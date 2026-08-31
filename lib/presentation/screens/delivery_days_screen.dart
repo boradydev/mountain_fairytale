@@ -16,13 +16,37 @@ class DeliveryDaysScreen extends StatefulWidget {
 }
 
 class _DeliveryDaysScreenState extends State<DeliveryDaysScreen> {
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
-    // Инициируем загрузку данных при старте экрана
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<DeliveryDaysProvider>().fetchDeliveryDays();
+      context.read<DeliveryDaysProvider>().fetchDeliveryDays(
+        isRefresh: true,
+      );
     });
+
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) {
+      return;
+    }
+
+    final position = _scrollController.position;
+
+    if (position.pixels >= position.maxScrollExtent - 200) {
+      context.read<DeliveryDaysProvider>().fetchDeliveryDays();
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -56,7 +80,10 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen> {
           child: CircularProgressIndicator(),
         ),
         DeliveryStatus.failure => _ErrorView(),
-        DeliveryStatus.success => const _DeliveryDaysListView(),
+        DeliveryStatus.success =>
+            _DeliveryDaysListView(
+              scrollController: _scrollController,
+            ),
       },
     );
   }
@@ -64,22 +91,50 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen> {
 
 /// Изолированный список — не перерисовывает весь Scaffold при изменении элементов
 class _DeliveryDaysListView extends StatelessWidget {
-  const _DeliveryDaysListView();
+  final ScrollController scrollController;
+
+  const _DeliveryDaysListView({
+    required this.scrollController,
+  });
 
   @override
   Widget build(BuildContext context) {
-    // Вытаскиваем список дней. Больше этот виджет ничего не слушает.
-    final days = context.select((DeliveryDaysProvider p) => p.days);
+    final days = context.select(
+          (DeliveryDaysProvider p) => p.days,
+    );
+
+    final hasMore = context.select(
+          (DeliveryDaysProvider p) => p.hasMore,
+    );
+
+    final isLoadingMore = context.select(
+          (DeliveryDaysProvider p) => p.isLoadingMore,
+    );
 
     if (days.isEmpty) {
-      return const Center(child: Text('Список доставок пуст'));
+      return const Center(
+        child: Text('Список доставок пуст'),
+      );
     }
 
+    final showLoader = hasMore && isLoadingMore;
+
     return ListView.builder(
+      controller: scrollController,
       padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: days.length,
+      itemCount: days.length + (showLoader ? 1 : 0),
       itemBuilder: (context, index) {
+        if (index == days.length) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 32),
+            child: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
         final day = days[index];
+
         return _DeliveryDayItem(day: day);
       },
     );
