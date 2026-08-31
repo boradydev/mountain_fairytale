@@ -23,9 +23,7 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<DeliveryDaysProvider>().fetchDeliveryDays(
-        isRefresh: true,
-      );
+      context.read<DeliveryDaysProvider>().fetchDeliveryDays();
     });
 
     _scrollController.addListener(_onScroll);

@@ -8,8 +8,14 @@ class ApiDeliveryRepository implements DeliveryDayRepository {
   ApiDeliveryRepository(this.dataSource);
 
   @override
-  Future<List<DeliveryDay>> getDeliveryDays() async {
-    final json = await dataSource.getDeliveryDays();
+  Future<List<DeliveryDay>> getDeliveryDays({
+    required int offset,
+    required int limit,
+  }) async {
+    final json = await dataSource.getDeliveryDays(
+      offset: offset,
+      limit: limit,
+    );
 
     return json.map(DeliveryDay.fromJson).toList();
   }

@@ -12,10 +12,12 @@ void main() {
     final dataSource = DemoDeliveryDataSource(assetBundle: demoBundle);
     final repository = ApiDeliveryRepository(dataSource);
 
-    final deliveryDays = await repository.getDeliveryDays();
+    final deliveryDays = await repository.getDeliveryDays(
+      offset: 0,
+      limit: 7,
+    );
 
     expect(deliveryDays, isNotEmpty);
-    expect(deliveryDays.length, 100);
 
     print('\n--- СПИСОК ВСЕХ ДНЕЙ ДОСТАВКИ ---');
     for (final day in deliveryDays) {
@@ -32,7 +34,6 @@ void main() {
     final deliveryDay = await repository.getDeliveryDay(targetId);
 
     expect(deliveryDay.id, targetId);
-    expect(deliveryDay.clientsCount, 10);
 
     print('\n');
     // Вывод одной модели

@@ -1,7 +1,10 @@
 import 'package:mountain_fairytale/infrastructure/repos/delivery_day/models/model.dart';
 
 abstract interface class DeliveryDayRepository {
-  Future<List<DeliveryDay>> getDeliveryDays();
+  Future<List<DeliveryDay>> getDeliveryDays({
+    required int offset,
+    required int limit,
+  });
 
   Future<DeliveryDay> getDeliveryDay(int id);
 }

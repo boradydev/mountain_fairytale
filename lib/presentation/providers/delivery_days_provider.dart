@@ -11,14 +11,14 @@ class DeliveryDaysProvider extends ChangeNotifier {
 
   static const int _pageSize = 7;
 
-  List<DeliveryDay> _allDays = const [];
+  int _offset = 0;
+  bool _hasMore = true;
+  bool _isLoadingMore = false;
+
   List<DeliveryDay> _days = const [];
 
   DeliveryStatus _status = DeliveryStatus.initial;
   String _errorMessage = '';
-
-  bool _isLoadingMore = false;
-  bool _hasMore = true;
 
   List<DeliveryDay> get days => _days;
 
@@ -34,76 +34,46 @@ class DeliveryDaysProvider extends ChangeNotifier {
 
   bool get hasError => _status == DeliveryStatus.failure;
 
-  bool get isEmpty => _status == DeliveryStatus.success && _days.isEmpty;
+  bool get isEmpty =>
+      _status == DeliveryStatus.success && _days.isEmpty;
 
-  Future<void> fetchDeliveryDays({bool isRefresh = false}) async {
-    // Не допускаем повторную загрузку первой страницы
-    // или загрузку следующей страницы одновременно.
-    if (_isLoadingMore || _status == DeliveryStatus.loading) {
+  Future<void> fetchDeliveryDays() async {
+    if (_isLoadingMore || !_hasMore) {
       return;
     }
+
+    _isLoadingMore = true;
+
+    if (_days.isEmpty) {
+      _status = DeliveryStatus.loading;
+    }
+
+    notifyListeners();
 
     try {
-      if (isRefresh) {
-        _status = DeliveryStatus.loading;
-        _errorMessage = '';
-        _hasMore = true;
-        _days = const [];
+      final newDays = await _repository.getDeliveryDays(
+        offset: _offset,
+        limit: _pageSize,
+      );
 
-        notifyListeners();
+      _days = [
+        ..._days,
+        ...newDays,
+      ];
 
-        _allDays = await _repository.getDeliveryDays();
+      _offset += newDays.length;
 
-        _loadNextPage();
-
-        _status = DeliveryStatus.success;
-        notifyListeners();
-
-        return;
+      if (newDays.length < _pageSize) {
+        _hasMore = false;
       }
 
-      // Если это обычная загрузка следующей страницы
-      if (!_hasMore) {
-        return;
-      }
-
-      _isLoadingMore = true;
-      notifyListeners();
-
-      // Небольшая задержка только для демонстрации поведения пагинации.
-      // Потом её можно убрать, когда появится реальный API.
-      await Future<void>.delayed(const Duration(milliseconds: 300));
-
-      _loadNextPage();
-
-      _isLoadingMore = false;
-      notifyListeners();
+      _status = DeliveryStatus.success;
     } catch (e) {
-      _isLoadingMore = false;
       _errorMessage = e.toString();
       _status = DeliveryStatus.failure;
-
+    } finally {
+      _isLoadingMore = false;
       notifyListeners();
-    }
-  }
-
-  void _loadNextPage() {
-    final start = _days.length;
-
-    if (start >= _allDays.length) {
-      _hasMore = false;
-      return;
-    }
-
-    final end = (start + _pageSize).clamp(0, _allDays.length);
-
-    _days = [
-      ..._days,
-      ..._allDays.sublist(start, end),
-    ];
-
-    if (end >= _allDays.length) {
-      _hasMore = false;
     }
   }
 }
