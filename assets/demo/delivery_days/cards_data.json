@@ -3,233 +3,233 @@
     "id": 100,
     "date": "2026-08-27",
     "clientsCount": 15,
-    "bottlesCount": 100,
+    "bottlesCount": 42,
     "returnsCount": 3,
-    "totalAmount": 30000.0
+    "totalAmount": 12600.0
   },
   {
     "id": 99,
     "date": "2026-08-26",
     "clientsCount": 18,
-    "bottlesCount": 90,
+    "bottlesCount": 75,
     "returnsCount": 1,
-    "totalAmount": 27000.0
+    "totalAmount": 22500.0
   },
   {
     "id": 98,
     "date": "2026-08-25",
     "clientsCount": 12,
-    "bottlesCount": 100,
+    "bottlesCount": 23,
     "returnsCount": 4,
-    "totalAmount": 30000.0
+    "totalAmount": 6900.0
   },
   {
     "id": 97,
     "date": "2026-08-24",
     "clientsCount": 17,
-    "bottlesCount": 80,
+    "bottlesCount": 58,
     "returnsCount": 2,
-    "totalAmount": 24000.0
+    "totalAmount": 17400.0
   },
   {
     "id": 96,
     "date": "2026-08-23",
     "clientsCount": 14,
-    "bottlesCount": 100,
+    "bottlesCount": 34,
     "returnsCount": 0,
-    "totalAmount": 30000.0
+    "totalAmount": 10200.0
   },
   {
     "id": 95,
     "date": "2026-08-22",
     "clientsCount": 16,
-    "bottlesCount": 90,
+    "bottlesCount": 89,
     "returnsCount": 5,
-    "totalAmount": 27000.0
+    "totalAmount": 26700.0
   },
   {
     "id": 94,
     "date": "2026-08-21",
     "clientsCount": 13,
-    "bottlesCount": 100,
+    "bottlesCount": 67,
     "returnsCount": 4,
-    "totalAmount": 30000.0
+    "totalAmount": 20100.0
   },
   {
     "id": 93,
     "date": "2026-08-20",
     "clientsCount": 19,
-    "bottlesCount": 80,
+    "bottlesCount": 45,
     "returnsCount": 2,
-    "totalAmount": 24000.0
+    "totalAmount": 13500.0
   },
   {
     "id": 92,
     "date": "2026-08-19",
     "clientsCount": 11,
-    "bottlesCount": 100,
+    "bottlesCount": 90,
     "returnsCount": 0,
-    "totalAmount": 30000.0
+    "totalAmount": 27000.0
   },
   {
     "id": 91,
     "date": "2026-08-18",
     "clientsCount": 15,
-    "bottlesCount": 90,
+    "bottlesCount": 39,
     "returnsCount": 3,
-    "totalAmount": 27000.0
+    "totalAmount": 11700.0
   },
   {
     "id": 90,
     "date": "2026-08-17",
     "clientsCount": 18,
-    "bottlesCount": 100,
+    "bottlesCount": 61,
     "returnsCount": 1,
-    "totalAmount": 30000.0
+    "totalAmount": 18300.0
   },
   {
     "id": 89,
     "date": "2026-08-16",
     "clientsCount": 12,
-    "bottlesCount": 90,
+    "bottlesCount": 28,
     "returnsCount": 4,
-    "totalAmount": 27000.0
+    "totalAmount": 8400.0
   },
   {
     "id": 88,
     "date": "2026-08-15",
     "clientsCount": 17,
-    "bottlesCount": 100,
+    "bottlesCount": 52,
     "returnsCount": 2,
-    "totalAmount": 30000.0
+    "totalAmount": 15600.0
   },
   {
     "id": 87,
     "date": "2026-08-14",
     "clientsCount": 14,
-    "bottlesCount": 90,
+    "bottlesCount": 33,
     "returnsCount": 0,
-    "totalAmount": 27000.0
+    "totalAmount": 9900.0
   },
   {
     "id": 86,
     "date": "2026-08-13",
     "clientsCount": 16,
-    "bottlesCount": 100,
+    "bottlesCount": 71,
     "returnsCount": 5,
-    "totalAmount": 30000.0
+    "totalAmount": 21300.0
   },
   {
     "id": 85,
     "date": "2026-08-12",
     "clientsCount": 13,
-    "bottlesCount": 90,
+    "bottlesCount": 47,
     "returnsCount": 4,
-    "totalAmount": 27000.0
+    "totalAmount": 14100.0
   },
   {
     "id": 84,
     "date": "2026-08-11",
     "clientsCount": 19,
-    "bottlesCount": 100,
+    "bottlesCount": 64,
     "returnsCount": 2,
-    "totalAmount": 30000.0
+    "totalAmount": 19200.0
   },
   {
     "id": 83,
     "date": "2026-08-10",
     "clientsCount": 11,
-    "bottlesCount": 90,
+    "bottlesCount": 25,
     "returnsCount": 0,
-    "totalAmount": 27000.0
+    "totalAmount": 7500.0
   },
   {
     "id": 82,
     "date": "2026-08-09",
     "clientsCount": 15,
-    "bottlesCount": 100,
+    "bottlesCount": 82,
     "returnsCount": 3,
-    "totalAmount": 30000.0
+    "totalAmount": 24600.0
   },
   {
     "id": 81,
     "date": "2026-08-08",
     "clientsCount": 18,
-    "bottlesCount": 90,
+    "bottlesCount": 36,
     "returnsCount": 1,
-    "totalAmount": 27000.0
+    "totalAmount": 10800.0
   },
   {
     "id": 80,
     "date": "2026-08-07",
     "clientsCount": 12,
-    "bottlesCount": 100,
+    "bottlesCount": 55,
     "returnsCount": 4,
-    "totalAmount": 30000.0
+    "totalAmount": 16500.0
   },
   {
     "id": 79,
     "date": "2026-08-06",
     "clientsCount": 17,
-    "bottlesCount": 90,
+    "bottlesCount": 41,
     "returnsCount": 2,
-    "totalAmount": 27000.0
+    "totalAmount": 12300.0
   },
   {
     "id": 78,
     "date": "2026-08-05",
     "clientsCount": 14,
-    "bottlesCount": 100,
+    "bottlesCount": 90,
     "returnsCount": 0,
-    "totalAmount": 30000.0
+    "totalAmount": 27000.0
   },
   {
     "id": 77,
     "date": "2026-08-04",
     "clientsCount": 16,
-    "bottlesCount": 90,
+    "bottlesCount": 30,
     "returnsCount": 5,
-    "totalAmount": 27000.0
+    "totalAmount": 9000.0
   },
   {
     "id": 76,
     "date": "2026-08-03",
     "clientsCount": 13,
-    "bottlesCount": 100,
+    "bottlesCount": 68,
     "returnsCount": 4,
-    "totalAmount": 30000.0
+    "totalAmount": 20400.0
   },
   {
     "id": 75,
     "date": "2026-08-02",
     "clientsCount": 19,
-    "bottlesCount": 90,
+    "bottlesCount": 50,
     "returnsCount": 2,
-    "totalAmount": 27000.0
+    "totalAmount": 15000.0
   },
   {
     "id": 74,
     "date": "2026-08-01",
     "clientsCount": 11,
-    "bottlesCount": 100,
+    "bottlesCount": 29,
     "returnsCount": 0,
-    "totalAmount": 30000.0
+    "totalAmount": 8700.0
   },
   {
     "id": 73,
     "date": "2026-07-31",
     "clientsCount": 15,
-    "bottlesCount": 90,
+    "bottlesCount": 73,
     "returnsCount": 3,
-    "totalAmount": 27000.0
+    "totalAmount": 21900.0
   },
   {
     "id": 72,
     "date": "2026-07-30",
     "clientsCount": 18,
-    "bottlesCount": 100,
+    "bottlesCount": 44,
     "returnsCount": 1,
-    "totalAmount": 30000.0
+    "totalAmount": 13200.0
   },
   {
     "id": 71,
@@ -243,137 +243,137 @@
     "id": 70,
     "date": "2026-07-28",
     "clientsCount": 17,
-    "bottlesCount": 100,
+    "bottlesCount": 31,
     "returnsCount": 2,
-    "totalAmount": 30000.0
+    "totalAmount": 9300.0
   },
   {
     "id": 69,
     "date": "2026-07-27",
     "clientsCount": 14,
-    "bottlesCount": 90,
+    "bottlesCount": 65,
     "returnsCount": 0,
-    "totalAmount": 27000.0
+    "totalAmount": 19500.0
   },
   {
     "id": 68,
     "date": "2026-07-26",
     "clientsCount": 16,
-    "bottlesCount": 100,
+    "bottlesCount": 53,
     "returnsCount": 5,
-    "totalAmount": 30000.0
+    "totalAmount": 15900.0
   },
   {
     "id": 67,
     "date": "2026-07-25",
     "clientsCount": 13,
-    "bottlesCount": 90,
+    "bottlesCount": 40,
     "returnsCount": 4,
-    "totalAmount": 27000.0
+    "totalAmount": 12000.0
   },
   {
     "id": 66,
     "date": "2026-07-24",
     "clientsCount": 19,
-    "bottlesCount": 100,
+    "bottlesCount": 88,
     "returnsCount": 2,
-    "totalAmount": 30000.0
+    "totalAmount": 26400.0
   },
   {
     "id": 65,
     "date": "2026-07-23",
     "clientsCount": 11,
-    "bottlesCount": 90,
+    "bottlesCount": 37,
     "returnsCount": 0,
-    "totalAmount": 27000.0
+    "totalAmount": 11100.0
   },
   {
     "id": 64,
     "date": "2026-07-22",
     "clientsCount": 15,
-    "bottlesCount": 100,
+    "bottlesCount": 76,
     "returnsCount": 3,
-    "totalAmount": 30000.0
+    "totalAmount": 22800.0
   },
   {
     "id": 63,
     "date": "2026-07-21",
     "clientsCount": 18,
-    "bottlesCount": 90,
+    "bottlesCount": 46,
     "returnsCount": 1,
-    "totalAmount": 27000.0
+    "totalAmount": 13800.0
   },
   {
     "id": 62,
     "date": "2026-07-20",
     "clientsCount": 12,
-    "bottlesCount": 100,
+    "bottlesCount": 90,
     "returnsCount": 4,
-    "totalAmount": 30000.0
+    "totalAmount": 27000.0
   },
   {
     "id": 61,
     "date": "2026-07-19",
     "clientsCount": 17,
-    "bottlesCount": 90,
+    "bottlesCount": 32,
     "returnsCount": 2,
-    "totalAmount": 27000.0
+    "totalAmount": 9600.0
   },
   {
     "id": 60,
     "date": "2026-07-18",
     "clientsCount": 14,
-    "bottlesCount": 100,
+    "bottlesCount": 60,
     "returnsCount": 0,
-    "totalAmount": 30000.0
+    "totalAmount": 18000.0
   },
   {
     "id": 59,
     "date": "2026-07-17",
     "clientsCount": 16,
-    "bottlesCount": 90,
+    "bottlesCount": 54,
     "returnsCount": 5,
-    "totalAmount": 27000.0
+    "totalAmount": 16200.0
   },
   {
     "id": 58,
     "date": "2026-07-16",
     "clientsCount": 13,
-    "bottlesCount": 100,
+    "bottlesCount": 43,
     "returnsCount": 4,
-    "totalAmount": 30000.0
+    "totalAmount": 12900.0
   },
   {
     "id": 57,
     "date": "2026-07-15",
     "clientsCount": 19,
-    "bottlesCount": 90,
+    "bottlesCount": 85,
     "returnsCount": 2,
-    "totalAmount": 27000.0
+    "totalAmount": 25500.0
   },
   {
     "id": 56,
     "date": "2026-07-14",
     "clientsCount": 11,
-    "bottlesCount": 100,
+    "bottlesCount": 35,
     "returnsCount": 0,
-    "totalAmount": 30000.0
+    "totalAmount": 10500.0
   },
   {
     "id": 55,
     "date": "2026-07-13",
     "clientsCount": 15,
-    "bottlesCount": 90,
+    "bottlesCount": 72,
     "returnsCount": 3,
-    "totalAmount": 27000.0
+    "totalAmount": 21600.0
   },
   {
     "id": 54,
     "date": "2026-07-12",
     "clientsCount": 18,
-    "bottlesCount": 100,
+    "bottlesCount": 48,
     "returnsCount": 1,
-    "totalAmount": 30000.0
+    "totalAmount": 14400.0
   },
   {
     "id": 53,
@@ -387,137 +387,137 @@
     "id": 52,
     "date": "2026-07-10",
     "clientsCount": 17,
-    "bottlesCount": 100,
+    "bottlesCount": 33,
     "returnsCount": 2,
-    "totalAmount": 30000.0
+    "totalAmount": 9900.0
   },
   {
     "id": 51,
     "date": "2026-07-09",
     "clientsCount": 14,
-    "bottlesCount": 90,
+    "bottlesCount": 62,
     "returnsCount": 0,
-    "totalAmount": 27000.0
+    "totalAmount": 18600.0
   },
   {
     "id": 50,
     "date": "2026-07-08",
     "clientsCount": 16,
-    "bottlesCount": 100,
+    "bottlesCount": 51,
     "returnsCount": 5,
-    "totalAmount": 30000.0
+    "totalAmount": 15300.0
   },
   {
     "id": 49,
     "date": "2026-07-07",
     "clientsCount": 13,
-    "bottlesCount": 90,
+    "bottlesCount": 49,
     "returnsCount": 4,
-    "totalAmount": 27000.0
+    "totalAmount": 14700.0
   },
   {
     "id": 48,
     "date": "2026-07-06",
     "clientsCount": 19,
-    "bottlesCount": 100,
+    "bottlesCount": 87,
     "returnsCount": 2,
-    "totalAmount": 30000.0
+    "totalAmount": 26100.0
   },
   {
     "id": 47,
     "date": "2026-07-05",
     "clientsCount": 11,
-    "bottlesCount": 90,
+    "bottlesCount": 36,
     "returnsCount": 0,
-    "totalAmount": 27000.0
+    "totalAmount": 10800.0
   },
   {
     "id": 46,
     "date": "2026-07-04",
     "clientsCount": 15,
-    "bottlesCount": 100,
+    "bottlesCount": 74,
     "returnsCount": 3,
-    "totalAmount": 30000.0
+    "totalAmount": 22200.0
   },
   {
     "id": 45,
     "date": "2026-07-03",
     "clientsCount": 18,
-    "bottlesCount": 90,
+    "bottlesCount": 42,
     "returnsCount": 1,
-    "totalAmount": 27000.0
+    "totalAmount": 12600.0
   },
   {
     "id": 44,
     "date": "2026-07-02",
     "clientsCount": 12,
-    "bottlesCount": 100,
+    "bottlesCount": 90,
     "returnsCount": 4,
-    "totalAmount": 30000.0
+    "totalAmount": 27000.0
   },
   {
     "id": 43,
     "date": "2026-07-01",
     "clientsCount": 17,
-    "bottlesCount": 90,
+    "bottlesCount": 30,
     "returnsCount": 2,
-    "totalAmount": 27000.0
+    "totalAmount": 9000.0
   },
   {
     "id": 42,
     "date": "2026-06-30",
     "clientsCount": 14,
-    "bottlesCount": 100,
+    "bottlesCount": 63,
     "returnsCount": 0,
-    "totalAmount": 30000.0
+    "totalAmount": 18900.0
   },
   {
     "id": 41,
     "date": "2026-06-29",
     "clientsCount": 16,
-    "bottlesCount": 90,
+    "bottlesCount": 50,
     "returnsCount": 5,
-    "totalAmount": 27000.0
+    "totalAmount": 15000.0
   },
   {
     "id": 40,
     "date": "2026-06-28",
     "clientsCount": 13,
-    "bottlesCount": 100,
+    "bottlesCount": 41,
     "returnsCount": 4,
-    "totalAmount": 30000.0
+    "totalAmount": 12300.0
   },
   {
     "id": 39,
     "date": "2026-06-27",
     "clientsCount": 19,
-    "bottlesCount": 90,
+    "bottlesCount": 89,
     "returnsCount": 2,
-    "totalAmount": 27000.0
+    "totalAmount": 26700.0
   },
   {
     "id": 38,
     "date": "2026-06-26",
     "clientsCount": 11,
-    "bottlesCount": 100,
+    "bottlesCount": 37,
     "returnsCount": 0,
-    "totalAmount": 30000.0
+    "totalAmount": 11100.0
   },
   {
     "id": 37,
     "date": "2026-06-25",
     "clientsCount": 15,
-    "bottlesCount": 90,
+    "bottlesCount": 76,
     "returnsCount": 3,
-    "totalAmount": 27000.0
+    "totalAmount": 22800.0
   },
   {
     "id": 36,
     "date": "2026-06-24",
     "clientsCount": 18,
-    "bottlesCount": 100,
+    "bottlesCount": 46,
     "returnsCount": 1,
-    "totalAmount": 30000.0
+    "totalAmount": 13800.0
   },
   {
     "id": 35,
@@ -531,65 +531,65 @@
     "id": 34,
     "date": "2026-06-22",
     "clientsCount": 17,
-    "bottlesCount": 100,
+    "bottlesCount": 32,
     "returnsCount": 2,
-    "totalAmount": 30000.0
+    "totalAmount": 9600.0
   },
   {
     "id": 33,
     "date": "2026-06-21",
     "clientsCount": 14,
-    "bottlesCount": 90,
+    "bottlesCount": 60,
     "returnsCount": 0,
-    "totalAmount": 27000.0
+    "totalAmount": 18000.0
   },
   {
     "id": 32,
     "date": "2026-06-20",
     "clientsCount": 16,
-    "bottlesCount": 90,
+    "bottlesCount": 54,
     "returnsCount": 5,
-    "totalAmount": 27000.0
+    "totalAmount": 16200.0
   },
   {
     "id": 31,
     "date": "2026-06-19",
     "clientsCount": 13,
-    "bottlesCount": 100,
+    "bottlesCount": 43,
     "returnsCount": 4,
-    "totalAmount": 30000.0
+    "totalAmount": 12900.0
   },
   {
     "id": 30,
     "date": "2026-06-18",
     "clientsCount": 19,
-    "bottlesCount": 90,
+    "bottlesCount": 85,
     "returnsCount": 2,
-    "totalAmount": 27000.0
+    "totalAmount": 25500.0
   },
   {
     "id": 29,
     "date": "2026-06-17",
     "clientsCount": 11,
-    "bottlesCount": 100,
+    "bottlesCount": 35,
     "returnsCount": 0,
-    "totalAmount": 30000.0
+    "totalAmount": 10500.0
   },
   {
     "id": 28,
     "date": "2026-06-16",
     "clientsCount": 15,
-    "bottlesCount": 90,
+    "bottlesCount": 72,
     "returnsCount": 3,
-    "totalAmount": 27000.0
+    "totalAmount": 21600.0
   },
   {
     "id": 27,
     "date": "2026-06-15",
     "clientsCount": 18,
-    "bottlesCount": 100,
+    "bottlesCount": 48,
     "returnsCount": 1,
-    "totalAmount": 30000.0
+    "totalAmount": 14400.0
   },
   {
     "id": 26,
@@ -603,65 +603,65 @@
     "id": 25,
     "date": "2026-06-13",
     "clientsCount": 17,
-    "bottlesCount": 100,
+    "bottlesCount": 33,
     "returnsCount": 2,
-    "totalAmount": 30000.0
+    "totalAmount": 9900.0
   },
   {
     "id": 24,
     "date": "2026-06-12",
     "clientsCount": 14,
-    "bottlesCount": 90,
+    "bottlesCount": 62,
     "returnsCount": 0,
-    "totalAmount": 27000.0
+    "totalAmount": 18600.0
   },
   {
     "id": 23,
     "date": "2026-06-11",
     "clientsCount": 16,
-    "bottlesCount": 90,
+    "bottlesCount": 51,
     "returnsCount": 5,
-    "totalAmount": 27000.0
+    "totalAmount": 15300.0
   },
   {
     "id": 22,
     "date": "2026-06-10",
     "clientsCount": 13,
-    "bottlesCount": 100,
+    "bottlesCount": 49,
     "returnsCount": 4,
-    "totalAmount": 30000.0
+    "totalAmount": 14700.0
   },
   {
     "id": 21,
     "date": "2026-06-09",
     "clientsCount": 19,
-    "bottlesCount": 90,
+    "bottlesCount": 87,
     "returnsCount": 2,
-    "totalAmount": 27000.0
+    "totalAmount": 26100.0
   },
   {
     "id": 20,
     "date": "2026-06-08",
     "clientsCount": 11,
-    "bottlesCount": 100,
+    "bottlesCount": 36,
     "returnsCount": 0,
-    "totalAmount": 30000.0
+    "totalAmount": 10800.0
   },
   {
     "id": 19,
     "date": "2026-06-07",
     "clientsCount": 15,
-    "bottlesCount": 90,
+    "bottlesCount": 74,
     "returnsCount": 3,
-    "totalAmount": 27000.0
+    "totalAmount": 22200.0
   },
   {
     "id": 18,
     "date": "2026-06-06",
     "clientsCount": 18,
-    "bottlesCount": 100,
+    "bottlesCount": 42,
     "returnsCount": 1,
-    "totalAmount": 30000.0
+    "totalAmount": 12600.0
   },
   {
     "id": 17,
@@ -675,65 +675,65 @@
     "id": 16,
     "date": "2026-06-04",
     "clientsCount": 17,
-    "bottlesCount": 100,
+    "bottlesCount": 30,
     "returnsCount": 2,
-    "totalAmount": 30000.0
+    "totalAmount": 9000.0
   },
   {
     "id": 15,
     "date": "2026-06-03",
     "clientsCount": 14,
-    "bottlesCount": 90,
+    "bottlesCount": 63,
     "returnsCount": 0,
-    "totalAmount": 27000.0
+    "totalAmount": 18900.0
   },
   {
     "id": 14,
     "date": "2026-06-02",
     "clientsCount": 16,
-    "bottlesCount": 90,
+    "bottlesCount": 50,
     "returnsCount": 5,
-    "totalAmount": 27000.0
+    "totalAmount": 15000.0
   },
   {
     "id": 13,
     "date": "2026-06-01",
     "clientsCount": 13,
-    "bottlesCount": 100,
+    "bottlesCount": 41,
     "returnsCount": 4,
-    "totalAmount": 30000.0
+    "totalAmount": 12300.0
   },
   {
     "id": 12,
     "date": "2026-05-31",
     "clientsCount": 19,
-    "bottlesCount": 90,
+    "bottlesCount": 89,
     "returnsCount": 2,
-    "totalAmount": 27000.0
+    "totalAmount": 26700.0
   },
   {
     "id": 11,
     "date": "2026-05-30",
     "clientsCount": 11,
-    "bottlesCount": 100,
+    "bottlesCount": 37,
     "returnsCount": 0,
-    "totalAmount": 30000.0
+    "totalAmount": 11100.0
   },
   {
     "id": 10,
     "date": "2026-05-29",
     "clientsCount": 15,
-    "bottlesCount": 90,
+    "bottlesCount": 76,
     "returnsCount": 3,
-    "totalAmount": 27000.0
+    "totalAmount": 22800.0
   },
   {
     "id": 9,
     "date": "2026-05-28",
     "clientsCount": 18,
-    "bottlesCount": 100,
+    "bottlesCount": 46,
     "returnsCount": 1,
-    "totalAmount": 30000.0
+    "totalAmount": 13800.0
   },
   {
     "id": 8,
@@ -747,56 +747,56 @@
     "id": 7,
     "date": "2026-05-26",
     "clientsCount": 17,
-    "bottlesCount": 100,
+    "bottlesCount": 32,
     "returnsCount": 2,
-    "totalAmount": 30000.0
+    "totalAmount": 9600.0
   },
   {
     "id": 6,
     "date": "2026-05-25",
     "clientsCount": 14,
-    "bottlesCount": 90,
+    "bottlesCount": 60,
     "returnsCount": 0,
-    "totalAmount": 27000.0
+    "totalAmount": 18000.0
   },
   {
     "id": 5,
     "date": "2026-05-24",
     "clientsCount": 16,
-    "bottlesCount": 90,
+    "bottlesCount": 54,
     "returnsCount": 5,
-    "totalAmount": 27000.0
+    "totalAmount": 16200.0
   },
   {
     "id": 4,
     "date": "2026-05-23",
     "clientsCount": 13,
-    "bottlesCount": 100,
+    "bottlesCount": 43,
     "returnsCount": 4,
-    "totalAmount": 30000.0
+    "totalAmount": 12900.0
   },
   {
     "id": 3,
     "date": "2026-05-22",
     "clientsCount": 19,
-    "bottlesCount": 90,
+    "bottlesCount": 85,
     "returnsCount": 2,
-    "totalAmount": 27000.0
+    "totalAmount": 25500.0
   },
   {
     "id": 2,
     "date": "2026-05-21",
     "clientsCount": 11,
-    "bottlesCount": 100,
+    "bottlesCount": 35,
     "returnsCount": 0,
-    "totalAmount": 30000.0
+    "totalAmount": 10500.0
   },
   {
     "id": 1,
     "date": "2026-05-20",
     "clientsCount": 15,
-    "bottlesCount": 90,
+    "bottlesCount": 72,
     "returnsCount": 3,
-    "totalAmount": 27000.0
+    "totalAmount": 21600.0
   }
 ]
