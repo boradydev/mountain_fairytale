@@ -7,6 +7,7 @@ class Client {
   final int id;
   final String name;
   final String phone;
+  final String address;
   final DateTime? lastDeliveryDate;
   final int? lastDeliveryQuantity;
   final DateTime? cooldownUntil;
@@ -15,6 +16,7 @@ class Client {
     required this.id,
     required this.name,
     required this.phone,
+    required this.address,
     this.lastDeliveryDate,
     this.lastDeliveryQuantity,
     this.cooldownUntil,

@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/core/utils/datetime_extensions.dart';
 import 'package:mountain_fairytale/infrastructure/repos/clients/models/client_model.dart';
+import 'package:mountain_fairytale/l10n/app_localizations.dart';
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
+import 'package:mountain_fairytale/presentation/widgets/card_widget.dart';
+import 'package:mountain_fairytale/presentation/widgets/metric_row_widget.dart';
 import 'package:provider/provider.dart';
 
 class ClientsAttentionListView extends StatelessWidget {
@@ -49,6 +53,7 @@ class _ClientAttentionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     final lastDeliveryText = client.lastDeliveryDate == null
         ? 'Доставок ещё не было'
@@ -57,51 +62,28 @@ class _ClientAttentionCard extends StatelessWidget {
               '${client.lastDeliveryDate!.month.toString().padLeft(2, '0')}.'
               '${client.lastDeliveryDate!.year}';
 
-    return Card(
-      elevation: 0,
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: colorScheme.outlineVariant.withAlpha(128)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return DeliveryDayCard(
+      title: '${client.name} / ${"Улица советская"}',
+      onTap: () {
+        // Логика перехода на детальный экран по day.id
+      },
+      metrics: [
+        Row(
           children: [
-            Text(
-              client.name,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(client.phone),
-            const SizedBox(height: 4),
-            Text(lastDeliveryText),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      // TODO: звонок
-                    },
-                    icon: const Icon(Icons.phone),
-                    label: const Text('Позвонить'),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  onPressed: () {
-                    // TODO: cooldown
-                  },
-                  icon: const Icon(Icons.snooze),
-                  tooltip: 'Отложить',
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
+            MetricRow(
+              label: '${"Телефон:"}',
+              labelWidth: 65,
+              value: '${client.phone}',
+          ),
+            const SizedBox(width: 16),
+            MetricRow(
+              label: '${"Последняя доставка:"}',
+              labelWidth: 140,
+              value: client.lastDeliveryDate?.toFormattedString() ?? 'никогда',
+
+            ),],
+        )
+      ],
     );
   }
 }

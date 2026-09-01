@@ -101,8 +101,8 @@ class _Dashboard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Expanded(
-          flex: 2,
+        SizedBox(
+          width: 300,
           child: DeliveryDaysListView(
             scrollController: scrollController,
           ),

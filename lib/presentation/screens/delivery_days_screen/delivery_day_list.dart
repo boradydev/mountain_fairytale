@@ -39,13 +39,7 @@ class DeliveryDaysListView extends StatelessWidget {
       itemBuilder: (context, index) {
         // Первая карточка — "Добавить доставку на сегодня"
         if (shouldShowTodayCard && index == 0) {
-          return Align(
-            alignment: Alignment.centerLeft,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 400),
-              child: const _TodayDeliveryCard(),
-            ),
-          );
+          return const _TodayDeliveryCard();
         }
 
         // Смещаем индекс, если перед списком есть TodayDeliveryCard
@@ -61,13 +55,7 @@ class DeliveryDaysListView extends StatelessWidget {
 
         final day = days[dayIndex];
 
-        return Align(
-          alignment: Alignment.centerLeft,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
-            child: _DeliveryDayItem(day: day),
-          ),
-        );
+        return _DeliveryDayItem(day: day);
       },
     );
   }
@@ -85,6 +73,7 @@ class _DeliveryDayItem extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     final dateStr = day.date.toFormattedString();
+    final labelWight = 100.0;
 
     return DeliveryDayCard(
       title: day.date.isToday
@@ -97,16 +86,19 @@ class _DeliveryDayItem extends StatelessWidget {
         MetricRow(
           icon: Icons.people_outline_rounded,
           label: l10n.deliveryCardClients,
+          labelWidth: labelWight,
           value: '${day.clientsCount} ${l10n.deliveryCardClientsMetrics}',
         ),
         MetricRow(
           icon: Icons.water_drop_outlined,
           label: l10n.deliveryCardBottles,
+          labelWidth: labelWight,
           value: '${day.bottlesCount} ${l10n.deliveryCardBottlesMetrics}',
         ),
         MetricRow(
           icon: Icons.assignment_return_outlined,
           label: l10n.deliveryCardReturns,
+          labelWidth: labelWight,
           value: '${day.returnsCount} ${l10n.deliveryCardReturnsMetrics}',
           // Выделяем возвраты цветом ошибки, если они есть
           valueColor: day.returnsCount > 0 ? colorScheme.error : null,
@@ -114,23 +106,27 @@ class _DeliveryDayItem extends StatelessWidget {
         MetricRow(
           icon: Icons.wine_bar_outlined,
           label: l10n.deliveryCardGlasses,
+          labelWidth: labelWight,
           value: '${day.glassesCount} ${l10n.deliveryCardGlassesMetrics}',
         ),
         MetricRow(
           icon: Icons.kitchen_outlined,
           label: l10n.deliveryCardWaterCooler,
+          labelWidth: labelWight,
           value:
               '${day.waterCoolerCount} ${l10n.deliveryCardWaterCoolerMetrics}',
         ),
         MetricRow(
           icon: Icons.build_circle_outlined,
           label: l10n.deliveryCardCoolerRepair,
+          labelWidth: labelWight,
           value:
               '${day.coolerRepairCount} ${l10n.deliveryCardCoolerRepairMetrics}',
         ),
         MetricRow(
           icon: Icons.payments_outlined,
           label: l10n.deliveryCardTotal,
+          labelWidth: labelWight,
           value:
               '${day.totalAmount.toStringAsFixed(2)} ${l10n.deliveryCardTotalMetrics}',
           valueColor: colorScheme.primary,
