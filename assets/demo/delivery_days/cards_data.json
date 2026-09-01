@@ -5,6 +5,9 @@
     "clientsCount": 15,
     "bottlesCount": 42,
     "returnsCount": 3,
+    "glassesCount": 600,
+    "waterCoolerCount": 2,
+    "coolerRepairCount": 1,
     "totalAmount": 12600.0
   },
   {
@@ -13,6 +16,9 @@
     "clientsCount": 18,
     "bottlesCount": 75,
     "returnsCount": 1,
+    "glassesCount": 800,
+    "waterCoolerCount": 1,
+    "coolerRepairCount": 0,
     "totalAmount": 22500.0
   },
   {
@@ -21,6 +27,9 @@
     "clientsCount": 12,
     "bottlesCount": 23,
     "returnsCount": 4,
+    "glassesCount": 400,
+    "waterCoolerCount": 0,
+    "coolerRepairCount": 3,
     "totalAmount": 6900.0
   },
   {
@@ -29,6 +38,9 @@
     "clientsCount": 17,
     "bottlesCount": 58,
     "returnsCount": 2,
+    "glassesCount": 900,
+    "waterCoolerCount": 3,
+    "coolerRepairCount": 2,
     "totalAmount": 17400.0
   },
   {
@@ -37,6 +49,9 @@
     "clientsCount": 14,
     "bottlesCount": 34,
     "returnsCount": 0,
+    "glassesCount": 700,
+    "waterCoolerCount": 2,
+    "coolerRepairCount": 1,
     "totalAmount": 10200.0
   },
   {
@@ -45,6 +60,9 @@
     "clientsCount": 16,
     "bottlesCount": 89,
     "returnsCount": 5,
+    "glassesCount": 500,
+    "waterCoolerCount": 1,
+    "coolerRepairCount": 0,
     "totalAmount": 26700.0
   },
   {
@@ -53,6 +71,9 @@
     "clientsCount": 13,
     "bottlesCount": 67,
     "returnsCount": 4,
+    "glassesCount": 300,
+    "waterCoolerCount": 0,
+    "coolerRepairCount": 3,
     "totalAmount": 20100.0
   },
   {
@@ -61,6 +82,9 @@
     "clientsCount": 19,
     "bottlesCount": 45,
     "returnsCount": 2,
+    "glassesCount": 1000,
+    "waterCoolerCount": 3,
+    "coolerRepairCount": 2,
     "totalAmount": 13500.0
   },
   {
@@ -69,6 +93,9 @@
     "clientsCount": 11,
     "bottlesCount": 90,
     "returnsCount": 0,
+    "glassesCount": 900,
+    "waterCoolerCount": 2,
+    "coolerRepairCount": 1,
     "totalAmount": 27000.0
   },
   {
@@ -77,6 +104,9 @@
     "clientsCount": 15,
     "bottlesCount": 39,
     "returnsCount": 3,
+    "glassesCount": 800,
+    "waterCoolerCount": 1,
+    "coolerRepairCount": 0,
     "totalAmount": 11700.0
   },
   {
@@ -85,6 +115,9 @@
     "clientsCount": 18,
     "bottlesCount": 61,
     "returnsCount": 1,
+    "glassesCount": 700,
+    "waterCoolerCount": 0,
+    "coolerRepairCount": 3,
     "totalAmount": 18300.0
   },
   {
@@ -93,6 +126,9 @@
     "clientsCount": 12,
     "bottlesCount": 28,
     "returnsCount": 4,
+    "glassesCount": 600,
+    "waterCoolerCount": 3,
+    "coolerRepairCount": 2,
     "totalAmount": 8400.0
   },
   {
@@ -101,6 +137,9 @@
     "clientsCount": 17,
     "bottlesCount": 52,
     "returnsCount": 2,
+    "glassesCount": 500,
+    "waterCoolerCount": 2,
+    "coolerRepairCount": 1,
     "totalAmount": 15600.0
   },
   {
@@ -109,6 +148,9 @@
     "clientsCount": 14,
     "bottlesCount": 33,
     "returnsCount": 0,
+    "glassesCount": 400,
+    "waterCoolerCount": 1,
+    "coolerRepairCount": 0,
     "totalAmount": 9900.0
   },
   {
@@ -117,6 +159,9 @@
     "clientsCount": 16,
     "bottlesCount": 71,
     "returnsCount": 5,
+    "glassesCount": 300,
+    "waterCoolerCount": 0,
+    "coolerRepairCount": 3,
     "totalAmount": 21300.0
   },
   {
@@ -125,6 +170,9 @@
     "clientsCount": 13,
     "bottlesCount": 47,
     "returnsCount": 4,
+    "glassesCount": 200,
+    "waterCoolerCount": 3,
+    "coolerRepairCount": 2,
     "totalAmount": 14100.0
   },
   {
@@ -133,6 +181,9 @@
     "clientsCount": 19,
     "bottlesCount": 64,
     "returnsCount": 2,
+    "glassesCount": 100,
+    "waterCoolerCount": 2,
+    "coolerRepairCount": 1,
     "totalAmount": 19200.0
   },
   {
@@ -141,6 +192,9 @@
     "clientsCount": 11,
     "bottlesCount": 25,
     "returnsCount": 0,
+    "glassesCount": 900,
+    "waterCoolerCount": 1,
+    "coolerRepairCount": 0,
     "totalAmount": 7500.0
   },
   {
@@ -149,6 +203,9 @@
     "clientsCount": 15,
     "bottlesCount": 82,
     "returnsCount": 3,
+    "glassesCount": 800,
+    "waterCoolerCount": 0,
+    "coolerRepairCount": 3,
     "totalAmount": 24600.0
   },
   {
@@ -157,6 +214,9 @@
     "clientsCount": 18,
     "bottlesCount": 36,
     "returnsCount": 1,
+    "glassesCount": 700,
+    "waterCoolerCount": 3,
+    "coolerRepairCount": 2,
     "totalAmount": 10800.0
   },
   {
@@ -165,6 +225,9 @@
     "clientsCount": 12,
     "bottlesCount": 55,
     "returnsCount": 4,
+    "glassesCount": 600,
+    "waterCoolerCount": 2,
+    "coolerRepairCount": 1,
     "totalAmount": 16500.0
   },
   {
@@ -173,6 +236,9 @@
     "clientsCount": 17,
     "bottlesCount": 41,
     "returnsCount": 2,
+    "glassesCount": 500,
+    "waterCoolerCount": 1,
+    "coolerRepairCount": 0,
     "totalAmount": 12300.0
   },
   {
@@ -181,6 +247,9 @@
     "clientsCount": 14,
     "bottlesCount": 90,
     "returnsCount": 0,
+    "glassesCount": 400,
+    "waterCoolerCount": 0,
+    "coolerRepairCount": 3,
     "totalAmount": 27000.0
   },
   {
@@ -189,6 +258,9 @@
     "clientsCount": 16,
     "bottlesCount": 30,
     "returnsCount": 5,
+    "glassesCount": 300,
+    "waterCoolerCount": 3,
+    "coolerRepairCount": 2,
     "totalAmount": 9000.0
   },
   {
@@ -197,6 +269,9 @@
     "clientsCount": 13,
     "bottlesCount": 68,
     "returnsCount": 4,
+    "glassesCount": 200,
+    "waterCoolerCount": 2,
+    "coolerRepairCount": 1,
     "totalAmount": 20400.0
   },
   {
@@ -205,6 +280,9 @@
     "clientsCount": 19,
     "bottlesCount": 50,
     "returnsCount": 2,
+    "glassesCount": 100,
+    "waterCoolerCount": 1,
+    "coolerRepairCount": 0,
     "totalAmount": 15000.0
   },
   {
@@ -213,6 +291,9 @@
     "clientsCount": 11,
     "bottlesCount": 29,
     "returnsCount": 0,
+    "glassesCount": 900,
+    "waterCoolerCount": 0,
+    "coolerRepairCount": 3,
     "totalAmount": 8700.0
   },
   {
@@ -221,6 +302,9 @@
     "clientsCount": 15,
     "bottlesCount": 73,
     "returnsCount": 3,
+    "glassesCount": 800,
+    "waterCoolerCount": 3,
+    "coolerRepairCount": 2,
     "totalAmount": 21900.0
   },
   {
@@ -229,6 +313,9 @@
     "clientsCount": 18,
     "bottlesCount": 44,
     "returnsCount": 1,
+    "glassesCount": 700,
+    "waterCoolerCount": 2,
+    "coolerRepairCount": 1,
     "totalAmount": 13200.0
   },
   {
@@ -237,6 +324,9 @@
     "clientsCount": 12,
     "bottlesCount": 90,
     "returnsCount": 4,
+    "glassesCount": 600,
+    "waterCoolerCount": 1,
+    "coolerRepairCount": 0,
     "totalAmount": 27000.0
   },
   {
@@ -245,6 +335,9 @@
     "clientsCount": 17,
     "bottlesCount": 31,
     "returnsCount": 2,
+    "glassesCount": 500,
+    "waterCoolerCount": 0,
+    "coolerRepairCount": 3,
     "totalAmount": 9300.0
   },
   {
@@ -253,6 +346,9 @@
     "clientsCount": 14,
     "bottlesCount": 65,
     "returnsCount": 0,
+    "glassesCount": 400,
+    "waterCoolerCount": 3,
+    "coolerRepairCount": 2,
     "totalAmount": 19500.0
   },
   {
@@ -261,6 +357,9 @@
     "clientsCount": 16,
     "bottlesCount": 53,
     "returnsCount": 5,
+    "glassesCount": 300,
+    "waterCoolerCount": 2,
+    "coolerRepairCount": 1,
     "totalAmount": 15900.0
   },
   {
@@ -269,6 +368,9 @@
     "clientsCount": 13,
     "bottlesCount": 40,
     "returnsCount": 4,
+    "glassesCount": 200,
+    "waterCoolerCount": 1,
+    "coolerRepairCount": 0,
     "totalAmount": 12000.0
   },
   {
@@ -277,6 +379,9 @@
     "clientsCount": 19,
     "bottlesCount": 88,
     "returnsCount": 2,
+    "glassesCount": 100,
+    "waterCoolerCount": 0,
+    "coolerRepairCount": 3,
     "totalAmount": 26400.0
   },
   {
@@ -285,6 +390,9 @@
     "clientsCount": 11,
     "bottlesCount": 37,
     "returnsCount": 0,
+    "glassesCount": 900,
+    "waterCoolerCount": 3,
+    "coolerRepairCount": 2,
     "totalAmount": 11100.0
   },
   {
@@ -293,6 +401,9 @@
     "clientsCount": 15,
     "bottlesCount": 76,
     "returnsCount": 3,
+    "glassesCount": 800,
+    "waterCoolerCount": 2,
+    "coolerRepairCount": 1,
     "totalAmount": 22800.0
   },
   {
@@ -301,6 +412,9 @@
     "clientsCount": 18,
     "bottlesCount": 46,
     "returnsCount": 1,
+    "glassesCount": 700,
+    "waterCoolerCount": 1,
+    "coolerRepairCount": 0,
     "totalAmount": 13800.0
   },
   {
@@ -309,6 +423,9 @@
     "clientsCount": 12,
     "bottlesCount": 90,
     "returnsCount": 4,
+    "glassesCount": 600,
+    "waterCoolerCount": 0,
+    "coolerRepairCount": 3,
     "totalAmount": 27000.0
   },
   {
@@ -317,6 +434,9 @@
     "clientsCount": 17,
     "bottlesCount": 32,
     "returnsCount": 2,
+    "glassesCount": 500,
+    "waterCoolerCount": 3,
+    "coolerRepairCount": 2,
     "totalAmount": 9600.0
   },
   {
@@ -325,6 +445,9 @@
     "clientsCount": 14,
     "bottlesCount": 60,
     "returnsCount": 0,
+    "glassesCount": 400,
+    "waterCoolerCount": 2,
+    "coolerRepairCount": 1,
     "totalAmount": 18000.0
   },
   {
@@ -333,6 +456,9 @@
     "clientsCount": 16,
     "bottlesCount": 54,
     "returnsCount": 5,
+    "glassesCount": 300,
+    "waterCoolerCount": 1,
+    "coolerRepairCount": 0,
     "totalAmount": 16200.0
   },
   {
@@ -341,6 +467,9 @@
     "clientsCount": 13,
     "bottlesCount": 43,
     "returnsCount": 4,
+    "glassesCount": 200,
+    "waterCoolerCount": 0,
+    "coolerRepairCount": 3,
     "totalAmount": 12900.0
   },
   {
@@ -349,6 +478,9 @@
     "clientsCount": 19,
     "bottlesCount": 85,
     "returnsCount": 2,
+    "glassesCount": 100,
+    "waterCoolerCount": 3,
+    "coolerRepairCount": 2,
     "totalAmount": 25500.0
   },
   {
@@ -357,6 +489,9 @@
     "clientsCount": 11,
     "bottlesCount": 35,
     "returnsCount": 0,
+    "glassesCount": 900,
+    "waterCoolerCount": 2,
+    "coolerRepairCount": 1,
     "totalAmount": 10500.0
   },
   {
@@ -365,6 +500,9 @@
     "clientsCount": 15,
     "bottlesCount": 72,
     "returnsCount": 3,
+    "glassesCount": 800,
+    "waterCoolerCount": 1,
+    "coolerRepairCount": 0,
     "totalAmount": 21600.0
   },
   {
@@ -373,6 +511,9 @@
     "clientsCount": 18,
     "bottlesCount": 48,
     "returnsCount": 1,
+    "glassesCount": 700,
+    "waterCoolerCount": 0,
+    "coolerRepairCount": 3,
     "totalAmount": 14400.0
   },
   {
@@ -381,6 +522,9 @@
     "clientsCount": 12,
     "bottlesCount": 90,
     "returnsCount": 4,
+    "glassesCount": 600,
+    "waterCoolerCount": 3,
+    "coolerRepairCount": 2,
     "totalAmount": 27000.0
   },
   {
@@ -389,6 +533,9 @@
     "clientsCount": 17,
     "bottlesCount": 33,
     "returnsCount": 2,
+    "glassesCount": 500,
+    "waterCoolerCount": 2,
+    "coolerRepairCount": 1,
     "totalAmount": 9900.0
   },
   {
@@ -397,6 +544,9 @@
     "clientsCount": 14,
     "bottlesCount": 62,
     "returnsCount": 0,
+    "glassesCount": 400,
+    "waterCoolerCount": 1,
+    "coolerRepairCount": 0,
     "totalAmount": 18600.0
   },
   {
@@ -405,6 +555,9 @@
     "clientsCount": 16,
     "bottlesCount": 51,
     "returnsCount": 5,
+    "glassesCount": 300,
+    "waterCoolerCount": 0,
+    "coolerRepairCount": 3,
     "totalAmount": 15300.0
   },
   {
@@ -413,6 +566,9 @@
     "clientsCount": 13,
     "bottlesCount": 49,
     "returnsCount": 4,
+    "glassesCount": 200,
+    "waterCoolerCount": 3,
+    "coolerRepairCount": 2,
     "totalAmount": 14700.0
   },
   {
@@ -421,6 +577,9 @@
     "clientsCount": 19,
     "bottlesCount": 87,
     "returnsCount": 2,
+    "glassesCount": 100,
+    "waterCoolerCount": 2,
+    "coolerRepairCount": 1,
     "totalAmount": 26100.0
   },
   {
@@ -429,6 +588,9 @@
     "clientsCount": 11,
     "bottlesCount": 36,
     "returnsCount": 0,
+    "glassesCount": 900,
+    "waterCoolerCount": 1,
+    "coolerRepairCount": 0,
     "totalAmount": 10800.0
   },
   {
@@ -437,6 +599,9 @@
     "clientsCount": 15,
     "bottlesCount": 74,
     "returnsCount": 3,
+    "glassesCount": 800,
+    "waterCoolerCount": 0,
+    "coolerRepairCount": 3,
     "totalAmount": 22200.0
   },
   {
@@ -445,6 +610,9 @@
     "clientsCount": 18,
     "bottlesCount": 42,
     "returnsCount": 1,
+    "glassesCount": 700,
+    "waterCoolerCount": 3,
+    "coolerRepairCount": 2,
     "totalAmount": 12600.0
   },
   {
@@ -453,6 +621,9 @@
     "clientsCount": 12,
     "bottlesCount": 90,
     "returnsCount": 4,
+    "glassesCount": 600,
+    "waterCoolerCount": 2,
+    "coolerRepairCount": 1,
     "totalAmount": 27000.0
   },
   {
@@ -461,6 +632,9 @@
     "clientsCount": 17,
     "bottlesCount": 30,
     "returnsCount": 2,
+    "glassesCount": 500,
+    "waterCoolerCount": 1,
+    "coolerRepairCount": 0,
     "totalAmount": 9000.0
   },
   {
@@ -469,6 +643,9 @@
     "clientsCount": 14,
     "bottlesCount": 63,
     "returnsCount": 0,
+    "glassesCount": 400,
+    "waterCoolerCount": 0,
+    "coolerRepairCount": 3,
     "totalAmount": 18900.0
   },
   {
@@ -477,6 +654,9 @@
     "clientsCount": 16,
     "bottlesCount": 50,
     "returnsCount": 5,
+    "glassesCount": 300,
+    "waterCoolerCount": 3,
+    "coolerRepairCount": 2,
     "totalAmount": 15000.0
   },
   {
@@ -485,6 +665,9 @@
     "clientsCount": 13,
     "bottlesCount": 41,
     "returnsCount": 4,
+    "glassesCount": 200,
+    "waterCoolerCount": 2,
+    "coolerRepairCount": 1,
     "totalAmount": 12300.0
   },
   {
@@ -493,6 +676,9 @@
     "clientsCount": 19,
     "bottlesCount": 89,
     "returnsCount": 2,
+    "glassesCount": 100,
+    "waterCoolerCount": 1,
+    "coolerRepairCount": 0,
     "totalAmount": 26700.0
   },
   {
@@ -501,6 +687,9 @@
     "clientsCount": 11,
     "bottlesCount": 37,
     "returnsCount": 0,
+    "glassesCount": 900,
+    "waterCoolerCount": 0,
+    "coolerRepairCount": 3,
     "totalAmount": 11100.0
   },
   {
@@ -509,6 +698,9 @@
     "clientsCount": 15,
     "bottlesCount": 76,
     "returnsCount": 3,
+    "glassesCount": 800,
+    "waterCoolerCount": 3,
+    "coolerRepairCount": 2,
     "totalAmount": 22800.0
   },
   {
@@ -517,6 +709,9 @@
     "clientsCount": 18,
     "bottlesCount": 46,
     "returnsCount": 1,
+    "glassesCount": 700,
+    "waterCoolerCount": 2,
+    "coolerRepairCount": 1,
     "totalAmount": 13800.0
   },
   {
@@ -525,6 +720,9 @@
     "clientsCount": 12,
     "bottlesCount": 90,
     "returnsCount": 4,
+    "glassesCount": 600,
+    "waterCoolerCount": 1,
+    "coolerRepairCount": 0,
     "totalAmount": 27000.0
   },
   {
@@ -533,6 +731,9 @@
     "clientsCount": 17,
     "bottlesCount": 32,
     "returnsCount": 2,
+    "glassesCount": 500,
+    "waterCoolerCount": 0,
+    "coolerRepairCount": 3,
     "totalAmount": 9600.0
   },
   {
@@ -541,6 +742,9 @@
     "clientsCount": 14,
     "bottlesCount": 60,
     "returnsCount": 0,
+    "glassesCount": 400,
+    "waterCoolerCount": 3,
+    "coolerRepairCount": 2,
     "totalAmount": 18000.0
   },
   {
@@ -549,6 +753,9 @@
     "clientsCount": 16,
     "bottlesCount": 54,
     "returnsCount": 5,
+    "glassesCount": 300,
+    "waterCoolerCount": 2,
+    "coolerRepairCount": 1,
     "totalAmount": 16200.0
   },
   {
@@ -557,6 +764,9 @@
     "clientsCount": 13,
     "bottlesCount": 43,
     "returnsCount": 4,
+    "glassesCount": 200,
+    "waterCoolerCount": 1,
+    "coolerRepairCount": 0,
     "totalAmount": 12900.0
   },
   {
@@ -565,6 +775,9 @@
     "clientsCount": 19,
     "bottlesCount": 85,
     "returnsCount": 2,
+    "glassesCount": 100,
+    "waterCoolerCount": 0,
+    "coolerRepairCount": 3,
     "totalAmount": 25500.0
   },
   {
@@ -573,6 +786,9 @@
     "clientsCount": 11,
     "bottlesCount": 35,
     "returnsCount": 0,
+    "glassesCount": 900,
+    "waterCoolerCount": 3,
+    "coolerRepairCount": 2,
     "totalAmount": 10500.0
   },
   {
@@ -581,6 +797,9 @@
     "clientsCount": 15,
     "bottlesCount": 72,
     "returnsCount": 3,
+    "glassesCount": 800,
+    "waterCoolerCount": 2,
+    "coolerRepairCount": 1,
     "totalAmount": 21600.0
   },
   {
@@ -589,6 +808,9 @@
     "clientsCount": 18,
     "bottlesCount": 48,
     "returnsCount": 1,
+    "glassesCount": 700,
+    "waterCoolerCount": 1,
+    "coolerRepairCount": 0,
     "totalAmount": 14400.0
   },
   {
@@ -597,6 +819,9 @@
     "clientsCount": 12,
     "bottlesCount": 90,
     "returnsCount": 4,
+    "glassesCount": 600,
+    "waterCoolerCount": 0,
+    "coolerRepairCount": 3,
     "totalAmount": 27000.0
   },
   {
@@ -605,6 +830,9 @@
     "clientsCount": 17,
     "bottlesCount": 33,
     "returnsCount": 2,
+    "glassesCount": 500,
+    "waterCoolerCount": 3,
+    "coolerRepairCount": 2,
     "totalAmount": 9900.0
   },
   {
@@ -613,6 +841,9 @@
     "clientsCount": 14,
     "bottlesCount": 62,
     "returnsCount": 0,
+    "glassesCount": 400,
+    "waterCoolerCount": 2,
+    "coolerRepairCount": 1,
     "totalAmount": 18600.0
   },
   {
@@ -621,6 +852,9 @@
     "clientsCount": 16,
     "bottlesCount": 51,
     "returnsCount": 5,
+    "glassesCount": 300,
+    "waterCoolerCount": 1,
+    "coolerRepairCount": 0,
     "totalAmount": 15300.0
   },
   {
@@ -629,6 +863,9 @@
     "clientsCount": 13,
     "bottlesCount": 49,
     "returnsCount": 4,
+    "glassesCount": 200,
+    "waterCoolerCount": 0,
+    "coolerRepairCount": 3,
     "totalAmount": 14700.0
   },
   {
@@ -637,6 +874,9 @@
     "clientsCount": 19,
     "bottlesCount": 87,
     "returnsCount": 2,
+    "glassesCount": 100,
+    "waterCoolerCount": 3,
+    "coolerRepairCount": 2,
     "totalAmount": 26100.0
   },
   {
@@ -645,6 +885,9 @@
     "clientsCount": 11,
     "bottlesCount": 36,
     "returnsCount": 0,
+    "glassesCount": 900,
+    "waterCoolerCount": 2,
+    "coolerRepairCount": 1,
     "totalAmount": 10800.0
   },
   {
@@ -653,6 +896,9 @@
     "clientsCount": 15,
     "bottlesCount": 74,
     "returnsCount": 3,
+    "glassesCount": 800,
+    "waterCoolerCount": 1,
+    "coolerRepairCount": 0,
     "totalAmount": 22200.0
   },
   {
@@ -661,6 +907,9 @@
     "clientsCount": 18,
     "bottlesCount": 42,
     "returnsCount": 1,
+    "glassesCount": 700,
+    "waterCoolerCount": 0,
+    "coolerRepairCount": 3,
     "totalAmount": 12600.0
   },
   {
@@ -669,6 +918,9 @@
     "clientsCount": 12,
     "bottlesCount": 90,
     "returnsCount": 4,
+    "glassesCount": 600,
+    "waterCoolerCount": 3,
+    "coolerRepairCount": 2,
     "totalAmount": 27000.0
   },
   {
@@ -677,6 +929,9 @@
     "clientsCount": 17,
     "bottlesCount": 30,
     "returnsCount": 2,
+    "glassesCount": 500,
+    "waterCoolerCount": 2,
+    "coolerRepairCount": 1,
     "totalAmount": 9000.0
   },
   {
@@ -685,6 +940,9 @@
     "clientsCount": 14,
     "bottlesCount": 63,
     "returnsCount": 0,
+    "glassesCount": 400,
+    "waterCoolerCount": 1,
+    "coolerRepairCount": 0,
     "totalAmount": 18900.0
   },
   {
@@ -693,6 +951,9 @@
     "clientsCount": 16,
     "bottlesCount": 50,
     "returnsCount": 5,
+    "glassesCount": 300,
+    "waterCoolerCount": 0,
+    "coolerRepairCount": 3,
     "totalAmount": 15000.0
   },
   {
@@ -701,6 +962,9 @@
     "clientsCount": 13,
     "bottlesCount": 41,
     "returnsCount": 4,
+    "glassesCount": 200,
+    "waterCoolerCount": 3,
+    "coolerRepairCount": 2,
     "totalAmount": 12300.0
   },
   {
@@ -709,6 +973,9 @@
     "clientsCount": 19,
     "bottlesCount": 89,
     "returnsCount": 2,
+    "glassesCount": 100,
+    "waterCoolerCount": 2,
+    "coolerRepairCount": 1,
     "totalAmount": 26700.0
   },
   {
@@ -717,6 +984,9 @@
     "clientsCount": 11,
     "bottlesCount": 37,
     "returnsCount": 0,
+    "glassesCount": 900,
+    "waterCoolerCount": 1,
+    "coolerRepairCount": 0,
     "totalAmount": 11100.0
   },
   {
@@ -725,6 +995,9 @@
     "clientsCount": 15,
     "bottlesCount": 76,
     "returnsCount": 3,
+    "glassesCount": 800,
+    "waterCoolerCount": 0,
+    "coolerRepairCount": 3,
     "totalAmount": 22800.0
   },
   {
@@ -733,6 +1006,9 @@
     "clientsCount": 18,
     "bottlesCount": 46,
     "returnsCount": 1,
+    "glassesCount": 700,
+    "waterCoolerCount": 3,
+    "coolerRepairCount": 2,
     "totalAmount": 13800.0
   },
   {
@@ -741,6 +1017,9 @@
     "clientsCount": 12,
     "bottlesCount": 90,
     "returnsCount": 4,
+    "glassesCount": 600,
+    "waterCoolerCount": 2,
+    "coolerRepairCount": 1,
     "totalAmount": 27000.0
   },
   {
@@ -749,6 +1028,9 @@
     "clientsCount": 17,
     "bottlesCount": 32,
     "returnsCount": 2,
+    "glassesCount": 500,
+    "waterCoolerCount": 1,
+    "coolerRepairCount": 0,
     "totalAmount": 9600.0
   },
   {
@@ -757,6 +1039,9 @@
     "clientsCount": 14,
     "bottlesCount": 60,
     "returnsCount": 0,
+    "glassesCount": 400,
+    "waterCoolerCount": 0,
+    "coolerRepairCount": 3,
     "totalAmount": 18000.0
   },
   {
@@ -765,6 +1050,9 @@
     "clientsCount": 16,
     "bottlesCount": 54,
     "returnsCount": 5,
+    "glassesCount": 300,
+    "waterCoolerCount": 3,
+    "coolerRepairCount": 2,
     "totalAmount": 16200.0
   },
   {
@@ -773,6 +1061,9 @@
     "clientsCount": 13,
     "bottlesCount": 43,
     "returnsCount": 4,
+    "glassesCount": 200,
+    "waterCoolerCount": 2,
+    "coolerRepairCount": 1,
     "totalAmount": 12900.0
   },
   {
@@ -781,6 +1072,9 @@
     "clientsCount": 19,
     "bottlesCount": 85,
     "returnsCount": 2,
+    "glassesCount": 100,
+    "waterCoolerCount": 1,
+    "coolerRepairCount": 0,
     "totalAmount": 25500.0
   },
   {
@@ -789,6 +1083,9 @@
     "clientsCount": 11,
     "bottlesCount": 35,
     "returnsCount": 0,
+    "glassesCount": 900,
+    "waterCoolerCount": 0,
+    "coolerRepairCount": 3,
     "totalAmount": 10500.0
   },
   {
@@ -797,6 +1094,9 @@
     "clientsCount": 15,
     "bottlesCount": 72,
     "returnsCount": 3,
+    "glassesCount": 800,
+    "waterCoolerCount": 3,
+    "coolerRepairCount": 2,
     "totalAmount": 21600.0
   }
 ]
