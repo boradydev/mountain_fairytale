@@ -2,14 +2,17 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/infrastructure/data_sources/clients/demo_data_source.dart';
 import 'package:mountain_fairytale/infrastructure/data_sources/delivery_day/demo_data_source.dart';
+import 'package:mountain_fairytale/infrastructure/repos/clients/repo.dart';
 import 'package:mountain_fairytale/infrastructure/repos/delivery_day/repo.dart';
 import 'package:mountain_fairytale/infrastructure/window_settings_service.dart';
 import 'package:mountain_fairytale/l10n/app_localizations.dart';
+import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/delivery_days_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/locale_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/theme_provider.dart';
-import 'package:mountain_fairytale/presentation/screens/delivery_days_screen.dart';
+import 'package:mountain_fairytale/presentation/screens/delivery_days_screen/dashboard.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
@@ -55,6 +58,14 @@ Future<void> main() async {
               DemoDeliveryDataSource(), // Сюда передаем ваш DataSource (если ему нужен http-клиент/dio, передайте его внутрь)
             ),
           ),
+        ),
+        ChangeNotifierProvider(
+          create: (context) =>
+              ClientsProvider(
+                ClientRepositoryImpl(
+                  DemoClientDataSource(),
+                ),
+              ),
         ),
       ],
       child: const MyApp(),
