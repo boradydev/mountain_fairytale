@@ -31,7 +31,7 @@ class MetricRow extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           SizedBox(
-            width: 70,
+            width: 100,
             child: Text(
               label,
               style: TextStyle(

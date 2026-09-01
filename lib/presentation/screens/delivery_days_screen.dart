@@ -109,9 +109,11 @@ class _DeliveryDaysListView extends StatelessWidget {
           (DeliveryDaysProvider p) => p.isLoadingMore,
     );
 
+    final l10n = AppLocalizations.of(context)!;
+
     if (days.isEmpty) {
-      return const Center(
-        child: Text('Список доставок пуст'),
+      return Center(
+        child: Text(l10n.deliveryDaysEmpty),
       );
     }
 
@@ -168,7 +170,7 @@ class _DeliveryDayItem extends StatelessWidget {
           value: '${day.clientsCount} ${l10n.deliveryCardClientsMetrics}',
         ),
         MetricRow(
-          icon: Icons.local_drink_outlined,
+          icon: Icons.water_drop_outlined,
           label: l10n.deliveryCardBottles,
           value: '${day.bottlesCount} ${l10n.deliveryCardBottlesMetrics}',
         ),
@@ -180,9 +182,24 @@ class _DeliveryDayItem extends StatelessWidget {
           valueColor: day.returnsCount > 0 ? colorScheme.error : null,
         ),
         MetricRow(
+          icon: Icons.wine_bar_outlined,
+          label: l10n.deliveryCardGlasses,
+          value: '${day.glassesCount} ${l10n.deliveryCardGlassesMetrics}',
+        ),
+        MetricRow(
+          icon: Icons.kitchen_outlined,
+          label: l10n.deliveryCardWaterCooler,
+          value: '${day.waterCoolerCount} ${l10n.deliveryCardWaterCoolerMetrics}',
+        ),
+        MetricRow(
+          icon: Icons.build_circle_outlined,
+          label: l10n.deliveryCardCoolerRepair,
+          value: '${day.coolerRepairCount} ${l10n.deliveryCardCoolerRepairMetrics}',
+        ),
+        MetricRow(
           icon: Icons.payments_outlined,
           label: l10n.deliveryCardTotal,
-          value: '${day.totalAmount.toStringAsFixed(2)} ',
+          value: '${day.totalAmount.toStringAsFixed(2)} ${l10n.deliveryCardTotalMetrics}',
           valueColor: colorScheme.primary,
         ),
       ],

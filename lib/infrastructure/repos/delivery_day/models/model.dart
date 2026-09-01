@@ -9,6 +9,9 @@ class DeliveryDay {
   final int clientsCount;
   final int bottlesCount;
   final int returnsCount;
+  final int glassesCount;
+  final int waterCoolerCount;
+  final int coolerRepairCount;
   final double totalAmount;
 
   const DeliveryDay({
@@ -17,6 +20,9 @@ class DeliveryDay {
     required this.clientsCount,
     required this.bottlesCount,
     required this.returnsCount,
+    required this.glassesCount,
+    required this.waterCoolerCount,
+    required this.coolerRepairCount,
     required this.totalAmount,
   });
 
