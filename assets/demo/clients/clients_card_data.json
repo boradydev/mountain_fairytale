@@ -1,7 +1,7 @@
 [
   {
     "id": 1,
-    "name": "Иван Иванов",
+    "name": "ООО «Альфа-Квант»",
     "phone": "+79001234567",
     "lastDeliveryDate": "2026-08-15",
     "lastDeliveryQuantity": 23,
@@ -9,7 +9,7 @@
   },
   {
     "id": 2,
-    "name": "Мария Смирнов",
+    "name": "ООО «Бизнес-Решения»",
     "phone": "+79007654321",
     "lastDeliveryDate": "2026-08-22",
     "lastDeliveryQuantity": 17,
@@ -17,7 +17,7 @@
   },
   {
     "id": 3,
-    "name": "Алексей Кузнецов",
+    "name": "ООО «Вектор-Плюс»",
     "phone": "+79001112233",
     "lastDeliveryDate": "2026-08-01",
     "lastDeliveryQuantity": null,
@@ -25,7 +25,7 @@
   },
   {
     "id": 4,
-    "name": "Анна Попов",
+    "name": "ООО «Горизонт-Строй»",
     "phone": "+79004445566",
     "lastDeliveryDate": "2026-08-31",
     "lastDeliveryQuantity": 30,
@@ -33,7 +33,7 @@
   },
   {
     "id": 5,
-    "name": "Петр Васильев",
+    "name": "ООО «Диджитал-Инновации»",
     "phone": "+79006667788",
     "lastDeliveryDate": null,
     "lastDeliveryQuantity": null,
@@ -41,7 +41,7 @@
   },
   {
     "id": 6,
-    "name": "Светлана Петров",
+    "name": "ООО «Евразия-Трейд»",
     "phone": "+79008889900",
     "lastDeliveryDate": "2026-08-10",
     "lastDeliveryQuantity": 12,
@@ -49,7 +49,7 @@
   },
   {
     "id": 7,
-    "name": "Дмитрий Соколов",
+    "name": "ООО «Зенит-Авто»",
     "phone": "+79002223344",
     "lastDeliveryDate": "2026-08-25",
     "lastDeliveryQuantity": 28,
@@ -57,7 +57,7 @@
   },
   {
     "id": 8,
-    "name": "Елена Михайлов",
+    "name": "ООО «Интеграл-Системс»",
     "phone": "+79005556677",
     "lastDeliveryDate": "2026-08-05",
     "lastDeliveryQuantity": null,
@@ -65,7 +65,7 @@
   },
   {
     "id": 9,
-    "name": "Олег Новиков",
+    "name": "ООО «Капитал-Маркет»",
     "phone": "+79003334455",
     "lastDeliveryDate": "2026-08-18",
     "lastDeliveryQuantity": 19,
@@ -73,7 +73,7 @@
   },
   {
     "id": 10,
-    "name": "Наталья Федоров",
+    "name": "ООО «Логистик-Экспресс»",
     "phone": "+79009990011",
     "lastDeliveryDate": null,
     "lastDeliveryQuantity": null,
@@ -81,7 +81,7 @@
   },
   {
     "id": 11,
-    "name": "Иван Иванов",
+    "name": "ООО «Медиа-Групп»",
     "phone": "+79001234567",
     "lastDeliveryDate": "2026-08-15",
     "lastDeliveryQuantity": 23,
@@ -89,7 +89,7 @@
   },
   {
     "id": 12,
-    "name": "Мария Смирнов",
+    "name": "ООО «Новация-Пром»",
     "phone": "+79007654321",
     "lastDeliveryDate": "2026-08-22",
     "lastDeliveryQuantity": 17,
@@ -97,7 +97,7 @@
   },
   {
     "id": 13,
-    "name": "Алексей Кузнецов",
+    "name": "ООО «Орион-Телеком»",
     "phone": "+79001112233",
     "lastDeliveryDate": "2026-08-01",
     "lastDeliveryQuantity": null,
@@ -105,7 +105,7 @@
   },
   {
     "id": 14,
-    "name": "Анна Попов",
+    "name": "ООО «Перспектива-Девелопмент»",
     "phone": "+79004445566",
     "lastDeliveryDate": "2026-08-31",
     "lastDeliveryQuantity": 30,
@@ -113,7 +113,7 @@
   },
   {
     "id": 15,
-    "name": "Петр Васильев",
+    "name": "ООО «Регион-Снаб»",
     "phone": "+79006667788",
     "lastDeliveryDate": null,
     "lastDeliveryQuantity": null,
@@ -121,7 +121,7 @@
   },
   {
     "id": 16,
-    "name": "Светлана Петров",
+    "name": "ООО «Сириус-Консалт»",
     "phone": "+79008889900",
     "lastDeliveryDate": "2026-08-10",
     "lastDeliveryQuantity": 12,
@@ -129,7 +129,7 @@
   },
   {
     "id": 17,
-    "name": "Дмитрий Соколов",
+    "name": "ООО «Техно-Билд»",
     "phone": "+79002223344",
     "lastDeliveryDate": "2026-08-25",
     "lastDeliveryQuantity": 28,
@@ -137,7 +137,7 @@
   },
   {
     "id": 18,
-    "name": "Елена Михайлов",
+    "name": "ООО «Универсал-Сервис»",
     "phone": "+79005556677",
     "lastDeliveryDate": "2026-08-05",
     "lastDeliveryQuantity": null,
@@ -145,7 +145,7 @@
   },
   {
     "id": 19,
-    "name": "Олег Новиков",
+    "name": "ООО «Флагман-Проект»",
     "phone": "+79003334455",
     "lastDeliveryDate": "2026-08-18",
     "lastDeliveryQuantity": 19,
@@ -153,7 +153,7 @@
   },
   {
     "id": 20,
-    "name": "Наталья Федоров",
+    "name": "ООО «Харвест-Агро»",
     "phone": "+79009990011",
     "lastDeliveryDate": null,
     "lastDeliveryQuantity": null,
@@ -161,7 +161,7 @@
   },
   {
     "id": 21,
-    "name": "Иван Иванов",
+    "name": "ИП Иванов А.В.",
     "phone": "+79001234567",
     "lastDeliveryDate": "2026-08-15",
     "lastDeliveryQuantity": 23,
@@ -169,7 +169,7 @@
   },
   {
     "id": 22,
-    "name": "Мария Смирнов",
+    "name": "ИП Петрова Е.Н.",
     "phone": "+79007654321",
     "lastDeliveryDate": "2026-08-22",
     "lastDeliveryQuantity": 17,
@@ -177,7 +177,7 @@
   },
   {
     "id": 23,
-    "name": "Алексей Кузнецов",
+    "name": "ИП Смирнов К.С.",
     "phone": "+79001112233",
     "lastDeliveryDate": "2026-08-01",
     "lastDeliveryQuantity": null,
@@ -185,7 +185,7 @@
   },
   {
     "id": 24,
-    "name": "Анна Попов",
+    "name": "ИП Кузнецова О.И.",
     "phone": "+79004445566",
     "lastDeliveryDate": "2026-08-31",
     "lastDeliveryQuantity": 30,
@@ -193,7 +193,7 @@
   },
   {
     "id": 25,
-    "name": "Петр Васильев",
+    "name": "ИП Попов Д.А.",
     "phone": "+79006667788",
     "lastDeliveryDate": null,
     "lastDeliveryQuantity": null,
@@ -201,7 +201,7 @@
   },
   {
     "id": 26,
-    "name": "Светлана Петров",
+    "name": "ИП Васильева М.В.",
     "phone": "+79008889900",
     "lastDeliveryDate": "2026-08-10",
     "lastDeliveryQuantity": 12,
@@ -209,7 +209,7 @@
   },
   {
     "id": 27,
-    "name": "Дмитрий Соколов",
+    "name": "ИП Соколов И.П.",
     "phone": "+79002223344",
     "lastDeliveryDate": "2026-08-25",
     "lastDeliveryQuantity": 28,
@@ -217,7 +217,7 @@
   },
   {
     "id": 28,
-    "name": "Елена Михайлов",
+    "name": "ИП Михайлов С.Ф.",
     "phone": "+79005556677",
     "lastDeliveryDate": "2026-08-05",
     "lastDeliveryQuantity": null,
@@ -225,7 +225,7 @@
   },
   {
     "id": 29,
-    "name": "Олег Новиков",
+    "name": "ИП Новикова Т.А.",
     "phone": "+79003334455",
     "lastDeliveryDate": "2026-08-18",
     "lastDeliveryQuantity": 19,
@@ -233,7 +233,7 @@
   },
   {
     "id": 30,
-    "name": "Наталья Федоров",
+    "name": "ИП Федоров Р.В.",
     "phone": "+79009990011",
     "lastDeliveryDate": null,
     "lastDeliveryQuantity": null,
@@ -241,7 +241,7 @@
   },
   {
     "id": 31,
-    "name": "Иван Иванов",
+    "name": "АО «ГлавСпецМонтаж»",
     "phone": "+79001234567",
     "lastDeliveryDate": "2026-08-15",
     "lastDeliveryQuantity": 23,
@@ -249,7 +249,7 @@
   },
   {
     "id": 32,
-    "name": "Мария Смирнов",
+    "name": "ПАО «Национальный Капитал»",
     "phone": "+79007654321",
     "lastDeliveryDate": "2026-08-22",
     "lastDeliveryQuantity": 17,
@@ -257,7 +257,7 @@
   },
   {
     "id": 33,
-    "name": "Алексей Кузнецов",
+    "name": "АО «Индустрия-Синтез»",
     "phone": "+79001112233",
     "lastDeliveryDate": "2026-08-01",
     "lastDeliveryQuantity": null,
@@ -265,7 +265,7 @@
   },
   {
     "id": 34,
-    "name": "Анна Попов",
+    "name": "ПАО «Энерго-Импульс»",
     "phone": "+79004445566",
     "lastDeliveryDate": "2026-08-31",
     "lastDeliveryQuantity": 30,
@@ -273,7 +273,7 @@
   },
   {
     "id": 35,
-    "name": "Петр Васильев",
+    "name": "АО «Генезис-Фарм»",
     "phone": "+79006667788",
     "lastDeliveryDate": null,
     "lastDeliveryQuantity": null,
@@ -281,7 +281,7 @@
   },
   {
     "id": 36,
-    "name": "Светлана Петров",
+    "name": "ПАО «Меридиан-Телеком»",
     "phone": "+79008889900",
     "lastDeliveryDate": "2026-08-10",
     "lastDeliveryQuantity": 12,
@@ -289,7 +289,7 @@
   },
   {
     "id": 37,
-    "name": "Дмитрий Соколов",
+    "name": "АО «Транс-Азимут»",
     "phone": "+79002223344",
     "lastDeliveryDate": "2026-08-25",
     "lastDeliveryQuantity": 28,
@@ -297,7 +297,7 @@
   },
   {
     "id": 38,
-    "name": "Елена Михайлов",
+    "name": "ПАО «Атлант-Финанс»",
     "phone": "+79005556677",
     "lastDeliveryDate": "2026-08-05",
     "lastDeliveryQuantity": null,
@@ -305,7 +305,7 @@
   },
   {
     "id": 39,
-    "name": "Олег Новиков",
+    "name": "АО «Компас-Навигатор»",
     "phone": "+79003334455",
     "lastDeliveryDate": "2026-08-18",
     "lastDeliveryQuantity": 19,
@@ -313,7 +313,7 @@
   },
   {
     "id": 40,
-    "name": "Наталья Федоров",
+    "name": "ПАО «Прогресс-Технологии»",
     "phone": "+79009990011",
     "lastDeliveryDate": null,
     "lastDeliveryQuantity": null,
@@ -321,7 +321,7 @@
   },
   {
     "id": 41,
-    "name": "Иван Иванов",
+    "name": "АО «Металл-Конструкт»",
     "phone": "+79001234567",
     "lastDeliveryDate": "2026-08-15",
     "lastDeliveryQuantity": 23,
@@ -329,7 +329,7 @@
   },
   {
     "id": 42,
-    "name": "Мария Смирнов",
+    "name": "ПАО «Олимп-Резорт»",
     "phone": "+79007654321",
     "lastDeliveryDate": "2026-08-22",
     "lastDeliveryQuantity": 17,
@@ -337,7 +337,7 @@
   },
   {
     "id": 43,
-    "name": "Алексей Кузнецов",
+    "name": "АО «Сфера-Глобус»",
     "phone": "+79001112233",
     "lastDeliveryDate": "2026-08-01",
     "lastDeliveryQuantity": null,
@@ -345,7 +345,7 @@
   },
   {
     "id": 44,
-    "name": "Анна Попов",
+    "name": "ПАО «Эволюция-Системс»",
     "phone": "+79004445566",
     "lastDeliveryDate": "2026-08-31",
     "lastDeliveryQuantity": 30,
@@ -353,7 +353,7 @@
   },
   {
     "id": 45,
-    "name": "Петр Васильев",
+    "name": "АО «Феникс-Авиа»",
     "phone": "+79006667788",
     "lastDeliveryDate": null,
     "lastDeliveryQuantity": null,
@@ -361,7 +361,7 @@
   },
   {
     "id": 46,
-    "name": "Светлана Петров",
+    "name": "ПАО «Союз-Инвест»",
     "phone": "+79008889900",
     "lastDeliveryDate": "2026-08-10",
     "lastDeliveryQuantity": 12,
@@ -369,7 +369,7 @@
   },
   {
     "id": 47,
-    "name": "Дмитрий Соколов",
+    "name": "АО «Эталон-Качество»",
     "phone": "+79002223344",
     "lastDeliveryDate": "2026-08-25",
     "lastDeliveryQuantity": 28,
@@ -377,7 +377,7 @@
   },
   {
     "id": 48,
-    "name": "Елена Михайлов",
+    "name": "ПАО «Спектр-Связь»",
     "phone": "+79005556677",
     "lastDeliveryDate": "2026-08-05",
     "lastDeliveryQuantity": null,
@@ -385,418 +385,10 @@
   },
   {
     "id": 49,
-    "name": "Олег Новиков",
+    "name": "АО «Тандем-Логистик»",
     "phone": "+79003334455",
     "lastDeliveryDate": "2026-08-18",
     "lastDeliveryQuantity": 19,
     "cooldownUntil": "2026-08-11"
-  },
-  {
-    "id": 50,
-    "name": "Наталья Федоров",
-    "phone": "+79009990011",
-    "lastDeliveryDate": null,
-    "lastDeliveryQuantity": null,
-    "cooldownUntil": null
-  },
-  {
-    "id": 51,
-    "name": "Иван Иванов",
-    "phone": "+79001234567",
-    "lastDeliveryDate": "2026-08-15",
-    "lastDeliveryQuantity": 23,
-    "cooldownUntil": "2026-08-08"
-  },
-  {
-    "id": 52,
-    "name": "Мария Смирнов",
-    "phone": "+79007654321",
-    "lastDeliveryDate": "2026-08-22",
-    "lastDeliveryQuantity": 17,
-    "cooldownUntil": "2026-08-15"
-  },
-  {
-    "id": 53,
-    "name": "Алексей Кузнецов",
-    "phone": "+79001112233",
-    "lastDeliveryDate": "2026-08-01",
-    "lastDeliveryQuantity": null,
-    "cooldownUntil": null
-  },
-  {
-    "id": 54,
-    "name": "Анна Попов",
-    "phone": "+79004445566",
-    "lastDeliveryDate": "2026-08-31",
-    "lastDeliveryQuantity": 30,
-    "cooldownUntil": "2026-08-24"
-  },
-  {
-    "id": 55,
-    "name": "Петр Васильев",
-    "phone": "+79006667788",
-    "lastDeliveryDate": null,
-    "lastDeliveryQuantity": null,
-    "cooldownUntil": null
-  },
-  {
-    "id": 56,
-    "name": "Светлана Петров",
-    "phone": "+79008889900",
-    "lastDeliveryDate": "2026-08-10",
-    "lastDeliveryQuantity": 12,
-    "cooldownUntil": "2026-08-03"
-  },
-  {
-    "id": 57,
-    "name": "Дмитрий Соколов",
-    "phone": "+79002223344",
-    "lastDeliveryDate": "2026-08-25",
-    "lastDeliveryQuantity": 28,
-    "cooldownUntil": "2026-08-18"
-  },
-  {
-    "id": 58,
-    "name": "Елена Михайлов",
-    "phone": "+79005556677",
-    "lastDeliveryDate": "2026-08-05",
-    "lastDeliveryQuantity": null,
-    "cooldownUntil": null
-  },
-  {
-    "id": 59,
-    "name": "Олег Новиков",
-    "phone": "+79003334455",
-    "lastDeliveryDate": "2026-08-18",
-    "lastDeliveryQuantity": 19,
-    "cooldownUntil": "2026-08-11"
-  },
-  {
-    "id": 60,
-    "name": "Наталья Федоров",
-    "phone": "+79009990011",
-    "lastDeliveryDate": null,
-    "lastDeliveryQuantity": null,
-    "cooldownUntil": null
-  },
-  {
-    "id": 61,
-    "name": "Иван Иванов",
-    "phone": "+79001234567",
-    "lastDeliveryDate": "2026-08-15",
-    "lastDeliveryQuantity": 23,
-    "cooldownUntil": "2026-08-08"
-  },
-  {
-    "id": 62,
-    "name": "Мария Смирнов",
-    "phone": "+79007654321",
-    "lastDeliveryDate": "2026-08-22",
-    "lastDeliveryQuantity": 17,
-    "cooldownUntil": "2026-08-15"
-  },
-  {
-    "id": 63,
-    "name": "Алексей Кузнецов",
-    "phone": "+79001112233",
-    "lastDeliveryDate": "2026-08-01",
-    "lastDeliveryQuantity": null,
-    "cooldownUntil": null
-  },
-  {
-    "id": 64,
-    "name": "Анна Попов",
-    "phone": "+79004445566",
-    "lastDeliveryDate": "2026-08-31",
-    "lastDeliveryQuantity": 30,
-    "cooldownUntil": "2026-08-24"
-  },
-  {
-    "id": 65,
-    "name": "Петр Васильев",
-    "phone": "+79006667788",
-    "lastDeliveryDate": null,
-    "lastDeliveryQuantity": null,
-    "cooldownUntil": null
-  },
-  {
-    "id": 66,
-    "name": "Светлана Петров",
-    "phone": "+79008889900",
-    "lastDeliveryDate": "2026-08-10",
-    "lastDeliveryQuantity": 12,
-    "cooldownUntil": "2026-08-03"
-  },
-  {
-    "id": 67,
-    "name": "Дмитрий Соколов",
-    "phone": "+79002223344",
-    "lastDeliveryDate": "2026-08-25",
-    "lastDeliveryQuantity": 28,
-    "cooldownUntil": "2026-08-18"
-  },
-  {
-    "id": 68,
-    "name": "Елена Михайлов",
-    "phone": "+79005556677",
-    "lastDeliveryDate": "2026-08-05",
-    "lastDeliveryQuantity": null,
-    "cooldownUntil": null
-  },
-  {
-    "id": 69,
-    "name": "Олег Новиков",
-    "phone": "+79003334455",
-    "lastDeliveryDate": "2026-08-18",
-    "lastDeliveryQuantity": 19,
-    "cooldownUntil": "2026-08-11"
-  },
-  {
-    "id": 70,
-    "name": "Наталья Федоров",
-    "phone": "+79009990011",
-    "lastDeliveryDate": null,
-    "lastDeliveryQuantity": null,
-    "cooldownUntil": null
-  },
-  {
-    "id": 71,
-    "name": "Иван Иванов",
-    "phone": "+79001234567",
-    "lastDeliveryDate": "2026-08-15",
-    "lastDeliveryQuantity": 23,
-    "cooldownUntil": "2026-08-08"
-  },
-  {
-    "id": 72,
-    "name": "Мария Смирнов",
-    "phone": "+79007654321",
-    "lastDeliveryDate": "2026-08-22",
-    "lastDeliveryQuantity": 17,
-    "cooldownUntil": "2026-08-15"
-  },
-  {
-    "id": 73,
-    "name": "Алексей Кузнецов",
-    "phone": "+79001112233",
-    "lastDeliveryDate": "2026-08-01",
-    "lastDeliveryQuantity": null,
-    "cooldownUntil": null
-  },
-  {
-    "id": 74,
-    "name": "Анна Попов",
-    "phone": "+79004445566",
-    "lastDeliveryDate": "2026-08-31",
-    "lastDeliveryQuantity": 30,
-    "cooldownUntil": "2026-08-24"
-  },
-  {
-    "id": 75,
-    "name": "Петр Васильев",
-    "phone": "+79006667788",
-    "lastDeliveryDate": null,
-    "lastDeliveryQuantity": null,
-    "cooldownUntil": null
-  },
-  {
-    "id": 76,
-    "name": "Светлана Петров",
-    "phone": "+79008889900",
-    "lastDeliveryDate": "2026-08-10",
-    "lastDeliveryQuantity": 12,
-    "cooldownUntil": "2026-08-03"
-  },
-  {
-    "id": 77,
-    "name": "Дмитрий Соколов",
-    "phone": "+79002223344",
-    "lastDeliveryDate": "2026-08-25",
-    "lastDeliveryQuantity": 28,
-    "cooldownUntil": "2026-08-18"
-  },
-  {
-    "id": 78,
-    "name": "Елена Михайлов",
-    "phone": "+79005556677",
-    "lastDeliveryDate": "2026-08-05",
-    "lastDeliveryQuantity": null,
-    "cooldownUntil": null
-  },
-  {
-    "id": 79,
-    "name": "Олег Новиков",
-    "phone": "+79003334455",
-    "lastDeliveryDate": "2026-08-18",
-    "lastDeliveryQuantity": 19,
-    "cooldownUntil": "2026-08-11"
-  },
-  {
-    "id": 80,
-    "name": "Наталья Федоров",
-    "phone": "+79009990011",
-    "lastDeliveryDate": null,
-    "lastDeliveryQuantity": null,
-    "cooldownUntil": null
-  },
-  {
-    "id": 81,
-    "name": "Иван Иванов",
-    "phone": "+79001234567",
-    "lastDeliveryDate": "2026-08-15",
-    "lastDeliveryQuantity": 23,
-    "cooldownUntil": "2026-08-08"
-  },
-  {
-    "id": 82,
-    "name": "Мария Смирнов",
-    "phone": "+79007654321",
-    "lastDeliveryDate": "2026-08-22",
-    "lastDeliveryQuantity": 17,
-    "cooldownUntil": "2026-08-15"
-  },
-  {
-    "id": 83,
-    "name": "Алексей Кузнецов",
-    "phone": "+79001112233",
-    "lastDeliveryDate": "2026-08-01",
-    "lastDeliveryQuantity": null,
-    "cooldownUntil": null
-  },
-  {
-    "id": 84,
-    "name": "Анна Попов",
-    "phone": "+79004445566",
-    "lastDeliveryDate": "2026-08-31",
-    "lastDeliveryQuantity": 30,
-    "cooldownUntil": "2026-08-24"
-  },
-  {
-    "id": 85,
-    "name": "Петр Васильев",
-    "phone": "+79006667788",
-    "lastDeliveryDate": null,
-    "lastDeliveryQuantity": null,
-    "cooldownUntil": null
-  },
-  {
-    "id": 86,
-    "name": "Светлана Петров",
-    "phone": "+79008889900",
-    "lastDeliveryDate": "2026-08-10",
-    "lastDeliveryQuantity": 12,
-    "cooldownUntil": "2026-08-03"
-  },
-  {
-    "id": 87,
-    "name": "Дмитрий Соколов",
-    "phone": "+79002223344",
-    "lastDeliveryDate": "2026-08-25",
-    "lastDeliveryQuantity": 28,
-    "cooldownUntil": "2026-08-18"
-  },
-  {
-    "id": 88,
-    "name": "Елена Михайлов",
-    "phone": "+79005556677",
-    "lastDeliveryDate": "2026-08-05",
-    "lastDeliveryQuantity": null,
-    "cooldownUntil": null
-  },
-  {
-    "id": 89,
-    "name": "Олег Новиков",
-    "phone": "+79003334455",
-    "lastDeliveryDate": "2026-08-18",
-    "lastDeliveryQuantity": 19,
-    "cooldownUntil": "2026-08-11"
-  },
-  {
-    "id": 90,
-    "name": "Наталья Федоров",
-    "phone": "+79009990011",
-    "lastDeliveryDate": null,
-    "lastDeliveryQuantity": null,
-    "cooldownUntil": null
-  },
-  {
-    "id": 91,
-    "name": "Иван Иванов",
-    "phone": "+79001234567",
-    "lastDeliveryDate": "2026-08-15",
-    "lastDeliveryQuantity": 23,
-    "cooldownUntil": "2026-08-08"
-  },
-  {
-    "id": 92,
-    "name": "Мария Смирнов",
-    "phone": "+79007654321",
-    "lastDeliveryDate": "2026-08-22",
-    "lastDeliveryQuantity": 17,
-    "cooldownUntil": "2026-08-15"
-  },
-  {
-    "id": 93,
-    "name": "Алексей Кузнецов",
-    "phone": "+79001112233",
-    "lastDeliveryDate": "2026-08-01",
-    "lastDeliveryQuantity": null,
-    "cooldownUntil": null
-  },
-  {
-    "id": 94,
-    "name": "Анна Попов",
-    "phone": "+79004445566",
-    "lastDeliveryDate": "2026-08-31",
-    "lastDeliveryQuantity": 30,
-    "cooldownUntil": "2026-08-24"
-  },
-  {
-    "id": 95,
-    "name": "Петр Васильев",
-    "phone": "+79006667788",
-    "lastDeliveryDate": null,
-    "lastDeliveryQuantity": null,
-    "cooldownUntil": null
-  },
-  {
-    "id": 96,
-    "name": "Светлана Петров",
-    "phone": "+79008889900",
-    "lastDeliveryDate": "2026-08-10",
-    "lastDeliveryQuantity": 12,
-    "cooldownUntil": "2026-08-03"
-  },
-  {
-    "id": 97,
-    "name": "Дмитрий Соколов",
-    "phone": "+79002223344",
-    "lastDeliveryDate": "2026-08-25",
-    "lastDeliveryQuantity": 28,
-    "cooldownUntil": "2026-08-18"
-  },
-  {
-    "id": 98,
-    "name": "Елена Михайлов",
-    "phone": "+79005556677",
-    "lastDeliveryDate": "2026-08-05",
-    "lastDeliveryQuantity": null,
-    "cooldownUntil": null
-  },
-  {
-    "id": 99,
-    "name": "Олег Новиков",
-    "phone": "+79003334455",
-    "lastDeliveryDate": "2026-08-18",
-    "lastDeliveryQuantity": 19,
-    "cooldownUntil": "2026-08-11"
-  },
-  {
-    "id": 100,
-    "name": "Наталья Федоров",
-    "phone": "+79009990011",
-    "lastDeliveryDate": null,
-    "lastDeliveryQuantity": null,
-    "cooldownUntil": null
   }
 ]
