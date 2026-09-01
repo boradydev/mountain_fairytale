@@ -5,7 +5,8 @@
     "phone": "+79001234567",
     "lastDeliveryDate": "2026-08-15",
     "lastDeliveryQuantity": 23,
-    "cooldownUntil": "2026-08-08"
+    "cooldownUntil": "2026-08-08",
+    "address": "г. Михайловск, ул. Ленина, д. 156"
   },
   {
     "id": 2,
@@ -13,7 +14,8 @@
     "phone": "+79007654321",
     "lastDeliveryDate": "2026-08-22",
     "lastDeliveryQuantity": 17,
-    "cooldownUntil": "2026-08-15"
+    "cooldownUntil": "2026-08-15",
+    "address": "г. Ставрополь, ул. Доваторцев, д. 30б"
   },
   {
     "id": 3,
@@ -21,7 +23,8 @@
     "phone": "+79001112233",
     "lastDeliveryDate": "2026-08-01",
     "lastDeliveryQuantity": null,
-    "cooldownUntil": null
+    "cooldownUntil": null,
+    "address": "г. Михайловск, ул. Гагарина, д. 9"
   },
   {
     "id": 4,
@@ -29,7 +32,8 @@
     "phone": "+79004445566",
     "lastDeliveryDate": "2026-08-31",
     "lastDeliveryQuantity": 30,
-    "cooldownUntil": "2026-08-24"
+    "cooldownUntil": "2026-08-24",
+    "address": "г. Ставрополь, ул. Карла Маркса, д. 7"
   },
   {
     "id": 5,
@@ -37,7 +41,8 @@
     "phone": "+79006667788",
     "lastDeliveryDate": null,
     "lastDeliveryQuantity": null,
-    "cooldownUntil": null
+    "cooldownUntil": null,
+    "address": "г. Михайловск, ул. Гоголя, д. 24"
   },
   {
     "id": 6,
@@ -45,7 +50,8 @@
     "phone": "+79008889900",
     "lastDeliveryDate": "2026-08-10",
     "lastDeliveryQuantity": 12,
-    "cooldownUntil": "2026-08-03"
+    "cooldownUntil": "2026-08-03",
+    "address": "г. Ставрополь, ул. Мира, д. 284"
   },
   {
     "id": 7,
@@ -53,7 +59,8 @@
     "phone": "+79002223344",
     "lastDeliveryDate": "2026-08-25",
     "lastDeliveryQuantity": 28,
-    "cooldownUntil": "2026-08-18"
+    "cooldownUntil": "2026-08-18",
+    "address": "г. Михайловск, ул. Ленина, д. 219"
   },
   {
     "id": 8,
@@ -61,7 +68,8 @@
     "phone": "+79005556677",
     "lastDeliveryDate": "2026-08-05",
     "lastDeliveryQuantity": null,
-    "cooldownUntil": null
+    "cooldownUntil": null,
+    "address": "г. Ставрополь, пр-кт Кулакова, д. 18"
   },
   {
     "id": 9,
@@ -69,7 +77,8 @@
     "phone": "+79003334455",
     "lastDeliveryDate": "2026-08-18",
     "lastDeliveryQuantity": 19,
-    "cooldownUntil": "2026-08-11"
+    "cooldownUntil": "2026-08-11",
+    "address": "г. Михайловск, ул. Октябрьская, д. 71"
   },
   {
     "id": 10,
@@ -77,7 +86,8 @@
     "phone": "+79009990011",
     "lastDeliveryDate": null,
     "lastDeliveryQuantity": null,
-    "cooldownUntil": null
+    "cooldownUntil": null,
+    "address": "г. Ставрополь, ул. Артема, д. 5"
   },
   {
     "id": 11,
@@ -85,7 +95,8 @@
     "phone": "+79001234567",
     "lastDeliveryDate": "2026-08-15",
     "lastDeliveryQuantity": 23,
-    "cooldownUntil": "2026-08-08"
+    "cooldownUntil": "2026-08-08",
+    "address": "г. Михайловск, ул. Войкова, д. 112"
   },
   {
     "id": 12,
@@ -93,7 +104,8 @@
     "phone": "+79007654321",
     "lastDeliveryDate": "2026-08-22",
     "lastDeliveryQuantity": 17,
-    "cooldownUntil": "2026-08-15"
+    "cooldownUntil": "2026-08-15",
+    "address": "г. Ставрополь, ул. Морозова, д. 22"
   },
   {
     "id": 13,
@@ -101,7 +113,8 @@
     "phone": "+79001112233",
     "lastDeliveryDate": "2026-08-01",
     "lastDeliveryQuantity": null,
-    "cooldownUntil": null
+    "cooldownUntil": null,
+    "address": "г. Михайловск, ул. Крупской, д. 38"
   },
   {
     "id": 14,
@@ -109,7 +122,8 @@
     "phone": "+79004445566",
     "lastDeliveryDate": "2026-08-31",
     "lastDeliveryQuantity": 30,
-    "cooldownUntil": "2026-08-24"
+    "cooldownUntil": "2026-08-24",
+    "address": "г. Ставрополь, ул. Тухачевского, д. 26"
   },
   {
     "id": 15,
@@ -117,7 +131,8 @@
     "phone": "+79006667788",
     "lastDeliveryDate": null,
     "lastDeliveryQuantity": null,
-    "cooldownUntil": null
+    "cooldownUntil": null,
+    "address": "г. Михайловск, ул. Пушкина, д. 51"
   },
   {
     "id": 16,
@@ -125,7 +140,8 @@
     "phone": "+79008889900",
     "lastDeliveryDate": "2026-08-10",
     "lastDeliveryQuantity": 12,
-    "cooldownUntil": "2026-08-03"
+    "cooldownUntil": "2026-08-03",
+    "address": "г. Ставрополь, ул. 50 лет ВЛКСМ, д. 43"
   },
   {
     "id": 17,
@@ -133,7 +149,8 @@
     "phone": "+79002223344",
     "lastDeliveryDate": "2026-08-25",
     "lastDeliveryQuantity": 28,
-    "cooldownUntil": "2026-08-18"
+    "cooldownUntil": "2026-08-18",
+    "address": "г. Михайловск, ул. Фрунзе, д. 16"
   },
   {
     "id": 18,
@@ -141,7 +158,8 @@
     "phone": "+79005556677",
     "lastDeliveryDate": "2026-08-05",
     "lastDeliveryQuantity": null,
-    "cooldownUntil": null
+    "cooldownUntil": null,
+    "address": "г. Ставрополь, ул. Дзержинского, д. 161"
   },
   {
     "id": 19,
@@ -149,7 +167,8 @@
     "phone": "+79003334455",
     "lastDeliveryDate": "2026-08-18",
     "lastDeliveryQuantity": 19,
-    "cooldownUntil": "2026-08-11"
+    "cooldownUntil": "2026-08-11",
+    "address": "г. Михайловск, ул. Ломоносова, д. 29"
   },
   {
     "id": 20,
@@ -157,7 +176,8 @@
     "phone": "+79009990011",
     "lastDeliveryDate": null,
     "lastDeliveryQuantity": null,
-    "cooldownUntil": null
+    "cooldownUntil": null,
+    "address": "г. Ставрополь, пр-кт Карла Маркса, д. 56"
   },
   {
     "id": 21,
@@ -165,7 +185,8 @@
     "phone": "+79001234567",
     "lastDeliveryDate": "2026-08-15",
     "lastDeliveryQuantity": 23,
-    "cooldownUntil": "2026-08-08"
+    "cooldownUntil": "2026-08-08",
+    "address": "г. Михайловск, ул. Комсомольская, д. 84"
   },
   {
     "id": 22,
@@ -173,7 +194,8 @@
     "phone": "+79007654321",
     "lastDeliveryDate": "2026-08-22",
     "lastDeliveryQuantity": 17,
-    "cooldownUntil": "2026-08-15"
+    "cooldownUntil": "2026-08-15",
+    "address": "г. Ставрополь, ул. Пирогова, д. 15"
   },
   {
     "id": 23,
@@ -181,7 +203,8 @@
     "phone": "+79001112233",
     "lastDeliveryDate": "2026-08-01",
     "lastDeliveryQuantity": null,
-    "cooldownUntil": null
+    "cooldownUntil": null,
+    "address": "г. Михайловск, ул. Калинина, д. 63"
   },
   {
     "id": 24,
@@ -189,7 +212,8 @@
     "phone": "+79004445566",
     "lastDeliveryDate": "2026-08-31",
     "lastDeliveryQuantity": 30,
-    "cooldownUntil": "2026-08-24"
+    "cooldownUntil": "2026-08-24",
+    "address": "г. Ставрополь, ул. Шпаковская, д. 76"
   },
   {
     "id": 25,
@@ -197,7 +221,8 @@
     "phone": "+79006667788",
     "lastDeliveryDate": null,
     "lastDeliveryQuantity": null,
-    "cooldownUntil": null
+    "cooldownUntil": null,
+    "address": "г. Михайловск, ул. Свердлова, д. 10"
   },
   {
     "id": 26,
@@ -205,7 +230,8 @@
     "phone": "+79008889900",
     "lastDeliveryDate": "2026-08-10",
     "lastDeliveryQuantity": 12,
-    "cooldownUntil": "2026-08-03"
+    "cooldownUntil": "2026-08-03",
+    "address": "г. Ставрополь, ул. Лермонтова, д. 121"
   },
   {
     "id": 27,
@@ -213,7 +239,8 @@
     "phone": "+79002223344",
     "lastDeliveryDate": "2026-08-25",
     "lastDeliveryQuantity": 28,
-    "cooldownUntil": "2026-08-18"
+    "cooldownUntil": "2026-08-18",
+    "address": "г. Михайловск, ул. Маяковского, д. 42"
   },
   {
     "id": 28,
@@ -221,7 +248,8 @@
     "phone": "+79005556677",
     "lastDeliveryDate": "2026-08-05",
     "lastDeliveryQuantity": null,
-    "cooldownUntil": null
+    "cooldownUntil": null,
+    "address": "г. Ставрополь, ул. Серова, д. 472"
   },
   {
     "id": 29,
@@ -229,7 +257,8 @@
     "phone": "+79003334455",
     "lastDeliveryDate": "2026-08-18",
     "lastDeliveryQuantity": 19,
-    "cooldownUntil": "2026-08-11"
+    "cooldownUntil": "2026-08-11",
+    "address": "г. Михайловск, ул. Советская, д. 95"
   },
   {
     "id": 30,
@@ -237,7 +266,8 @@
     "phone": "+79009990011",
     "lastDeliveryDate": null,
     "lastDeliveryQuantity": null,
-    "cooldownUntil": null
+    "cooldownUntil": null,
+    "address": "г. Ставрополь, ул. Маршала Жукова, д. 8"
   },
   {
     "id": 31,
@@ -245,7 +275,8 @@
     "phone": "+79001234567",
     "lastDeliveryDate": "2026-08-15",
     "lastDeliveryQuantity": 23,
-    "cooldownUntil": "2026-08-08"
+    "cooldownUntil": "2026-08-08",
+    "address": "г. Михайловск, ул. Суворова, д. 14"
   },
   {
     "id": 32,
@@ -253,7 +284,8 @@
     "phone": "+79007654321",
     "lastDeliveryDate": "2026-08-22",
     "lastDeliveryQuantity": 17,
-    "cooldownUntil": "2026-08-15"
+    "cooldownUntil": "2026-08-15",
+    "address": "г. Ставрополь, пр-кт Октябрьской Революции, д. 29"
   },
   {
     "id": 33,
@@ -261,7 +293,8 @@
     "phone": "+79001112233",
     "lastDeliveryDate": "2026-08-01",
     "lastDeliveryQuantity": null,
-    "cooldownUntil": null
+    "cooldownUntil": null,
+    "address": "г. Михайловск, ул. Ишкова, д. 91"
   },
   {
     "id": 34,
@@ -269,7 +302,8 @@
     "phone": "+79004445566",
     "lastDeliveryDate": "2026-08-31",
     "lastDeliveryQuantity": 30,
-    "cooldownUntil": "2026-08-24"
+    "cooldownUntil": "2026-08-24",
+    "address": "г. Ставрополь, ул. Голенева, д. 37"
   },
   {
     "id": 35,
@@ -277,7 +311,8 @@
     "phone": "+79006667788",
     "lastDeliveryDate": null,
     "lastDeliveryQuantity": null,
-    "cooldownUntil": null
+    "cooldownUntil": null,
+    "address": "г. Михайловск, ул. Прекрасная, д. 5"
   },
   {
     "id": 36,
@@ -285,15 +320,17 @@
     "phone": "+79008889900",
     "lastDeliveryDate": "2026-08-10",
     "lastDeliveryQuantity": 12,
-    "cooldownUntil": "2026-08-03"
+    "cooldownUntil": "2026-08-03",
+    "address": "г. Ставрополь, ул. Юности, д. 11"
   },
   {
     "id": 37,
-    "name": "АО «Транс-Азимут»",
+    "name": "ПАО «Транс-Азимут»",
     "phone": "+79002223344",
     "lastDeliveryDate": "2026-08-25",
     "lastDeliveryQuantity": 28,
-    "cooldownUntil": "2026-08-18"
+    "cooldownUntil": "2026-08-18",
+    "address": "г. Михайловск, ул. Грибоедова, д. 19"
   },
   {
     "id": 38,
@@ -301,15 +338,17 @@
     "phone": "+79005556677",
     "lastDeliveryDate": "2026-08-05",
     "lastDeliveryQuantity": null,
-    "cooldownUntil": null
+    "cooldownUntil": null,
+    "address": "г. Ставрополь, ул. Рогожникова, д. 3"
   },
   {
     "id": 39,
-    "name": "АО «Компас-Навигатор»",
+    "name": "ПАО «Компас-Навигатор»",
     "phone": "+79003334455",
     "lastDeliveryDate": "2026-08-18",
     "lastDeliveryQuantity": 19,
-    "cooldownUntil": "2026-08-11"
+    "cooldownUntil": "2026-08-11",
+    "address": "г. Михайловск, ул. Садовая, д. 124"
   },
   {
     "id": 40,
@@ -317,7 +356,8 @@
     "phone": "+79009990011",
     "lastDeliveryDate": null,
     "lastDeliveryQuantity": null,
-    "cooldownUntil": null
+    "cooldownUntil": null,
+    "address": "г. Ставрополь, ул. Октябрьская, д. 182"
   },
   {
     "id": 41,
@@ -325,7 +365,8 @@
     "phone": "+79001234567",
     "lastDeliveryDate": "2026-08-15",
     "lastDeliveryQuantity": 23,
-    "cooldownUntil": "2026-08-08"
+    "cooldownUntil": "2026-08-08",
+    "address": "г. Михайловск, ул. Лермонтова, д. 73"
   },
   {
     "id": 42,
@@ -333,7 +374,8 @@
     "phone": "+79007654321",
     "lastDeliveryDate": "2026-08-22",
     "lastDeliveryQuantity": 17,
-    "cooldownUntil": "2026-08-15"
+    "cooldownUntil": "2026-08-15",
+    "address": "г. Ставрополь, ул. Васильева, д. 12"
   },
   {
     "id": 43,
@@ -341,7 +383,8 @@
     "phone": "+79001112233",
     "lastDeliveryDate": "2026-08-01",
     "lastDeliveryQuantity": null,
-    "cooldownUntil": null
+    "cooldownUntil": null,
+    "address": "г. Михайловск, ул. Терешковой, д. 22"
   },
   {
     "id": 44,
@@ -349,7 +392,8 @@
     "phone": "+79004445566",
     "lastDeliveryDate": "2026-08-31",
     "lastDeliveryQuantity": 30,
-    "cooldownUntil": "2026-08-24"
+    "cooldownUntil": "2026-08-24",
+    "address": "г. Ставрополь, ул. Пригородная, д. 215"
   },
   {
     "id": 45,
@@ -357,7 +401,8 @@
     "phone": "+79006667788",
     "lastDeliveryDate": null,
     "lastDeliveryQuantity": null,
-    "cooldownUntil": null
+    "cooldownUntil": null,
+    "address": "г. Михайловск, ул. Кузьмина, д. 8"
   },
   {
     "id": 46,
@@ -365,7 +410,8 @@
     "phone": "+79008889900",
     "lastDeliveryDate": "2026-08-10",
     "lastDeliveryQuantity": 12,
-    "cooldownUntil": "2026-08-03"
+    "cooldownUntil": "2026-08-03",
+    "address": "г. Ставрополь, ул. Доваторцев, д. 11"
   },
   {
     "id": 47,
@@ -373,7 +419,8 @@
     "phone": "+79002223344",
     "lastDeliveryDate": "2026-08-25",
     "lastDeliveryQuantity": 28,
-    "cooldownUntil": "2026-08-18"
+    "cooldownUntil": "2026-08-18",
+    "address": "г. Михайловск, ул. Розы Люксембург, д. 54"
   },
   {
     "id": 48,
@@ -381,14 +428,16 @@
     "phone": "+79005556677",
     "lastDeliveryDate": "2026-08-05",
     "lastDeliveryQuantity": null,
-    "cooldownUntil": null
+    "cooldownUntil": null,
+    "address": "г. Ставрополь, ул. Булкина, д. 6"
   },
   {
     "id": 49,
-    "name": "АО «Тандем-Логистик»",
+    "name": "ПАО «Тандем-Логистик»",
     "phone": "+79003334455",
     "lastDeliveryDate": "2026-08-18",
     "lastDeliveryQuantity": 19,
-    "cooldownUntil": "2026-08-11"
+    "cooldownUntil": "2026-08-11",
+    "address": "г. Михайловск, ул. Никонова, д. 41"
   }
 ]
