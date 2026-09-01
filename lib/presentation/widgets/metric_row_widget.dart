@@ -4,7 +4,7 @@ class MetricRow extends StatelessWidget {
   final IconData? icon;
   final String label;
   final String value;
-  final double labelWidth;
+  final double? labelWidth;
   final Color? iconColor;
   final Color? valueColor;
 
@@ -13,7 +13,7 @@ class MetricRow extends StatelessWidget {
     this.icon,
     required this.label,
     required this.value,
-    this.labelWidth = 100,
+    this.labelWidth,
     this.iconColor,
     this.valueColor,
   });
@@ -35,6 +35,7 @@ class MetricRow extends StatelessWidget {
             ),
             const SizedBox(width: 12),
           ],
+          // SizedBox с width: null не ограничивает ширину и подстраивается под текст
           SizedBox(
             width: labelWidth,
             child: Text(
