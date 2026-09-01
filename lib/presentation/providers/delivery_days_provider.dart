@@ -37,6 +37,21 @@ class DeliveryDaysProvider extends ChangeNotifier {
   bool get isEmpty =>
       _status == DeliveryStatus.success && _days.isEmpty;
 
+  bool get shouldShowTodayCard {
+    if (_status != DeliveryStatus.success) {
+      return false;
+    }
+
+    final today = DateTime.now();
+
+    return !_days.any(
+          (day) =>
+      day.date.year == today.year &&
+          day.date.month == today.month &&
+          day.date.day == today.day,
+    );
+  }
+
   Future<void> fetchDeliveryDays() async {
     if (_isLoadingMore || !_hasMore) {
       return;

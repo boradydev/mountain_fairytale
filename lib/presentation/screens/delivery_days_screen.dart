@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/infrastructure/repos/delivery_day/models/model.dart';
+import 'package:mountain_fairytale/infrastructure/utils/datetime_extensions.dart';
 import 'package:mountain_fairytale/l10n/app_localizations.dart';
 import 'package:mountain_fairytale/presentation/providers/delivery_days_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/theme_provider.dart';
@@ -109,22 +110,38 @@ class _DeliveryDaysListView extends StatelessWidget {
           (DeliveryDaysProvider p) => p.isLoadingMore,
     );
 
-    final l10n = AppLocalizations.of(context)!;
-
-    if (days.isEmpty) {
-      return Center(
-        child: Text(l10n.deliveryDaysEmpty),
-      );
-    }
+    final shouldShowTodayCard = context.select(
+          (DeliveryDaysProvider p) => p.shouldShowTodayCard,
+    );
 
     final showLoader = hasMore && isLoadingMore;
+
+    final todayCardCount = shouldShowTodayCard ? 1 : 0;
+    final loaderCount = showLoader ? 1 : 0;
 
     return ListView.builder(
       controller: scrollController,
       padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: days.length + (showLoader ? 1 : 0),
+      itemCount: todayCardCount + days.length + loaderCount,
       itemBuilder: (context, index) {
-        if (index == days.length) {
+        // Первая карточка — "Добавить доставку на сегодня"
+        if (shouldShowTodayCard && index == 0) {
+          return Align(
+            alignment: Alignment.centerLeft,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxWidth: 400,
+              ),
+              child: const _TodayDeliveryCard(),
+            ),
+          );
+        }
+
+        // Смещаем индекс, если перед списком есть TodayDeliveryCard
+        final dayIndex = index - todayCardCount;
+
+        // Последний элемент — loader
+        if (dayIndex == days.length) {
           return const Padding(
             padding: EdgeInsets.symmetric(vertical: 32),
             child: Center(
@@ -133,9 +150,17 @@ class _DeliveryDaysListView extends StatelessWidget {
           );
         }
 
-        final day = days[index];
+        final day = days[dayIndex];
 
-        return _DeliveryDayItem(day: day);
+        return Align(
+          alignment: Alignment.centerLeft,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: 400,
+            ),
+            child: _DeliveryDayItem(day: day),
+          ),
+        );
       },
     );
   }
@@ -152,14 +177,12 @@ class _DeliveryDayItem extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
 
-    // Форматируем дату (можно вынести в расширение DateTime extension)
-    final dateStr =
-        '${day.date.day.toString().padLeft(2, '0')}.'
-        '${day.date.month.toString().padLeft(2, '0')}.'
-        '${day.date.year}';
+    final dateStr = day.date.toFormattedString();
 
     return DeliveryDayCard(
-      title: '${l10n.deliveryCardTitle}: $dateStr',
+      title: day.date.isToday
+          ? l10n.deliveryCardTitleToday
+          : '${l10n.deliveryCardTitle}: $dateStr',
       onTap: () {
         // Логика перехода на детальный экран по day.id
       },
@@ -236,6 +259,47 @@ class _ErrorView extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _TodayDeliveryCard extends StatelessWidget {
+  const _TodayDeliveryCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme
+        .of(context)
+        .colorScheme;
+
+    final l10n = AppLocalizations.of(context)!;
+
+    return DeliveryDayCard(
+      title: l10n.deliveryCardTitleToday,
+      onTap: () {
+        // TODO: открыть форму создания доставки
+      },
+      metrics: [
+        Center(
+          child: Column(
+            children: [
+              Icon(
+                Icons.add_circle_outline,
+                size: 40,
+                color: colorScheme.primary,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Добавить доставку',
+                style: TextStyle(
+                  color: colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
