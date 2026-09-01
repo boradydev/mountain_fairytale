@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/l10n/app_localizations.dart';
+import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/delivery_days_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/theme_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/delivery_days_screen/client_list.dart';
@@ -21,12 +22,15 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen> {
   void initState() {
     super.initState();
 
+    // Первоначальная загрузка данных
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<DeliveryDaysProvider>().fetchDeliveryDays();
+      context.read<ClientsProvider>().fetchClients();
     });
 
     _scrollController.addListener(_onScroll);
   }
+
 
   void _onScroll() {
     if (!_scrollController.hasClients) {

@@ -8,10 +8,25 @@ class ClientsAttentionListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 1. Сначала проверяем статус
+    final status = context.select((ClientsProvider p) => p.status);
+
+    if (status == ClientStatus.loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (status == ClientStatus.failure) {
+      final error = context.select((ClientsProvider p) => p.errorMessage);
+      return Center(child: Text('Ошибка: $error'));
+    }
+
+    // 2. Только при успехе берем клиентов
     final clients = context.select((ClientsProvider p) => p.sortedClients);
 
     if (clients.isEmpty) {
-      return const Center(child: Text('Клиенты отсутствуют'));
+      return const Center(
+        child: Text('Клиенты отсутствуют'),
+      );
     }
 
     return ListView.builder(
@@ -19,12 +34,12 @@ class ClientsAttentionListView extends StatelessWidget {
       itemCount: clients.length,
       itemBuilder: (context, index) {
         final client = clients[index];
-
         return _ClientAttentionCard(client: client);
       },
     );
   }
 }
+
 
 class _ClientAttentionCard extends StatelessWidget {
   final Client client;
