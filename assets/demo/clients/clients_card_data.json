@@ -1,0 +1,50 @@
+[
+  {
+    "id": 1,
+    "name": "ООО Ромашка",
+    "phone": "+79991112233",
+    "lastDeliveryDate": "2026-08-18",
+    "lastDeliveryQuantity": 24,
+    "cooldownUntil": null
+  },
+  {
+    "id": 2,
+    "name": "ИП Иванов",
+    "phone": "+79992223344",
+    "lastDeliveryDate": "2026-08-24",
+    "lastDeliveryQuantity": 12,
+    "cooldownUntil": null
+  },
+  {
+    "id": 3,
+    "name": "Кафе Уют",
+    "phone": "+79993334455",
+    "lastDeliveryDate": "2026-08-27",
+    "lastDeliveryQuantity": 18,
+    "cooldownUntil": null
+  },
+  {
+    "id": 4,
+    "name": "Магазин Север",
+    "phone": "+79994445566",
+    "lastDeliveryDate": "2026-08-30",
+    "lastDeliveryQuantity": 10,
+    "cooldownUntil": null
+  },
+  {
+    "id": 5,
+    "name": "ООО Вектор",
+    "phone": "+79995556677",
+    "lastDeliveryDate": "2026-08-20",
+    "lastDeliveryQuantity": 30,
+    "cooldownUntil": "2026-09-05"
+  },
+  {
+    "id": 6,
+    "name": "ИП Петров",
+    "phone": "+79996667788",
+    "lastDeliveryDate": null,
+    "lastDeliveryQuantity": null,
+    "cooldownUntil": null
+  }
+]

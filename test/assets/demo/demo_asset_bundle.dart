@@ -12,7 +12,7 @@ class DemoAssetBundle extends CachingAssetBundle {
 
   @override
   Future<ByteData> load(String key) async {
-    // key — это путь к файлу, который запрашивает код (например, 'assets/demo/delivery_days/cards_data.json')
+    // key — это путь к файлу, который запрашивает код (например, 'assets/demo/delivery_days/delivery_days_card_data.json')
     final file = File(key);
 
     if (!await file.exists()) {

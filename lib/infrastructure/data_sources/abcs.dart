@@ -7,3 +7,6 @@ abstract interface class DeliveryDataSource {
   Future<Map<String, dynamic>> getDeliveryDay(int id);
 }
 
+abstract interface class ClientDataSource {
+  Future<List<Map<String, dynamic>>> getAllClients();
+}

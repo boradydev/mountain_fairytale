@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/infrastructure/repos/delivery_day/abcs.dart';
-import 'package:mountain_fairytale/infrastructure/repos/delivery_day/models/model.dart';
+import 'package:mountain_fairytale/infrastructure/repos/delivery_day/models/delivery_day_model.dart';
 
 enum DeliveryStatus { initial, loading, success, failure }
 

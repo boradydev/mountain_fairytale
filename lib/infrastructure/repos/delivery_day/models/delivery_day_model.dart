@@ -1,6 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 
-part 'model.g.dart';
+part 'delivery_day_model.g.dart';
 
 @JsonSerializable()
 class DeliveryDay {

@@ -1,4 +1,4 @@
-import 'package:mountain_fairytale/infrastructure/repos/delivery_day/models/model.dart';
+import 'package:mountain_fairytale/infrastructure/repos/delivery_day/models/delivery_day_model.dart';
 
 abstract interface class DeliveryDayRepository {
   Future<List<DeliveryDay>> getDeliveryDays({

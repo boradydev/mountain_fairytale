@@ -7,7 +7,7 @@ class DemoDeliveryDataSource implements DeliveryDataSource {
   final AssetBundle _assetBundle;
   List<Map<String, dynamic>>? _cache;
 
-  static const _deliveryDaysPath = 'assets/demo/delivery_days/cards_data.json';
+  static const _deliveryDaysPath = 'assets/demo/delivery_days/delivery_days_card_data.json';
 
   // Конструктор принимает бандл, по умолчанию инициализируется системным rootBundle
   DemoDeliveryDataSource({AssetBundle? assetBundle})
