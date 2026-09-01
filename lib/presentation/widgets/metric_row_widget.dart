@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class MetricRow extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
   final String label;
   final String value;
   final Color? iconColor;
@@ -9,7 +9,7 @@ class MetricRow extends StatelessWidget {
 
   const MetricRow({
     super.key,
-    required this.icon,
+    this.icon,
     required this.label,
     required this.value,
     this.iconColor,
@@ -24,12 +24,15 @@ class MetricRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          Icon(
-            icon,
-            size: 20,
-            color: iconColor ?? colorScheme.onSurfaceVariant,
-          ),
-          const SizedBox(width: 12),
+          // Если иконка передана, показываем её и отступ
+          if (icon != null) ...[
+            Icon(
+              icon,
+              size: 20,
+              color: iconColor ?? colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: 12),
+          ],
           SizedBox(
             width: 100,
             child: Text(
