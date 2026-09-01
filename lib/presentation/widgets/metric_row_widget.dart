@@ -4,6 +4,7 @@ class MetricRow extends StatelessWidget {
   final IconData? icon;
   final String label;
   final String value;
+  final double labelWidth;
   final Color? iconColor;
   final Color? valueColor;
 
@@ -12,6 +13,7 @@ class MetricRow extends StatelessWidget {
     this.icon,
     required this.label,
     required this.value,
+    this.labelWidth = 100,
     this.iconColor,
     this.valueColor,
   });
@@ -34,7 +36,7 @@ class MetricRow extends StatelessWidget {
             const SizedBox(width: 12),
           ],
           SizedBox(
-            width: 100,
+            width: labelWidth,
             child: Text(
               label,
               style: TextStyle(
