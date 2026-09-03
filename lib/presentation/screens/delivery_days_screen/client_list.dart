@@ -63,7 +63,7 @@ class _ClientAttentionCard extends StatelessWidget {
               '${client.lastDeliveryDate!.year}';
 
     return DeliveryDayCard(
-      title: '${client.name} / ${"Улица советская"}',
+      title: '${client.name}. Адрес: ${client.address}',
       onTap: () {
         // Логика перехода на детальный экран по day.id
       },
