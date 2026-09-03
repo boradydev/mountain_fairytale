@@ -99,4 +99,29 @@ class ClientsProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<void> updateClientCooldown(int clientId, int weeks) async {
+    try {
+      // Высчитываем дату окончания кулдауна относительно текущего момента
+      final cooldownDate = DateTime.now().add(Duration(days: weeks * 7));
+
+      // Обновляем на "сервере" (в репозитории)
+      final updatedClient = await _repository.updateCooldown(
+          clientId, cooldownDate);
+
+      // Обновляем локальный список в стейте провайдера
+      _clients = _clients.map((client) {
+        return client.id == clientId ? updatedClient : client;
+      }).toList();
+
+      // Уведомляем UI для перерисовки и пересортировки
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = e.toString();
+      // Здесь можно сгенерировать отдельный эвент ошибки для Снэкбара
+      notifyListeners();
+    }
+  }
+
+
 }
