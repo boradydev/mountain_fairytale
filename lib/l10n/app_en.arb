@@ -1,0 +1,34 @@
+{
+  "appTitle": "Mountain Fairytale",
+
+  "deliveryCardTitleToday": "Delivery on today",
+
+  "deliveryCardTitle": "Delivery on",
+  "deliveryCardClients": "Clients",
+  "deliveryCardClientsMetrics": "Points",
+
+  "deliveryCardBottles": "Bottles",
+  "deliveryCardBottlesMetrics": "pcs",
+
+  "deliveryCardReturns": "Returns",
+  "deliveryCardReturnsMetrics": "pcs",
+
+  "deliveryCardGlasses": "Glasses",
+  "deliveryCardGlassesMetrics": "pcs",
+
+  "deliveryCardWaterCooler": "Water Cooler",
+  "deliveryCardWaterCoolerMetrics": "pcs",
+
+  "deliveryCardCoolerRepair": "Cooler Repair",
+  "deliveryCardCoolerRepairMetrics": "pcs",
+
+  "deliveryCardTotal": "Total",
+  "deliveryCardTotalMetrics": "₽",
+
+  "notifySaveSuccess": "File saved successfully",
+  "notifySaveError": "Error saving file",
+  "notifyWarning": "Warning: amounts in documents differ!",
+  "notifyMergeSuccess": "Fields from 1c UTD merged",
+  "resetButton": "Restart",
+  "themBottom": "Theme"
+}

@@ -1,0 +1,35 @@
+{
+  "appTitle": "Горная сказка",
+
+  "deliveryCardTitleToday": "Доставка на сегодня",
+
+  "deliveryCardTitle": "Доставка на",
+  "deliveryCardClients": "Клиенты",
+  "deliveryCardClientsMetrics": "Точек",
+
+  "deliveryCardBottles": "Бутылки",
+  "deliveryCardBottlesMetrics": "шт.",
+
+  "deliveryCardReturns": "Возвраты",
+  "deliveryCardReturnsMetrics": "шт.",
+
+  "deliveryCardGlasses": "Стаканы",
+  "deliveryCardGlassesMetrics": "шт.",
+
+  "deliveryCardWaterCooler": "Кулер",
+  "deliveryCardWaterCoolerMetrics": "шт.",
+
+  "deliveryCardCoolerRepair": "Ремонт кулера",
+  "deliveryCardCoolerRepairMetrics": "шт.",
+
+  "deliveryCardTotal": "Всего",
+  "deliveryCardTotalMetrics": "₽",
+
+
+  "notifySaveSuccess": "Файл успешно сохранен",
+  "notifySaveError": "Ошибка сохранения файла",
+  "notifyWarning": "Внимание: суммы в документах различаются!",
+  "notifyMergeSuccess": "Данные из 1с УПД перенесены",
+  "resetButton": "Сбросить",
+  "themBottom": "Тема"
+}
