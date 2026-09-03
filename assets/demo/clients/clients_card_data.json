@@ -6,7 +6,8 @@
     "lastDeliveryDate": "2026-08-15",
     "lastDeliveryQuantity": 23,
     "cooldownUntil": "2026-08-08",
-    "address": "г. Михайловск, ул. Ленина, д. 156"
+    "address": "г. Михайловск, ул. Ленина, д. 156",
+    "sleepingThresholdDays": 14
   },
   {
     "id": 2,
@@ -15,7 +16,8 @@
     "lastDeliveryDate": "2026-08-22",
     "lastDeliveryQuantity": 17,
     "cooldownUntil": "2026-08-15",
-    "address": "г. Ставрополь, ул. Доваторцев, д. 30б"
+    "address": "г. Ставрополь, ул. Доваторцев, д. 30б",
+    "sleepingThresholdDays": 7
   },
   {
     "id": 3,
@@ -24,7 +26,8 @@
     "lastDeliveryDate": "2026-08-01",
     "lastDeliveryQuantity": null,
     "cooldownUntil": null,
-    "address": "г. Михайловск, ул. Гагарина, д. 9"
+    "address": "г. Михайловск, ул. Гагарина, д. 9",
+    "sleepingThresholdDays": 21
   },
   {
     "id": 4,
@@ -33,7 +36,8 @@
     "lastDeliveryDate": "2026-08-31",
     "lastDeliveryQuantity": 30,
     "cooldownUntil": "2026-08-24",
-    "address": "г. Ставрополь, ул. Карла Маркса, д. 7"
+    "address": "г. Ставрополь, ул. Карла Маркса, д. 7",
+    "sleepingThresholdDays": 14
   },
   {
     "id": 5,
@@ -42,7 +46,8 @@
     "lastDeliveryDate": null,
     "lastDeliveryQuantity": null,
     "cooldownUntil": null,
-    "address": "г. Михайловск, ул. Гоголя, д. 24"
+    "address": "г. Михайловск, ул. Гоголя, д. 24",
+    "sleepingThresholdDays": 7
   },
   {
     "id": 6,
@@ -51,7 +56,8 @@
     "lastDeliveryDate": "2026-08-10",
     "lastDeliveryQuantity": 12,
     "cooldownUntil": "2026-08-03",
-    "address": "г. Ставрополь, ул. Мира, д. 284"
+    "address": "г. Ставрополь, ул. Мира, д. 284",
+    "sleepingThresholdDays": 21
   },
   {
     "id": 7,
@@ -60,7 +66,8 @@
     "lastDeliveryDate": "2026-08-25",
     "lastDeliveryQuantity": 28,
     "cooldownUntil": "2026-08-18",
-    "address": "г. Михайловск, ул. Ленина, д. 219"
+    "address": "г. Михайловск, ул. Ленина, д. 219",
+    "sleepingThresholdDays": 14
   },
   {
     "id": 8,
@@ -69,7 +76,8 @@
     "lastDeliveryDate": "2026-08-05",
     "lastDeliveryQuantity": null,
     "cooldownUntil": null,
-    "address": "г. Ставрополь, пр-кт Кулакова, д. 18"
+    "address": "г. Ставрополь, пр-кт Кулакова, д. 18",
+    "sleepingThresholdDays": 7
   },
   {
     "id": 9,
@@ -78,7 +86,8 @@
     "lastDeliveryDate": "2026-08-18",
     "lastDeliveryQuantity": 19,
     "cooldownUntil": "2026-08-11",
-    "address": "г. Михайловск, ул. Октябрьская, д. 71"
+    "address": "г. Михайловск, ул. Октябрьская, д. 71",
+    "sleepingThresholdDays": 21
   },
   {
     "id": 10,
@@ -87,7 +96,8 @@
     "lastDeliveryDate": null,
     "lastDeliveryQuantity": null,
     "cooldownUntil": null,
-    "address": "г. Ставрополь, ул. Артема, д. 5"
+    "address": "г. Ставрополь, ул. Артема, д. 5",
+    "sleepingThresholdDays": 14
   },
   {
     "id": 11,
@@ -96,7 +106,8 @@
     "lastDeliveryDate": "2026-08-15",
     "lastDeliveryQuantity": 23,
     "cooldownUntil": "2026-08-08",
-    "address": "г. Михайловск, ул. Войкова, д. 112"
+    "address": "г. Михайловск, ул. Войкова, д. 112",
+    "sleepingThresholdDays": 7
   },
   {
     "id": 12,
@@ -105,7 +116,8 @@
     "lastDeliveryDate": "2026-08-22",
     "lastDeliveryQuantity": 17,
     "cooldownUntil": "2026-08-15",
-    "address": "г. Ставрополь, ул. Морозова, д. 22"
+    "address": "г. Ставрополь, ул. Морозова, д. 22",
+    "sleepingThresholdDays": 21
   },
   {
     "id": 13,
@@ -114,7 +126,8 @@
     "lastDeliveryDate": "2026-08-01",
     "lastDeliveryQuantity": null,
     "cooldownUntil": null,
-    "address": "г. Михайловск, ул. Крупской, д. 38"
+    "address": "г. Михайловск, ул. Крупской, д. 38",
+    "sleepingThresholdDays": 14
   },
   {
     "id": 14,
@@ -123,7 +136,8 @@
     "lastDeliveryDate": "2026-08-31",
     "lastDeliveryQuantity": 30,
     "cooldownUntil": "2026-08-24",
-    "address": "г. Ставрополь, ул. Тухачевского, д. 26"
+    "address": "г. Ставрополь, ул. Тухачевского, д. 26",
+    "sleepingThresholdDays": 7
   },
   {
     "id": 15,
@@ -132,7 +146,8 @@
     "lastDeliveryDate": null,
     "lastDeliveryQuantity": null,
     "cooldownUntil": null,
-    "address": "г. Михайловск, ул. Пушкина, д. 51"
+    "address": "г. Михайловск, ул. Пушкина, д. 51",
+    "sleepingThresholdDays": 21
   },
   {
     "id": 16,
@@ -141,7 +156,8 @@
     "lastDeliveryDate": "2026-08-10",
     "lastDeliveryQuantity": 12,
     "cooldownUntil": "2026-08-03",
-    "address": "г. Ставрополь, ул. 50 лет ВЛКСМ, д. 43"
+    "address": "г. Ставрополь, ул. 50 лет ВЛКСМ, д. 43",
+    "sleepingThresholdDays": 14
   },
   {
     "id": 17,
@@ -150,7 +166,8 @@
     "lastDeliveryDate": "2026-08-25",
     "lastDeliveryQuantity": 28,
     "cooldownUntil": "2026-08-18",
-    "address": "г. Михайловск, ул. Фрунзе, д. 16"
+    "address": "г. Михайловск, ул. Фрунзе, д. 16",
+    "sleepingThresholdDays": 7
   },
   {
     "id": 18,
@@ -159,7 +176,8 @@
     "lastDeliveryDate": "2026-08-05",
     "lastDeliveryQuantity": null,
     "cooldownUntil": null,
-    "address": "г. Ставрополь, ул. Дзержинского, д. 161"
+    "address": "г. Ставрополь, ул. Дзержинского, д. 161",
+    "sleepingThresholdDays": 21
   },
   {
     "id": 19,
@@ -168,7 +186,8 @@
     "lastDeliveryDate": "2026-08-18",
     "lastDeliveryQuantity": 19,
     "cooldownUntil": "2026-08-11",
-    "address": "г. Михайловск, ул. Ломоносова, д. 29"
+    "address": "г. Михайловск, ул. Ломоносова, д. 29",
+    "sleepingThresholdDays": 14
   },
   {
     "id": 20,
@@ -177,7 +196,8 @@
     "lastDeliveryDate": null,
     "lastDeliveryQuantity": null,
     "cooldownUntil": null,
-    "address": "г. Ставрополь, пр-кт Карла Маркса, д. 56"
+    "address": "г. Ставрополь, пр-кт Карла Маркса, д. 56",
+    "sleepingThresholdDays": 7
   },
   {
     "id": 21,
@@ -186,7 +206,8 @@
     "lastDeliveryDate": "2026-08-15",
     "lastDeliveryQuantity": 23,
     "cooldownUntil": "2026-08-08",
-    "address": "г. Михайловск, ул. Комсомольская, д. 84"
+    "address": "г. Михайловск, ул. Комсомольская, д. 84",
+    "sleepingThresholdDays": 21
   },
   {
     "id": 22,
@@ -195,7 +216,8 @@
     "lastDeliveryDate": "2026-08-22",
     "lastDeliveryQuantity": 17,
     "cooldownUntil": "2026-08-15",
-    "address": "г. Ставрополь, ул. Пирогова, д. 15"
+    "address": "г. Ставрополь, ул. Пирогова, д. 15",
+    "sleepingThresholdDays": 14
   },
   {
     "id": 23,
@@ -204,7 +226,8 @@
     "lastDeliveryDate": "2026-08-01",
     "lastDeliveryQuantity": null,
     "cooldownUntil": null,
-    "address": "г. Михайловск, ул. Калинина, д. 63"
+    "address": "г. Михайловск, ул. Калинина, д. 63",
+    "sleepingThresholdDays": 7
   },
   {
     "id": 24,
@@ -213,7 +236,8 @@
     "lastDeliveryDate": "2026-08-31",
     "lastDeliveryQuantity": 30,
     "cooldownUntil": "2026-08-24",
-    "address": "г. Ставрополь, ул. Шпаковская, д. 76"
+    "address": "г. Ставрополь, ул. Шпаковская, д. 76",
+    "sleepingThresholdDays": 21
   },
   {
     "id": 25,
@@ -222,7 +246,8 @@
     "lastDeliveryDate": null,
     "lastDeliveryQuantity": null,
     "cooldownUntil": null,
-    "address": "г. Михайловск, ул. Свердлова, д. 10"
+    "address": "г. Михайловск, ул. Свердлова, д. 10",
+    "sleepingThresholdDays": 14
   },
   {
     "id": 26,
@@ -231,7 +256,8 @@
     "lastDeliveryDate": "2026-08-10",
     "lastDeliveryQuantity": 12,
     "cooldownUntil": "2026-08-03",
-    "address": "г. Ставрополь, ул. Лермонтова, д. 121"
+    "address": "г. Ставрополь, ул. Лермонтова, д. 121",
+    "sleepingThresholdDays": 7
   },
   {
     "id": 27,
@@ -240,7 +266,8 @@
     "lastDeliveryDate": "2026-08-25",
     "lastDeliveryQuantity": 28,
     "cooldownUntil": "2026-08-18",
-    "address": "г. Михайловск, ул. Маяковского, д. 42"
+    "address": "г. Михайловск, ул. Маяковского, д. 42",
+    "sleepingThresholdDays": 21
   },
   {
     "id": 28,
@@ -249,7 +276,8 @@
     "lastDeliveryDate": "2026-08-05",
     "lastDeliveryQuantity": null,
     "cooldownUntil": null,
-    "address": "г. Ставрополь, ул. Серова, д. 472"
+    "address": "г. Ставрополь, ул. Серова, д. 472",
+    "sleepingThresholdDays": 14
   },
   {
     "id": 29,
@@ -258,7 +286,8 @@
     "lastDeliveryDate": "2026-08-18",
     "lastDeliveryQuantity": 19,
     "cooldownUntil": "2026-08-11",
-    "address": "г. Михайловск, ул. Советская, д. 95"
+    "address": "г. Михайловск, ул. Советская, д. 95",
+    "sleepingThresholdDays": 7
   },
   {
     "id": 30,
@@ -267,7 +296,8 @@
     "lastDeliveryDate": null,
     "lastDeliveryQuantity": null,
     "cooldownUntil": null,
-    "address": "г. Ставрополь, ул. Маршала Жукова, д. 8"
+    "address": "г. Ставрополь, ул. Маршала Жукова, д. 8",
+    "sleepingThresholdDays": 21
   },
   {
     "id": 31,
@@ -276,7 +306,8 @@
     "lastDeliveryDate": "2026-08-15",
     "lastDeliveryQuantity": 23,
     "cooldownUntil": "2026-08-08",
-    "address": "г. Михайловск, ул. Суворова, д. 14"
+    "address": "г. Михайловск, ул. Суворова, д. 14",
+    "sleepingThresholdDays": 14
   },
   {
     "id": 32,
@@ -285,7 +316,8 @@
     "lastDeliveryDate": "2026-08-22",
     "lastDeliveryQuantity": 17,
     "cooldownUntil": "2026-08-15",
-    "address": "г. Ставрополь, пр-кт Октябрьской Революции, д. 29"
+    "address": "г. Ставрополь, пр-кт Октябрьской Революции, д. 29",
+    "sleepingThresholdDays": 7
   },
   {
     "id": 33,
@@ -294,7 +326,8 @@
     "lastDeliveryDate": "2026-08-01",
     "lastDeliveryQuantity": null,
     "cooldownUntil": null,
-    "address": "г. Михайловск, ул. Ишкова, д. 91"
+    "address": "г. Михайловск, ул. Ишкова, д. 91",
+    "sleepingThresholdDays": 21
   },
   {
     "id": 34,
@@ -303,7 +336,8 @@
     "lastDeliveryDate": "2026-08-31",
     "lastDeliveryQuantity": 30,
     "cooldownUntil": "2026-08-24",
-    "address": "г. Ставрополь, ул. Голенева, д. 37"
+    "address": "г. Ставрополь, ул. Голенева, д. 37",
+    "sleepingThresholdDays": 14
   },
   {
     "id": 35,
@@ -312,7 +346,8 @@
     "lastDeliveryDate": null,
     "lastDeliveryQuantity": null,
     "cooldownUntil": null,
-    "address": "г. Михайловск, ул. Прекрасная, д. 5"
+    "address": "г. Михайловск, ул. Прекрасная, д. 5",
+    "sleepingThresholdDays": 7
   },
   {
     "id": 36,
@@ -321,7 +356,8 @@
     "lastDeliveryDate": "2026-08-10",
     "lastDeliveryQuantity": 12,
     "cooldownUntil": "2026-08-03",
-    "address": "г. Ставрополь, ул. Юности, д. 11"
+    "address": "г. Ставрополь, ул. Юности, д. 11",
+    "sleepingThresholdDays": 21
   },
   {
     "id": 37,
@@ -330,7 +366,8 @@
     "lastDeliveryDate": "2026-08-25",
     "lastDeliveryQuantity": 28,
     "cooldownUntil": "2026-08-18",
-    "address": "г. Михайловск, ул. Грибоедова, д. 19"
+    "address": "г. Михайловск, ул. Грибоедова, д. 19",
+    "sleepingThresholdDays": 14
   },
   {
     "id": 38,
@@ -339,7 +376,8 @@
     "lastDeliveryDate": "2026-08-05",
     "lastDeliveryQuantity": null,
     "cooldownUntil": null,
-    "address": "г. Ставрополь, ул. Рогожникова, д. 3"
+    "address": "г. Ставрополь, ул. Рогожникова, д. 3",
+    "sleepingThresholdDays": 7
   },
   {
     "id": 39,
@@ -348,7 +386,8 @@
     "lastDeliveryDate": "2026-08-18",
     "lastDeliveryQuantity": 19,
     "cooldownUntil": "2026-08-11",
-    "address": "г. Михайловск, ул. Садовая, д. 124"
+    "address": "г. Михайловск, ул. Садовая, д. 124",
+    "sleepingThresholdDays": 21
   },
   {
     "id": 40,
@@ -357,7 +396,8 @@
     "lastDeliveryDate": null,
     "lastDeliveryQuantity": null,
     "cooldownUntil": null,
-    "address": "г. Ставрополь, ул. Октябрьская, д. 182"
+    "address": "г. Ставрополь, ул. Октябрьская, д. 182",
+    "sleepingThresholdDays": 14
   },
   {
     "id": 41,
@@ -366,7 +406,8 @@
     "lastDeliveryDate": "2026-08-15",
     "lastDeliveryQuantity": 23,
     "cooldownUntil": "2026-08-08",
-    "address": "г. Михайловск, ул. Лермонтова, д. 73"
+    "address": "г. Михайловск, ул. Лермонтова, д. 73",
+    "sleepingThresholdDays": 7
   },
   {
     "id": 42,
@@ -375,7 +416,8 @@
     "lastDeliveryDate": "2026-08-22",
     "lastDeliveryQuantity": 17,
     "cooldownUntil": "2026-08-15",
-    "address": "г. Ставрополь, ул. Васильева, д. 12"
+    "address": "г. Ставрополь, ул. Васильева, д. 12",
+    "sleepingThresholdDays": 21
   },
   {
     "id": 43,
@@ -384,7 +426,8 @@
     "lastDeliveryDate": "2026-08-01",
     "lastDeliveryQuantity": null,
     "cooldownUntil": null,
-    "address": "г. Михайловск, ул. Терешковой, д. 22"
+    "address": "г. Михайловск, ул. Терешковой, д. 22",
+    "sleepingThresholdDays": 14
   },
   {
     "id": 44,
@@ -393,7 +436,8 @@
     "lastDeliveryDate": "2026-08-31",
     "lastDeliveryQuantity": 30,
     "cooldownUntil": "2026-08-24",
-    "address": "г. Ставрополь, ул. Пригородная, д. 215"
+    "address": "г. Ставрополь, ул. Пригородная, д. 215",
+    "sleepingThresholdDays": 7
   },
   {
     "id": 45,
@@ -402,7 +446,8 @@
     "lastDeliveryDate": null,
     "lastDeliveryQuantity": null,
     "cooldownUntil": null,
-    "address": "г. Михайловск, ул. Кузьмина, д. 8"
+    "address": "г. Михайловск, ул. Кузьмина, д. 8",
+    "sleepingThresholdDays": 21
   },
   {
     "id": 46,
@@ -411,7 +456,8 @@
     "lastDeliveryDate": "2026-08-10",
     "lastDeliveryQuantity": 12,
     "cooldownUntil": "2026-08-03",
-    "address": "г. Ставрополь, ул. Доваторцев, д. 11"
+    "address": "г. Ставрополь, ул. Доваторцев, д. 11",
+    "sleepingThresholdDays": 14
   },
   {
     "id": 47,
@@ -420,7 +466,8 @@
     "lastDeliveryDate": "2026-08-25",
     "lastDeliveryQuantity": 28,
     "cooldownUntil": "2026-08-18",
-    "address": "г. Михайловск, ул. Розы Люксембург, д. 54"
+    "address": "г. Михайловск, ул. Розы Люксембург, д. 54",
+    "sleepingThresholdDays": 7
   },
   {
     "id": 48,
@@ -429,7 +476,8 @@
     "lastDeliveryDate": "2026-08-05",
     "lastDeliveryQuantity": null,
     "cooldownUntil": null,
-    "address": "г. Ставрополь, ул. Булкина, д. 6"
+    "address": "г. Ставрополь, ул. Булкина, д. 6",
+    "sleepingThresholdDays": 21
   },
   {
     "id": 49,
@@ -438,6 +486,7 @@
     "lastDeliveryDate": "2026-08-18",
     "lastDeliveryQuantity": 19,
     "cooldownUntil": "2026-08-11",
-    "address": "г. Михайловск, ул. Никонова, д. 41"
+    "address": "г. Михайловск, ул. Никонова, д. 41",
+    "sleepingThresholdDays": 14
   }
 ]
