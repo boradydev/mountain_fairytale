@@ -9,8 +9,19 @@ class ClientRepositoryImpl implements ClientRepository {
 
   @override
   Future<List<Client>> getAllClients() async {
-    final json = await dataSource.getAllClients();
+    final jsonList = await dataSource.getAllClients();
+    return jsonList.map(Client.fromJson).toList();
+  }
 
-    return json.map(Client.fromJson).toList();
+  @override
+  Future<Client> updateCooldown(int clientId, DateTime cooldownUntil) async {
+    // Переводим DateTime в ISO-строку, так как HTTP-клиенты/JSON работают со строками
+    final String isoDate = cooldownUntil.toIso8601String();
+
+    // Отправляем запрос в DataSource
+    final updatedJson = await dataSource.updateCooldown(clientId, isoDate);
+
+    // Маппим результат обратно в строго типизированную модель
+    return Client.fromJson(updatedJson);
   }
 }

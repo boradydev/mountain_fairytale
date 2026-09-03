@@ -16,53 +16,46 @@ class DeliveryDaysProvider extends ChangeNotifier {
   bool _isLoadingMore = false;
 
   List<DeliveryDay> _days = const [];
-
   DeliveryStatus _status = DeliveryStatus.initial;
   String _errorMessage = '';
 
   List<DeliveryDay> get days => _days;
-
   DeliveryStatus get status => _status;
-
   String get errorMessage => _errorMessage;
-
   bool get isLoading => _status == DeliveryStatus.loading;
-
   bool get isLoadingMore => _isLoadingMore;
-
   bool get hasMore => _hasMore;
-
   bool get hasError => _status == DeliveryStatus.failure;
 
-  bool get isEmpty =>
-      _status == DeliveryStatus.success && _days.isEmpty;
+  bool get isEmpty => _status == DeliveryStatus.success && _days.isEmpty;
 
   bool get shouldShowTodayCard {
-    if (_status != DeliveryStatus.success) {
-      return false;
-    }
-
+    if (_status != DeliveryStatus.success) return false;
     final today = DateTime.now();
+    return !_days.any((day) =>
+    day.date.year == today.year &&
+        day.date.month == today.month &&
+        day.date.day == today.day);
+  }
 
-    return !_days.any(
-          (day) =>
-      day.date.year == today.year &&
-          day.date.month == today.month &&
-          day.date.day == today.day,
-    );
+  /// Полный сброс для Pull-to-Refresh или кнопки Обновить
+  Future<void> refreshDeliveryDays() async {
+    _offset = 0;
+    _hasMore = true;
+    _isLoadingMore = false;
+    _days = const [];
+    _status = DeliveryStatus.initial;
+    await fetchDeliveryDays();
   }
 
   Future<void> fetchDeliveryDays() async {
-    if (_isLoadingMore || !_hasMore) {
-      return;
-    }
+    if (_isLoadingMore || !_hasMore) return;
 
     _isLoadingMore = true;
-
+    // Если это первая загрузка или мы переигрываем ошибку первой загрузки
     if (_days.isEmpty) {
       _status = DeliveryStatus.loading;
     }
-
     notifyListeners();
 
     try {
@@ -71,21 +64,20 @@ class DeliveryDaysProvider extends ChangeNotifier {
         limit: _pageSize,
       );
 
-      _days = [
-        ..._days,
-        ...newDays,
-      ];
-
+      _days = [..._days, ...newDays];
       _offset += newDays.length;
 
       if (newDays.length < _pageSize) {
         _hasMore = false;
       }
-
       _status = DeliveryStatus.success;
     } catch (e) {
       _errorMessage = e.toString();
-      _status = DeliveryStatus.failure;
+      // Если данные уже были, не переключаем экран в глобальную ошибку,
+      // а просто сохраняем текст ошибки (можно показать SnackBar)
+      if (_days.isEmpty) {
+        _status = DeliveryStatus.failure;
+      }
     } finally {
       _isLoadingMore = false;
       notifyListeners();

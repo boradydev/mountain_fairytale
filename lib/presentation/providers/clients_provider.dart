@@ -28,41 +28,47 @@ class ClientsProvider extends ChangeNotifier {
 
   List<Client> get sortedClients {
     final clients = [..._clients];
-
     final now = DateTime.now();
+
+    // Вспомогательная функция для расчета коэффициента просрочки (K)
+    double getUrgencyCoefficient(Client client) {
+      if (client.lastDeliveryDate == null) {
+        return 999.0; // Максимальная срочность, если доставок никогда не было
+      }
+
+      // Считаем разницу в днях
+      final differenceDays = now
+          .difference(client.lastDeliveryDate!)
+          .inDays;
+
+      // Возвращаем коэффициент отношения к порогу засыпания
+      return differenceDays / client.sleepingThresholdDays;
+    }
 
     clients.sort((a, b) {
       final aOnCooldown = _isOnCooldown(a, now);
       final bOnCooldown = _isOnCooldown(b, now);
 
-      // Клиенты на cooldown всегда в конце.
+      // 1. Клиенты на кулдауне всегда в самом конце
       if (aOnCooldown != bOnCooldown) {
         return aOnCooldown ? 1 : -1;
       }
 
-      // Если оба на cooldown — сначала тот,
-      // у кого cooldown закончится раньше.
+      // 2. Если оба на кулдауне — сначала тот, у кого он закончится раньше
       if (aOnCooldown && bOnCooldown) {
         return a.cooldownUntil!.compareTo(b.cooldownUntil!);
       }
 
-      // Клиенты без доставки вообще — самые приоритетные.
-      if (a.lastDeliveryDate == null && b.lastDeliveryDate != null) {
-        return -1;
+      // 3. Для активных клиентов сортируем по коэффициенту срочности (чем больше K, тем выше)
+      final aUrgency = getUrgencyCoefficient(a);
+      final bUrgency = getUrgencyCoefficient(b);
+
+      if (aUrgency != bUrgency) {
+        return bUrgency.compareTo(aUrgency); // Сортировка по убыванию
       }
 
-      if (a.lastDeliveryDate != null && b.lastDeliveryDate == null) {
-        return 1;
-      }
-
-      // Если у обоих нет доставки — порядок по имени.
-      if (a.lastDeliveryDate == null && b.lastDeliveryDate == null) {
-        return a.name.compareTo(b.name);
-      }
-
-      // Чем старше последняя доставка,
-      // тем выше клиент в списке.
-      return a.lastDeliveryDate!.compareTo(b.lastDeliveryDate!);
+      // 4. Если коэффициенты равны, сортируем по имени
+      return a.name.compareTo(b.name);
     });
 
     return clients;
