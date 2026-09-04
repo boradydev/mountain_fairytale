@@ -5,6 +5,7 @@ class MetricRow extends StatelessWidget {
   final String label;
   final String value;
   final double? labelWidth;
+  final double? valueWidth;
   final Color? iconColor;
   final Color? valueColor;
 
@@ -14,6 +15,7 @@ class MetricRow extends StatelessWidget {
     required this.label,
     required this.value,
     this.labelWidth,
+    this.valueWidth,
     this.iconColor,
     this.valueColor,
   });
@@ -47,18 +49,22 @@ class MetricRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          Text.rich(
-            TextSpan(
-              text: value,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: valueColor ?? colorScheme.onSurface,
-                fontSize: 14,
+          // Обернуто в SizedBox по аналогии с labelWidth
+          SizedBox(
+            width: valueWidth,
+            child: Text.rich(
+              TextSpan(
+                text: value,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: valueColor ?? colorScheme.onSurface,
+                  fontSize: 14,
+                ),
               ),
+              textAlign: TextAlign.left,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
-            textAlign: TextAlign.left,
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
           ),
         ],
       ),
