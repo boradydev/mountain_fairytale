@@ -54,20 +54,39 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen> {
   Widget build(BuildContext context) {
     final isDarkMode = context.select((ThemeProvider p) => p.isDarkMode);
     final l10n = AppLocalizations.of(context)!;
-
-    // Точечно слушаем только статус загрузки для отображения нужного экрана
     final status = context.select((DeliveryDaysProvider p) => p.status);
+
+    // Слушаем состояние фильтра, чтобы менять цвет иконки кнопки
+    final showOnlySleeping = context.select((ClientsProvider p) =>
+    p.showOnlySleeping);
+    final colorScheme = Theme
+        .of(context)
+        .colorScheme;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.appTitle),
         actions: [
+          // Новая кнопка фильтрации клиентов по просрочке
+          IconButton(
+            icon: Icon(
+              showOnlySleeping ? Icons.warning_rounded : Icons
+                  .warning_amber_rounded,
+              // Если фильтр включен — красим его в акцентный цвет (например, оранжевый или primary)
+              color: showOnlySleeping ? Colors.orange.shade700 : null,
+            ),
+            tooltip: showOnlySleeping
+                ? 'Показать всех'
+                : 'Только просроченные клиенты',
+            onPressed: () =>
+                context.read<ClientsProvider>().toggleSleepingFilter(),
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: status == DeliveryStatus.loading
                 ? null
                 : () =>
-                      context.read<DeliveryDaysProvider>().fetchDeliveryDays(),
+                context.read<DeliveryDaysProvider>().fetchDeliveryDays(),
           ),
           const LocaleToggleButton(),
           IconButton(

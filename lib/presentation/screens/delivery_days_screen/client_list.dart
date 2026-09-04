@@ -26,20 +26,36 @@ class ClientsAttentionListView extends StatelessWidget {
 
     final clients = context.select((ClientsProvider p) => p.sortedClients);
 
-    // Карточка добавления отображается всегда, когда данные успешно загружены
-    const addCardCount = 1;
+    // Читаем из провайдера, включен ли сейчас фильтр просрочки
+    final showOnlySleeping = context.select((ClientsProvider p) =>
+    p.showOnlySleeping);
+
+    // Если фильтр включен — карточку добавления НЕ показываем (count = 0), иначе показываем (count = 1)
+    final addCardCount = showOnlySleeping ? 0 : 1;
+
+    if (clients.isEmpty && showOnlySleeping) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Text(
+            'Все клиенты в порядке!\nПросроченных нет.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey, fontSize: 16),
+          ),
+        ),
+      );
+    }
 
     return ListView.builder(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      // Общее количество элементов увеличивается на 1 из-за карточки создания
       itemCount: clients.length + addCardCount,
       itemBuilder: (context, index) {
-        // Первым элементом (индекс 0) всегда выводим карточку создания клиента
-        if (index == 0) {
+        // Если карточка добавления активна и это самый первый элемент
+        if (addCardCount == 1 && index == 0) {
           return const _AddClientCard();
         }
 
-        // Для остальных элементов уменьшаем индекс на 1, чтобы не выйти за пределы массива
+        // Смещаем индекс на addCardCount (0 или 1), чтобы правильно читать массив
         final client = clients[index - addCardCount];
         return _ClientAttentionCard(client: client);
       },

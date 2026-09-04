@@ -10,68 +10,76 @@ class ClientsProvider extends ChangeNotifier {
   ClientsProvider(this._repository);
 
   List<Client> _clients = const [];
-
   ClientStatus _status = ClientStatus.initial;
   String _errorMessage = '';
 
+  // Новый стейт: показывать только просроченных?
+  bool _showOnlySleeping = false;
+
   List<Client> get clients => _clients;
-
   ClientStatus get status => _status;
-
   String get errorMessage => _errorMessage;
-
   bool get isLoading => _status == ClientStatus.loading;
-
   bool get hasError => _status == ClientStatus.failure;
-
   bool get isEmpty => _status == ClientStatus.success && _clients.isEmpty;
 
+  // Геттер для чтения состояния фильтра в UI
+  bool get showOnlySleeping => _showOnlySleeping;
+
+  /// Переключатель фильтра
+  void toggleSleepingFilter() {
+    _showOnlySleeping = !_showOnlySleeping;
+    notifyListeners(); // Мгновенно перерисовываем UI с новой логикой
+  }
+
+  /// Универсальный геттер, который теперь учитывает активный режим
   List<Client> get sortedClients {
-    final clients = [..._clients];
     final now = DateTime.now();
 
     // Вспомогательная функция для расчета коэффициента просрочки (K)
     double getUrgencyCoefficient(Client client) {
-      if (client.lastDeliveryDate == null) {
-        return 999.0; // Максимальная срочность, если доставок никогда не было
-      }
-
-      // Считаем разницу в днях
+      if (client.lastDeliveryDate == null) return 999.0;
       final differenceDays = now
           .difference(client.lastDeliveryDate!)
           .inDays;
-
-      // Возвращаем коэффициент отношения к порогу засыпания
       return differenceDays / client.sleepingThresholdDays;
     }
 
-    clients.sort((a, b) {
-      final aOnCooldown = _isOnCooldown(a, now);
-      final bOnCooldown = _isOnCooldown(b, now);
-
-      // 1. Клиенты на кулдауне всегда в самом конце
-      if (aOnCooldown != bOnCooldown) {
-        return aOnCooldown ? 1 : -1;
+    // Вспомогательная функция проверки: просрочен ли клиент? (K >= 1.0)
+    bool isSleeping(Client client) {
+      // Если клиент на кулдауне, менеджер его уже обработал — он временно не считается "активно засыпающим"
+      final cooldownUntil = client.cooldownUntil;
+      if (cooldownUntil != null && cooldownUntil.isAfter(now)) {
+        return false;
       }
+      return getUrgencyCoefficient(client) >= 1.0;
+    }
 
-      // 2. Если оба на кулдауне — сначала тот, у кого он закончится раньше
-      if (aOnCooldown && bOnCooldown) {
-        return a.cooldownUntil!.compareTo(b.cooldownUntil!);
-      }
+    // ----------------------------------------------------
+    // РЕЖИМ 1: Показываем ТОЛЬКО просроченных клиентов
+    // ----------------------------------------------------
+    if (_showOnlySleeping) {
+      // Сначала фильтруем: оставляем только тех, кто реально спит
+      final filtered = _clients.where(isSleeping).toList();
 
-      // 3. Для активных клиентов сортируем по коэффициенту срочности (чем больше K, тем выше)
-      final aUrgency = getUrgencyCoefficient(a);
-      final bUrgency = getUrgencyCoefficient(b);
+      // Сортируем их по критичности (чем больше K, тем выше)
+      filtered.sort((a, b) {
+        final aUrgency = getUrgencyCoefficient(a);
+        final bUrgency = getUrgencyCoefficient(b);
+        if (aUrgency != bUrgency) return bUrgency.compareTo(aUrgency);
+        return a.name.compareTo(b.name);
+      });
 
-      if (aUrgency != bUrgency) {
-        return bUrgency.compareTo(aUrgency); // Сортировка по убыванию
-      }
+      return filtered;
+    }
 
-      // 4. Если коэффициенты равны, сортируем по имени
-      return a.name.compareTo(b.name);
-    });
-
-    return clients;
+    // ----------------------------------------------------
+    // РЕЖИМ 2: Обычный режим (Сортировка по ID от новых к старым)
+    // ----------------------------------------------------
+    final allClients = [..._clients];
+    allClients.sort((a, b) =>
+        b.id.compareTo(a.id)); // Новые (больший ID) будут сверху
+    return allClients;
   }
 
   bool _isOnCooldown(Client client, DateTime now) {
