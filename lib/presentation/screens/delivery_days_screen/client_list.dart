@@ -88,59 +88,36 @@ class _ClientAttentionCard extends StatelessWidget {
 
   const _ClientAttentionCard({required this.client});
 
-  // Метод определения цвета в зависимости от коэффициента просрочки
-  Color? _getUrgencyColor(BuildContext context, Client client) {
-    if (client.lastDeliveryDate == null)
-      return Colors.red.shade700; // Никогда не покупал
-
-    final now = DateTime.now();
-    final differenceDays = now
-        .difference(client.lastDeliveryDate!)
-        .inDays;
-    final k = differenceDays / client.sleepingThresholdDays;
-
-    if (k >= 3.0) return Colors.red.shade700; // x3 и более
-    if (k >= 2.0) return Colors.orange.shade700; // x2 - x3
-    if (k >= 1.0) return Colors.amber.shade600; // x1 - x2 (желтый/янтарный)
-
-    return null; // Нет просрочки, цвет не нужен
-  }
-
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final now = DateTime.now();
-    final isOnCooldown = client.cooldownUntil != null &&
-        client.cooldownUntil!.isAfter(now);
 
-    // Получаем цвет индикатора (если клиент на кулдауне — индикатор скрываем или делаем серым)
-    final indicatorColor = isOnCooldown ? null : _getUrgencyColor(
-        context, client);
+    // Рассчитываем конфигурацию визуального статуса
+    final statusConfig = _ClientStatusConfig.calculate(client, now);
 
     return AppBaseCard(
       onTap: () {
         // Логика перехода на детальный экран
       },
-      child: IntrinsicHeight( // Чтобы цветная полоска растягивалась по всей высоте содержимого
+      child: IntrinsicHeight(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Левый цветной маркер срочности
-            if (indicatorColor != null) ...[
-              Container(
-                width: 5,
-                decoration: BoxDecoration(
-                  color: indicatorColor,
-                  borderRadius: BorderRadius.circular(4),
-                ),
+            // Левая цветная индикаторная линия
+            Container(
+              width: 5,
+              decoration: BoxDecoration(
+                color: statusConfig.lineColor,
+                borderRadius: BorderRadius.circular(4),
               ),
-              const SizedBox(width: 12),
-            ],
-
-            // Основной контент карточки
+            ),
+            const SizedBox(width: 16),
             Expanded(
+              flex: 3,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -155,94 +132,145 @@ class _ClientAttentionCard extends StatelessWidget {
                           ),
                         ),
                       ),
+                      // Кнопка вызова меню откладывания
                       PopupMenuButton<int>(
-                        icon: Icon(
-                          Icons.access_time_rounded,
-                          color: isOnCooldown
-                              ? colorScheme.primary
-                              : colorScheme.onSurfaceVariant,
-                        ),
+                        icon: Icon(Icons.access_time_rounded,
+                          color: statusConfig.badgeTextColor,),
                         tooltip: 'Отложить обработку',
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
                         onSelected: (weeks) {
                           context.read<ClientsProvider>().updateClientCooldown(
                               client.id, weeks);
                         },
                         itemBuilder: (BuildContext context) =>
                         <PopupMenuEntry<int>>[
-                          const PopupMenuItem<int>(value: 1, child: Text(
-                              'Отложить на 1 неделю')),
-                          const PopupMenuItem<int>(value: 2, child: Text(
-                              'Отложить на 2 недели')),
-                          const PopupMenuItem<int>(value: 3, child: Text(
-                              'Отложить на 3 недели')),
+                          const PopupMenuItem<int>(
+                              value: 1, child: Text('Отложить на 1 неделю')),
+                          const PopupMenuItem<int>(
+                              value: 2, child: Text('Отложить на 2 недели')),
+                          const PopupMenuItem<int>(
+                              value: 3, child: Text('Отложить на 3 недели')),
                         ],
                       ),
+                      MetricRow(label: 'Статус доставок:',
+                        value: statusConfig.statusText,
+                        valueWidth: 170,
+                      ),
+
                     ],
-                  ),
-                  Text(
-                    client.address,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: colorScheme.onSurfaceVariant.withAlpha(200),
-                    ),
                   ),
                   const SizedBox(height: 8),
                   Divider(color: colorScheme.outlineVariant, height: 1),
                   const SizedBox(height: 8),
                   Row(
                     children: [
+                      MetricRow(
+                        label: 'Телефон:',
+                        value: client.phone,
+                      ),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: MetricRow(
-                          label: 'Телефон:',
-                          labelWidth: 65,
-                          value: client.phone,
+                          label: 'Адрес:',
+                          value: client.address,
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: MetricRow(
-                          label: 'Последняя доставка:',
-                          labelWidth: 140,
-                          value: client.lastDeliveryDate?.toFormattedString() ??
-                              'никогда',
-                        ),
+                      MetricRow(
+                        label: 'Последняя доставка:',
+                        value: client.lastDeliveryDate?.toFormattedString() ??
+                            'никогда',
+                        valueWidth: 170,
                       ),
                     ],
                   ),
-                  if (isOnCooldown) ...[
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: colorScheme.primaryContainer.withAlpha(100),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.info_outline, size: 14, color: colorScheme
-                              .primary),
-                          const SizedBox(width: 6),
-                          Text(
-                            'В режиме ожидания до: ${client.cooldownUntil!
-                                .toFormattedString()}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: colorScheme.onPrimaryContainer,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
                 ],
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ClientStatusConfig {
+  final Color lineColor; // Цвет полоски справа
+  final Color badgeBgColor; // Фон плашки статуса
+  final Color badgeTextColor; // Цвет текста плашки
+  final String statusText; // Сам текст статуса
+
+  const _ClientStatusConfig({
+    required this.lineColor,
+    required this.badgeBgColor,
+    required this.badgeTextColor,
+    required this.statusText,
+  });
+
+  factory _ClientStatusConfig.calculate(Client client, DateTime now) {
+    // 1. Состояние: Режим ожидания (Кулдаун) — высший приоритет для отображения
+    final cooldownUntil = client.cooldownUntil;
+    if (cooldownUntil != null && cooldownUntil.isAfter(now)) {
+      return const _ClientStatusConfig(
+        lineColor: Colors.blue,
+        badgeBgColor: Color(0xFFE3F2FD), // Light blue
+        badgeTextColor: Color(0xFF0D47A1), // Dark blue
+        statusText: 'В режиме ожидания',
+      );
+    }
+
+    // 2. Состояние: Доставок вообще никогда не было
+    if (client.lastDeliveryDate == null) {
+      return _ClientStatusConfig(
+        lineColor: Colors.red.shade700,
+        badgeBgColor: Colors.red.shade50,
+        badgeTextColor: Colors.red.shade900,
+        statusText: 'Доставок не было',
+      );
+    }
+
+    // Вычисляем просрочку в днях и коэффициент K
+    final differenceDays = now
+        .difference(client.lastDeliveryDate!)
+        .inDays;
+    final k = differenceDays / client.sleepingThresholdDays;
+
+    // 3. Состояние: Критическое (Красный)
+    if (k >= 3.0) {
+      return _ClientStatusConfig(
+        lineColor: Colors.red.shade700,
+        badgeBgColor: Colors.red.shade50,
+        badgeTextColor: Colors.red.shade900,
+        statusText: 'Без доставки $differenceDays дн.',
+      );
+    }
+
+    // 4. Состояние: Засыпает (Оранжевый)
+    if (k >= 2.0) {
+      return _ClientStatusConfig(
+        lineColor: Colors.orange.shade700,
+        badgeBgColor: Colors.orange.shade50,
+        badgeTextColor: Colors.orange.shade900,
+        statusText: 'Без доставки $differenceDays дн.',
+      );
+    }
+
+    // 5. Состояние: Внимание (Желтый)
+    if (k >= 1.0) {
+      return _ClientStatusConfig(
+        lineColor: Colors.amber.shade600,
+        badgeBgColor: Colors.amber.shade50,
+        badgeTextColor: Colors.amber.shade900,
+        statusText: 'Без доставки $differenceDays дн.',
+      );
+    }
+
+    // 6. Состояние: Норма (Зеленый)
+    return const _ClientStatusConfig(
+      lineColor: Colors.green,
+      badgeBgColor: Color(0xFFE8F5E9), // Light green
+      badgeTextColor: Color(0xFF1B5E20), // Dark green
+      statusText: 'Доставляем регулярно',
     );
   }
 }
