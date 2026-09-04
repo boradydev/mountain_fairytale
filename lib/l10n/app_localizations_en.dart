@@ -15,6 +15,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deliveryCardTitleToday => 'Delivery on today';
 
   @override
+  String get deliveryCardAddDelivery => 'Add Delivery';
+
+  @override
   String get deliveryCardTitle => 'Delivery on';
 
   @override

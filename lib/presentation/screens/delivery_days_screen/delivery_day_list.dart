@@ -3,6 +3,7 @@ import 'package:mountain_fairytale/core/utils/datetime_extensions.dart';
 import 'package:mountain_fairytale/infrastructure/repos/delivery_day/models/delivery_day_model.dart';
 import 'package:mountain_fairytale/l10n/app_localizations.dart';
 import 'package:mountain_fairytale/presentation/providers/delivery_days_provider.dart';
+import 'package:mountain_fairytale/presentation/widgets/add_action_card.dart';
 import 'package:mountain_fairytale/presentation/widgets/card_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/metric_row_widget.dart';
 import 'package:provider/provider.dart';
@@ -31,6 +32,8 @@ class DeliveryDaysListView extends StatelessWidget {
 
     final todayCardCount = shouldShowTodayCard ? 1 : 0;
     final loaderCount = showLoader ? 1 : 0;
+    final l10n = AppLocalizations.of(context)!;
+
 
     return ListView.builder(
       controller: scrollController,
@@ -39,10 +42,16 @@ class DeliveryDaysListView extends StatelessWidget {
       itemBuilder: (context, index) {
         // Первая карточка — "Добавить доставку на сегодня"
         if (shouldShowTodayCard && index == 0) {
-          return const _TodayDeliveryCard();
+          return AddActionButton(
+            label: l10n.deliveryCardAddDelivery, // Берем заголовок из локализации ("Доставка на сегодня")
+            icon: Icons.add_circle_outline,
+            onTap: () {
+              // TODO: Открыть форму/диалог создания дня доставки
+            },
+          );
         }
 
-        // Смещаем индекс, если перед списком есть TodayDeliveryCard
+        // Смещаем индекс, если перед списком есть кнопка добавления
         final dayIndex = index - todayCardCount;
 
         // Последний элемент — loader

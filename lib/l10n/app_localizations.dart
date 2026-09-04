@@ -107,6 +107,12 @@ abstract class AppLocalizations {
   /// **'Delivery on today'**
   String get deliveryCardTitleToday;
 
+  /// No description provided for @deliveryCardAddDelivery.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Delivery'**
+  String get deliveryCardAddDelivery;
+
   /// No description provided for @deliveryCardTitle.
   ///
   /// In en, this message translates to:

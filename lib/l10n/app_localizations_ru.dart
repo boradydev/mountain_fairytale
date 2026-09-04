@@ -15,6 +15,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get deliveryCardTitleToday => 'Доставка на сегодня';
 
   @override
+  String get deliveryCardAddDelivery => 'Добавить доставку';
+
+  @override
   String get deliveryCardTitle => 'Доставка на';
 
   @override
