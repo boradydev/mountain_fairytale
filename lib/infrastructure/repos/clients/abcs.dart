@@ -2,7 +2,15 @@ import 'package:mountain_fairytale/infrastructure/repos/clients/models/client_mo
 
 abstract interface class ClientRepository {
   Future<List<Client>> getAllClients();
-
-  // Добавляем контракт на обновление кулдауна
   Future<Client> updateCooldown(int clientId, DateTime cooldownUntil);
+
+  Future<Client?> checkDuplicate(String name, String address);
+
+  // Новый контракт в репозитории
+  Future<Client> createClient({
+    required String name,
+    required String phone,
+    required String address,
+    required int thresholdDays,
+  });
 }

@@ -58,4 +58,73 @@ class DemoClientDataSource implements ClientDataSource {
     // Возвращаем обновленную карту клиента
     return _cache![index];
   }
+
+  @override
+  Future<Map<String, dynamic>?> checkDuplicate(String name,
+      String address) async {
+    await Future<void>.delayed(
+        const Duration(milliseconds: 300)); // Имитируем сеть
+
+    if (_cache == null) {
+      await _getDemoJson();
+    }
+
+    final cleanName = name.trim().toLowerCase();
+    final cleanAddress = address.trim().toLowerCase();
+
+    if (cleanName.isEmpty || cleanAddress.isEmpty) return null;
+
+    // Ищем точное совпадение по имени и адресу в кэше
+    try {
+      final duplicate = _cache!.firstWhere(
+            (client) =>
+        client['name'].toString().toLowerCase() == cleanName &&
+            client['address'].toString().toLowerCase() == cleanAddress,
+      );
+      return duplicate;
+    } catch (_) {
+      return null; // Дубликат не найден
+    }
+  }
+
+  // Реализуем метод добавления внутри дата-сорса:
+  @override
+  Future<Map<String, dynamic>> createClient({
+    required String name,
+    required String phone,
+    required String address,
+    required int thresholdDays,
+  }) async {
+    // Имитируем задержку сети
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+
+    // Гарантируем, что кэш загружен
+    if (_cache == null) {
+      await _getDemoJson();
+    }
+
+    // Находим максимальный ID в текущем кэше и прибавляем 1
+    final int newId = _cache!.isEmpty
+        ? 1
+        : _cache!.map((c) => int.parse(c['id'].toString())).reduce((a, b) =>
+    a > b ? a : b) + 1;
+
+    // Формируем структуру в точном соответствии с JSON-моделью
+    final newClientJson = {
+      'id': newId,
+      'name': name.trim(),
+      'phone': phone.trim(),
+      'address': address.trim(),
+      'sleepingThresholdDays': thresholdDays,
+      'lastDeliveryDate': null,
+      'lastDeliveryQuantity': null,
+      'cooldownUntil': null,
+    };
+
+    // Пушим в начало нашего кэша, чтобы новый клиент сразу отображался сверху
+    _cache!.insert(0, newClientJson);
+
+    return newClientJson;
+  }
+
 }

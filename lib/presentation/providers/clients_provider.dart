@@ -137,5 +137,43 @@ class ClientsProvider extends ChangeNotifier {
     }
   }
 
+  Future<Client?> checkClientDuplicate(String name, String address) async {
+    try {
+      return await _repository.checkDuplicate(name, address);
+    } catch (e) {
+      _errorMessage = e.toString();
+      return null;
+    }
+  }
 
+
+  Future<void> addClient({
+    required String name,
+    required String phone,
+    required String address,
+    required int thresholdDays,
+  }) async {
+    _status = ClientStatus.loading;
+    _errorMessage = '';
+    notifyListeners();
+
+    try {
+      // Делаем реальный запрос через репозиторий
+      final newClient = await _repository.createClient(
+        name: name,
+        phone: phone,
+        address: address,
+        thresholdDays: thresholdDays,
+      );
+
+      // Добавляем созданную модель в стейт провайдера
+      _clients = [newClient, ..._clients];
+      _status = ClientStatus.success;
+    } catch (e) {
+      _errorMessage = e.toString();
+      _status = ClientStatus.failure;
+    } finally {
+      notifyListeners();
+    }
+  }
 }

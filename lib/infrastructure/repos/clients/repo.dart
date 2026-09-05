@@ -24,4 +24,28 @@ class ClientRepositoryImpl implements ClientRepository {
     // Маппим результат обратно в строго типизированную модель
     return Client.fromJson(updatedJson);
   }
+
+  @override
+  Future<Client?> checkDuplicate(String name, String address) async {
+    final json = await dataSource.checkDuplicate(name, address);
+    if (json == null) return null;
+    return Client.fromJson(json);
+  }
+
+  @override
+  Future<Client> createClient({
+    required String name,
+    required String phone,
+    required String address,
+    required int thresholdDays,
+  }) async {
+    final json = await dataSource.createClient(
+      name: name,
+      phone: phone,
+      address: address,
+      thresholdDays: thresholdDays,
+    );
+
+    return Client.fromJson(json);
+  }
 }

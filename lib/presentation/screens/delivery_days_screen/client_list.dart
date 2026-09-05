@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/core/utils/datetime_extensions.dart';
 import 'package:mountain_fairytale/infrastructure/repos/clients/models/client_model.dart';
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
+import 'package:mountain_fairytale/presentation/screens/delivery_days_screen/add_client_dialog.dart';
 import 'package:mountain_fairytale/presentation/widgets/add_action_card.dart';
 import 'package:mountain_fairytale/presentation/widgets/base_card_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/metric_row_widget.dart';
@@ -78,7 +79,11 @@ class _AddClientCard extends StatelessWidget {
     return AddActionButton(label: 'Добавить клиента',
         icon: Icons.person_add_alt_1_outlined,
         onTap: () {
-          // TODO: Логика добавления клиента
+          showDialog(
+            context: context,
+            barrierDismissible: true, // Клик вне окна закроет его
+            builder: (context) => const AddClientDialog(),
+          );
         });
   }
 }
