@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/core/theme_extensions.dart';
 import 'package:mountain_fairytale/infrastructure/repos/clients/models/client_model.dart';
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
+import 'package:mountain_fairytale/presentation/widgets/metric_row_widget.dart';
+import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
 import 'package:provider/provider.dart';
 
 class AddClientDialog extends StatefulWidget {
@@ -23,6 +26,7 @@ class _AddClientDialogState extends State<AddClientDialog> {
 
   Client? _duplicateClient;
   bool _isCheckingDuplicate = false;
+  bool _duplicateChecked = false;
 
   @override
   void initState() {
@@ -47,6 +51,7 @@ class _AddClientDialogState extends State<AddClientDialog> {
         setState(() {
           _duplicateClient = duplicate;
           _isCheckingDuplicate = false;
+          _duplicateChecked = true;
         });
       }
     }
@@ -78,7 +83,6 @@ class _AddClientDialogState extends State<AddClientDialog> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
@@ -97,55 +101,11 @@ class _AddClientDialogState extends State<AddClientDialog> {
                 ),
                 const SizedBox(height: 16),
 
-                // --- БЛОК ИНФОРМАЦИИ О ДУБЛИКАТЕ ---
-                if (_isCheckingDuplicate)
-                  const Padding(
-                    padding: EdgeInsets.only(bottom: 12),
-                    child: Row(
-                      children: [
-                        SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
-                        SizedBox(width: 12),
-                        Text('Проверка на дубликаты...', style: TextStyle(color: Colors.grey)),
-                      ],
-                    ),
-                  ),
-                if (_duplicateClient != null)
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 16),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.shade50,
-                      border: Border.all(color: Colors.amber.shade600),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(Icons.warning_amber_rounded, color: Colors.amber.shade900),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Внимание! Возможный дубликат',
-                                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.amber.shade900),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Найден клиент: ID ${_duplicateClient!.id}\n'
-                                    'Название: ${_duplicateClient!.name}\n'
-                                    'Адрес: ${_duplicateClient!.address}\n'
-                                    'Телефон: ${_duplicateClient!.phone}',
-                                style: TextStyle(fontSize: 13, color: Colors.amber.shade900),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                // ----------------------------------
+                // --- СТАТУС ПРОВЕРКИ НА ДУБЛИКАТЫ ---
+                _DuplicateCheckStatus(
+                  isChecking: _isCheckingDuplicate,
+                  isChecked: _duplicateChecked,
+                  duplicateClient: _duplicateClient,),
 
                 TextFormField(
                   controller: _nameController,
@@ -198,18 +158,14 @@ class _AddClientDialogState extends State<AddClientDialog> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    TextButton(
+                    AppSecondaryButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Отмена'),
+                      text: 'Отмена',
                     ),
                     const SizedBox(width: 8),
-                    ElevatedButton(
+                    AppPrimaryButton(
                       onPressed: _submitForm,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colorScheme.primary,
-                        foregroundColor: colorScheme.onPrimary,
-                      ),
-                      child: const Text('Создать клиента'),
+                      text: 'Создать клиента',
                     ),
                   ],
                 ),
@@ -221,3 +177,122 @@ class _AddClientDialogState extends State<AddClientDialog> {
     );
   }
 }
+
+class _DuplicateCheckStatus extends StatelessWidget {
+  final bool isChecking;
+  final bool isChecked;
+  final Client? duplicateClient;
+
+  const _DuplicateCheckStatus({
+    required this.isChecking,
+    required this.isChecked,
+    required this.duplicateClient,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme
+        .of(context)
+        .colorScheme;
+    final customColors = Theme.of(context).extension<AppColorsExtension>()!;
+    final hasDuplicate = duplicateClient != null;
+
+    final Color contentColor;
+    final IconData icon;
+    final String text;
+
+    if (isChecking) {
+      contentColor = colorScheme.onSurfaceVariant;
+      icon = Icons.hourglass_empty_rounded;
+      text = 'Проверка на дубликаты...';
+    } else if (!isChecked) {
+      contentColor = colorScheme.onSurfaceVariant;
+      icon = Icons.search_rounded;
+      text = 'Ожидание проверки...';
+    } else if (hasDuplicate) {
+      contentColor = customColors.warningColor;
+      icon = Icons.warning_amber_rounded;
+      text = 'Найдены возможные дубликаты';
+    } else {
+      contentColor = customColors.successColor;
+      icon = Icons.check_circle_outline;
+      text = 'Дубликаты не найдены';
+    }
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: colorScheme.outlineVariant,
+          width: 1,
+        ),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // --- СТАТУС ---
+          Row(
+            children: [
+              if (isChecking)
+                SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: contentColor,
+                  ),
+                )
+              else
+                Icon(
+                  icon,
+                  size: 18,
+                  color: contentColor,
+                ),
+              const SizedBox(width: 10),
+              Text(
+                text,
+                style: TextStyle(
+                  color: contentColor,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          // --- ИНФОРМАЦИЯ О ДУБЛИКАТЕ ---
+          if (hasDuplicate) ...[
+            const SizedBox(height: 12),
+            Divider(
+              color: colorScheme.outlineVariant.withAlpha(128),
+              height: 1,
+            ),
+            const SizedBox(height: 6),
+            MetricRow(
+              label: 'ID клиента:',
+              value: duplicateClient!.id.toString(),
+              labelWidth: 100,
+            ),
+            MetricRow(
+              label: 'Название:',
+              value: duplicateClient!.name,
+              labelWidth: 100,
+            ),
+            MetricRow(
+              label: 'Адрес:',
+              value: duplicateClient!.address,
+              labelWidth: 100,
+            ),
+            MetricRow(
+              label: 'Телефон:',
+              value: duplicateClient!.phone,
+              labelWidth: 100,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
