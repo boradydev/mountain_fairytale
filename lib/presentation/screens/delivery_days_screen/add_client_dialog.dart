@@ -207,11 +207,11 @@ class _DuplicateCheckStatus extends StatelessWidget {
       text = 'Проверка на дубликаты...';
     } else if (!isChecked) {
       contentColor = colorScheme.onSurfaceVariant;
-      icon = Icons.hourglass_empty_rounded;
-      text = 'Ожидание проверки...';
+      icon = Icons.help_outline_rounded    ;
+      text = 'Введите данные для проверки...';
     } else if (hasDuplicate) {
       contentColor = customColors.warningColor;
-      icon = Icons.warning_amber_rounded;
+      icon = Icons.info_outline;
       text = 'Найдены возможные дубликаты';
     } else {
       contentColor = customColors.successColor;
@@ -222,14 +222,6 @@ class _DuplicateCheckStatus extends StatelessWidget {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: colorScheme.outlineVariant,
-          width: 1,
-        ),
-        borderRadius: BorderRadius.circular(10),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
