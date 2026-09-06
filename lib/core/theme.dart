@@ -21,6 +21,7 @@ class AppTheme {
       // Регистрируем кастомные цвета внутри темы
       extensions: [
         AppColorsExtension(
+          // --- WARNING COLORS ---
           // Для светлой темы используем ваш четкий оранжевый, для темной — чуть светлее и пастельнее
           warningColor: isDark
               ? const Color(0xFFFF9800)
@@ -29,6 +30,17 @@ class AppTheme {
           warningContainer: isDark
               ? const Color(0xFF3E2723)
               : const Color(0xFFFFF3E0),
+
+          // --- GOOD COLORS ---
+          // Насыщенный зеленый для текста/иконок успеха
+          successColor: isDark
+              ? const Color(0xFF81C784)
+              : const Color(0xFF2E7D32),
+          // Мягкий зеленый фон для плашки
+          successContainer: isDark
+              ? const Color(0xFF1B5E20).withAlpha(
+              40) // Ненасыщенный темно-зеленый
+              : const Color(0xFFE8F5E9), // Приятный светло-зеленый
         ),
       ],
     );
