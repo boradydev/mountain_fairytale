@@ -3,6 +3,7 @@ import 'package:mountain_fairytale/core/utils/datetime_extensions.dart';
 import 'package:mountain_fairytale/infrastructure/repos/delivery_day/models/delivery_day_model.dart';
 import 'package:mountain_fairytale/l10n/app_localizations.dart';
 import 'package:mountain_fairytale/presentation/providers/delivery_days_provider.dart';
+import 'package:mountain_fairytale/presentation/screens/route_constructor_screen/route_constructor_screen.dart';
 import 'package:mountain_fairytale/presentation/widgets/add_action_card.dart';
 import 'package:mountain_fairytale/presentation/widgets/card_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/metric_row_widget.dart';
@@ -46,7 +47,10 @@ class DeliveryDaysListView extends StatelessWidget {
             label: l10n.deliveryCardAddDelivery, // Берем заголовок из локализации ("Доставка на сегодня")
             icon: Icons.add_circle_outline,
             onTap: () {
-              // TODO: Открыть форму/диалог создания дня доставки
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                    builder: (context) => const RouteConstructorScreen()),
+              );
             },
           );
         }

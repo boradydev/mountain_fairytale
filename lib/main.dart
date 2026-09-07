@@ -3,14 +3,18 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/infrastructure/data_sources/clients/demo_data_source.dart';
+import 'package:mountain_fairytale/infrastructure/data_sources/constructor/demo_constructor_data_source.dart';
 import 'package:mountain_fairytale/infrastructure/data_sources/delivery_day/demo_data_source.dart';
 import 'package:mountain_fairytale/infrastructure/repos/clients/repo.dart';
+import 'package:mountain_fairytale/infrastructure/repos/constructor_directory_repo.dart';
 import 'package:mountain_fairytale/infrastructure/repos/delivery_day/repo.dart';
+import 'package:mountain_fairytale/infrastructure/repos/delivery_route/delivery_route_repository.dart';
 import 'package:mountain_fairytale/infrastructure/window_settings_service.dart';
 import 'package:mountain_fairytale/l10n/app_localizations.dart';
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/delivery_days_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/locale_provider.dart';
+import 'package:mountain_fairytale/presentation/providers/route_constructor_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/theme_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/delivery_days_screen/dashboard.dart';
 import 'package:provider/provider.dart';
@@ -47,8 +51,10 @@ Future<void> main() async {
 
     windowManager.addListener(WindowSettingsService());
   }
+  final constructorDataSource = DemoConstructorDataSource();
   runApp(
     MultiProvider(
+
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider(prefs)),
         ChangeNotifierProvider(create: (_) => LocaleProvider(prefs)),
@@ -65,6 +71,17 @@ Future<void> main() async {
                 ClientRepositoryImpl(
                   DemoClientDataSource(),
                 ),
+              ),
+
+        ),
+        ChangeNotifierProvider(
+          create: (context) =>
+              RouteConstructorProvider(
+                directoryRepo: ConstructorDirectoryRepository(
+                  carDataSource: constructorDataSource,
+                  productDataSource: constructorDataSource,
+                ),
+                routeRepo: DeliveryRouteRepository(constructorDataSource),
               ),
         ),
       ],
