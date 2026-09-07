@@ -1,0 +1,36 @@
+[
+  {
+    "id": 1,
+    "date": "2026-09-07T00:00:00.000Z",
+    "driverName": "Иванов Петр",
+    "carId": 1,
+    "carModelAndNumber": "Газель Некст (А123КХ 126)",
+    "startMileage": 120500.0,
+    "endMileage": 120640.0,
+    "points": [
+      {
+        "clientId": 1,
+        "clientName": "ООО Вектор",
+        "city": "Ставрополь",
+        "address": "ул. Ленина, д. 21, оф. 4",
+        "phone": "+7 (999) 111-22-33",
+        "paymentMethod": "Безналичный расчет",
+        "salesRepresentative": "Алексей Краснов",
+        "items": [
+          {
+            "productId": 1,
+            "productName": "Вода Горная 19л",
+            "quantity": 4,
+            "price": 350.0
+          },
+          {
+            "productId": 3,
+            "productName": "Стаканы пластиковые (уп. 100 шт)",
+            "quantity": 2,
+            "price": 150.0
+          }
+        ]
+      }
+    ]
+  }
+]

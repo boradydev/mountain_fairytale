@@ -73,6 +73,9 @@ flutter:
   assets:
     - assets/demo/delivery_days/
     - assets/demo/clients/
+    - assets/demo/cars/
+    - assets/demo/products/
+    - assets/demo/delivery_routes/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

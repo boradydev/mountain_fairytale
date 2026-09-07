@@ -24,3 +24,16 @@ abstract interface class ClientDataSource {
     required int thresholdDays,
   });
 }
+
+abstract interface class CarDataSource {
+  Future<List<Map<String, dynamic>>> getAllCars();
+}
+
+abstract interface class ProductDataSource {
+  Future<List<Map<String, dynamic>>> getAllProducts();
+}
+
+abstract interface class DeliveryRouteDataSource {
+  Future<List<Map<String, dynamic>>> getAllRouteSheets();
+  Future<Map<String, dynamic>> createRouteSheet(Map<String, dynamic> sheetJson);
+}
