@@ -18,9 +18,12 @@ class _RouteConstructorScreenState extends State<RouteConstructorScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<RouteConstructorProvider>().loadDirectories();
+      final routeProvider = context.read<RouteConstructorProvider>();
+      routeProvider.resetForm(); // Очищаем старые точки, предотвращая дубликаты Key
+      routeProvider.loadDirectories();
     });
   }
+
 
   @override
   Widget build(BuildContext context) {

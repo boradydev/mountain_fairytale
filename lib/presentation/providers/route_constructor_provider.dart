@@ -239,4 +239,15 @@ class RouteConstructorProvider extends ChangeNotifier {
     }
   }
 
+  void resetForm() {
+    selectedDate = DateTime.now();
+    driverName = '';
+    selectedDriver = null;
+    selectedCar = null;
+    startMileage = 0.0;
+    points = [];
+    notifyListeners();
+  }
+
+
 }

@@ -280,7 +280,10 @@ class _FlightMetaPanelState extends State<FlightMetaPanel> {
                         ),
                       ),
                     );
-                    if (success) Navigator.pop(context);
+                    if (success) {
+                      // Возвращаем true в Navigator.pop, чтобы вызывающий экран знал об успехе
+                      Navigator.pop(context, true);
+                    }
                   }
                 }
               },

@@ -44,13 +44,19 @@ class DeliveryDaysListView extends StatelessWidget {
         // Первая карточка — "Добавить доставку на сегодня"
         if (shouldShowTodayCard && index == 0) {
           return AddActionButton(
-            label: l10n.deliveryCardAddDelivery, // Берем заголовок из локализации ("Доставка на сегодня")
+            label: l10n.deliveryCardAddDelivery,
             icon: Icons.add_circle_outline,
-            onTap: () {
-              Navigator.of(context).push(
+            onTap: () async {
+              // Ждем результат закрытия экрана конструктора
+              final isSaved = await Navigator.of(context).push<bool>(
                 MaterialPageRoute(
                     builder: (context) => const RouteConstructorScreen()),
               );
+
+              // Если маршрут успешно сохранился, обновляем список на дашборде
+              if (isSaved == true && context.mounted) {
+                context.read<DeliveryDaysProvider>().refreshDeliveryDays();
+              }
             },
           );
         }
