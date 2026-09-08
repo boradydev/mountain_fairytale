@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mountain_fairytale/infra/data_sources/delivery_day/demo_data_source.dart';
+import 'package:mountain_fairytale/infra/repos/delivery_day/sources/demo_data.dart';
 import 'package:mountain_fairytale/infra/repos/delivery_day/repo.dart';
 
 import '../../../assets/demo/demo_asset_bundle.dart';
