@@ -193,4 +193,50 @@ class RouteConstructorProvider extends ChangeNotifier {
       return false;
     }
   }
+
+  Future<Driver?> addDriver(String name) async {
+    final normalizedName = name.trim();
+
+    if (normalizedName.isEmpty) {
+      return null;
+    }
+
+    try {
+      final driver = await _directoryRepo.createDriver(normalizedName);
+
+      drivers.insert(0, driver);
+      selectDriver(driver);
+
+      return driver;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<Car?> addCar({
+    required String model,
+    required String number,
+  }) async {
+    final normalizedModel = model.trim();
+    final normalizedNumber = number.trim();
+
+    if (normalizedModel.isEmpty || normalizedNumber.isEmpty) {
+      return null;
+    }
+
+    try {
+      final car = await _directoryRepo.createCar(
+        model: normalizedModel,
+        number: normalizedNumber,
+      );
+
+      cars.insert(0, car);
+      selectCar(car);
+
+      return car;
+    } catch (_) {
+      return null;
+    }
+  }
+
 }

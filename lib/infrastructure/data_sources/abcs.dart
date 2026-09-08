@@ -27,10 +27,14 @@ abstract interface class ClientDataSource {
 
 abstract interface class CarDataSource {
   Future<List<Map<String, dynamic>>> getAllCars();
+
+  Future<Map<String, dynamic>> createCar(Map<String, dynamic> carJson,);
 }
 
 abstract interface class DriverDataSource {
   Future<List<Map<String, dynamic>>> getAllDrivers();
+
+  Future<Map<String, dynamic>> createDriver(Map<String, dynamic> driverJson,);
 }
 
 abstract interface class ProductDataSource {

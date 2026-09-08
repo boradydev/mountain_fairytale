@@ -110,4 +110,56 @@ class DemoConstructorDataSource
 
     return _driversCache!;
   }
+
+  @override
+  Future<Map<String, dynamic>> createDriver(
+      Map<String, dynamic> driverJson,) async {
+    await Future.delayed(const Duration(milliseconds: 400));
+
+    if (_driversCache == null) {
+      await getAllDrivers();
+    }
+
+    final newId = _driversCache!.isEmpty
+        ? 1
+        : _driversCache!
+        .map((item) => int.parse(item['id'].toString()))
+        .reduce((a, b) => a > b ? a : b) +
+        1;
+
+    final newDriver = {
+      ...driverJson,
+      'id': newId,
+    };
+
+    _driversCache!.insert(0, newDriver);
+
+    return newDriver;
+  }
+
+  @override
+  Future<Map<String, dynamic>> createCar(Map<String, dynamic> carJson,) async {
+    await Future.delayed(const Duration(milliseconds: 400));
+
+    if (_carsCache == null) {
+      await getAllCars();
+    }
+
+    final newId = _carsCache!.isEmpty
+        ? 1
+        : _carsCache!
+        .map((item) => int.parse(item['id'].toString()))
+        .reduce((a, b) => a > b ? a : b) +
+        1;
+
+    final newCar = {
+      ...carJson,
+      'id': newId,
+    };
+
+    _carsCache!.insert(0, newCar);
+
+    return newCar;
+  }
+
 }

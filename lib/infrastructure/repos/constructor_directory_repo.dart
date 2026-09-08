@@ -28,4 +28,25 @@ class ConstructorDirectoryRepository {
     final list = await productDataSource.getAllProducts();
     return list.map(Product.fromJson).toList();
   }
+
+  Future<Driver> createDriver(String name) async {
+    final json = await driverDataSource.createDriver({
+      'name': name,
+    });
+
+    return Driver.fromJson(json);
+  }
+
+  Future<Car> createCar({
+    required String model,
+    required String number,
+  }) async {
+    final json = await carDataSource.createCar({
+      'model': model,
+      'number': number,
+    });
+
+    return Car.fromJson(json);
+  }
+
 }

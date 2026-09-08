@@ -26,6 +26,39 @@ class _FlightMetaPanelState extends State<FlightMetaPanel> {
     super.dispose();
   }
 
+  // Метод открытия диалога для водителя
+  Future<void> _showAddDriverDialog(BuildContext context,
+      RouteConstructorProvider provider,) async {
+    final name = await showDialog<String>(
+      context: context,
+      // ВАЖНО: Если _AddDriverDialog лежит в другом файле,
+      // уберите нижнее подчеркивание и импортируйте его.
+      builder: (context) => const _AddDriverDialog(),
+    );
+
+    if (name == null || name
+        .trim()
+        .isEmpty) return;
+    await provider.addDriver(name);
+  }
+
+  // Метод открытия диалога для автомобиля
+  Future<void> _showAddCarDialog(BuildContext context,
+      RouteConstructorProvider provider,) async {
+    final result = await showDialog<({String model, String number})>(
+      context: context,
+      // ВАЖНО: Если _AddCarDialog лежит в другом файле,
+      // уберите нижнее подчеркивание и импортируйте его.
+      builder: (context) => const _AddCarDialog(),
+    );
+
+    if (result == null) return;
+    await provider.addCar(
+      model: result.model,
+      number: result.number,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<RouteConstructorProvider>();
@@ -82,9 +115,7 @@ class _FlightMetaPanelState extends State<FlightMetaPanel> {
                 ),
               ),
               IconButton(
-                onPressed: () {
-                  // TODO: добавить нового водителя
-                },
+                onPressed: () => _showAddDriverDialog(context, provider),
                 icon: const Icon(Icons.add),
                 tooltip: 'Добавить водителя',
               ),
@@ -121,9 +152,7 @@ class _FlightMetaPanelState extends State<FlightMetaPanel> {
                 ),
               ),
               IconButton(
-                onPressed: () {
-                  // TODO: добавить автомобиль
-                },
+                onPressed: () => _showAddCarDialog(context, provider),
                 icon: const Icon(Icons.add),
                 tooltip: 'Добавить автомобиль',
               ),
@@ -259,6 +288,136 @@ class _FlightMetaPanelState extends State<FlightMetaPanel> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _AddDriverDialog extends StatefulWidget {
+  const _AddDriverDialog();
+
+  @override
+  State<_AddDriverDialog> createState() => _AddDriverDialogState();
+}
+
+class _AddDriverDialogState extends State<_AddDriverDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Добавить водителя'),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        decoration: const InputDecoration(
+          labelText: 'ФИО',
+          hintText: 'Иванов Иван Иванович',
+          border: OutlineInputBorder(),
+        ),
+        textInputAction: TextInputAction.done,
+        onSubmitted: (value) => Navigator.of(context).pop(value),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Отмена'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(_controller.text),
+          child: const Text('Добавить'),
+        ),
+      ],
+    );
+  }
+}
+
+class _AddCarDialog extends StatefulWidget {
+  const _AddCarDialog();
+
+  @override
+  State<_AddCarDialog> createState() => _AddCarDialogState();
+}
+
+class _AddCarDialogState extends State<_AddCarDialog> {
+  late final TextEditingController _modelController;
+  late final TextEditingController _numberController;
+
+  @override
+  void initState() {
+    super.initState();
+    _modelController = TextEditingController();
+    _numberController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _modelController.dispose();
+    _numberController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Добавить автомобиль'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _modelController,
+            autofocus: true,
+            decoration: const InputDecoration(
+              labelText: 'Модель',
+              hintText: 'Газель',
+              border: OutlineInputBorder(),
+            ),
+            textInputAction: TextInputAction.next,
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _numberController,
+            decoration: const InputDecoration(
+              labelText: 'Номер',
+              hintText: 'А123ББ',
+              border: OutlineInputBorder(),
+            ),
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) {
+              Navigator.of(context).pop((
+              model: _modelController.text,
+              number: _numberController.text,
+              ));
+            },
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Отмена'),
+        ),
+        FilledButton(
+          onPressed: () {
+            Navigator.of(context).pop((
+            model: _modelController.text,
+            number: _numberController.text,
+            ));
+          },
+          child: const Text('Добавить'),
+        ),
+      ],
     );
   }
 }
