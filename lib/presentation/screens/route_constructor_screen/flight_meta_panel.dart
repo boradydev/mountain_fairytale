@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/core/utils/datetime_extensions.dart';
+import 'package:mountain_fairytale/infra/app_notify.dart';
 import 'package:mountain_fairytale/infra/repos/cars/models/car_model.dart';
 import 'package:mountain_fairytale/infra/repos/drivers/models/driver_model.dart';
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
@@ -272,24 +273,27 @@ class _FlightMetaPanelState extends State<FlightMetaPanel> {
               onPressed: () async {
                 if (widget.formKey.currentState!.validate()) {
                   final success = await provider.saveRoute();
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          success
-                              ? 'Маршрутный лист сохранен!'
-                              : 'Ошибка заполнения',
-                        ),
-                      ),
+
+                  // Защита от Gap: проверяем, жив ли еще виджет в дереве элементов
+                  if (!context.mounted) return;
+
+                  if (success) {
+                    AppNotify.show(
+                      context,
+                      'Маршрутный лист успешно сохранен',
                     );
-                    if (success) {
-                      // Возвращаем true в Navigator.pop, чтобы вызывающий экран знал об успехе
-                      Navigator.pop(context, true);
-                    }
+                    Navigator.pop(context, true);
+                  } else {
+                    AppNotify.show(
+                      context,
+                      'Ошибка при сохранении маршрута',
+                      isError: true,
+                    );
                   }
                 }
               },
             ),
+
           ),
         ],
       ),
