@@ -2,18 +2,18 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:mountain_fairytale/infra/repos/delivery_day/sources/demo_data.dart';
-import 'package:mountain_fairytale/infra/repos/delivery_route/sources/demo_data.dart';
-import 'package:mountain_fairytale/infra/repos/drivers/sources/demo_data.dart';
-import 'package:mountain_fairytale/infra/repos/products/sources/demo_data.dart';
 import 'package:mountain_fairytale/infra/repos/cars/repo.dart';
 import 'package:mountain_fairytale/infra/repos/cars/sources/demo_data.dart';
 import 'package:mountain_fairytale/infra/repos/clients/repo.dart';
 import 'package:mountain_fairytale/infra/repos/clients/sources/demo_data.dart';
 import 'package:mountain_fairytale/infra/repos/delivery_day/repo.dart';
+import 'package:mountain_fairytale/infra/repos/delivery_day/sources/demo_data.dart';
 import 'package:mountain_fairytale/infra/repos/delivery_route/repo.dart';
+import 'package:mountain_fairytale/infra/repos/delivery_route/sources/demo_data.dart';
 import 'package:mountain_fairytale/infra/repos/drivers/repo.dart';
+import 'package:mountain_fairytale/infra/repos/drivers/sources/demo_data.dart';
 import 'package:mountain_fairytale/infra/repos/products/repo.dart';
+import 'package:mountain_fairytale/infra/repos/products/sources/demo_data.dart';
 import 'package:mountain_fairytale/infra/window_settings_service.dart';
 import 'package:mountain_fairytale/l10n/app_localizations.dart';
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
@@ -63,9 +63,11 @@ Future<void> main() async {
   final driverDataSource = DemoDriverDataSource();
   final carDataSource = DemoCarDataSource();
   final productDataSource = DemoProductDataSource();
-  final routeDataSource = DemoDeliveryRouteDataSource();
-  final clientDataSource = DemoClientDataSource();
   final deliveryDayDataSource = DemoDeliveryDataSource();
+  final routeDataSource = DemoDeliveryRouteDataSource(
+      deliveryDayDataSource: deliveryDayDataSource
+  );
+  final clientDataSource = DemoClientDataSource();
 
   // ===========================================================================
   // 2. ИНИЦИАЛИЗАЦИЯ РЕПОЗИТОРИЕВ

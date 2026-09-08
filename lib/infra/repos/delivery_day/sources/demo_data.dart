@@ -57,4 +57,23 @@ class DemoDeliveryDataSource implements DeliveryDataSource {
 
     return deliveryDays.firstWhere((deliveryDay) => deliveryDay['id'] == id);
   }
+
+
+  /// ДЕМО-ХАК: Метод для ручного добавления сгенерированного дня доставки в кэш
+  Future<void> addDeliveryDay(Map<String, dynamic> dayJson) async {
+    if (_cache == null) {
+      await _getDemoJson();
+    }
+
+    // Вычисляем новый ID для дня доставки
+    final int newId = _cache!.isEmpty
+        ? 1
+        : _cache!.map((d) => int.parse(d['id'].toString())).reduce((a, b) =>
+    a > b ? a : b) + 1;
+
+    final finalDay = {...dayJson, 'id': newId};
+
+    // Вставляем в начало, чтобы новый день сразу появился на дашборде сверху
+    _cache!.insert(0, finalDay);
+  }
 }
