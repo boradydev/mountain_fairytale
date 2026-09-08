@@ -16,7 +16,6 @@ class TaskDialogs {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            final colorScheme = Theme.of(context).colorScheme;
             return AlertDialog(
               title: const Text('Добавить позицию в задание'),
               content: Column(

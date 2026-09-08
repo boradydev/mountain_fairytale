@@ -70,11 +70,6 @@ class _AddClientCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme
-        .of(context)
-        .colorScheme;
-    // Опционально: можно вытянуть из l10n, когда добавите строку
-    // final l10n = AppLocalizations.of(context)!;
 
     return AddActionButton(label: 'Добавить клиента',
         icon: Icons.person_add_alt_1_outlined,

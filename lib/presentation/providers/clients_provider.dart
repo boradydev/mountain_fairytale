@@ -82,16 +82,6 @@ class ClientsProvider extends ChangeNotifier {
     return allClients;
   }
 
-  bool _isOnCooldown(Client client, DateTime now) {
-    final cooldownUntil = client.cooldownUntil;
-
-    if (cooldownUntil == null) {
-      return false;
-    }
-
-    return cooldownUntil.isAfter(now);
-  }
-
   Future<void> fetchClients() async {
     if (_status == ClientStatus.loading) {
       return;

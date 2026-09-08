@@ -38,7 +38,9 @@ class _FlightMetaPanelState extends State<FlightMetaPanel> {
 
     if (name == null || name
         .trim()
-        .isEmpty) return;
+        .isEmpty) {
+      return;
+    }
     await provider.addDriver(name);
   }
 
