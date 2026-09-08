@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/core/utils/datetime_extensions.dart';
 import 'package:mountain_fairytale/infra/repos/delivery_day/models/delivery_day_model.dart';
+import 'package:mountain_fairytale/infra/repos/delivery_route/models/delivery_route_sheet_model.dart';
 import 'package:mountain_fairytale/l10n/app_localizations.dart';
 import 'package:mountain_fairytale/presentation/providers/delivery_days_provider.dart';
+import 'package:mountain_fairytale/presentation/providers/route_constructor_provider.dart';
+import 'package:mountain_fairytale/presentation/screens/delivery_days_screen/select_route_dialog.dart';
 import 'package:mountain_fairytale/presentation/screens/route_constructor_screen/route_constructor_screen.dart';
 import 'package:mountain_fairytale/presentation/widgets/add_action_card.dart';
 import 'package:mountain_fairytale/presentation/widgets/card_widget.dart';
@@ -99,15 +102,53 @@ class _DeliveryDayItem extends StatelessWidget {
           ? l10n.deliveryCardTitleToday
           : '${l10n.deliveryCardTitle}: $dateStr',
       onTap: () async {
-        // Переходим в конструктор маршрутов, передавая дату выбранного дня
+        final routeProvider = context.read<RouteConstructorProvider>();
+
+        // Показываем индикатор загрузки на время проверки базы данных
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) =>
+          const Center(child: CircularProgressIndicator()),
+        );
+
+        // Получаем список всех маршрутов за выбранный день
+        final sheets = await routeProvider.getRouteSheetsByDate(day.date);
+
+        if (context.mounted) {
+          Navigator.of(context).pop(); // Закрываем индикатор загрузки
+        }
+
+        DateTime? targetDate = day.date;
+
+        // Если за этот день создано несколько независимых маршрутных листов
+        if (sheets.length > 1) {
+          if (!context.mounted) return;
+
+          final selectedSheet = await showDialog<DeliveryRouteSheet>(
+            context: context,
+            builder: (context) => SelectRouteDialog(sheets: sheets),
+          );
+
+          // Если пользователь нажал "Отмена" в диалоге, прерываем операцию
+          if (selectedSheet == null) return;
+
+          // В демо-логике мы все еще привязываемся к дате,
+          // но в будущем здесь можно передавать конкретный sheet.id
+          targetDate = selectedSheet.date;
+        }
+
+        if (!context.mounted) return;
+
+        // Переходим в конструктор маршрутов
         final isUpdated = await Navigator.of(context).push<bool>(
           MaterialPageRoute(
             builder: (context) =>
-                RouteConstructorScreen(existingDate: day.date),
+                RouteConstructorScreen(existingDate: targetDate),
           ),
         );
 
-        // Если это был сегодняшний день и его отредактировали/сохранили — обновляем дашборд
+        // Если день был отредактирован и сохранен — обновляем дашборд
         if (isUpdated == true && context.mounted) {
           context.read<DeliveryDaysProvider>().refreshDeliveryDays();
         }

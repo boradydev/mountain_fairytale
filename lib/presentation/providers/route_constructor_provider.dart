@@ -288,4 +288,19 @@ class RouteConstructorProvider extends ChangeNotifier {
     }
   }
 
+  /// Возвращает список всех маршрутных листов за указанную дату
+  Future<List<DeliveryRouteSheet>> getRouteSheetsByDate(DateTime date) async {
+    try {
+      final allSheets = await _routeRepo.getRouteSheets();
+      return allSheets.where((sheet) =>
+      sheet.date.year == date.year &&
+          sheet.date.month == date.month &&
+          sheet.date.day == date.day
+      ).toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
+
 }
