@@ -3,13 +3,46 @@ import 'package:mountain_fairytale/presentation/providers/route_constructor_prov
 import 'package:mountain_fairytale/presentation/screens/route_constructor_screen/task_dialogs.dart';
 import 'package:provider/provider.dart';
 
-class RoutePointsList extends StatelessWidget {
+class RoutePointsList extends StatefulWidget {
   const RoutePointsList({super.key});
+
+  @override
+  State<RoutePointsList> createState() => _RoutePointsListState();
+}
+
+class _RoutePointsListState extends State<RoutePointsList> {
+  final ScrollController _scrollController = ScrollController();
+
+  int _lastPointsCount = 0;
+  bool _initialized = false;
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<RouteConstructorProvider>();
     final colorScheme = Theme.of(context).colorScheme;
+
+    if (!_initialized) {
+      _lastPointsCount = provider.points.length;
+      _initialized = true;
+    } else if (provider.points.length > _lastPointsCount) {
+      _lastPointsCount = provider.points.length;
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!_scrollController.hasClients) return;
+
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeOut,
+        );
+      });
+    }
 
     if (provider.points.isEmpty) {
       return const Center(
@@ -20,6 +53,7 @@ class RoutePointsList extends StatelessWidget {
     }
 
     return ReorderableListView.builder(
+      scrollController: _scrollController,
       padding: const EdgeInsets.all(16),
       buildDefaultDragHandles: false,
       itemCount: provider.points.length,
