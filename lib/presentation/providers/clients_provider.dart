@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mountain_fairytale/infra/repos/abcs.dart';
+import 'package:mountain_fairytale/presentation/providers/abcs/repo.dart';
 import 'package:mountain_fairytale/infra/repos/clients/models/client_model.dart';
 
 enum ClientStatus { initial, loading, success, failure }

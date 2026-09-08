@@ -1,20 +1,20 @@
-import 'package:mountain_fairytale/infra/repos/cars/models/car_model.dart';
-import 'package:mountain_fairytale/infra/repos/clients/models/client_model.dart';
-import 'package:mountain_fairytale/infra/repos/delivery_day/models/delivery_day_model.dart';
-import 'package:mountain_fairytale/infra/repos/delivery_route/models/delivery_route_sheet_model.dart';
-import 'package:mountain_fairytale/infra/repos/drivers/models/driver_model.dart';
-import 'package:mountain_fairytale/infra/repos/products/models/product_model.dart';
-
-abstract interface class CarRepository {
-  Future<List<Car>> getAvailableCars();
-  Future<Car> createCar(Car car);
+// Интерфейс для дней доставки (Дашборд)
+abstract interface class DeliveryDataSource {
+  Future<List<Map<String, dynamic>>> getDeliveryDays({
+    required int offset,
+    required int limit,
+  });
+  Future<Map<String, dynamic>> getDeliveryDay(int id);
 }
 
-abstract interface class ClientRepository {
-  Future<List<Client>> getAllClients();
-  Future<Client> updateCooldown(int clientId, DateTime cooldownUntil);
-  Future<Client?> checkDuplicate(String name, String address);
-  Future<Client> createClient({
+// Интерфейс для клиентов
+abstract interface class ClientDataSource {
+  Future<List<Map<String, dynamic>>> getAllClients();
+
+  Future<Map<String, dynamic>> updateCooldown(int clientId,
+      String cooldownUntilIso);
+  Future<Map<String, dynamic>?> checkDuplicate(String name, String address);
+  Future<Map<String, dynamic>> createClient({
     required String name,
     required String phone,
     required String address,
@@ -22,24 +22,27 @@ abstract interface class ClientRepository {
   });
 }
 
-abstract interface class DeliveryDayRepository {
-  Future<List<DeliveryDay>> getDeliveryDays({
-    required int offset,
-    required int limit,
-  });
-  Future<DeliveryDay> getDeliveryDay(int id);
+// Интерфейс для водителей
+abstract interface class DriverDataSource {
+  Future<List<Map<String, dynamic>>> getAllDrivers();
+
+  Future<Map<String, dynamic>> createDriver(Map<String, dynamic> driverJson);
 }
 
-abstract interface class DeliveryRouteRepository {
-  Future<List<DeliveryRouteSheet>> getRouteSheets();
-  Future<DeliveryRouteSheet> saveRouteSheet(DeliveryRouteSheet sheet);
+// Интерфейс для автомобилей
+abstract interface class CarDataSource {
+  Future<List<Map<String, dynamic>>> getAllCars();
+
+  Future<Map<String, dynamic>> createCar(Map<String, dynamic> carJson);
 }
 
-abstract interface class DriverRepository {
-  Future<List<Driver>> getAvailableDrivers();
-  Future<Driver> createDriver(Driver driver);
+// Интерфейс для продуктов/услуг
+abstract interface class ProductDataSource {
+  Future<List<Map<String, dynamic>>> getAllProducts();
 }
 
-abstract interface class ProductRepository {
-  Future<List<Product>> getAvailableProducts();
+// Интерфейс для маршрутных листов конструктора
+abstract interface class DeliveryRouteDataSource {
+  Future<List<Map<String, dynamic>>> getAllRouteSheets();
+  Future<Map<String, dynamic>> createRouteSheet(Map<String, dynamic> sheetJson);
 }
