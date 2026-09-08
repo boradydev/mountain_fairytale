@@ -146,7 +146,7 @@ class _RoutePointsListState extends State<RoutePointsList> {
                               children: [
                                 Expanded(
                                   child: DropdownButtonFormField<String>(
-                                    value: point.paymentMethod,
+                                    initialValue: point.paymentMethod,
                                     decoration: const InputDecoration(
                                       labelText: 'Форма оплаты',
                                       isDense: true,

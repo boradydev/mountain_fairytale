@@ -2,13 +2,18 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/infrastructure/data_sources/cars/demo_car_data_source.dart';
 import 'package:mountain_fairytale/infrastructure/data_sources/clients/demo_data_source.dart';
-import 'package:mountain_fairytale/infrastructure/data_sources/constructor/demo_constructor_data_source.dart';
 import 'package:mountain_fairytale/infrastructure/data_sources/delivery_day/demo_data_source.dart';
+import 'package:mountain_fairytale/infrastructure/data_sources/delivery_route/demo_delivery_route_data_source.dart';
+import 'package:mountain_fairytale/infrastructure/data_sources/drivers/demo_driver_data_source.dart';
+import 'package:mountain_fairytale/infrastructure/data_sources/products/demo_product_data_source.dart';
+import 'package:mountain_fairytale/infrastructure/repos/cars/repo.dart';
 import 'package:mountain_fairytale/infrastructure/repos/clients/repo.dart';
-import 'package:mountain_fairytale/infrastructure/repos/constructor_directory_repo.dart';
 import 'package:mountain_fairytale/infrastructure/repos/delivery_day/repo.dart';
 import 'package:mountain_fairytale/infrastructure/repos/delivery_route/delivery_route_repository.dart';
+import 'package:mountain_fairytale/infrastructure/repos/drivers/repo.dart';
+import 'package:mountain_fairytale/infrastructure/repos/products/repo.dart';
 import 'package:mountain_fairytale/infrastructure/window_settings_service.dart';
 import 'package:mountain_fairytale/l10n/app_localizations.dart';
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
@@ -51,39 +56,57 @@ Future<void> main() async {
 
     windowManager.addListener(WindowSettingsService());
   }
-  final constructorDataSource = DemoConstructorDataSource();
+  // ===========================================================================
+  // 1. ИНИЦИАЛИЗАЦИЯ АТОМАРНЫХ ДАННЫХ (DATA SOURCES)
+  // Каждый источник независим, хранит свой кэш и имитирует сетевые запросы
+  // ===========================================================================
+  final driverDataSource = DemoDriverDataSource();
+  final carDataSource = DemoCarDataSource();
+  final productDataSource = DemoProductDataSource();
+  final routeDataSource = DemoDeliveryRouteDataSource();
+  final clientDataSource = DemoClientDataSource();
+  final deliveryDayDataSource = DemoDeliveryDataSource();
+
+  // ===========================================================================
+  // 2. ИНИЦИАЛИЗАЦИЯ РЕПОЗИТОРИЕВ
+  // Принимают сущности от UI, конвертируют в JSON-Map и общаются с Data Sources
+  // ===========================================================================
+  final driverRepository = DriverRepositoryImpl(driverDataSource);
+  final carRepository = CarRepositoryImpl(carDataSource);
+  final productRepository = ProductRepositoryImpl(productDataSource);
+  final routeRepository = DeliveryRouteRepositoryImpl(routeDataSource);
+  final clientRepository = ClientRepositoryImpl(clientDataSource);
+  final deliveryDayRepository = ApiDeliveryRepository(deliveryDayDataSource);
+
+  // ===========================================================================
+  // 3. ЗАПУСК ПРИЛОЖЕНИЯ И ВНЕДРЕНИЕ ЗАВИСИМОСТЕЙ (DI)
+  // Передаем созданные синглтоны репозиториев в UI-провайдеры управления стейтом
+  // ===========================================================================
   runApp(
     MultiProvider(
-
       providers: [
+        // Системные настройки (Тема и Локализация)
         ChangeNotifierProvider(create: (_) => ThemeProvider(prefs)),
         ChangeNotifierProvider(create: (_) => LocaleProvider(prefs)),
-        ChangeNotifierProvider(
-          create: (context) => DeliveryDaysProvider(
-            ApiDeliveryRepository(
-              DemoDeliveryDataSource(), // Сюда передаем ваш DataSource (если ему нужен http-клиент/dio, передайте его внутрь)
-            ),
-          ),
-        ),
-        ChangeNotifierProvider(
-          create: (context) =>
-              ClientsProvider(
-                ClientRepositoryImpl(
-                  DemoClientDataSource(),
-                ),
-              ),
 
-        ),
+        // Провайдер дашборда дней доставки
         ChangeNotifierProvider(
-          create: (context) =>
-              RouteConstructorProvider(
-                directoryRepo: ConstructorDirectoryRepository(
-                  carDataSource: constructorDataSource,
-                  productDataSource: constructorDataSource,
-                  driverDataSource: constructorDataSource,
-                ),
-                routeRepo: DeliveryRouteRepository(constructorDataSource),
-              ),
+          create: (context) => DeliveryDaysProvider(deliveryDayRepository),
+        ),
+
+        // Провайдер списка клиентов (контроль засыпания, дубликаты)
+        ChangeNotifierProvider(
+          create: (context) => ClientsProvider(clientRepository),
+        ),
+
+        // Обновленный провайдер конструктора маршрутов со строго изолированными репозиториями
+        ChangeNotifierProvider(
+          create: (context) => RouteConstructorProvider(
+            carRepo: carRepository,
+            driverRepo: driverRepository,
+            productRepo: productRepository,
+            routeRepo: routeRepository,
+          ),
         ),
       ],
       child: const MyApp(),

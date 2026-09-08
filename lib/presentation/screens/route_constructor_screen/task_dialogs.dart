@@ -24,7 +24,7 @@ class TaskDialogs {
                 children: [
                   DropdownButtonFormField<Product>(
                     hint: const Text('Выберите товар/услугу'),
-                    value: selectedProduct,
+                    initialValue: selectedProduct,
                     items: provider.products.map((p) {
                       return DropdownMenuItem(
                         value: p,

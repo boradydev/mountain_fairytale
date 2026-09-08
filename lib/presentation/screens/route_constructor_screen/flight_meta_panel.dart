@@ -126,7 +126,7 @@ class _FlightMetaPanelState extends State<FlightMetaPanel> {
             decoration: const InputDecoration(
               border: OutlineInputBorder(),
             ),
-            value: provider.selectedDriver,
+            initialValue: provider.selectedDriver,
             items: provider.drivers.map((driver) {
               return DropdownMenuItem<Driver>(
                 value: driver,
@@ -163,7 +163,7 @@ class _FlightMetaPanelState extends State<FlightMetaPanel> {
             decoration: const InputDecoration(
               border: OutlineInputBorder(),
             ),
-            value: provider.selectedCar,
+            initialValue: provider.selectedCar,
             items: provider.cars.map((car) {
               return DropdownMenuItem<Car>(
                 value: car,
