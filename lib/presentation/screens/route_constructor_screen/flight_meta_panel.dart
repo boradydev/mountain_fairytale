@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/core/utils/datetime_extensions.dart';
 import 'package:mountain_fairytale/infrastructure/repos/cars/models/car_model.dart';
+import 'package:mountain_fairytale/infrastructure/repos/drivers/models/driver_model.dart';
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/route_constructor_provider.dart';
 import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
@@ -68,31 +69,81 @@ class _FlightMetaPanelState extends State<FlightMetaPanel> {
             },
           ),
           const SizedBox(height: 12),
-          TextFormField(
+
+          // Водитель
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Водитель *',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: () {
+                  // TODO: добавить нового водителя
+                },
+                icon: const Icon(Icons.add),
+                tooltip: 'Добавить водителя',
+              ),
+            ],
+          ),
+
+          DropdownButtonFormField<Driver>(
             decoration: const InputDecoration(
-              labelText: 'ФИО Водителя *',
               border: OutlineInputBorder(),
             ),
-            initialValue: provider.driverName,
-            onChanged: (v) => provider.driverName = v,
-            validator: (v) =>
-                v == null || v.isEmpty ? 'Укажите водителя' : null,
+            value: provider.selectedDriver,
+            items: provider.drivers.map((driver) {
+              return DropdownMenuItem<Driver>(
+                value: driver,
+                child: Text(driver.name),
+              );
+            }).toList(),
+            onChanged: provider.selectDriver,
+            validator: (value) =>
+            value == null ? 'Выберите водителя' : null,
           ),
+
           const SizedBox(height: 12),
+
+          // Автомобиль
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Автомобиль *',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: () {
+                  // TODO: добавить автомобиль
+                },
+                icon: const Icon(Icons.add),
+                tooltip: 'Добавить автомобиль',
+              ),
+            ],
+          ),
+
           DropdownButtonFormField<Car>(
             decoration: const InputDecoration(
-              labelText: 'Автомобиль *',
               border: OutlineInputBorder(),
             ),
             value: provider.selectedCar,
             items: provider.cars.map((car) {
-              return DropdownMenuItem(
+              return DropdownMenuItem<Car>(
                 value: car,
                 child: Text('${car.model} (${car.number})'),
               );
             }).toList(),
-            onChanged: (car) => provider.selectedCar = car,
-            validator: (v) => v == null ? 'Выберите авто' : null,
+            onChanged: provider.selectCar,
+            validator: (value) =>
+            value == null ? 'Выберите автомобиль' : null,
           ),
           const SizedBox(height: 12),
           TextFormField(

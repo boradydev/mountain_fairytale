@@ -29,6 +29,10 @@ abstract interface class CarDataSource {
   Future<List<Map<String, dynamic>>> getAllCars();
 }
 
+abstract interface class DriverDataSource {
+  Future<List<Map<String, dynamic>>> getAllDrivers();
+}
+
 abstract interface class ProductDataSource {
   Future<List<Map<String, dynamic>>> getAllProducts();
 }

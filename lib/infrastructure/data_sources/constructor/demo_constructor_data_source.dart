@@ -4,12 +4,17 @@ import 'package:flutter/services.dart';
 import 'package:mountain_fairytale/infrastructure/data_sources/abcs.dart';
 
 class DemoConstructorDataSource
-    implements CarDataSource, ProductDataSource, DeliveryRouteDataSource {
+    implements
+        CarDataSource,
+        DriverDataSource,
+        ProductDataSource,
+        DeliveryRouteDataSource {
   final AssetBundle _assetBundle;
 
   List<Map<String, dynamic>>? _carsCache;
   List<Map<String, dynamic>>? _productsCache;
   List<Map<String, dynamic>>? _routesCache;
+  List<Map<String, dynamic>>? _driversCache;
 
   DemoConstructorDataSource({AssetBundle? assetBundle})
     : _assetBundle = assetBundle ?? rootBundle;
@@ -77,5 +82,32 @@ class DemoConstructorDataSource
     // Сохраняем в начало фейковой "базы данных"
     _routesCache!.insert(0, finalSheet);
     return finalSheet;
+  }
+
+  // --- Реализация DriverDataSource ---
+  @override
+  Future<List<Map<String, dynamic>>> getAllDrivers() async {
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    if (_driversCache != null) {
+      return _driversCache!;
+    }
+
+    _driversCache = [
+      {
+        'id': 1,
+        'name': 'Иванов Иван Иванович',
+      },
+      {
+        'id': 2,
+        'name': 'Петров Петр Петрович',
+      },
+      {
+        'id': 3,
+        'name': 'Сидоров Алексей Владимирович',
+      },
+    ];
+
+    return _driversCache!;
   }
 }

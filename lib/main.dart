@@ -80,6 +80,7 @@ Future<void> main() async {
                 directoryRepo: ConstructorDirectoryRepository(
                   carDataSource: constructorDataSource,
                   productDataSource: constructorDataSource,
+                  driverDataSource: constructorDataSource,
                 ),
                 routeRepo: DeliveryRouteRepository(constructorDataSource),
               ),

@@ -6,6 +6,7 @@ import 'package:mountain_fairytale/infrastructure/repos/delivery_route/delivery_
 import 'package:mountain_fairytale/infrastructure/repos/delivery_route/models/delivery_route_sheet_model.dart';
 import 'package:mountain_fairytale/infrastructure/repos/delivery_route/models/delivery_task_item_model.dart';
 import 'package:mountain_fairytale/infrastructure/repos/delivery_route/models/route_point_model.dart';
+import 'package:mountain_fairytale/infrastructure/repos/drivers/models/driver_model.dart';
 import 'package:mountain_fairytale/infrastructure/repos/products/models/product_model.dart';
 
 class RouteConstructorProvider extends ChangeNotifier {
@@ -20,13 +21,19 @@ class RouteConstructorProvider extends ChangeNotifier {
 
   // Справочники
   List<Car> cars = [];
+  List<Driver> drivers = [];
   List<Product> products = [];
+
   bool isLoadingDirectories = false;
 
   // Поля формы маршрутного листа
   DateTime selectedDate = DateTime.now();
+
   String driverName = '';
+
+  Driver? selectedDriver;
   Car? selectedCar;
+
   double startMileage = 0.0;
 
   // Список точек (наш изменяемый порядок объезда)
@@ -37,11 +44,25 @@ class RouteConstructorProvider extends ChangeNotifier {
   Future<void> loadDirectories() async {
     isLoadingDirectories = true;
     notifyListeners();
+
     try {
       cars = await _directoryRepo.getAvailableCars();
+      drivers = await _directoryRepo.getAvailableDrivers();
       products = await _directoryRepo.getAvailableProducts();
     } catch (_) {}
+
     isLoadingDirectories = false;
+    notifyListeners();
+  }
+
+  void selectDriver(Driver? driver) {
+    selectedDriver = driver;
+    driverName = driver?.name ?? '';
+    notifyListeners();
+  }
+
+  void selectCar(Car? car) {
+    selectedCar = car;
     notifyListeners();
   }
 
@@ -152,12 +173,13 @@ class RouteConstructorProvider extends ChangeNotifier {
   }
 
   Future<bool> saveRoute() async {
-    if (selectedCar == null || driverName.trim().isEmpty || points.isEmpty)
+    if (selectedDriver == null || selectedCar == null || points.isEmpty) {
       return false;
+    }
 
     final sheet = DeliveryRouteSheet(
       date: selectedDate,
-      driverName: driverName.trim(),
+      driverName: selectedDriver!.name,
       carId: selectedCar!.id,
       carModelAndNumber: '${selectedCar!.model} (${selectedCar!.number})',
       startMileage: startMileage,
