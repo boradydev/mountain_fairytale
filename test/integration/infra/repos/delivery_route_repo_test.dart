@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mountain_fairytale/infrastructure/data_sources/constructor/demo_constructor_data_source.dart';
+import 'package:mountain_fairytale/infrastructure/data_sources/delivery_route/demo_delivery_route_data_source.dart';
 import 'package:mountain_fairytale/infrastructure/repos/delivery_route/delivery_route_repository.dart';
 import 'package:mountain_fairytale/infrastructure/repos/delivery_route/models/delivery_route_sheet_model.dart';
 import 'package:mountain_fairytale/infrastructure/repos/delivery_route/models/delivery_task_item_model.dart';
@@ -12,8 +12,9 @@ void main() {
   final demoBundle = DemoAssetBundle.instance;
 
   test('should load and save delivery route sheets via repository', () async {
-    final dataSource = DemoConstructorDataSource(assetBundle: demoBundle);
-    final repository = DeliveryRouteRepository(dataSource);
+    // Используем декомпозированный DataSource и реализацию репозитория
+    final dataSource = DemoDeliveryRouteDataSource(assetBundle: demoBundle);
+    final repository = DeliveryRouteRepositoryImpl(dataSource);
 
     // 1. Проверяем чтение изначального списка маршрутных листов
     final initialRoutes = await repository.getRouteSheets();
@@ -28,7 +29,6 @@ void main() {
     // 2. Формируем тестовую модель маршрутного листа для сохранения (без ID)
     final newSheetRequest = DeliveryRouteSheet(
       id: null,
-      // Сервер/DataSource должен сгенерировать ID сам
       date: DateTime.now(),
       driverName: 'Сидоров Иван',
       carId: 2,
@@ -75,12 +75,10 @@ void main() {
     final updatedRoutes = await repository.getRouteSheets();
     expect(updatedRoutes.length, initialLength + 1);
 
-    // Проверяем, что новый элемент встал в начало списка (как мы реализовали в DataSource)
     expect(updatedRoutes.first.id, savedSheet.id);
     expect(updatedRoutes.first.driverName, 'Сидоров Иван');
 
-    // Проверяем, что геттеры сумм высчитываются корректно
-    expect(savedSheet.points.first.totalAmount, 2200.0); // (2 * 350) + 1500
+    expect(savedSheet.points.first.totalAmount, 2200.0);
     expect(savedSheet.grandTotal, 2200.0);
   });
 }
