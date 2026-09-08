@@ -98,8 +98,19 @@ class _DeliveryDayItem extends StatelessWidget {
       title: day.date.isToday
           ? l10n.deliveryCardTitleToday
           : '${l10n.deliveryCardTitle}: $dateStr',
-      onTap: () {
-        // Логика перехода на детальный экран по day.id
+      onTap: () async {
+        // Переходим в конструктор маршрутов, передавая дату выбранного дня
+        final isUpdated = await Navigator.of(context).push<bool>(
+          MaterialPageRoute(
+            builder: (context) =>
+                RouteConstructorScreen(existingDate: day.date),
+          ),
+        );
+
+        // Если это был сегодняшний день и его отредактировали/сохранили — обновляем дашборд
+        if (isUpdated == true && context.mounted) {
+          context.read<DeliveryDaysProvider>().refreshDeliveryDays();
+        }
       },
       metrics: [
         MetricRow(

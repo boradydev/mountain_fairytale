@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mountain_fairytale/presentation/providers/abcs/repo.dart';
 import 'package:mountain_fairytale/infra/repos/cars/models/car_model.dart';
 import 'package:mountain_fairytale/infra/repos/clients/models/client_model.dart';
 import 'package:mountain_fairytale/infra/repos/delivery_route/models/delivery_route_sheet_model.dart';
@@ -7,6 +6,7 @@ import 'package:mountain_fairytale/infra/repos/delivery_route/models/delivery_ta
 import 'package:mountain_fairytale/infra/repos/delivery_route/models/route_point_model.dart';
 import 'package:mountain_fairytale/infra/repos/drivers/models/driver_model.dart';
 import 'package:mountain_fairytale/infra/repos/products/models/product_model.dart';
+import 'package:mountain_fairytale/presentation/providers/abcs/repo.dart';
 
 class RouteConstructorProvider extends ChangeNotifier {
   final CarRepository _carRepo;
@@ -30,6 +30,7 @@ class RouteConstructorProvider extends ChangeNotifier {
   List<Product> products = [];
 
   bool isLoadingDirectories = false;
+  bool isReadOnly = false;
 
   DateTime selectedDate = DateTime.now();
   String driverName = '';
@@ -47,6 +48,7 @@ class RouteConstructorProvider extends ChangeNotifier {
     selectedCar = null;
     startMileage = 0.0;
     points = [];
+    isReadOnly = false;
     notifyListeners();
   }
 
@@ -227,4 +229,63 @@ class RouteConstructorProvider extends ChangeNotifier {
       return null;
     }
   }
+
+  /// Загружает существующий маршрут по дате дня доставки
+  Future<void> loadExistingRoute(DateTime date) async {
+    isLoadingDirectories = true;
+    notifyListeners();
+
+    try {
+      // 1. Сначала загружаем справочники (машины, водители, продукты)
+      cars = await _carRepo.getAvailableCars();
+      drivers = await _driverRepo.getAvailableDrivers();
+      products = await _productRepo.getAvailableProducts();
+
+      // 2. Устанавливаем режим "Только для чтения", если дата не сегодняшняя
+      final now = DateTime.now();
+      isReadOnly = !(date.year == now.year && date.month == now.month &&
+          date.day == now.day);
+      selectedDate = date;
+
+      // 3. Запрашиваем все маршрутные листы из репозитория
+      final allSheets = await _routeRepo.getRouteSheets();
+
+      // Ищем маршрут, у которого совпадает дата (день, месяц, год)
+      final existingSheet = allSheets.firstWhere(
+            (sheet) =>
+        sheet.date.year == date.year &&
+            sheet.date.month == date.month &&
+            sheet.date.day == date.day,
+      );
+
+      // 4. Наполняем стейт провайдера данными из найденного маршрутного листа
+      startMileage = existingSheet.startMileage;
+      points = List.from(existingSheet.points);
+
+      // Восстанавливаем выбранного водителя
+      selectedDriver = drivers.firstWhere(
+            (d) => d.name == existingSheet.driverName,
+        orElse: () => Driver(id: 0, name: existingSheet.driverName),
+      );
+      driverName = selectedDriver?.name ?? '';
+
+      // Восстанавливаем выбранный автомобиль
+      try {
+        selectedCar = cars.firstWhere((c) => c.id == existingSheet.carId);
+      } catch (_) {
+        // Если машина с таким ID не найдена, берем первую доступную или оставляем null
+        selectedCar = cars.isNotEmpty ? cars.first : null;
+      }
+    } catch (e) {
+      // Если маршрутный лист для этого дня не найден в демо-базе,
+      // оставляем форму пустой на эту дату (или можно показать ошибку)
+      points = [];
+      selectedDriver = null;
+      selectedCar = null;
+    } finally {
+      isLoadingDirectories = false;
+      notifyListeners();
+    }
+  }
+
 }

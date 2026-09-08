@@ -269,18 +269,22 @@ class _FlightMetaPanelState extends State<FlightMetaPanel> {
           SizedBox(
             width: double.infinity,
             child: AppPrimaryButton(
-              text: 'Сохранить маршрут',
-              onPressed: () async {
+              text: provider.isReadOnly
+                  ? 'Маршрут заблокирован'
+                  : 'Сохранить маршрут',
+              // Если режим "Только для чтения", передаем null в onPressed, что автоматически делает кнопку неактивной
+              onPressed: provider.isReadOnly
+                  ? null
+                  : () async {
                 if (widget.formKey.currentState!.validate()) {
                   final success = await provider.saveRoute();
 
-                  // Защита от Gap: проверяем, жив ли еще виджет в дереве элементов
                   if (!context.mounted) return;
 
                   if (success) {
                     AppNotify.show(
                       context,
-                      'Маршрутный лист успешно сохранен',
+                      'Маршрутный лист успешно обновлен',
                     );
                     Navigator.pop(context, true);
                   } else {
@@ -293,7 +297,6 @@ class _FlightMetaPanelState extends State<FlightMetaPanel> {
                 }
               },
             ),
-
           ),
         ],
       ),

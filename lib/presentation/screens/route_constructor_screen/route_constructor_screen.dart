@@ -5,7 +5,9 @@ import 'package:mountain_fairytale/presentation/screens/route_constructor_screen
 import 'package:provider/provider.dart';
 
 class RouteConstructorScreen extends StatefulWidget {
-  const RouteConstructorScreen({super.key});
+  final DateTime? existingDate; // Передаем дату, если открываем на просмотр/редактирование
+
+  const RouteConstructorScreen({super.key, this.existingDate});
 
   @override
   State<RouteConstructorScreen> createState() => _RouteConstructorScreenState();
@@ -19,11 +21,17 @@ class _RouteConstructorScreenState extends State<RouteConstructorScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final routeProvider = context.read<RouteConstructorProvider>();
-      routeProvider.resetForm(); // Очищаем старые точки, предотвращая дубликаты Key
-      routeProvider.loadDirectories();
+
+      if (widget.existingDate != null) {
+        // Режим просмотра/редактирования существующего дня
+        routeProvider.loadExistingRoute(widget.existingDate!);
+      } else {
+        // Режим создания нового маршрута на сегодня
+        routeProvider.resetForm();
+        routeProvider.loadDirectories();
+      }
     });
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +39,9 @@ class _RouteConstructorScreenState extends State<RouteConstructorScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Конструктор маршрутного листа'),
+        title: Text(widget.existingDate != null
+            ? 'Просмотр маршрутного листа'
+            : 'Конструктор маршрутного листа'),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
@@ -50,17 +60,14 @@ class _RouteConstructorScreenState extends State<RouteConstructorScreen> {
       body: provider.isLoadingDirectories
           ? const Center(child: CircularProgressIndicator())
           : Form(
-              key: _formKey,
-              child: Row(
-                children: [
-                  // Левая панель: Ввод данных рейса + Подгрузка клиентов
-                  FlightMetaPanel(formKey: _formKey),
-
-                  // Правая интерактивная панель: Сортируемый список точек
-                  const Expanded(child: RoutePointsList()),
-                ],
-              ),
-            ),
+        key: _formKey,
+        child: Row(
+          children: [
+            FlightMetaPanel(formKey: _formKey),
+            const Expanded(child: RoutePointsList()),
+          ],
+        ),
+      ),
     );
   }
 }
