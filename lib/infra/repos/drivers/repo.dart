@@ -1,5 +1,5 @@
 import 'package:mountain_fairytale/infra/data_sources/abcs.dart';
-import 'package:mountain_fairytale/infra/repos/drivers/abcs.dart';
+import 'package:mountain_fairytale/infra/repos/abcs.dart';
 import 'package:mountain_fairytale/infra/repos/drivers/models/driver_model.dart';
 
 class DriverRepositoryImpl implements DriverRepository {

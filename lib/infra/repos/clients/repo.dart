@@ -1,5 +1,5 @@
 import 'package:mountain_fairytale/infra/data_sources/abcs.dart';
-import 'package:mountain_fairytale/infra/repos/clients/abcs.dart';
+import 'package:mountain_fairytale/infra/repos/abcs.dart';
 import 'package:mountain_fairytale/infra/repos/clients/models/client_model.dart';
 
 class ClientRepositoryImpl implements ClientRepository {

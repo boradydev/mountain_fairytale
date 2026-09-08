@@ -1,5 +1,5 @@
 import 'package:mountain_fairytale/infra/data_sources/abcs.dart';
-import 'package:mountain_fairytale/infra/repos/delivery_day/abcs.dart';
+import 'package:mountain_fairytale/infra/repos/abcs.dart';
 import 'package:mountain_fairytale/infra/repos/delivery_day/models/delivery_day_model.dart';
 
 class ApiDeliveryRepository implements DeliveryDayRepository {

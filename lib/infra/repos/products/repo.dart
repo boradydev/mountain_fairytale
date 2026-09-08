@@ -1,5 +1,5 @@
 import 'package:mountain_fairytale/infra/data_sources/abcs.dart';
-import 'package:mountain_fairytale/infra/repos/products/abcs.dart';
+import 'package:mountain_fairytale/infra/repos/abcs.dart';
 import 'package:mountain_fairytale/infra/repos/products/models/product_model.dart';
 
 class ProductRepositoryImpl implements ProductRepository {

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mountain_fairytale/infra/data_sources/cars/demo_car_data_source.dart';
-import 'package:mountain_fairytale/infra/data_sources/drivers/demo_driver_data_source.dart';
-import 'package:mountain_fairytale/infra/data_sources/products/demo_product_data_source.dart';
+import 'package:mountain_fairytale/infra/repos/cars/sources/demo_data.dart';
+import 'package:mountain_fairytale/infra/repos/drivers/sources/demo_data.dart';
+import 'package:mountain_fairytale/infra/repos/products/sources/demo_data.dart';
 import 'package:mountain_fairytale/infra/repos/cars/models/car_model.dart';
 import 'package:mountain_fairytale/infra/repos/cars/repo.dart';
 import 'package:mountain_fairytale/infra/repos/drivers/models/driver_model.dart';
