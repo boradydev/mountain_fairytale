@@ -11,7 +11,7 @@ import 'package:mountain_fairytale/infra/data_sources/products/demo_product_data
 import 'package:mountain_fairytale/infra/repos/cars/repo.dart';
 import 'package:mountain_fairytale/infra/repos/clients/repo.dart';
 import 'package:mountain_fairytale/infra/repos/delivery_day/repo.dart';
-import 'package:mountain_fairytale/infra/repos/delivery_route/delivery_route_repository.dart';
+import 'package:mountain_fairytale/infra/repos/delivery_route/repo.dart';
 import 'package:mountain_fairytale/infra/repos/drivers/repo.dart';
 import 'package:mountain_fairytale/infra/repos/products/repo.dart';
 import 'package:mountain_fairytale/infra/window_settings_service.dart';

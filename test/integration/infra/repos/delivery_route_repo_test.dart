@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mountain_fairytale/infra/data_sources/delivery_route/demo_delivery_route_data_source.dart';
-import 'package:mountain_fairytale/infra/repos/delivery_route/delivery_route_repository.dart';
+import 'package:mountain_fairytale/infra/repos/delivery_route/repo.dart';
 import 'package:mountain_fairytale/infra/repos/delivery_route/models/delivery_route_sheet_model.dart';
 import 'package:mountain_fairytale/infra/repos/delivery_route/models/delivery_task_item_model.dart';
 import 'package:mountain_fairytale/infra/repos/delivery_route/models/route_point_model.dart';
