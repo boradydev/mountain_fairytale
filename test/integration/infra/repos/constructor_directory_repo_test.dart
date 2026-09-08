@@ -14,6 +14,7 @@ void main() {
     final repository = ConstructorDirectoryRepository(
       carDataSource: dataSource,
       productDataSource: dataSource,
+      driverDataSource: dataSource,
     );
 
     // 1. Проверяем загрузку автомобилей
