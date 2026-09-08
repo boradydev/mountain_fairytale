@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/core/utils/datetime_extensions.dart';
-import 'package:mountain_fairytale/infrastructure/repos/delivery_day/models/delivery_day_model.dart';
+import 'package:mountain_fairytale/infra/repos/delivery_day/models/delivery_day_model.dart';
 import 'package:mountain_fairytale/l10n/app_localizations.dart';
 import 'package:mountain_fairytale/presentation/providers/delivery_days_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/route_constructor_screen/route_constructor_screen.dart';

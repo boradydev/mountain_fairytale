@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mountain_fairytale/infrastructure/repos/clients/abcs.dart';
-import 'package:mountain_fairytale/infrastructure/repos/clients/models/client_model.dart';
+import 'package:mountain_fairytale/infra/repos/clients/abcs.dart';
+import 'package:mountain_fairytale/infra/repos/clients/models/client_model.dart';
 
 enum ClientStatus { initial, loading, success, failure }
 

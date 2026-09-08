@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/core/theme_extensions.dart';
-import 'package:mountain_fairytale/infrastructure/repos/clients/models/client_model.dart';
+import 'package:mountain_fairytale/infra/repos/clients/models/client_model.dart';
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
 import 'package:mountain_fairytale/presentation/widgets/metric_row_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';

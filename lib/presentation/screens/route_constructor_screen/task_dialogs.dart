@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mountain_fairytale/infrastructure/repos/products/models/product_model.dart';
+import 'package:mountain_fairytale/infra/repos/products/models/product_model.dart';
 import 'package:mountain_fairytale/presentation/providers/route_constructor_provider.dart';
 
 class TaskDialogs {
