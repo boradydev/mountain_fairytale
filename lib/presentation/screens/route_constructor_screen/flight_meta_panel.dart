@@ -6,16 +6,39 @@ import 'package:mountain_fairytale/presentation/providers/route_constructor_prov
 import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
 import 'package:provider/provider.dart';
 
-class FlightMetaPanel extends StatelessWidget {
+class FlightMetaPanel extends StatefulWidget {
   final GlobalKey<FormState> formKey;
 
   const FlightMetaPanel({super.key, required this.formKey});
+
+  @override
+  State<FlightMetaPanel> createState() => _FlightMetaPanelState();
+}
+
+class _FlightMetaPanelState extends State<FlightMetaPanel> {
+  final TextEditingController _clientSearchController =
+  TextEditingController();
+
+  @override
+  void dispose() {
+    _clientSearchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<RouteConstructorProvider>();
     final clientProvider = context.watch<ClientsProvider>();
     final colorScheme = Theme.of(context).colorScheme;
+    final searchQuery = _clientSearchController.text.trim().toLowerCase();
+
+    final filteredClients = clientProvider.clients.where((client) {
+      if (searchQuery.isEmpty) return true;
+
+      return client.name.toLowerCase().contains(searchQuery) ||
+          client.address.toLowerCase().contains(searchQuery) ||
+          client.phone.toLowerCase().contains(searchQuery);
+    }).toList();
 
     return Container(
       width: 360,
@@ -87,11 +110,35 @@ class FlightMetaPanel extends StatelessWidget {
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
+
+          TextField(
+            controller: _clientSearchController,
+            onChanged: (_) => setState(() {}),
+            decoration: InputDecoration(
+              hintText: 'Имя, адрес или телефон',
+              prefixIcon: const Icon(Icons.search),
+              suffixIcon: _clientSearchController.text.isEmpty
+                  ? null
+                  : IconButton(
+                icon: const Icon(Icons.clear),
+                onPressed: () {
+                  _clientSearchController.clear();
+                  setState(() {});
+                },
+              ),
+              border: const OutlineInputBorder(),
+              isDense: true,
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
           Expanded(
             child: ListView.builder(
-              itemCount: clientProvider.clients.length,
+              itemCount: filteredClients.length,
               itemBuilder: (context, idx) {
-                final client = clientProvider.clients[idx];
+                final client = filteredClients[idx];
+
                 return ListTile(
                   title: Text(
                     client.name,
@@ -103,7 +150,10 @@ class FlightMetaPanel extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  trailing: const Icon(Icons.add_circle, color: Colors.green),
+                  trailing: const Icon(
+                    Icons.add_circle,
+                    color: Colors.green,
+                  ),
                   dense: true,
                   onTap: () => provider.addClientPoint(client),
                 );
@@ -116,7 +166,7 @@ class FlightMetaPanel extends StatelessWidget {
             child: AppPrimaryButton(
               text: 'Сохранить маршрут',
               onPressed: () async {
-                if (formKey.currentState!.validate()) {
+                if (widget.formKey.currentState!.validate()) {
                   final success = await provider.saveRoute();
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
