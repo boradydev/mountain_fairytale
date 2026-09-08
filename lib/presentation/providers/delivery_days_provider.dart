@@ -31,6 +31,7 @@ class DeliveryDaysProvider extends ChangeNotifier {
 
   bool get shouldShowTodayCard {
     if (_status != DeliveryStatus.success) return false;
+    return true;
     final today = DateTime.now();
     return !_days.any((day) =>
     day.date.year == today.year &&

@@ -59,21 +59,49 @@ class DemoDeliveryDataSource implements DeliveryDataSource {
   }
 
 
-  /// ДЕМО-ХАК: Метод для ручного добавления сгенерированного дня доставки в кэш
-  Future<void> addDeliveryDay(Map<String, dynamic> dayJson) async {
+  /// ДЕМО-ХАК: Умное добавление или обновление существующего дня доставки в кэше
+  Future<void> updateOrCreateDeliveryDay(Map<String, dynamic> dayJson) async {
     if (_cache == null) {
       await _getDemoJson();
     }
 
-    // Вычисляем новый ID для дня доставки
-    final int newId = _cache!.isEmpty
-        ? 1
-        : _cache!.map((d) => int.parse(d['id'].toString())).reduce((a, b) =>
-    a > b ? a : b) + 1;
+    final String targetDateStr = dayJson['date'] ?? '';
+    if (targetDateStr.isEmpty) return;
 
-    final finalDay = {...dayJson, 'id': newId};
+    final DateTime targetDate = DateTime.parse(targetDateStr);
 
-    // Вставляем в начало, чтобы новый день сразу появился на дашборде сверху
-    _cache!.insert(0, finalDay);
+    // Ищем, есть ли уже день с такой датой в кэше
+    final existingIndex = _cache!.indexWhere((day) {
+      final String dayDateStr = day['date'] ?? '';
+      if (dayDateStr.isEmpty) return false;
+      final DateTime dayDate = DateTime.parse(dayDateStr);
+      return dayDate.year == targetDate.year &&
+          dayDate.month == targetDate.month &&
+          dayDate.day == targetDate.day;
+    });
+
+    if (existingIndex != -1) {
+      // ДЕНЬ НАЙДЕН: Обновляем статистику, сохраняя старый ID
+      final int existingId = int.parse(_cache![existingIndex]['id'].toString());
+      _cache![existingIndex] = {
+        ...dayJson,
+        'id': existingId, // ID не должен меняться при обновлении данных
+      };
+    } else {
+      // ДЕНЬ НЕ НАЙДЕН: Создаем новую запись
+      final int newId = _cache!.isEmpty
+          ? 1
+          : _cache!.map((d) => int.parse(d['id'].toString())).reduce((a,
+          b) => a > b ? a : b) + 1;
+
+      final finalDay = {
+        ...dayJson,
+        'id': newId,
+      };
+
+      // Вставляем в начало списка
+      _cache!.insert(0, finalDay);
+    }
   }
+
 }

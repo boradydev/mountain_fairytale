@@ -48,11 +48,17 @@ class DemoDeliveryRouteDataSource implements DeliveryRouteDataSource {
     _routesCache!.insert(0, finalSheet);
 
     // =========================================================================
-    // ДЕМО-ХАК: Считаем агрегированные данные для DeliveryDay на основе точек
+    // ДЕМО-ХАК: Считаем агрегированные данные для DeliveryDay на основе ВСЕХ маршрутов за эту дату
     // =========================================================================
     try {
-      final List<dynamic> points = sheetJson['points'] ?? [];
+      final String sheetDateStr = sheetJson['date'] ??
+          DateTime.now().toIso8601String();
+      final DateTime sheetDate = DateTime.parse(sheetDateStr);
 
+      // 1. Получаем абсолютно все маршруты из кэша (включая только что добавленный)
+      final allRoutes = _routesCache ?? [];
+
+      int totalClientsCount = 0;
       int bottlesCount = 0;
       int returnsCount = 0;
       int glassesCount = 0;
@@ -60,36 +66,54 @@ class DemoDeliveryRouteDataSource implements DeliveryRouteDataSource {
       int coolerRepairCount = 0;
       double totalAmount = 0.0;
 
-      for (var point in points) {
-        final List<dynamic> items = point['items'] ?? [];
-        for (var item in items) {
-          final String name = (item['productName'] ?? '')
-              .toString()
-              .toLowerCase();
-          final int quantity = int.tryParse(item['quantity'].toString()) ?? 0;
-          final double price = double.tryParse(item['price'].toString()) ?? 0.0;
+      // 2. Бежим по всем маршрутам и собираем статистику ТОЛЬКО за эту дату
+      for (var route in allRoutes) {
+        final routeDateStr = route['date'] ?? '';
+        if (routeDateStr.isEmpty) continue;
 
-          totalAmount += quantity * price;
+        final DateTime routeDate = DateTime.parse(routeDateStr);
 
-          // Распределяем по категориям на основе названий продуктов (хардкод для демо)
-          if (name.contains('вода') || name.contains('19л')) {
-            bottlesCount += quantity;
-          } else if (name.contains('возврат')) {
-            returnsCount += quantity;
-          } else if (name.contains('стакан')) {
-            glassesCount += quantity;
-          } else if (name.contains('кулер') && !name.contains('ремонт')) {
-            waterCoolerCount += quantity;
-          } else if (name.contains('ремонт')) {
-            coolerRepairCount += quantity;
+        // Сравниваем только день, месяц и год
+        if (routeDate.year == sheetDate.year &&
+            routeDate.month == sheetDate.month &&
+            routeDate.day == sheetDate.day) {
+          final List<dynamic> points = route['points'] ?? [];
+          totalClientsCount +=
+              points.length; // Плюсуем точки всех машин за день
+
+          for (var point in points) {
+            final List<dynamic> items = point['items'] ?? [];
+            for (var item in items) {
+              final String name = (item['productName'] ?? '')
+                  .toString()
+                  .toLowerCase();
+              final int quantity = int.tryParse(item['quantity'].toString()) ??
+                  0;
+              final double price = double.tryParse(item['price'].toString()) ??
+                  0.0;
+
+              totalAmount += quantity * price;
+
+              if (name.contains('вода') || name.contains('19л')) {
+                bottlesCount += quantity;
+              } else if (name.contains('возврат')) {
+                returnsCount += quantity;
+              } else if (name.contains('стакан')) {
+                glassesCount += quantity;
+              } else if (name.contains('кулер') && !name.contains('ремонт')) {
+                waterCoolerCount += quantity;
+              } else if (name.contains('ремонт')) {
+                coolerRepairCount += quantity;
+              }
+            }
           }
         }
       }
 
-      // Формируем JSON-карту в формате модели DeliveryDay
+      // 3. Формируем единую карту для дня доставки
       final Map<String, dynamic> generatedDayJson = {
-        'date': sheetJson['date'] ?? DateTime.now().toIso8601String(),
-        'clientsCount': points.length,
+        'date': sheetDateStr,
+        'clientsCount': totalClientsCount,
         'bottlesCount': bottlesCount,
         'returnsCount': returnsCount,
         'glassesCount': glassesCount,
@@ -98,12 +122,13 @@ class DemoDeliveryRouteDataSource implements DeliveryRouteDataSource {
         'totalAmount': totalAmount,
       };
 
-      // Передаем сгенерированный день в дата-сорс дней доставки
-      await _deliveryDayDataSource.addDeliveryDay(generatedDayJson);
+      // 4. Передаем данные в дата-сорс дней доставки для умного сохранения/обновления
+      await _deliveryDayDataSource.updateOrCreateDeliveryDay(generatedDayJson);
     } catch (e) {
       print('Ошибка работы демо-хака генерации дня доставки: $e');
     }
     // =========================================================================
+
 
     return finalSheet;
   }
