@@ -139,23 +139,45 @@ class _FlightMetaPanelState extends State<FlightMetaPanel> {
               itemBuilder: (context, idx) {
                 final client = filteredClients[idx];
 
+                final isAlreadyAdded = provider.points.any(
+                      (point) => point.clientId == client.id,
+                );
+
                 return ListTile(
                   title: Text(
                     client.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: isAlreadyAdded
+                          ? colorScheme.onSurfaceVariant
+                          : null,
+                    ),
                   ),
                   subtitle: Text(
                     client.address,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: isAlreadyAdded
+                          ? colorScheme.onSurfaceVariant
+                          : null,
+                    ),
                   ),
-                  trailing: const Icon(
+                  trailing: isAlreadyAdded
+                      ? const Icon(
+                    Icons.check_circle,
+                    color: Colors.grey,
+                  )
+                      : const Icon(
                     Icons.add_circle,
                     color: Colors.green,
                   ),
                   dense: true,
-                  onTap: () => provider.addClientPoint(client),
+                  enabled: !isAlreadyAdded,
+                  onTap: isAlreadyAdded
+                      ? null
+                      : () => provider.addClientPoint(client),
                 );
               },
             ),
