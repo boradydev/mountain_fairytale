@@ -102,39 +102,43 @@ class RouteSheetPdfBuilder {
     return pw.Table(
       border: pw.TableBorder.all(color: PdfColors.grey600, width: 0.6),
       columnWidths: const {
-        0: pw.FixedColumnWidth(25),
-        1: pw.FlexColumnWidth(2.2),
-        2: pw.FlexColumnWidth(1.5),
-        3: pw.FlexColumnWidth(2.4),
-        4: pw.FlexColumnWidth(2.0),
-        5: pw.FlexColumnWidth(1.2),
+        0: pw.FixedColumnWidth(18), // Номер строки основного списка
+        1: pw.FlexColumnWidth(2.5), // Информация о клиенте
+        2: pw.FlexColumnWidth(4.5), // Зона под вложенную таблицу "Задание"
+        3: pw.FixedColumnWidth(55), // Итоговая сумма по клиенту
       },
       children: [
+        // Главная шапка таблицы
         pw.TableRow(
           decoration: const pw.BoxDecoration(color: PdfColors.grey300),
           children: [
             _tableHeader('#'),
-            _tableHeader('Клиент'),
-            _tableHeader('Город'),
-            _tableHeader('Адрес / телефон'),
+            _tableHeader('Информация о клиенте'),
             _tableHeader('Задание'),
             _tableHeader('Сумма'),
           ],
         ),
+        // Строки с данными клиентов
         ...sheet.points.asMap().entries.map((entry) {
           final index = entry.key;
           final point = entry.value;
 
           return pw.TableRow(
+            verticalAlignment: pw.TableCellVerticalAlignment.full,
+            // Чтобы сетка внутри не съезжала
             children: [
               _tableCell('${index + 1}'),
-              _tableCell(point.clientName),
-              _tableCell(point.city),
-              _tableCell('${point.address}\n${point.phone}'),
+              _tableCell(
+                'Клиент: ${point.clientName}\n'
+                    'Город: ${point.city}\n'
+                    'Адрес: ${point.address}\n'
+                    'Тел: ${point.phone}',
+              ),
+              // Сюда передаем наш список продуктов, он разложится в красивую мини-таблицу
               _buildItemsCell(point.items),
               _tableCell(
                 '${point.totalAmount.toStringAsFixed(2)} ₽',
-                align: pw.TextAlign.right,
+                align: pw.TextAlign.center,
               ),
             ],
           );
@@ -144,20 +148,55 @@ class RouteSheetPdfBuilder {
   }
 
   pw.Widget _buildItemsCell(List<dynamic> items) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.all(5),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: items.map((item) {
-          return pw.Text(
-            '${item.productName} × ${item.quantity} '
-            '(${item.price.toStringAsFixed(2)} ₽)',
-            style: const pw.TextStyle(fontSize: 7.5),
-          );
-        }).toList(),
+    return pw.Table(
+      // Внутренние границы между колонками продуктов
+      border: const pw.TableBorder(
+        verticalInside: pw.BorderSide(color: PdfColors.grey400, width: 0.4),
+        horizontalInside: pw.BorderSide(color: PdfColors.grey400, width: 0.4),
       ),
+      columnWidths: const {
+        0: pw.FixedColumnWidth(15), // # продукта
+        1: pw.FlexColumnWidth(3.0), // Продукция
+        2: pw.FixedColumnWidth(30), // Кол-во
+        3: pw.FixedColumnWidth(45), // Цена
+        4: pw.FixedColumnWidth(50), // Сумма
+      },
+      children: [
+        // Шапка для продуктов (внутри ячейки Задание)
+        pw.TableRow(
+          decoration: const pw.BoxDecoration(color: PdfColors.grey200),
+          children: [
+            _tableHeader('#'),
+            _tableHeader('Продукция'),
+            _tableHeader('Кол-во'),
+            _tableHeader('Цена'),
+            _tableHeader('Сумма'),
+          ],
+        ),
+        // Строки самих продуктов
+        ...items
+            .asMap()
+            .entries
+            .map((itemEntry) {
+          final subIndex = itemEntry.key;
+          final item = itemEntry.value;
+
+          return pw.TableRow(
+            children: [
+              _tableCell('${subIndex + 1}', align: pw.TextAlign.center),
+              _tableCell(item.productName),
+              _tableCell('${item.quantity}', align: pw.TextAlign.center),
+              _tableCell('${item.price.toStringAsFixed(2)} ₽',
+                  align: pw.TextAlign.right),
+              _tableCell('${item.amount.toStringAsFixed(2)} ₽',
+                  align: pw.TextAlign.right),
+            ],
+          );
+        }),
+      ],
     );
   }
+
 
   pw.Widget _tableHeader(String text) {
     return pw.Padding(
