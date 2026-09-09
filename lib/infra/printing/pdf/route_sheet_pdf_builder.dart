@@ -39,21 +39,29 @@ class RouteSheetPdfBuilder {
   }
 
   pw.Widget _buildHeader(DeliveryRouteSheet sheet) {
-    return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.center,
-      children: [
-        pw.Text(
-          'МАРШРУТНЫЙ ЛИСТ',
-          style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+    return pw.Container(
+      alignment: pw.Alignment.center,
+      padding: const pw.EdgeInsets.only(bottom: 10),
+      child: pw.RichText(
+        text: pw.TextSpan(
+          style: const pw.TextStyle(color: PdfColors.black),
+          children: [
+            pw.TextSpan(
+              text: 'МАРШРУТНЫЙ ЛИСТ ',
+              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+            ),
+            pw.TextSpan(
+              text: 'от ${_formatDate(sheet.date)}',
+              style: pw.TextStyle(fontSize: 13,
+                  fontWeight: pw.FontWeight.normal,
+                  color: PdfColors.grey800),
+            ),
+          ],
         ),
-        pw.SizedBox(height: 4),
-        pw.Text(
-          'от ${_formatDate(sheet.date)}',
-          style: const pw.TextStyle(fontSize: 11),
-        ),
-      ],
+      ),
     );
   }
+
 
   pw.Widget _buildRouteInfo(DeliveryRouteSheet sheet) {
     return pw.Container(
@@ -102,10 +110,10 @@ class RouteSheetPdfBuilder {
     return pw.Table(
       border: pw.TableBorder.all(color: PdfColors.grey600, width: 0.6),
       columnWidths: const {
-        0: pw.FixedColumnWidth(18), // Номер строки основного списка
+        0: pw.FixedColumnWidth(15), // Номер клиента
         1: pw.FlexColumnWidth(2.5), // Информация о клиенте
         2: pw.FlexColumnWidth(4.5), // Зона под вложенную таблицу "Задание"
-        3: pw.FixedColumnWidth(55), // Итоговая сумма по клиенту
+        3: pw.FixedColumnWidth(50), // Итоговая сумма по клиенту
       },
       children: [
         // Главная шапка таблицы
@@ -115,7 +123,7 @@ class RouteSheetPdfBuilder {
             _tableHeader('#'),
             _tableHeader('Информация о клиенте'),
             _tableHeader('Задание'),
-            _tableHeader('Сумма'),
+            _tableHeader('Итого'),
           ],
         ),
         // Строки с данными клиентов
@@ -128,11 +136,39 @@ class RouteSheetPdfBuilder {
             // Чтобы сетка внутри не съезжала
             children: [
               _tableCell('${index + 1}'),
-              _tableCell(
-                'Клиент: ${point.clientName}\n'
-                    'Город: ${point.city}\n'
-                    'Адрес: ${point.address}\n'
-                    'Тел: ${point.phone}',
+              pw.Container(
+                padding: const pw.EdgeInsets.all(5),
+                alignment: pw.Alignment.centerLeft,
+                // Выравнивание по вертикали и левому краю
+                child: pw.RichText(
+                  text: pw.TextSpan(
+                    style: const pw.TextStyle(
+                        fontSize: 7.5, color: PdfColors.black),
+                    children: [
+                      pw.TextSpan(text: 'Клиент: '),
+                      pw.TextSpan(text: '${point.clientName}\n',
+                          style: pw.TextStyle(fontWeight: pw.FontWeight
+                              .bold)),
+                      pw.TextSpan(text: 'Адрес: '),
+                      pw.TextSpan(
+                        text: '${point.address}\n', style: pw.TextStyle(
+                          fontWeight: pw.FontWeight.bold
+                      ),
+                      ),
+                      pw.TextSpan(text: 'Тел: '),
+                      pw.TextSpan(text: '${point.phone}\n', style: pw.TextStyle(
+                          fontWeight: pw.FontWeight.bold
+                      ),
+                      ),
+                      const pw.TextSpan(text: 'Форма оплаты: '),
+                      pw.TextSpan(
+                        text: point.paymentMethod,
+                        style: pw.TextStyle(fontWeight: pw.FontWeight
+                            .bold), // ДЕЛАЕМ ЖИРНЫМ
+                      ),
+                    ],
+                  ),
+                ),
               ),
               // Сюда передаем наш список продуктов, он разложится в красивую мини-таблицу
               _buildItemsCell(point.items),
@@ -157,7 +193,7 @@ class RouteSheetPdfBuilder {
       columnWidths: const {
         0: pw.FixedColumnWidth(15), // # продукта
         1: pw.FlexColumnWidth(3.0), // Продукция
-        2: pw.FixedColumnWidth(30), // Кол-во
+        2: pw.FixedColumnWidth(45), // Кол-во
         3: pw.FixedColumnWidth(45), // Цена
         4: pw.FixedColumnWidth(50), // Сумма
       },
@@ -210,15 +246,26 @@ class RouteSheetPdfBuilder {
   }
 
   pw.Widget _tableCell(String text, {pw.TextAlign align = pw.TextAlign.left}) {
-    return pw.Padding(
+    // Мапим pw.TextAlign в соответствующий pw.Alignment для контейнера
+    final containerAlignment = switch (align) {
+      pw.TextAlign.left => pw.Alignment.centerLeft,
+      pw.TextAlign.right => pw.Alignment.centerRight,
+      pw.TextAlign.center => pw.Alignment.center,
+      _ => pw.Alignment.centerLeft,
+    };
+
+    return pw.Container(
       padding: const pw.EdgeInsets.all(5),
+      alignment: containerAlignment,
+      // Выравнивает текст по вертикали и горизонтали внутри ячейки
       child: pw.Text(
         text,
-        textAlign: align,
+        textAlign: align, // Сохраняем горизонтальный текст-элайн
         style: const pw.TextStyle(fontSize: 7.5),
       ),
     );
   }
+
 
   pw.Widget _buildTotal(DeliveryRouteSheet sheet) {
     return pw.Row(
