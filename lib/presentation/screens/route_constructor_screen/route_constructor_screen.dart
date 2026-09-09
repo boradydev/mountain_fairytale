@@ -3,6 +3,7 @@ import 'package:mountain_fairytale/infra/app_notify.dart';
 import 'package:mountain_fairytale/presentation/providers/route_constructor_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/route_constructor_screen/flight_meta_panel.dart';
 import 'package:mountain_fairytale/presentation/screens/route_constructor_screen/route_points_list.dart';
+import 'package:mountain_fairytale/presentation/screens/route_constructor_screen/route_sheet_preview_dialog.dart';
 import 'package:provider/provider.dart';
 
 class RouteConstructorScreen extends StatefulWidget {
@@ -47,22 +48,64 @@ class _RouteConstructorScreenState extends State<RouteConstructorScreen> {
           IconButton(
             icon: const Icon(Icons.print),
             tooltip: 'Печать маршрутного листа',
-            onPressed: provider.points.isEmpty ||
-                provider.selectedDriver == null ||
-                provider.selectedCar == null
-                ? null
-                : () async {
-              final success = await provider.printRoute();
+            onPressed: () {
+              if (provider.selectedDriver == null) {
+                AppNotify.show(
+                  context,
+                  'Укажите водителя перед печатью маршрутного листа',
+                  isError: true,
+                );
+                return;
+              }
 
-              if (!context.mounted) return;
+              if (provider.selectedCar == null) {
+                AppNotify.show(
+                  context,
+                  'Укажите автомобиль перед печатью маршрутного листа',
+                  isError: true,
+                );
+                return;
+              }
 
-              if (!success) {
+              if (provider.points.isEmpty) {
+                AppNotify.show(
+                  context,
+                  'Добавьте хотя бы один маршрут перед печатью маршрутного листа',
+                  isError: true,
+                );
+                return;
+              }
+
+              final hasProducts = provider.points.any(
+                    (point) => point.items.isNotEmpty,
+              );
+
+              if (!hasProducts) {
+                AppNotify.show(
+                  context,
+                  'Добавьте продукцию хотя бы в один маршрут перед печатью маршрутного листа',
+                  isError: true,
+                );
+                return;
+              }
+
+              final sheet = provider.currentRouteSheet;
+
+              if (sheet == null) {
                 AppNotify.show(
                   context,
                   'Не удалось подготовить маршрутный лист к печати',
                   isError: true,
                 );
+                return;
               }
+
+              showDialog(
+                context: context,
+                builder: (_) => RouteSheetPreviewDialog(
+                  sheet: sheet,
+                ),
+              );
             },
           ),
 
