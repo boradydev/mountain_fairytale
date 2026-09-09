@@ -44,6 +44,8 @@ dependencies:
   window_manager: ^0.5.1
   shared_preferences: ^2.5.5
   json_annotation: ^4.12.0
+  pdf: ^3.11.3
+  printing: ^5.14.2
 
   intl: any
 dev_dependencies:
@@ -78,6 +80,8 @@ flutter:
     - assets/demo/products/
     - assets/demo/delivery_routes/
     - assets/demo/driver/
+
+    - assets/fonts/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

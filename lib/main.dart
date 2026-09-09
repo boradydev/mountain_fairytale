@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/infra/printing/pdf/route_sheet_pdf_builder.dart';
+import 'package:mountain_fairytale/infra/printing/windows_route_print_service.dart';
 import 'package:mountain_fairytale/infra/repos/cars/repo.dart';
 import 'package:mountain_fairytale/infra/repos/cars/sources/demo_data.dart';
 import 'package:mountain_fairytale/infra/repos/clients/repo.dart';
@@ -79,9 +81,15 @@ Future<void> main() async {
   final routeRepository = DeliveryRouteRepositoryImpl(routeDataSource);
   final clientRepository = ClientRepositoryImpl(clientDataSource);
   final deliveryDayRepository = ApiDeliveryRepository(deliveryDayDataSource);
+  ;
 
   // ===========================================================================
-  // 3. ЗАПУСК ПРИЛОЖЕНИЯ И ВНЕДРЕНИЕ ЗАВИСИМОСТЕЙ (DI)
+  // 3. ИНИЦИАЛИЗАЦИЯ СЕРВИСОВ
+  // ===========================================================================
+  final routePrintService = WindowsRoutePrintService(RouteSheetPdfBuilder());
+
+  // ===========================================================================
+  // 4. ЗАПУСК ПРИЛОЖЕНИЯ И ВНЕДРЕНИЕ ЗАВИСИМОСТЕЙ (DI)
   // Передаем созданные синглтоны репозиториев в UI-провайдеры управления стейтом
   // ===========================================================================
   runApp(
@@ -108,6 +116,7 @@ Future<void> main() async {
             driverRepo: driverRepository,
             productRepo: productRepository,
             routeRepo: routeRepository,
+            printService: routePrintService,
           ),
         ),
       ],

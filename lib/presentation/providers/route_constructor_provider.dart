@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/infra/printing/route_print_service.dart';
 import 'package:mountain_fairytale/infra/repos/cars/models/car_model.dart';
 import 'package:mountain_fairytale/infra/repos/clients/models/client_model.dart';
 import 'package:mountain_fairytale/infra/repos/delivery_route/models/delivery_route_sheet_model.dart';
@@ -13,17 +14,20 @@ class RouteConstructorProvider extends ChangeNotifier {
   final DriverRepository _driverRepo;
   final ProductRepository _productRepo;
   final DeliveryRouteRepository _routeRepo;
+  final RoutePrintService _printService;
 
   RouteConstructorProvider({
     required CarRepository carRepo,
     required DriverRepository driverRepo,
     required ProductRepository productRepo,
     required DeliveryRouteRepository routeRepo,
+    required RoutePrintService printService,
   })
       : _carRepo = carRepo,
         _driverRepo = driverRepo,
         _productRepo = productRepo,
-        _routeRepo = routeRepo;
+        _routeRepo = routeRepo,
+        _printService = printService;
 
   List<Car> cars = [];
   List<Driver> drivers = [];
@@ -174,18 +178,11 @@ class RouteConstructorProvider extends ChangeNotifier {
   }
 
   Future<bool> saveRoute() async {
-    if (selectedDriver == null || selectedCar == null || points.isEmpty) {
+    final sheet = currentRouteSheet;
+
+    if (sheet == null) {
       return false;
     }
-
-    final sheet = DeliveryRouteSheet(
-      date: selectedDate,
-      driverName: selectedDriver!.name,
-      carId: selectedCar!.id,
-      carModelAndNumber: '${selectedCar!.model} (${selectedCar!.number})',
-      startMileage: startMileage,
-      points: points,
-    );
 
     try {
       await _routeRepo.saveRouteSheet(sheet);
@@ -302,5 +299,37 @@ class RouteConstructorProvider extends ChangeNotifier {
     }
   }
 
+  DeliveryRouteSheet? get currentRouteSheet {
+    if (selectedDriver == null ||
+        selectedCar == null ||
+        points.isEmpty) {
+      return null;
+    }
+
+    return DeliveryRouteSheet(
+      date: selectedDate,
+      driverName: selectedDriver!.name,
+      carId: selectedCar!.id,
+      carModelAndNumber:
+      '${selectedCar!.model} (${selectedCar!.number})',
+      startMileage: startMileage,
+      points: points,
+    );
+  }
+
+  Future<bool> printRoute() async {
+    final sheet = currentRouteSheet;
+
+    if (sheet == null) {
+      return false;
+    }
+
+    try {
+      await _printService.printRouteSheet(sheet);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
 
 }
