@@ -18,7 +18,7 @@ class CarRepositoryImpl implements CarRepository {
   }
 
   @override
-  Future<Car> createCar(Car car) async {
+  Future<Car> createCar(CreateCarRequest car) async {
     final json = await dataSource.createCar(car.toJson());
     return Car.fromJson(json);
   }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:mountain_fairytale/presentation/providers/abcs/services.dart';
+import 'package:mountain_fairytale/core/repos/car_contracts.dart';
+import 'package:mountain_fairytale/core/repos/driver_contracts.dart';
+import 'package:mountain_fairytale/core/repos/product_contracts.dart';
 import 'package:mountain_fairytale/infra/repos/cars/models/car_model.dart';
 import 'package:mountain_fairytale/infra/repos/clients/models/client_model.dart';
 import 'package:mountain_fairytale/infra/repos/delivery_route/models/delivery_route_sheet_model.dart';
@@ -8,6 +10,7 @@ import 'package:mountain_fairytale/infra/repos/delivery_route/models/route_point
 import 'package:mountain_fairytale/infra/repos/drivers/models/driver_model.dart';
 import 'package:mountain_fairytale/infra/repos/products/models/product_model.dart';
 import 'package:mountain_fairytale/presentation/providers/abcs/repos.dart';
+import 'package:mountain_fairytale/presentation/providers/abcs/services.dart';
 
 class RouteConstructorProvider extends ChangeNotifier {
   final CarRepository _carRepo;
@@ -197,9 +200,9 @@ class RouteConstructorProvider extends ChangeNotifier {
     if (normalizedName.isEmpty) return null;
 
     try {
-      // Репозиторий теперь ждет модель, передаем временный инстанс (ID назначит сервер/сорс)
-      final driverModel = Driver(id: 0, name: normalizedName);
-      final createdDriver = await _driverRepo.createDriver(driverModel);
+      // ИСПОРАВЛЕНО: Вместо Driver(id: 0, ...) используем чистое DTO для создания
+      final request = CreateDriverRequest(name: normalizedName);
+      final createdDriver = await _driverRepo.createDriver(request);
 
       drivers.insert(0, createdDriver);
       selectDriver(createdDriver);
@@ -215,9 +218,10 @@ class RouteConstructorProvider extends ChangeNotifier {
     if (normalizedModel.isEmpty || normalizedNumber.isEmpty) return null;
 
     try {
-      final carModel = Car(
-          id: 0, model: normalizedModel, number: normalizedNumber);
-      final createdCar = await _carRepo.createCar(carModel);
+      // ИСПРАВЛЕНО: Вместо Car(id: 0, ...) используем официальный CreateCarRequest DTO
+      final request = CreateCarRequest(
+          model: normalizedModel, number: normalizedNumber);
+      final createdCar = await _carRepo.createCar(request);
 
       cars.insert(0, createdCar);
       selectCar(createdCar);
@@ -226,6 +230,7 @@ class RouteConstructorProvider extends ChangeNotifier {
       return null;
     }
   }
+
 
   /// Загружает существующий маршрут по дате дня доставки
   Future<void> loadExistingRoute(DateTime date) async {

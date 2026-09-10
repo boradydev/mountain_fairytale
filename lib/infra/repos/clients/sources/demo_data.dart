@@ -122,41 +122,29 @@ class DemoClientDataSource implements ClientDataSource {
 
   // Реализуем метод добавления внутри дата-сорса:
   @override
-  Future<Map<String, dynamic>> createClient({
-    required String name,
-    required String phone,
-    required String address,
-    required int thresholdDays,
-  }) async {
-    // Имитируем задержку сети
+  Future<Map<String, dynamic>> createClient(
+      Map<String, dynamic> clientJson) async {
     await Future<void>.delayed(const Duration(milliseconds: 500));
 
-    // Гарантируем, что кэш загружен
     if (_cache == null) {
       await _getDemoJson();
     }
 
-    // Находим максимальный ID в текущем кэше и прибавляем 1
     final int newId = _cache!.isEmpty
         ? 1
         : _cache!.map((c) => int.parse(c['id'].toString())).reduce((a, b) =>
     a > b ? a : b) + 1;
 
-    // Формируем структуру в точном соответствии с JSON-моделью
+    // Формируем финальную структуру на основе пришедшего JSON
     final newClientJson = {
+      ...clientJson,
       'id': newId,
-      'name': name.trim(),
-      'phone': phone.trim(),
-      'address': address.trim(),
-      'sleepingThresholdDays': thresholdDays,
       'lastDeliveryDate': null,
       'lastDeliveryQuantity': null,
       'cooldownUntil': null,
     };
 
-    // Пушим в начало нашего кэша, чтобы новый клиент сразу отображался сверху
     _cache!.insert(0, newClientJson);
-
     return newClientJson;
   }
 

@@ -52,3 +52,37 @@ class Client {
 
   Map<String, dynamic> toJson() => _$ClientToJson(this);
 }
+
+@JsonSerializable()
+class CreateClientRequest {
+  final String name;
+  final String phone;
+  final String address;
+  final int sleepingThresholdDays;
+
+  const CreateClientRequest({
+    required this.name,
+    required this.phone,
+    required this.address,
+    required this.sleepingThresholdDays,
+  });
+
+  Map<String, dynamic> toJson() => _$CreateClientRequestToJson(this);
+}
+
+@JsonSerializable(includeIfNull: false)
+class UpdateClientRequest {
+  final String? name;
+  final String? phone;
+  final String? address;
+  final int? sleepingThresholdDays;
+
+  const UpdateClientRequest({
+    this.name,
+    this.phone,
+    this.address,
+    this.sleepingThresholdDays,
+  });
+
+  Map<String, dynamic> toJson() => _$UpdateClientRequestToJson(this);
+}

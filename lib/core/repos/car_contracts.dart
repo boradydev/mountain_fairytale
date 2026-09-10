@@ -17,7 +17,7 @@ abstract interface class CarRepository {
 
   Future<Car> getCarById(int id);
 
-  Future<Car> createCar(Car car);
+  Future<Car> createCar(CreateCarRequest car);
 
   Future<Car> updateCar(int id, UpdateCarRequest request);
 

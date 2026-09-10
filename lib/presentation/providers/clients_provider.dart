@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mountain_fairytale/presentation/providers/abcs/repos.dart';
+import 'package:mountain_fairytale/core/repos/client_contracts.dart';
 import 'package:mountain_fairytale/infra/repos/clients/models/client_model.dart';
 
 enum ClientStatus { initial, loading, success, failure }
@@ -148,15 +148,16 @@ class ClientsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Делаем реальный запрос через репозиторий
-      final newClient = await _repository.createClient(
+      // ИСПРАВЛЕНО: Упаковываем аргументы в один масштабируемый объект-запрос
+      final request = CreateClientRequest(
         name: name,
         phone: phone,
         address: address,
-        thresholdDays: thresholdDays,
+        sleepingThresholdDays: thresholdDays,
       );
 
-      // Добавляем созданную модель в стейт провайдера
+      final newClient = await _repository.createClient(request);
+
       _clients = [newClient, ..._clients];
       _status = ClientStatus.success;
     } catch (e) {

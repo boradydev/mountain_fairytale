@@ -38,25 +38,14 @@ class ClientRepositoryImpl implements ClientRepository {
   }
 
   @override
-  Future<Client> createClient({
-    required String name,
-    required String phone,
-    required String address,
-    required int thresholdDays,
-  }) async {
-    final json = await dataSource.createClient(
-      name: name,
-      phone: phone,
-      address: address,
-      thresholdDays: thresholdDays,
-    );
-
+  Future<Client> createClient(CreateClientRequest request) async {
+    final json = await dataSource.createClient(request.toJson());
     return Client.fromJson(json);
   }
 
   @override
-  Future<Client> updateClient(int id, Map<String, dynamic> json) async {
-    final updatedJson = await dataSource.patchClient(id, json);
+  Future<Client> updateClient(int id, UpdateClientRequest request) async {
+    final updatedJson = await dataSource.patchClient(id, request.toJson());
     return Client.fromJson(updatedJson);
   }
 
