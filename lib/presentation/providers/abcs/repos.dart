@@ -3,7 +3,10 @@ import 'package:mountain_fairytale/infra/repos/clients/models/client_model.dart'
 import 'package:mountain_fairytale/infra/repos/delivery_day/models/delivery_day_model.dart';
 import 'package:mountain_fairytale/infra/repos/delivery_route/models/delivery_route_sheet_model.dart';
 import 'package:mountain_fairytale/infra/repos/drivers/models/driver_model.dart';
+import 'package:mountain_fairytale/infra/repos/payment_methods/models/payment_method_model.dart';
 import 'package:mountain_fairytale/infra/repos/products/models/product_model.dart';
+import 'package:mountain_fairytale/infra/repos/sales_representatives/models/sales_representative_model.dart';
+
 
 abstract interface class CarRepository {
   Future<List<Car>> getAvailableCars();
@@ -42,4 +45,56 @@ abstract interface class DriverRepository {
 
 abstract interface class ProductRepository {
   Future<List<Product>> getAvailableProducts();
+}
+
+
+abstract interface class PaymentMethodDataSource {
+  Future<List<Map<String, dynamic>>> getAllPaymentMethods();
+
+  Future<Map<String, dynamic>> getPaymentMethodById(int id);
+
+  Future<Map<String, dynamic>> createPaymentMethod(Map<String, dynamic> json);
+
+  Future<Map<String, dynamic>> patchPaymentMethod(int id,
+      Map<String, dynamic> json);
+
+  Future<void> deletePaymentMethod(int id);
+}
+
+abstract interface class PaymentMethodRepository {
+  Future<List<PaymentMethod>> getAllPaymentMethods();
+
+  Future<PaymentMethod> getPaymentMethodById(int id);
+
+  Future<PaymentMethod> createPaymentMethod(
+      CreatePaymentMethodRequest request);
+  Future<PaymentMethod> updatePaymentMethod(int id,
+      UpdatePaymentMethodRequest request);
+  Future<void> deletePaymentMethod(int id);
+}
+
+abstract interface class SalesRepresentativeDataSource {
+  Future<List<Map<String, dynamic>>> getAllSalesRepresentatives();
+
+  Future<Map<String, dynamic>> getSalesRepresentativeById(int id);
+
+  Future<Map<String, dynamic>> createSalesRepresentative(
+      Map<String, dynamic> json);
+
+  Future<Map<String, dynamic>> patchSalesRepresentative(int id,
+      Map<String, dynamic> json);
+
+  Future<void> deleteSalesRepresentative(int id);
+}
+
+abstract interface class SalesRepresentativeRepository {
+  Future<List<SalesRepresentative>> getAllSalesRepresentatives();
+
+  Future<SalesRepresentative> getSalesRepresentativeById(int id);
+
+  Future<SalesRepresentative> createSalesRepresentative(
+      CreateSalesRepresentativeRequest request);
+  Future<SalesRepresentative> updateSalesRepresentative(int id,
+      UpdateSalesRepresentativeRequest request);
+  Future<void> deleteSalesRepresentative(int id);
 }

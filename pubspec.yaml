@@ -80,6 +80,8 @@ flutter:
     - assets/demo/products/
     - assets/demo/delivery_routes/
     - assets/demo/driver/
+    - assets/demo/payment_methods/
+    - assets/demo/sales_representatives/
 
     - assets/fonts/
 

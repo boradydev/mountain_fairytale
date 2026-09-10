@@ -14,3 +14,29 @@ class Car {
 
   Map<String, dynamic> toJson() => _$CarToJson(this);
 }
+
+@JsonSerializable()
+class CreateCarRequest {
+  final String model;
+  final String number;
+
+  const CreateCarRequest({
+    required this.model,
+    required this.number,
+  });
+
+  Map<String, dynamic> toJson() => _$CreateCarRequestToJson(this);
+}
+
+@JsonSerializable(includeIfNull: false)
+class UpdateCarRequest {
+  final String? model;
+  final String? number;
+
+  const UpdateCarRequest({
+    this.model,
+    this.number,
+  });
+
+  Map<String, dynamic> toJson() => _$UpdateCarRequestToJson(this);
+}
