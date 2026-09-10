@@ -110,7 +110,7 @@ class RouteSheetPdfBuilder {
     return pw.Table(
       border: pw.TableBorder.all(color: PdfColors.grey600, width: 0.6),
       columnWidths: const {
-        0: pw.FixedColumnWidth(15), // Номер клиента
+        0: pw.FixedColumnWidth(20), // Номер клиента
         1: pw.FlexColumnWidth(2.5), // Информация о клиенте
         2: pw.FlexColumnWidth(4.5), // Зона под вложенную таблицу "Задание"
         3: pw.FixedColumnWidth(50), // Итоговая сумма по клиенту
@@ -135,7 +135,7 @@ class RouteSheetPdfBuilder {
             verticalAlignment: pw.TableCellVerticalAlignment.full,
             // Чтобы сетка внутри не съезжала
             children: [
-              _tableCell('${index + 1}'),
+              _tableCell('${index + 1}', align: pw.TextAlign.center),
               pw.Container(
                 padding: const pw.EdgeInsets.all(5),
                 alignment: pw.Alignment.centerLeft,
@@ -191,7 +191,7 @@ class RouteSheetPdfBuilder {
         horizontalInside: pw.BorderSide(color: PdfColors.grey400, width: 0.4),
       ),
       columnWidths: const {
-        0: pw.FixedColumnWidth(15), // # продукта
+        0: pw.FixedColumnWidth(20), // # продукта
         1: pw.FlexColumnWidth(3.0), // Продукция
         2: pw.FixedColumnWidth(45), // Кол-во
         3: pw.FixedColumnWidth(45), // Цена
