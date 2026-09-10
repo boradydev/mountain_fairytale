@@ -1,5 +1,5 @@
 import 'package:mountain_fairytale/infra/repos/abcs.dart';
-import 'package:mountain_fairytale/presentation/providers/abcs/repo.dart';
+import 'package:mountain_fairytale/presentation/providers/abcs/repos.dart';
 import 'package:mountain_fairytale/infra/repos/delivery_route/models/delivery_route_sheet_model.dart';
 
 class DeliveryRouteRepositoryImpl implements DeliveryRouteRepository {
