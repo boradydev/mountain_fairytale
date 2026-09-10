@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
-import 'package:mountain_fairytale/infra/repos/abcs.dart';
+import 'package:mountain_fairytale/core/repos/delivery_day.dart';
 
 class DemoDeliveryDataSource implements DeliveryDataSource {
   final AssetBundle _assetBundle;

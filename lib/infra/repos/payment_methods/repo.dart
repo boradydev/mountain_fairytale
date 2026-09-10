@@ -1,5 +1,5 @@
+import 'package:mountain_fairytale/core/repos/payment_method_abcs.dart';
 import 'package:mountain_fairytale/infra/repos/payment_methods/models/payment_method_model.dart';
-import 'package:mountain_fairytale/presentation/providers/abcs/repos.dart';
 
 class PaymentMethodRepositoryImpl implements PaymentMethodRepository {
   final PaymentMethodDataSource dataSource;

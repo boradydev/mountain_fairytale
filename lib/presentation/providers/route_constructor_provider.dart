@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/core/repos/car_contracts.dart';
+import 'package:mountain_fairytale/core/repos/delivery_route.dart';
 import 'package:mountain_fairytale/core/repos/driver_contracts.dart';
 import 'package:mountain_fairytale/core/repos/product_contracts.dart';
 import 'package:mountain_fairytale/infra/repos/cars/models/car_model.dart';
@@ -9,7 +10,6 @@ import 'package:mountain_fairytale/infra/repos/delivery_route/models/delivery_ta
 import 'package:mountain_fairytale/infra/repos/delivery_route/models/route_point_model.dart';
 import 'package:mountain_fairytale/infra/repos/drivers/models/driver_model.dart';
 import 'package:mountain_fairytale/infra/repos/products/models/product_model.dart';
-import 'package:mountain_fairytale/presentation/providers/abcs/repos.dart';
 import 'package:mountain_fairytale/presentation/providers/abcs/services.dart';
 
 class RouteConstructorProvider extends ChangeNotifier {

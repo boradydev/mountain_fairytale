@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
-import 'package:mountain_fairytale/presentation/providers/abcs/repos.dart';
+import 'package:mountain_fairytale/core/repos/payment_method_abcs.dart';
 
 class DemoPaymentMethodDataSource implements PaymentMethodDataSource {
   final AssetBundle _assetBundle;
