@@ -1,5 +1,4 @@
-import 'package:mountain_fairytale/infra/repos/abcs.dart';
-import 'package:mountain_fairytale/presentation/providers/abcs/repos.dart';
+import 'package:mountain_fairytale/core/repos/client_contracts.dart';
 import 'package:mountain_fairytale/infra/repos/clients/models/client_model.dart';
 
 class ClientRepositoryImpl implements ClientRepository {
@@ -11,6 +10,12 @@ class ClientRepositoryImpl implements ClientRepository {
   Future<List<Client>> getAllClients() async {
     final jsonList = await dataSource.getAllClients();
     return jsonList.map(Client.fromJson).toList();
+  }
+
+  @override
+  Future<Client> getClientById(int id) async {
+    final json = await dataSource.getClientById(id);
+    return Client.fromJson(json);
   }
 
   @override
@@ -47,5 +52,16 @@ class ClientRepositoryImpl implements ClientRepository {
     );
 
     return Client.fromJson(json);
+  }
+
+  @override
+  Future<Client> updateClient(int id, Map<String, dynamic> json) async {
+    final updatedJson = await dataSource.patchClient(id, json);
+    return Client.fromJson(updatedJson);
+  }
+
+  @override
+  Future<void> deleteClient(int id) async {
+    await dataSource.deleteClient(id);
   }
 }

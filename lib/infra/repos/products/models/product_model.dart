@@ -19,3 +19,29 @@ class Product {
 
   Map<String, dynamic> toJson() => _$ProductToJson(this);
 }
+
+@JsonSerializable()
+class CreateProductRequest {
+  final String name;
+  final double basePrice;
+
+  const CreateProductRequest({
+    required this.name,
+    required this.basePrice,
+  });
+
+  Map<String, dynamic> toJson() => _$CreateProductRequestToJson(this);
+}
+
+@JsonSerializable(includeIfNull: false)
+class UpdateProductRequest {
+  final String? name;
+  final double? basePrice;
+
+  const UpdateProductRequest({
+    this.name,
+    this.basePrice,
+  });
+
+  Map<String, dynamic> toJson() => _$UpdateProductRequestToJson(this);
+}

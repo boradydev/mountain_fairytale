@@ -1,5 +1,4 @@
-import 'package:mountain_fairytale/infra/repos/abcs.dart';
-import 'package:mountain_fairytale/presentation/providers/abcs/repos.dart';
+import 'package:mountain_fairytale/core/repos/driver_contracts.dart';
 import 'package:mountain_fairytale/infra/repos/drivers/models/driver_model.dart';
 
 class DriverRepositoryImpl implements DriverRepository {
@@ -14,10 +13,25 @@ class DriverRepositoryImpl implements DriverRepository {
   }
 
   @override
-  Future<Driver> createDriver(Driver driver) async {
-    // Репозиторий принимает модель, переводит в JSON map
-    final json = await dataSource.createDriver(driver.toJson());
-    // Возвращает готовую модель обратно на UI
+  Future<Driver> getDriverById(int id) async {
+    final json = await dataSource.getDriverById(id);
     return Driver.fromJson(json);
+  }
+
+  @override
+  Future<Driver> createDriver(CreateDriverRequest request) async {
+    final json = await dataSource.createDriver(request.toJson());
+    return Driver.fromJson(json);
+  }
+
+  @override
+  Future<Driver> updateDriver(int id, UpdateDriverRequest request) async {
+    final json = await dataSource.patchDriver(id, request.toJson());
+    return Driver.fromJson(json);
+  }
+
+  @override
+  Future<void> deleteDriver(int id) async {
+    await dataSource.deleteDriver(id);
   }
 }

@@ -13,3 +13,21 @@ class Driver {
 
   Map<String, dynamic> toJson() => _$DriverToJson(this);
 }
+
+@JsonSerializable()
+class CreateDriverRequest {
+  final String name;
+
+  const CreateDriverRequest({required this.name});
+
+  Map<String, dynamic> toJson() => _$CreateDriverRequestToJson(this);
+}
+
+@JsonSerializable(includeIfNull: false)
+class UpdateDriverRequest {
+  final String? name;
+
+  const UpdateDriverRequest({this.name});
+
+  Map<String, dynamic> toJson() => _$UpdateDriverRequestToJson(this);
+}

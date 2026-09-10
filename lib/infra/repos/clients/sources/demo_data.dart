@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
-import 'package:mountain_fairytale/infra/repos/abcs.dart';
+import 'package:mountain_fairytale/core/repos/client_contracts.dart';
 
 class DemoClientDataSource implements ClientDataSource {
   final AssetBundle _assetBundle;
@@ -29,11 +29,44 @@ class DemoClientDataSource implements ClientDataSource {
     return jsonData;
   }
 
+
   @override
   Future<List<Map<String, dynamic>>> getAllClients() async {
     await Future<void>.delayed(const Duration(milliseconds: 600));
-    return _getDemoJson();
+    return _getDemoJson(); // Просто возвращаем весь кэш
   }
+
+
+  @override
+  Future<Map<String, dynamic>> getClientById(int id) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    if (_cache == null) await _getDemoJson();
+    return _cache!.firstWhere((e) => e['id'] == id,
+        orElse: () => throw Exception('Client not found'));
+  }
+
+  @override
+  Future<Map<String, dynamic>> patchClient(int id,
+      Map<String, dynamic> json) async {
+    await Future.delayed(const Duration(milliseconds: 400));
+    if (_cache == null) await _getDemoJson();
+    final index = _cache!.indexWhere((e) => e['id'] == id);
+    if (index == -1) throw Exception('Client not found');
+    final updated = Map<String, dynamic>.from(_cache![index]);
+    json.forEach((key, value) {
+      if (value != null) updated[key] = value;
+    });
+    _cache![index] = updated;
+    return updated;
+  }
+
+  @override
+  Future<void> deleteClient(int id) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (_cache == null) await _getDemoJson();
+    _cache!.removeWhere((e) => e['id'] == id);
+  }
+
 
   @override
   Future<Map<String, dynamic>> updateCooldown(int clientId,
@@ -126,5 +159,6 @@ class DemoClientDataSource implements ClientDataSource {
 
     return newClientJson;
   }
+
 
 }
