@@ -1,4 +1,4 @@
-import 'package:mountain_fairytale/core/repos/car_contracts.dart';
+import 'package:mountain_fairytale/presentation/providers/abcs/repos/car_contracts.dart';
 import 'package:mountain_fairytale/infra/repos/cars/models/car_model.dart';
 
 class CarRepositoryImpl implements CarRepository {

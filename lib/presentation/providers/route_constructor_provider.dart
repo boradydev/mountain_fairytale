@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:mountain_fairytale/core/repos/car_contracts.dart';
-import 'package:mountain_fairytale/core/repos/delivery_route.dart';
-import 'package:mountain_fairytale/core/repos/driver_contracts.dart';
-import 'package:mountain_fairytale/core/repos/product_contracts.dart';
+import 'package:mountain_fairytale/presentation/providers/abcs/repos/car_contracts.dart';
+import 'package:mountain_fairytale/presentation/providers/abcs/repos/delivery_route.dart';
+import 'package:mountain_fairytale/presentation/providers/abcs/repos/driver_contracts.dart';
+import 'package:mountain_fairytale/presentation/providers/abcs/repos/product_contracts.dart';
 import 'package:mountain_fairytale/infra/repos/cars/models/car_model.dart';
 import 'package:mountain_fairytale/infra/repos/clients/models/client_model.dart';
 import 'package:mountain_fairytale/infra/repos/delivery_route/models/delivery_route_sheet_model.dart';

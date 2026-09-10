@@ -1,4 +1,4 @@
-import 'package:mountain_fairytale/core/repos/product_contracts.dart';
+import 'package:mountain_fairytale/presentation/providers/abcs/repos/product_contracts.dart';
 import 'package:mountain_fairytale/infra/repos/products/models/product_model.dart';
 
 class ProductRepositoryImpl implements ProductRepository {

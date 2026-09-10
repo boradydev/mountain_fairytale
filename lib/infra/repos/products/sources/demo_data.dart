@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
-import 'package:mountain_fairytale/core/repos/product_contracts.dart';
+import 'package:mountain_fairytale/presentation/providers/abcs/repos/product_contracts.dart';
 
 class DemoProductDataSource implements ProductDataSource {
   final AssetBundle _assetBundle;

@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
-import 'package:mountain_fairytale/core/repos/car_contracts.dart';
+import 'package:mountain_fairytale/presentation/providers/abcs/repos/car_contracts.dart';
 
 class DemoCarDataSource implements CarDataSource {
   final AssetBundle _assetBundle;

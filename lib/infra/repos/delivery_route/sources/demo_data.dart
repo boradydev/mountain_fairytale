@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
-import 'package:mountain_fairytale/core/repos/delivery_route.dart';
+import 'package:mountain_fairytale/presentation/providers/abcs/repos/delivery_route.dart';
 import 'package:mountain_fairytale/infra/repos/delivery_day/sources/demo_data.dart';
 
 class DemoDeliveryRouteDataSource implements DeliveryRouteDataSource {

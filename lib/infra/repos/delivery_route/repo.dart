@@ -1,4 +1,4 @@
-import 'package:mountain_fairytale/core/repos/delivery_route.dart';
+import 'package:mountain_fairytale/presentation/providers/abcs/repos/delivery_route.dart';
 import 'package:mountain_fairytale/infra/repos/delivery_route/models/delivery_route_sheet_model.dart';
 
 class DeliveryRouteRepositoryImpl implements DeliveryRouteRepository {
