@@ -5,6 +5,7 @@ import 'package:mountain_fairytale/infra/repos/cars/models/car_model.dart';
 import 'package:mountain_fairytale/infra/repos/drivers/models/driver_model.dart';
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/route_constructor_provider.dart';
+import 'package:mountain_fairytale/presentation/screens/delivery_days_screen/add_client_dialog.dart';
 import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
 import 'package:provider/provider.dart';
 
@@ -59,6 +60,13 @@ class _FlightMetaPanelState extends State<FlightMetaPanel> {
     await provider.addCar(
       model: result.model,
       number: result.number,
+    );
+  }
+
+  Future<void> _showAddClientDialog(BuildContext context) async {
+    await showDialog<void>(
+      context: context,
+      builder: (_) => const ClientDialog(),
     );
   }
 
@@ -188,9 +196,23 @@ class _FlightMetaPanelState extends State<FlightMetaPanel> {
             onChanged: (v) => provider.startMileage = double.tryParse(v) ?? 0.0,
           ),
           const Divider(height: 32),
-          const Text(
-            '2. Быстрое добавление клиента',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  '2. Быстрое добавление клиента',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: () => _showAddClientDialog(context),
+                icon: const Icon(Icons.add),
+                tooltip: 'Добавить клиента',
+              ),
+            ],
           ),
           const SizedBox(height: 8),
 
@@ -227,6 +249,17 @@ class _FlightMetaPanelState extends State<FlightMetaPanel> {
                 );
 
                 return ListTile(
+                  leading: IconButton(
+                    icon: const Icon(Icons.edit_outlined),
+                    tooltip: 'Редактировать клиента',
+                    visualDensity: VisualDensity.compact,
+                    onPressed: () async {
+                      await showDialog<void>(
+                        context: context,
+                        builder: (_) => ClientDialog(client: client),
+                      );
+                    },
+                  ),
                   title: Text(
                     client.name,
                     maxLines: 1,
