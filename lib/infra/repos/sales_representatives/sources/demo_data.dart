@@ -87,4 +87,22 @@ class DemoSalesRepresentativeDataSource
           throw Exception('SalesRepresentative with id $id not found'),
     );
   }
+
+  @override
+  Future<Map<String, dynamic>?> checkDuplicate(String name) async {
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    if (_cache == null) await getAllSalesRepresentatives();
+
+    final cleanName = name.trim().toLowerCase();
+    if (cleanName.isEmpty) return null;
+
+    try {
+      final duplicate = _cache!.firstWhere(
+        (rep) => rep['name'].toString().toLowerCase() == cleanName,
+      );
+      return duplicate;
+    } catch (_) {
+      return null;
+    }
+  }
 }

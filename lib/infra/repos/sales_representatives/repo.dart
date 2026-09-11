@@ -1,5 +1,5 @@
-import 'package:mountain_fairytale/presentation/providers/abcs/repos/sales_representative.dart';
 import 'package:mountain_fairytale/infra/repos/sales_representatives/models/sales_representative_model.dart';
+import 'package:mountain_fairytale/presentation/providers/abcs/repos/sales_representative.dart';
 
 class SalesRepresentativeRepositoryImpl
     implements SalesRepresentativeRepository {
@@ -42,5 +42,12 @@ class SalesRepresentativeRepositoryImpl
   @override
   Future<void> deleteSalesRepresentative(int id) async {
     await dataSource.deleteSalesRepresentative(id);
+  }
+
+  @override
+  Future<SalesRepresentative?> checkDuplicate(String name) async {
+    final json = await dataSource.checkDuplicate(name);
+    if (json == null) return null;
+    return SalesRepresentative.fromJson(json);
   }
 }

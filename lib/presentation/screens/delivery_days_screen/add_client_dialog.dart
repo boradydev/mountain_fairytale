@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/infra/repos/clients/models/client_model.dart';
+import 'package:mountain_fairytale/infra/repos/sales_representatives/models/sales_representative_model.dart';
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
+import 'package:mountain_fairytale/presentation/screens/delivery_days_screen/sales_rep_dialog.dart';
 import 'package:mountain_fairytale/presentation/widgets/base_form_dialog_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/confirm_delete_dialog.dart';
 import 'package:mountain_fairytale/presentation/widgets/duplicate_check_status_widget.dart';
@@ -37,10 +39,16 @@ class _ClientDialogState extends State<ClientDialog> {
   Client? _duplicateClient;
 
   bool get _isEditMode => widget.client != null;
+  SalesRepresentative? _selectedSalesRep;
 
   @override
   void initState() {
     super.initState();
+
+    // Подгружаем торговых представителей при открытии диалога
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ClientsProvider>().fetchSalesRepresentatives();
+    });
 
     final client = widget.client;
 
@@ -337,6 +345,86 @@ class _ClientDialogState extends State<ClientDialog> {
             return null;
           },
         ),
+
+        const SizedBox(height: 16),
+
+        // Блок Торговый представитель
+        Row(
+          children: [
+            const Expanded(
+              child: Text(
+                'Торговый представитель',
+                style: TextStyle(fontWeight: FontWeight.w500),
+              ),
+            ),
+            IconButton(
+              onPressed: () async {
+                await showDialog<void>(
+                  context: context,
+                  builder: (_) => const SalesRepDialog(),
+                );
+              },
+              icon: const Icon(Icons.add),
+              tooltip: 'Добавить торгового представителя',
+            ),
+            IconButton(
+              onPressed: _selectedSalesRep != null
+                  ? () async {
+                final result = await showDialog<dynamic>(
+                  context: context,
+                  builder: (_) => SalesRepDialog(salesRep: _selectedSalesRep),
+                );
+                // Если представитель был удален, сбрасываем значение локального выбора
+                if (result == true && !mounted) return;
+                final provider = context.read<ClientsProvider>();
+                if (!provider.salesRepresentatives.contains(
+                    _selectedSalesRep)) {
+                  setState(() {
+                    _selectedSalesRep = null;
+                  });
+                }
+              }
+                  : null,
+              icon: const Icon(Icons.edit_outlined),
+              tooltip: 'Редактировать торгового представителя',
+            ),
+          ],
+        ),
+
+        Consumer<ClientsProvider>(
+          builder: (context, provider, child) {
+            // Если выбранный представитель по какой-то причине пропал из общего списка (удалили), сбрасываем в null
+            if (_selectedSalesRep != null &&
+                !provider.salesRepresentatives.any((r) =>
+                r.id ==
+                    _selectedSalesRep!.id)) {
+              _selectedSalesRep = null;
+            }
+
+            return DropdownButtonFormField<SalesRepresentative>(
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.badge_outlined),
+              ),
+              initialValue: _selectedSalesRep,
+              hint: const Text('Выберите представителя'),
+              items: provider.salesRepresentatives.map((rep) {
+                return DropdownMenuItem<SalesRepresentative>(
+                  value: rep,
+                  child: Text(rep.name),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedSalesRep = value;
+                });
+              },
+            );
+          },
+        ),
+
+        const SizedBox(height: 16),
+
       ],
     );
   }

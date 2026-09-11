@@ -16,6 +16,8 @@ import 'package:mountain_fairytale/infra/repos/drivers/repo.dart';
 import 'package:mountain_fairytale/infra/repos/drivers/sources/demo_data.dart';
 import 'package:mountain_fairytale/infra/repos/products/repo.dart';
 import 'package:mountain_fairytale/infra/repos/products/sources/demo_data.dart';
+import 'package:mountain_fairytale/infra/repos/sales_representatives/repo.dart';
+import 'package:mountain_fairytale/infra/repos/sales_representatives/sources/demo_data.dart';
 import 'package:mountain_fairytale/infra/window_settings_service.dart';
 import 'package:mountain_fairytale/l10n/app_localizations.dart';
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
@@ -81,7 +83,10 @@ Future<void> main() async {
   final routeRepository = DeliveryRouteRepositoryImpl(routeDataSource);
   final clientRepository = ClientRepositoryImpl(clientDataSource);
   final deliveryDayRepository = ApiDeliveryRepository(deliveryDayDataSource);
-  ;
+  final salesRepDataSource = DemoSalesRepresentativeDataSource();
+  final salesRepRepository = SalesRepresentativeRepositoryImpl(
+      salesRepDataSource);
+
 
   // ===========================================================================
   // 3. ИНИЦИАЛИЗАЦИЯ СЕРВИСОВ
@@ -106,7 +111,8 @@ Future<void> main() async {
 
         // Провайдер списка клиентов (контроль засыпания, дубликаты)
         ChangeNotifierProvider(
-          create: (context) => ClientsProvider(clientRepository),
+          create: (context) =>
+              ClientsProvider(clientRepository, salesRepRepository),
         ),
 
         // Обновленный провайдер конструктора маршрутов со строго изолированными репозиториями
