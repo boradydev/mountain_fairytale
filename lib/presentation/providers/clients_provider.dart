@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mountain_fairytale/presentation/providers/abcs/repos/client_contracts.dart';
 import 'package:mountain_fairytale/infra/repos/clients/models/client_model.dart';
+import 'package:mountain_fairytale/presentation/providers/abcs/repos/client_contracts.dart';
 
 enum ClientStatus { initial, loading, success, failure }
 
@@ -137,7 +137,7 @@ class ClientsProvider extends ChangeNotifier {
   }
 
 
-  Future<void> addClient({
+  Future<bool> addClient({
     required String name,
     required String phone,
     required String address,
@@ -148,7 +148,6 @@ class ClientsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // ИСПРАВЛЕНО: Упаковываем аргументы в один масштабируемый объект-запрос
       final request = CreateClientRequest(
         name: name,
         phone: phone,
@@ -160,11 +159,73 @@ class ClientsProvider extends ChangeNotifier {
 
       _clients = [newClient, ..._clients];
       _status = ClientStatus.success;
+
+      notifyListeners();
+      return true;
     } catch (e) {
       _errorMessage = e.toString();
       _status = ClientStatus.failure;
-    } finally {
+
       notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> updateClient({
+    required int clientId,
+    required String name,
+    required String phone,
+    required String address,
+    required int thresholdDays,
+  }) async {
+    _errorMessage = '';
+
+    try {
+      final request = UpdateClientRequest(
+        name: name,
+        phone: phone,
+        address: address,
+        sleepingThresholdDays: thresholdDays,
+      );
+
+      final updatedClient = await _repository.updateClient(
+        clientId,
+        request,
+      );
+
+      _clients = _clients.map((client) {
+        return client.id == clientId ? updatedClient : client;
+      }).toList();
+
+      _status = ClientStatus.success;
+
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> deleteClient(int clientId) async {
+    _errorMessage = '';
+
+    try {
+      await _repository.deleteClient(clientId);
+
+      _clients = _clients
+          .where((client) => client.id != clientId)
+          .toList();
+
+      _status = ClientStatus.success;
+
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
     }
   }
 }

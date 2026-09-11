@@ -2,23 +2,32 @@ import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/infra/repos/clients/models/client_model.dart';
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
 import 'package:mountain_fairytale/presentation/widgets/base_form_dialog_widget.dart';
+import 'package:mountain_fairytale/presentation/widgets/confirm_delete_dialog.dart';
 import 'package:mountain_fairytale/presentation/widgets/duplicate_check_status_widget.dart';
+import 'package:mountain_fairytale/presentation/widgets/icon_button_widget.dart';
 import 'package:provider/provider.dart';
 
-class AddClientDialog extends StatefulWidget {
-  const AddClientDialog({super.key});
+class ClientDialog extends StatefulWidget {
+  final Client? client;
+
+  const ClientDialog({
+    super.key,
+    this.client,
+  });
+
+  bool get isEditMode => client != null;
 
   @override
-  State<AddClientDialog> createState() => _AddClientDialogState();
+  State<ClientDialog> createState() => _ClientDialogState();
 }
 
-class _AddClientDialogState extends State<AddClientDialog> {
+class _ClientDialogState extends State<ClientDialog> {
   final _formKey = GlobalKey<FormState>();
 
-  final _nameController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _addressController = TextEditingController();
-  final _thresholdController = TextEditingController(text: '7');
+  late final TextEditingController _nameController;
+  late final TextEditingController _phoneController;
+  late final TextEditingController _addressController;
+  late final TextEditingController _thresholdController;
 
   final _nameFocusNode = FocusNode();
   final _addressFocusNode = FocusNode();
@@ -27,32 +36,175 @@ class _AddClientDialogState extends State<AddClientDialog> {
   bool _duplicateChecked = false;
   Client? _duplicateClient;
 
+  bool get _isEditMode => widget.client != null;
+
   @override
   void initState() {
     super.initState();
+
+    final client = widget.client;
+
+    _nameController = TextEditingController(
+      text: client?.name ?? '',
+    );
+
+    _phoneController = TextEditingController(
+      text: client?.phone ?? '',
+    );
+
+    _addressController = TextEditingController(
+      text: client?.address ?? '',
+    );
+
+    _thresholdController = TextEditingController(
+      text: client?.sleepingThresholdDays.toString() ?? '7',
+    );
+
     _nameFocusNode.addListener(_onFocusChange);
     _addressFocusNode.addListener(_onFocusChange);
   }
 
-  void _onFocusChange() async {
-    if (!_nameFocusNode.hasFocus && !_addressFocusNode.hasFocus) {
-      final name = _nameController.text.trim();
-      final address = _addressController.text.trim();
-
-      if (name.isNotEmpty && address.isNotEmpty) {
-        setState(() {
-          _isCheckingDuplicate = true;
-        });
-
-        final duplicate = await context.read<ClientsProvider>().checkClientDuplicate(name, address);
-
-        setState(() {
-          _isCheckingDuplicate = false;
-          _duplicateChecked = true;
-          _duplicateClient = duplicate; // Просто записываем объект (или null)
-        });
-      }
+  void _onFocusChange() {
+    if (_nameFocusNode.hasFocus || _addressFocusNode.hasFocus) {
+      return;
     }
+
+    _checkDuplicate();
+  }
+
+  Future<void> _checkDuplicate() async {
+    final name = _nameController.text.trim();
+    final address = _addressController.text.trim();
+
+    if (name.isEmpty || address.isEmpty) {
+      return;
+    }
+
+    // В режиме редактирования, если имя и адрес
+    // остались прежними — сам клиент не является дубликатом.
+    final currentClient = widget.client;
+
+    if (currentClient != null &&
+        currentClient.name.trim().toLowerCase() == name.toLowerCase() &&
+        currentClient.address.trim().toLowerCase() == address.toLowerCase()) {
+      setState(() {
+        _isCheckingDuplicate = false;
+        _duplicateChecked = true;
+        _duplicateClient = null;
+      });
+      return;
+    }
+
+    setState(() {
+      _isCheckingDuplicate = true;
+      _duplicateChecked = false;
+      _duplicateClient = null;
+    });
+
+    final duplicate = await context
+        .read<ClientsProvider>()
+        .checkClientDuplicate(name, address);
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _isCheckingDuplicate = false;
+      _duplicateChecked = true;
+      _duplicateClient = duplicate;
+    });
+  }
+
+  Future<void> _submitForm() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    final provider = context.read<ClientsProvider>();
+
+    final name = _nameController.text.trim();
+    final phone = _phoneController.text.trim();
+    final address = _addressController.text.trim();
+    final thresholdDays = int.parse(
+      _thresholdController.text.trim(),
+    );
+
+    final bool success;
+
+    if (_isEditMode) {
+      success = await provider.updateClient(
+        clientId: widget.client!.id,
+        name: name,
+        phone: phone,
+        address: address,
+        thresholdDays: thresholdDays,
+      );
+    } else {
+      success = await provider.addClient(
+        name: name,
+        phone: phone,
+        address: address,
+        thresholdDays: thresholdDays,
+      );
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    if (success) {
+      Navigator.of(context).pop();
+      return;
+    }
+
+    _showError();
+  }
+
+  Future<void> _deleteClient() async {
+    final client = widget.client;
+
+    if (client == null) {
+      return;
+    }
+
+    final confirmed = await ConfirmDeleteDialog.show(
+      context,
+      entityName: 'клиента «${client.name}»',
+    );
+
+    if (!confirmed || !mounted) {
+      return;
+    }
+
+    final success = await context
+        .read<ClientsProvider>()
+        .deleteClient(client.id);
+
+    if (!mounted) {
+      return;
+    }
+
+    if (success) {
+      Navigator.of(context).pop();
+      return;
+    }
+
+    _showError();
+  }
+
+  void _showError() {
+    final error = context.read<ClientsProvider>().errorMessage;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          error.isEmpty
+              ? 'Не удалось сохранить изменения'
+              : 'Ошибка: $error',
+        ),
+      ),
+    );
   }
 
   @override
@@ -61,49 +213,51 @@ class _AddClientDialogState extends State<AddClientDialog> {
     _phoneController.dispose();
     _addressController.dispose();
     _thresholdController.dispose();
+
     _nameFocusNode.dispose();
     _addressFocusNode.dispose();
-    super.dispose();
-  }
 
-  void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-      context.read<ClientsProvider>().addClient(
-        name: _nameController.text.trim(),
-        phone: _phoneController.text.trim(),
-        address: _addressController.text.trim(),
-        thresholdDays: int.parse(_thresholdController.text.trim()),
-      );
-      Navigator.of(context).pop(); // Закрываем диалог после успешного добавления
-    }
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return BaseFormDialog(
-      title: 'Добавление нового клиента',
-      submitButtonText: 'Создать клиента',
+      title: _isEditMode
+          ? 'Редактирование клиента'
+          : 'Добавление нового клиента',
+
+      submitButtonText: _isEditMode
+          ? 'Сохранить'
+          : 'Создать клиента',
+
       formKey: _formKey,
       onSubmit: _submitForm,
+
+      leadingAction: _isEditMode
+          ? AppIconButton(
+        icon: Icons.delete_outline,
+        tooltip: 'Удалить клиента',
+        destructive: true,
+        onPressed: _deleteClient,
+      )
+          : null,
+
       children: [
-        // Универсальный статус проверки дубликатов
         DuplicateCheckStatusWidget(
           isChecking: _isCheckingDuplicate,
           isChecked: _duplicateChecked,
-          // Передаем true, если объект не null
           hasDuplicate: _duplicateClient != null,
-          // Формируем строку на лету: если дубликат есть — берем его поля, если нет — пустую строку
           warningText: _duplicateClient != null
               ? 'Найден похожий клиент: '
-              '${_duplicateClient!.name} '
-              '\n${_duplicateClient!.address} '
-              '\n${_duplicateClient!.phone}'
+              '${_duplicateClient!.name}\n'
+              '${_duplicateClient!.address}\n'
+              '${_duplicateClient!.phone}'
               : '',
         ),
 
-        const SizedBox(height: 8), // Небольшой отступ после плашки статуса
+        const SizedBox(height: 8),
 
-        // Поле: Название организации
         TextFormField(
           controller: _nameController,
           focusNode: _nameFocusNode,
@@ -112,30 +266,36 @@ class _AddClientDialogState extends State<AddClientDialog> {
             border: OutlineInputBorder(),
             prefixIcon: Icon(Icons.person_outline),
           ),
-          validator: (value) =>
-          value == null || value
-              .trim()
-              .isEmpty ? 'Введите название' : null,
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return 'Введите название';
+            }
+
+            return null;
+          },
         ),
+
         const SizedBox(height: 16),
 
-        // Поле: Адрес доставки
         TextFormField(
           controller: _addressController,
           focusNode: _addressFocusNode,
           decoration: const InputDecoration(
-            labelText: 'Фактический адрес доставки *',
+            labelText: 'Адрес доставки *',
             border: OutlineInputBorder(),
             prefixIcon: Icon(Icons.location_on_outlined),
           ),
-          validator: (value) =>
-          value == null || value
-              .trim()
-              .isEmpty ? 'Введите адрес' : null,
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return 'Введите адрес';
+            }
+
+            return null;
+          },
         ),
+
         const SizedBox(height: 16),
 
-        // Поле: Номер телефона
         TextFormField(
           controller: _phoneController,
           decoration: const InputDecoration(
@@ -144,14 +304,17 @@ class _AddClientDialogState extends State<AddClientDialog> {
             prefixIcon: Icon(Icons.phone_outlined),
             hintText: '+7 (XXX) XXX-XX-XX',
           ),
-          validator: (value) =>
-          value == null || value
-              .trim()
-              .isEmpty ? 'Введите телефон' : null,
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return 'Введите телефон';
+            }
+
+            return null;
+          },
         ),
+
         const SizedBox(height: 16),
 
-        // Поле: Порог засыпания
         TextFormField(
           controller: _thresholdController,
           keyboardType: TextInputType.number,
@@ -161,14 +324,16 @@ class _AddClientDialogState extends State<AddClientDialog> {
             prefixIcon: Icon(Icons.hourglass_empty_rounded),
           ),
           validator: (value) {
-            if (value == null || value
-                .trim()
-                .isEmpty) {
+            if (value == null || value.trim().isEmpty) {
               return 'Введите количество дней';
             }
-            if (int.tryParse(value.trim()) == null) {
-              return 'Введите корректное число';
+
+            final days = int.tryParse(value.trim());
+
+            if (days == null || days <= 0) {
+              return 'Введите корректное число дней';
             }
+
             return null;
           },
         ),

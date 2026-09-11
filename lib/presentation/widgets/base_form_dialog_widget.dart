@@ -8,6 +8,11 @@ class BaseFormDialog extends StatelessWidget {
   final GlobalKey<FormState> formKey;
   final List<Widget> children;
 
+  /// Дополнительное действие слева от кнопок.
+  ///
+  /// Например, кнопка удаления в режиме редактирования.
+  final Widget? leadingAction;
+
   const BaseFormDialog({
     super.key,
     required this.title,
@@ -15,15 +20,19 @@ class BaseFormDialog extends StatelessWidget {
     required this.onSubmit,
     required this.formKey,
     required this.children,
+    this.leadingAction,
   });
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Container(
-        width: 500, // Единая ширина для всех десктопных форм
+        width: 500,
         padding: const EdgeInsets.all(24),
         child: Form(
           key: formKey,
@@ -41,11 +50,17 @@ class BaseFormDialog extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
+
                 ...children,
+
                 const SizedBox(height: 24),
+
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
+                    if (leadingAction != null) leadingAction!,
+
+                    const Spacer(),
+
                     AppSecondaryButton(
                       onPressed: () => Navigator.of(context).pop(),
                       text: 'Отмена',

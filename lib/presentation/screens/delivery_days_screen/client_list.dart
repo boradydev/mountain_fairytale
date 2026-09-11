@@ -77,7 +77,7 @@ class _AddClientCard extends StatelessWidget {
           showDialog(
             context: context,
             barrierDismissible: true, // Клик вне окна закроет его
-            builder: (context) => const AddClientDialog(),
+            builder: (context) => const ClientDialog(),
           );
         });
   }
@@ -98,7 +98,13 @@ class _ClientAttentionCard extends StatelessWidget {
 
     return AppBaseCard(
       onTap: () {
-        // Логика перехода на детальный экран
+        showDialog(
+          context: context,
+          builder: (context) =>
+              ClientDialog(
+                client: client,
+              ),
+        );
       },
       child: IntrinsicHeight(
         child: Row(
