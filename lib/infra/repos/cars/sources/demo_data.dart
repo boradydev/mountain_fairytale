@@ -60,4 +60,27 @@ class DemoCarDataSource implements CarDataSource {
     if (_carsCache == null) await getAllCars();
     _carsCache?.removeWhere((e) => e['id'] == id);
   }
+
+  @override
+  Future<Map<String, dynamic>?> checkDuplicate(String number) async {
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    if (_carsCache == null) await getAllCars();
+
+    final cleanNumber = number.replaceAll(' ', '').toLowerCase();
+    if (cleanNumber.isEmpty) return null;
+
+    try {
+      final duplicate = _carsCache!.firstWhere(
+            (car) =>
+        car['number']
+            .toString()
+            .replaceAll(' ', '')
+            .toLowerCase() == cleanNumber,
+      );
+      return duplicate;
+    } catch (_) {
+      return null;
+    }
+  }
+
 }

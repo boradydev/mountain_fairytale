@@ -259,7 +259,6 @@ class RouteConstructorProvider extends ChangeNotifier {
     if (normalizedModel.isEmpty || normalizedNumber.isEmpty) return null;
 
     try {
-      // ИСПРАВЛЕНО: Вместо Car(id: 0, ...) используем официальный CreateCarRequest DTO
       final request = CreateCarRequest(
           model: normalizedModel, number: normalizedNumber);
       final createdCar = await _carRepo.createCar(request);
@@ -271,6 +270,50 @@ class RouteConstructorProvider extends ChangeNotifier {
       return null;
     }
   }
+
+  Future<bool> updateCar(int id,
+      {required String model, required String number}) async {
+    final normalizedModel = model.trim();
+    final normalizedNumber = number.trim();
+    if (normalizedModel.isEmpty || normalizedNumber.isEmpty) return false;
+
+    try {
+      final request = UpdateCarRequest(
+          model: normalizedModel, number: normalizedNumber);
+      final updatedCar = await _carRepo.updateCar(id, request);
+
+      cars = cars.map((c) => c.id == id ? updatedCar : c).toList();
+      selectCar(updatedCar);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> deleteCar(int id) async {
+    try {
+      await _carRepo.deleteCar(id);
+      cars = cars.where((c) => c.id != id).toList();
+
+      if (selectedCar?.id == id) {
+        selectCar(null);
+      } else {
+        notifyListeners();
+      }
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<Car?> checkCarDuplicate(String number) async {
+    try {
+      return await _carRepo.checkDuplicate(number);
+    } catch (_) {
+      return null;
+    }
+  }
+
 
 
   /// Загружает существующий маршрут по дате дня доставки

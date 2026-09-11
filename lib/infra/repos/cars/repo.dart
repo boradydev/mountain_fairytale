@@ -1,5 +1,5 @@
-import 'package:mountain_fairytale/presentation/providers/abcs/repos/car_contracts.dart';
 import 'package:mountain_fairytale/infra/repos/cars/models/car_model.dart';
+import 'package:mountain_fairytale/presentation/providers/abcs/repos/car_contracts.dart';
 
 class CarRepositoryImpl implements CarRepository {
   final CarDataSource dataSource;
@@ -32,5 +32,12 @@ class CarRepositoryImpl implements CarRepository {
   @override
   Future<void> deleteCar(int id) async {
     await dataSource.deleteCar(id);
+  }
+
+  @override
+  Future<Car?> checkDuplicate(String number) async {
+    final json = await dataSource.checkDuplicate(number);
+    if (json == null) return null;
+    return Car.fromJson(json);
   }
 }
