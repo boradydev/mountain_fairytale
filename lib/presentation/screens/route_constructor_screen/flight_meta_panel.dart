@@ -196,6 +196,8 @@ class _FlightMetaPanelState extends State<FlightMetaPanel> {
             onChanged: (v) => provider.startMileage = double.tryParse(v) ?? 0.0,
           ),
           const Divider(height: 32),
+          const SizedBox(height: 8),
+
           Row(
             children: [
               const Expanded(
@@ -214,6 +216,7 @@ class _FlightMetaPanelState extends State<FlightMetaPanel> {
               ),
             ],
           ),
+
           const SizedBox(height: 8),
 
           TextField(
@@ -251,9 +254,13 @@ class _FlightMetaPanelState extends State<FlightMetaPanel> {
                 return ListTile(
                   leading: IconButton(
                     icon: const Icon(Icons.edit_outlined),
-                    tooltip: 'Редактировать клиента',
+                    tooltip: isAlreadyAdded
+                        ? 'Клиент уже добавлен в маршрут'
+                        : 'Редактировать клиента',
                     visualDensity: VisualDensity.compact,
-                    onPressed: () async {
+                    onPressed: isAlreadyAdded
+                        ? null
+                        : () async {
                       await showDialog<void>(
                         context: context,
                         builder: (_) => ClientDialog(client: client),
@@ -290,7 +297,6 @@ class _FlightMetaPanelState extends State<FlightMetaPanel> {
                     color: Colors.green,
                   ),
                   dense: true,
-                  enabled: !isAlreadyAdded,
                   onTap: isAlreadyAdded
                       ? null
                       : () => provider.addClientPoint(client),
