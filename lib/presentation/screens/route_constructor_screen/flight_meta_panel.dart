@@ -6,6 +6,7 @@ import 'package:mountain_fairytale/infra/repos/drivers/models/driver_model.dart'
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/route_constructor_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/delivery_days_screen/add_client_dialog.dart';
+import 'package:mountain_fairytale/presentation/screens/route_constructor_screen/driver_dialog.dart';
 import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
 import 'package:provider/provider.dart';
 
@@ -29,21 +30,11 @@ class _FlightMetaPanelState extends State<FlightMetaPanel> {
   }
 
   // Метод открытия диалога для водителя
-  Future<void> _showAddDriverDialog(BuildContext context,
-      RouteConstructorProvider provider,) async {
-    final name = await showDialog<String>(
+  Future<void> _showDriverDialog(BuildContext context, {Driver? driver}) async {
+    await showDialog<void>(
       context: context,
-      // ВАЖНО: Если _AddDriverDialog лежит в другом файле,
-      // уберите нижнее подчеркивание и импортируйте его.
-      builder: (context) => const _AddDriverDialog(),
+      builder: (context) => DriverDialog(driver: driver),
     );
-
-    if (name == null || name
-        .trim()
-        .isEmpty) {
-      return;
-    }
-    await provider.addDriver(name);
   }
 
   // Метод открытия диалога для автомобиля
@@ -51,8 +42,6 @@ class _FlightMetaPanelState extends State<FlightMetaPanel> {
       RouteConstructorProvider provider,) async {
     final result = await showDialog<({String model, String number})>(
       context: context,
-      // ВАЖНО: Если _AddCarDialog лежит в другом файле,
-      // уберите нижнее подчеркивание и импортируйте его.
       builder: (context) => const _AddCarDialog(),
     );
 
@@ -115,6 +104,7 @@ class _FlightMetaPanelState extends State<FlightMetaPanel> {
           const SizedBox(height: 12),
 
           // Водитель
+          // Водитель
           Row(
             children: [
               const Expanded(
@@ -126,9 +116,18 @@ class _FlightMetaPanelState extends State<FlightMetaPanel> {
                 ),
               ),
               IconButton(
-                onPressed: () => _showAddDriverDialog(context, provider),
+                onPressed: () => _showDriverDialog(context),
                 icon: const Icon(Icons.add),
                 tooltip: 'Добавить водителя',
+              ),
+              IconButton(
+                // Кнопка активна только когда водитель выбран в дропдауне
+                onPressed: provider.selectedDriver != null
+                    ? () =>
+                    _showDriverDialog(context, driver: provider.selectedDriver)
+                    : null,
+                icon: const Icon(Icons.edit_outlined),
+                tooltip: 'Редактировать выбранного водителя',
               ),
             ],
           ),
@@ -138,6 +137,7 @@ class _FlightMetaPanelState extends State<FlightMetaPanel> {
               border: OutlineInputBorder(),
             ),
             initialValue: provider.selectedDriver,
+            // Меняем на value, чтобы сброс в null мгновенно очищал поле
             items: provider.drivers.map((driver) {
               return DropdownMenuItem<Driver>(
                 value: driver,
@@ -339,57 +339,6 @@ class _FlightMetaPanelState extends State<FlightMetaPanel> {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _AddDriverDialog extends StatefulWidget {
-  const _AddDriverDialog();
-
-  @override
-  State<_AddDriverDialog> createState() => _AddDriverDialogState();
-}
-
-class _AddDriverDialogState extends State<_AddDriverDialog> {
-  late final TextEditingController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Добавить водителя'),
-      content: TextField(
-        controller: _controller,
-        autofocus: true,
-        decoration: const InputDecoration(
-          labelText: 'ФИО',
-          hintText: 'Иванов Иван Иванович',
-          border: OutlineInputBorder(),
-        ),
-        textInputAction: TextInputAction.done,
-        onSubmitted: (value) => Navigator.of(context).pop(value),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Отмена'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop(_controller.text),
-          child: const Text('Добавить'),
-        ),
-      ],
     );
   }
 }

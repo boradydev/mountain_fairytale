@@ -1,8 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mountain_fairytale/presentation/providers/abcs/repos/car_contracts.dart';
-import 'package:mountain_fairytale/presentation/providers/abcs/repos/delivery_route.dart';
-import 'package:mountain_fairytale/presentation/providers/abcs/repos/driver_contracts.dart';
-import 'package:mountain_fairytale/presentation/providers/abcs/repos/product_contracts.dart';
 import 'package:mountain_fairytale/infra/repos/cars/models/car_model.dart';
 import 'package:mountain_fairytale/infra/repos/clients/models/client_model.dart';
 import 'package:mountain_fairytale/infra/repos/delivery_route/models/delivery_route_sheet_model.dart';
@@ -10,6 +6,10 @@ import 'package:mountain_fairytale/infra/repos/delivery_route/models/delivery_ta
 import 'package:mountain_fairytale/infra/repos/delivery_route/models/route_point_model.dart';
 import 'package:mountain_fairytale/infra/repos/drivers/models/driver_model.dart';
 import 'package:mountain_fairytale/infra/repos/products/models/product_model.dart';
+import 'package:mountain_fairytale/presentation/providers/abcs/repos/car_contracts.dart';
+import 'package:mountain_fairytale/presentation/providers/abcs/repos/delivery_route.dart';
+import 'package:mountain_fairytale/presentation/providers/abcs/repos/driver_contracts.dart';
+import 'package:mountain_fairytale/presentation/providers/abcs/repos/product_contracts.dart';
 import 'package:mountain_fairytale/presentation/providers/abcs/services.dart';
 
 class RouteConstructorProvider extends ChangeNotifier {
@@ -200,7 +200,6 @@ class RouteConstructorProvider extends ChangeNotifier {
     if (normalizedName.isEmpty) return null;
 
     try {
-      // ИСПОРАВЛЕНО: Вместо Driver(id: 0, ...) используем чистое DTO для создания
       final request = CreateDriverRequest(name: normalizedName);
       final createdDriver = await _driverRepo.createDriver(request);
 
@@ -211,6 +210,48 @@ class RouteConstructorProvider extends ChangeNotifier {
       return null;
     }
   }
+
+  Future<bool> updateDriver(int id, String name) async {
+    final normalizedName = name.trim();
+    if (normalizedName.isEmpty) return false;
+
+    try {
+      final request = UpdateDriverRequest(name: normalizedName);
+      final updatedDriver = await _driverRepo.updateDriver(id, request);
+
+      drivers = drivers.map((d) => d.id == id ? updatedDriver : d).toList();
+      selectDriver(updatedDriver);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> deleteDriver(int id) async {
+    try {
+      await _driverRepo.deleteDriver(id);
+      drivers = drivers.where((d) => d.id != id).toList();
+
+      // Если удалили текущего выбранного водителя — зануляем поле дропдауна
+      if (selectedDriver?.id == id) {
+        selectDriver(null);
+      } else {
+        notifyListeners();
+      }
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<Driver?> checkDriverDuplicate(String name) async {
+    try {
+      return await _driverRepo.checkDuplicate(name);
+    } catch (_) {
+      return null;
+    }
+  }
+
 
   Future<Car?> addCar({required String model, required String number}) async {
     final normalizedModel = model.trim();

@@ -1,5 +1,5 @@
-import 'package:mountain_fairytale/presentation/providers/abcs/repos/driver_contracts.dart';
 import 'package:mountain_fairytale/infra/repos/drivers/models/driver_model.dart';
+import 'package:mountain_fairytale/presentation/providers/abcs/repos/driver_contracts.dart';
 
 class DriverRepositoryImpl implements DriverRepository {
   final DriverDataSource dataSource;
@@ -33,5 +33,12 @@ class DriverRepositoryImpl implements DriverRepository {
   @override
   Future<void> deleteDriver(int id) async {
     await dataSource.deleteDriver(id);
+  }
+
+  @override
+  Future<Driver?> checkDuplicate(String name) async {
+    final json = await dataSource.checkDuplicate(name);
+    if (json == null) return null;
+    return Driver.fromJson(json);
   }
 }

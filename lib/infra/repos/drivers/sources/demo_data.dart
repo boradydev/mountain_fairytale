@@ -61,4 +61,23 @@ class DemoDriverDataSource implements DriverDataSource {
     if (_driversCache == null) await getAllDrivers();
     _driversCache!.removeWhere((e) => e['id'] == id);
   }
+
+  @override
+  Future<Map<String, dynamic>?> checkDuplicate(String name) async {
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    if (_driversCache == null) await getAllDrivers();
+
+    final cleanName = name.trim().toLowerCase();
+    if (cleanName.isEmpty) return null;
+
+    try {
+      final duplicate = _driversCache!.firstWhere(
+            (driver) => driver['name'].toString().toLowerCase() == cleanName,
+      );
+      return duplicate;
+    } catch (_) {
+      return null;
+    }
+  }
+
 }
