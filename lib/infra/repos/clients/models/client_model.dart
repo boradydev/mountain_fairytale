@@ -44,6 +44,9 @@ class Client {
   /// ФИО торгового представителя
   final String? salesRepresentativeName;
 
+  /// Форма оплаты по умолчанию
+  final String? defaultPaymentMethod;
+
   const Client({
     required this.id,
     required this.name,
@@ -55,6 +58,7 @@ class Client {
     required this.sleepingThresholdDays,
     this.salesRepresentativeId,
     this.salesRepresentativeName,
+    this.defaultPaymentMethod,
   });
 
   factory Client.fromJson(Map<String, dynamic> json) => _$ClientFromJson(json);
@@ -70,6 +74,7 @@ class CreateClientRequest {
   final int sleepingThresholdDays;
   final int? salesRepresentativeId;
   final String? salesRepresentativeName;
+  final String? defaultPaymentMethod;
 
   const CreateClientRequest({
     required this.name,
@@ -78,6 +83,7 @@ class CreateClientRequest {
     required this.sleepingThresholdDays,
     this.salesRepresentativeId,
     this.salesRepresentativeName,
+    this.defaultPaymentMethod,
   });
 
   Map<String, dynamic> toJson() => _$CreateClientRequestToJson(this);
@@ -92,6 +98,8 @@ class UpdateClientRequest {
   final int? sleepingThresholdDays;
   final int? salesRepresentativeId;
   final String? salesRepresentativeName;
+  final String? defaultPaymentMethod;
+
 
   const UpdateClientRequest({
     this.name,
@@ -100,6 +108,7 @@ class UpdateClientRequest {
     this.sleepingThresholdDays,
     this.salesRepresentativeId,
     this.salesRepresentativeName,
+    this.defaultPaymentMethod,
   });
 
   Map<String, dynamic> toJson() => _$UpdateClientRequestToJson(this);

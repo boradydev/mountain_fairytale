@@ -128,6 +128,7 @@ Future<void> main() async {
             productRepo: productRepository,
             routeRepo: routeRepository,
             paymentMethodRepo: paymentMethodRepository,
+            clientRepo: clientRepository,
             printService: routePrintService,
           ),
         ),

@@ -8,6 +8,7 @@ import 'package:mountain_fairytale/infra/repos/drivers/models/driver_model.dart'
 import 'package:mountain_fairytale/infra/repos/payment_methods/models/payment_method_model.dart';
 import 'package:mountain_fairytale/infra/repos/products/models/product_model.dart';
 import 'package:mountain_fairytale/presentation/providers/abcs/repos/car_contracts.dart';
+import 'package:mountain_fairytale/presentation/providers/abcs/repos/client_contracts.dart';
 import 'package:mountain_fairytale/presentation/providers/abcs/repos/delivery_route.dart';
 import 'package:mountain_fairytale/presentation/providers/abcs/repos/driver_contracts.dart';
 import 'package:mountain_fairytale/presentation/providers/abcs/repos/payment_method_abcs.dart';
@@ -20,6 +21,7 @@ class RouteConstructorProvider extends ChangeNotifier {
   final ProductRepository _productRepo;
   final DeliveryRouteRepository _routeRepo;
   final PaymentMethodRepository _paymentMethodRepo;
+  final ClientRepository _clientRepo;
   final RoutePrintService _printService;
 
   RouteConstructorProvider({
@@ -28,6 +30,7 @@ class RouteConstructorProvider extends ChangeNotifier {
     required ProductRepository productRepo,
     required DeliveryRouteRepository routeRepo,
     required PaymentMethodRepository paymentMethodRepo,
+    required ClientRepository clientRepo,
     required RoutePrintService printService,
   })
       : _carRepo = carRepo,
@@ -35,12 +38,13 @@ class RouteConstructorProvider extends ChangeNotifier {
         _productRepo = productRepo,
         _routeRepo = routeRepo,
         _paymentMethodRepo = paymentMethodRepo,
+        _clientRepo = clientRepo,
         _printService = printService;
 
   List<Car> cars = [];
   List<Driver> drivers = [];
   List<Product> products = [];
-  List<PaymentMethod> paymentMethods = []; // <-- Массив сущнос
+  List<PaymentMethod> paymentMethods = [];
 
   bool isLoadingDirectories = false;
   bool isReadOnly = false;
@@ -51,6 +55,8 @@ class RouteConstructorProvider extends ChangeNotifier {
   Car? selectedCar;
   double startMileage = 0.0;
   List<RoutePoint> points = [];
+
+  String? newlyCreatedPaymentMethodName;
 
   double get grandTotal => points.fold(0.0, (sum, p) => sum + p.totalAmount);
 
@@ -107,11 +113,13 @@ class RouteConstructorProvider extends ChangeNotifier {
         city: 'г. Ставрополь',
         address: client.address,
         phone: client.phone,
-        paymentMethod: 'Наличные',
-        // Если у клиента сохранен представитель — берем его имя, иначе оставляем дефолтное значение
+        // ИЗМЕНЕНО: Сначала ищем дефолтную оплату клиента, если пусто — ставим первую из справочника, иначе "Наличные"
+        paymentMethod: client.defaultPaymentMethod ??
+            (paymentMethods.isNotEmpty
+                ? paymentMethods.first.name
+                : 'Наличные'),
         salesRepresentative: client.salesRepresentativeName ??
             'Основной менеджер',
-        // <-- Обновлено
         items: [],
       ),
     );
@@ -176,9 +184,10 @@ class RouteConstructorProvider extends ChangeNotifier {
   }
 
   void updatePointMeta(int pointIndex,
-      {String? paymentMethod, String? salesRep}) {
+      {String? paymentMethod, String? salesRep}) async {
     final p = points[pointIndex];
-    points[pointIndex] = RoutePoint(
+
+    final updatedPoint = RoutePoint(
       clientId: p.clientId,
       clientName: p.clientName,
       city: p.city,
@@ -188,7 +197,21 @@ class RouteConstructorProvider extends ChangeNotifier {
       salesRepresentative: salesRep ?? p.salesRepresentative,
       items: p.items,
     );
+
+    points[pointIndex] = updatedPoint;
     notifyListeners();
+
+    // Перезапись формы оплаты по умолчанию у клиента "на сервере" (в DataSource кэше)
+    if (paymentMethod != null) {
+      try {
+        await _clientRepo.updateClient(
+          p.clientId,
+          UpdateClientRequest(defaultPaymentMethod: paymentMethod),
+        );
+      } catch (e) {
+        print('Не удалось обновить дефолтную оплату клиента: $e');
+      }
+    }
   }
 
   Future<bool> saveRoute() async {
@@ -444,6 +467,8 @@ class RouteConstructorProvider extends ChangeNotifier {
       final created = await _paymentMethodRepo.createPaymentMethod(request);
 
       paymentMethods.insert(0, created);
+      newlyCreatedPaymentMethodName =
+          created.name; // <-- ЗАПОМИНАЕМ для фокуса дропдауна
       notifyListeners();
       return created;
     } catch (_) {

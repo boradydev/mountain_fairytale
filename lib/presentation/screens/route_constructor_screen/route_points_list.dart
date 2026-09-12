@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/infra/app_notify.dart';
 import 'package:mountain_fairytale/presentation/providers/route_constructor_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/route_constructor_screen/payment_method_dialog.dart';
 import 'package:mountain_fairytale/presentation/screens/route_constructor_screen/task_dialogs.dart';
@@ -183,7 +184,6 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                                 Icons.edit_outlined, size: 18),
                                             tooltip: 'Редактировать выбранную оплату',
                                             onPressed: () {
-                                              // Находим текущую выбранную модель из провайдера, чтобы передать её в диалог
                                               try {
                                                 final currentModel = provider
                                                     .paymentMethods.firstWhere(
@@ -197,11 +197,11 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                                           paymentMethod: currentModel),
                                                 );
                                               } catch (_) {
-                                                ScaffoldMessenger
-                                                    .of(context)
-                                                    .showSnackBar(
-                                                  const SnackBar(content: Text(
-                                                      'Для редактирования выберите элемент из списка')),
+                                                // ЗАМЕНЕНО: Использование системного кастомного менеджера уведомлений
+                                                AppNotify.show(
+                                                  context,
+                                                  'Сначала выберите существующую форму оплаты из выпадающего списка для её редактирования',
+                                                  isWarning: true,
                                                 );
                                               }
                                             },
@@ -211,11 +211,41 @@ class _RoutePointsListState extends State<RoutePointsList> {
 
                                       // Сам интерактивный Дропдаун
                                       DropdownButtonFormField<String>(
-                                        initialValue: provider.paymentMethods
-                                            .any((p) =>
-                                        p.name == point.paymentMethod)
-                                            ? point.paymentMethod
-                                            : null,
+                                        // ЛОГИКА ФОКУСА:
+                                        // 1. Если только что создали элемент через диалог — выбираем его.
+                                        // 2. Иначе берем сохраненный метод у точки маршрута.
+                                        value: () {
+                                          if (provider
+                                              .newlyCreatedPaymentMethodName !=
+                                              null &&
+                                              provider.paymentMethods.any((p) =>
+                                              p.name == provider
+                                                  .newlyCreatedPaymentMethodName)) {
+                                            // Применяем новый фокус к текущей редактируемой точке
+                                            final activeNewMethod = provider
+                                                .newlyCreatedPaymentMethodName!;
+
+                                            // Сбрасываем триггер отложенно, чтобы другие карточки не перехватили фокус при редрейве
+                                            WidgetsBinding.instance
+                                                .addPostFrameCallback((_) {
+                                              provider
+                                                  .newlyCreatedPaymentMethodName =
+                                              null;
+                                            });
+
+                                            // Автоматически триггерим обновление дефолтного метода у клиента
+                                            provider.updatePointMeta(index,
+                                                paymentMethod: activeNewMethod);
+                                            return activeNewMethod;
+                                          }
+
+                                          // Обычное состояние отображения
+                                          return provider.paymentMethods.any((
+                                              p) =>
+                                          p.name == point.paymentMethod)
+                                              ? point.paymentMethod
+                                              : null;
+                                        }(),
                                         decoration: const InputDecoration(
                                           border: OutlineInputBorder(),
                                           isDense: true,
