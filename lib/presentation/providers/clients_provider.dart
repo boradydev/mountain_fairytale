@@ -149,6 +149,8 @@ class ClientsProvider extends ChangeNotifier {
     required String phone,
     required String address,
     required int thresholdDays,
+    int? salesRepId,
+    String? salesRepName,
   }) async {
     _status = ClientStatus.loading;
     _errorMessage = '';
@@ -160,6 +162,8 @@ class ClientsProvider extends ChangeNotifier {
         phone: phone,
         address: address,
         sleepingThresholdDays: thresholdDays,
+        salesRepresentativeId: salesRepId,
+        salesRepresentativeName: salesRepName,
       );
 
       final newClient = await _repository.createClient(request);
@@ -184,6 +188,8 @@ class ClientsProvider extends ChangeNotifier {
     required String phone,
     required String address,
     required int thresholdDays,
+    int? salesRepId, // <-- Добавлено
+    String? salesRepName, // <-- Добавлено
   }) async {
     _errorMessage = '';
 
@@ -193,6 +199,9 @@ class ClientsProvider extends ChangeNotifier {
         phone: phone,
         address: address,
         sleepingThresholdDays: thresholdDays,
+        salesRepresentativeId: salesRepId,
+        // <-- Добавлено
+        salesRepresentativeName: salesRepName, // <-- Добавлено
       );
 
       final updatedClient = await _repository.updateClient(

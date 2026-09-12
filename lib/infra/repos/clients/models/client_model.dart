@@ -35,7 +35,14 @@ class Client {
   /// Задается при создании клиента (например, 1 день или 7 дней).
   /// Если с момента [lastDeliveryDate] прошло больше дней, чем указано здесь,
   /// клиент автоматически считается засыпающим и попадает на дашборд.
+  /// Индивидуальный порог "засыпания" клиента (в днях).
   final int sleepingThresholdDays;
+
+  /// ID торгового представителя
+  final int? salesRepresentativeId;
+
+  /// ФИО торгового представителя
+  final String? salesRepresentativeName;
 
   const Client({
     required this.id,
@@ -46,6 +53,8 @@ class Client {
     this.lastDeliveryQuantity,
     this.cooldownUntil,
     required this.sleepingThresholdDays,
+    this.salesRepresentativeId,
+    this.salesRepresentativeName,
   });
 
   factory Client.fromJson(Map<String, dynamic> json) => _$ClientFromJson(json);
@@ -59,30 +68,40 @@ class CreateClientRequest {
   final String phone;
   final String address;
   final int sleepingThresholdDays;
+  final int? salesRepresentativeId;
+  final String? salesRepresentativeName;
 
   const CreateClientRequest({
     required this.name,
     required this.phone,
     required this.address,
     required this.sleepingThresholdDays,
+    this.salesRepresentativeId,
+    this.salesRepresentativeName,
   });
 
   Map<String, dynamic> toJson() => _$CreateClientRequestToJson(this);
 }
 
-@JsonSerializable(includeIfNull: false)
+@JsonSerializable(
+    includeIfNull: true) // Поменяли на true, чтобы можно было занулить / перетереть при редактировании
 class UpdateClientRequest {
   final String? name;
   final String? phone;
   final String? address;
   final int? sleepingThresholdDays;
+  final int? salesRepresentativeId;
+  final String? salesRepresentativeName;
 
   const UpdateClientRequest({
     this.name,
     this.phone,
     this.address,
     this.sleepingThresholdDays,
+    this.salesRepresentativeId,
+    this.salesRepresentativeName,
   });
 
   Map<String, dynamic> toJson() => _$UpdateClientRequestToJson(this);
 }
+

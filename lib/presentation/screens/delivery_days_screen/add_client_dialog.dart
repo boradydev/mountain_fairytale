@@ -70,7 +70,17 @@ class _ClientDialogState extends State<ClientDialog> {
 
     _nameFocusNode.addListener(_onFocusChange);
     _addressFocusNode.addListener(_onFocusChange);
+
+    // Восстанавливаем сохраненного представителя в режиме редактирования
+    if (client != null && client.salesRepresentativeId != null) {
+      _selectedSalesRep = SalesRepresentative(
+        id: client.salesRepresentativeId!,
+        name: client.salesRepresentativeName ?? '',
+        phone: '',
+      );
+    }
   }
+
 
   void _onFocusChange() {
     if (_nameFocusNode.hasFocus || _addressFocusNode.hasFocus) {
@@ -134,9 +144,7 @@ class _ClientDialogState extends State<ClientDialog> {
     final name = _nameController.text.trim();
     final phone = _phoneController.text.trim();
     final address = _addressController.text.trim();
-    final thresholdDays = int.parse(
-      _thresholdController.text.trim(),
-    );
+    final thresholdDays = int.parse(_thresholdController.text.trim());
 
     final bool success;
 
@@ -147,6 +155,9 @@ class _ClientDialogState extends State<ClientDialog> {
         phone: phone,
         address: address,
         thresholdDays: thresholdDays,
+        salesRepId: _selectedSalesRep?.id,
+        // <-- Добавлено
+        salesRepName: _selectedSalesRep?.name, // <-- Добавлено
       );
     } else {
       success = await provider.addClient(
@@ -154,6 +165,9 @@ class _ClientDialogState extends State<ClientDialog> {
         phone: phone,
         address: address,
         thresholdDays: thresholdDays,
+        salesRepId: _selectedSalesRep?.id,
+        // <-- Добавлено
+        salesRepName: _selectedSalesRep?.name, // <-- Добавлено
       );
     }
 
@@ -393,12 +407,17 @@ class _ClientDialogState extends State<ClientDialog> {
 
         Consumer<ClientsProvider>(
           builder: (context, provider, child) {
-            // Если выбранный представитель по какой-то причине пропал из общего списка (удалили), сбрасываем в null
-            if (_selectedSalesRep != null &&
-                !provider.salesRepresentatives.any((r) =>
-                r.id ==
-                    _selectedSalesRep!.id)) {
-              _selectedSalesRep = null;
+            // Находим реальный объект из списка по ID, чтобы у Dropdown совпадали ссылки
+            SalesRepresentative? currentSelection;
+            if (_selectedSalesRep != null) {
+              try {
+                currentSelection =
+                    provider.salesRepresentatives.firstWhere((r) =>
+                    r.id ==
+                        _selectedSalesRep!.id);
+              } catch (_) {
+                _selectedSalesRep = null;
+              }
             }
 
             return DropdownButtonFormField<SalesRepresentative>(
@@ -406,7 +425,8 @@ class _ClientDialogState extends State<ClientDialog> {
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.badge_outlined),
               ),
-              initialValue: _selectedSalesRep,
+              initialValue: currentSelection,
+              // Используем сопоставленный объект
               hint: const Text('Выберите представителя'),
               items: provider.salesRepresentatives.map((rep) {
                 return DropdownMenuItem<SalesRepresentative>(
@@ -421,6 +441,7 @@ class _ClientDialogState extends State<ClientDialog> {
               },
             );
           },
+
         ),
 
         const SizedBox(height: 16),
