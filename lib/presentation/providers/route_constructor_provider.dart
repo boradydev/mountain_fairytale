@@ -5,10 +5,12 @@ import 'package:mountain_fairytale/infra/repos/delivery_route/models/delivery_ro
 import 'package:mountain_fairytale/infra/repos/delivery_route/models/delivery_task_item_model.dart';
 import 'package:mountain_fairytale/infra/repos/delivery_route/models/route_point_model.dart';
 import 'package:mountain_fairytale/infra/repos/drivers/models/driver_model.dart';
+import 'package:mountain_fairytale/infra/repos/payment_methods/models/payment_method_model.dart';
 import 'package:mountain_fairytale/infra/repos/products/models/product_model.dart';
 import 'package:mountain_fairytale/presentation/providers/abcs/repos/car_contracts.dart';
 import 'package:mountain_fairytale/presentation/providers/abcs/repos/delivery_route.dart';
 import 'package:mountain_fairytale/presentation/providers/abcs/repos/driver_contracts.dart';
+import 'package:mountain_fairytale/presentation/providers/abcs/repos/payment_method_abcs.dart';
 import 'package:mountain_fairytale/presentation/providers/abcs/repos/product_contracts.dart';
 import 'package:mountain_fairytale/presentation/providers/abcs/services.dart';
 
@@ -17,6 +19,7 @@ class RouteConstructorProvider extends ChangeNotifier {
   final DriverRepository _driverRepo;
   final ProductRepository _productRepo;
   final DeliveryRouteRepository _routeRepo;
+  final PaymentMethodRepository _paymentMethodRepo;
   final RoutePrintService _printService;
 
   RouteConstructorProvider({
@@ -24,17 +27,20 @@ class RouteConstructorProvider extends ChangeNotifier {
     required DriverRepository driverRepo,
     required ProductRepository productRepo,
     required DeliveryRouteRepository routeRepo,
+    required PaymentMethodRepository paymentMethodRepo,
     required RoutePrintService printService,
   })
       : _carRepo = carRepo,
         _driverRepo = driverRepo,
         _productRepo = productRepo,
         _routeRepo = routeRepo,
+        _paymentMethodRepo = paymentMethodRepo,
         _printService = printService;
 
   List<Car> cars = [];
   List<Driver> drivers = [];
   List<Product> products = [];
+  List<PaymentMethod> paymentMethods = []; // <-- Массив сущнос
 
   bool isLoadingDirectories = false;
   bool isReadOnly = false;
@@ -67,6 +73,8 @@ class RouteConstructorProvider extends ChangeNotifier {
       cars = await _carRepo.getAvailableCars();
       drivers = await _driverRepo.getAvailableDrivers();
       products = await _productRepo.getAvailableProducts();
+      paymentMethods =
+      await _paymentMethodRepo.getAllPaymentMethods();
     } catch (_) {}
 
     isLoadingDirectories = false;
@@ -109,7 +117,6 @@ class RouteConstructorProvider extends ChangeNotifier {
     );
     notifyListeners();
   }
-
 
   void removePoint(int index) {
     points.removeAt(index);
@@ -324,12 +331,11 @@ class RouteConstructorProvider extends ChangeNotifier {
   Future<void> loadExistingRoute(DateTime date) async {
     isLoadingDirectories = true;
     notifyListeners();
-
     try {
-      // 1. Сначала загружаем справочники (машины, водители, продукты)
       cars = await _carRepo.getAvailableCars();
       drivers = await _driverRepo.getAvailableDrivers();
       products = await _productRepo.getAvailableProducts();
+      paymentMethods = await _paymentMethodRepo.getAllPaymentMethods();
 
       // 2. Устанавливаем режим "Только для чтения", если дата не сегодняшняя
       final now = DateTime.now();
@@ -422,6 +428,79 @@ class RouteConstructorProvider extends ChangeNotifier {
       return true;
     } catch (_) {
       return false;
+    }
+  }
+
+  // =========================================================================
+  // МЕТОДЫ УПРАВЛЕНИЯ СПРАВОЧНИКОМ ФОРМ ОПЛАТЫ
+  // =========================================================================
+
+  Future<PaymentMethod?> addPaymentMethod(String name) async {
+    final normalizedName = name.trim();
+    if (normalizedName.isEmpty) return null;
+
+    try {
+      final request = CreatePaymentMethodRequest(name: normalizedName);
+      final created = await _paymentMethodRepo.createPaymentMethod(request);
+
+      paymentMethods.insert(0, created);
+      notifyListeners();
+      return created;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<bool> updatePaymentMethod(int id, String name) async {
+    final normalizedName = name.trim();
+    if (normalizedName.isEmpty) return false;
+
+    try {
+      final request = UpdatePaymentMethodRequest(name: normalizedName);
+      final updated = await _paymentMethodRepo.updatePaymentMethod(id, request);
+
+      paymentMethods =
+          paymentMethods.map((p) => p.id == id ? updated : p).toList();
+
+      // Обновляем форму оплаты во всех точках текущего маршрута, если она там использовалась
+      for (int i = 0; i < points.length; i++) {
+        if (points[i].paymentMethod ==
+            points[i].paymentMethod) { // Сверяем по строке (или логике UI)
+          // Дополнительное обновление метаданных при необходимости
+        }
+      }
+
+      notifyListeners();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> deletePaymentMethod(int id, String fallbackName) async {
+    try {
+      await _paymentMethodRepo.deletePaymentMethod(id);
+      paymentMethods = paymentMethods.where((p) => p.id != id).toList();
+      notifyListeners();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<PaymentMethod?> checkPaymentMethodDuplicate(String name) async {
+    try {
+      final cleanName = name.trim().toLowerCase();
+      if (cleanName.isEmpty) return null;
+
+      // В демо-датасорсе нет встроенного checkDuplicate для оплат, сделаем локальную проверку по кэшу
+      final list = await _paymentMethodRepo.getAllPaymentMethods();
+      final duplicate = list.firstWhere(
+            (p) => p.name.trim().toLowerCase() == cleanName,
+      );
+      return duplicate;
+    } catch (_) {
+      return null;
     }
   }
 

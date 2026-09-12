@@ -14,6 +14,8 @@ import 'package:mountain_fairytale/infra/repos/delivery_route/repo.dart';
 import 'package:mountain_fairytale/infra/repos/delivery_route/sources/demo_data.dart';
 import 'package:mountain_fairytale/infra/repos/drivers/repo.dart';
 import 'package:mountain_fairytale/infra/repos/drivers/sources/demo_data.dart';
+import 'package:mountain_fairytale/infra/repos/payment_methods/repo.dart';
+import 'package:mountain_fairytale/infra/repos/payment_methods/sources/demo_data.dart';
 import 'package:mountain_fairytale/infra/repos/products/repo.dart';
 import 'package:mountain_fairytale/infra/repos/products/sources/demo_data.dart';
 import 'package:mountain_fairytale/infra/repos/sales_representatives/repo.dart';
@@ -72,6 +74,7 @@ Future<void> main() async {
       deliveryDayDataSource: deliveryDayDataSource
   );
   final clientDataSource = DemoClientDataSource();
+  final paymentMethodDataSource = DemoPaymentMethodDataSource();
 
   // ===========================================================================
   // 2. ИНИЦИАЛИЗАЦИЯ РЕПОЗИТОРИЕВ
@@ -86,6 +89,8 @@ Future<void> main() async {
   final salesRepDataSource = DemoSalesRepresentativeDataSource();
   final salesRepRepository = SalesRepresentativeRepositoryImpl(
       salesRepDataSource);
+  final paymentMethodRepository = PaymentMethodRepositoryImpl(
+      paymentMethodDataSource);
 
 
   // ===========================================================================
@@ -122,6 +127,7 @@ Future<void> main() async {
             driverRepo: driverRepository,
             productRepo: productRepository,
             routeRepo: routeRepository,
+            paymentMethodRepo: paymentMethodRepository,
             printService: routePrintService,
           ),
         ),

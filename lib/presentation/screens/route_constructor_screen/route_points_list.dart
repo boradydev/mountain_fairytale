@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/presentation/providers/route_constructor_provider.dart';
+import 'package:mountain_fairytale/presentation/screens/route_constructor_screen/payment_method_dialog.dart';
 import 'package:mountain_fairytale/presentation/screens/route_constructor_screen/task_dialogs.dart';
 import 'package:provider/provider.dart';
 
@@ -143,44 +144,123 @@ class _RoutePointsListState extends State<RoutePointsList> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              // Выравниваем по нижней линии полей ввода
                               children: [
                                 Expanded(
-                                  child: DropdownButtonFormField<String>(
-                                    initialValue: point.paymentMethod,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Форма оплаты',
-                                      isDense: true,
-                                    ),
-                                    items: [
-                                      'Наличные',
-                                      'Безналичные (ООО/ИП)',
-                                      'Карта',
-                                    ].map((method) {
-                                      return DropdownMenuItem(
-                                        value: method,
-                                        child: Text(method),
-                                      );
-                                    }).toList(),
-                                    onChanged: (value) =>
-                                        provider.updatePointMeta(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment
+                                        .start,
+                                    children: [
+                                      // Шапка управления элементами справочника
+                                      Row(
+                                        children: [
+                                          const Expanded(
+                                            child: Text(
+                                              'Форма оплаты *',
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.w500,
+                                                  fontSize: 13),
+                                            ),
+                                          ),
+                                          IconButton(
+                                            visualDensity: VisualDensity
+                                                .compact,
+                                            icon: const Icon(
+                                                Icons.add, size: 18),
+                                            tooltip: 'Добавить форму оплаты',
+                                            onPressed: () =>
+                                                showDialog(
+                                                  context: context,
+                                                  builder: (
+                                                      _) => const PaymentMethodDialog(),
+                                                ),
+                                          ),
+                                          IconButton(
+                                            visualDensity: VisualDensity
+                                                .compact,
+                                            icon: const Icon(
+                                                Icons.edit_outlined, size: 18),
+                                            tooltip: 'Редактировать выбранную оплату',
+                                            onPressed: () {
+                                              // Находим текущую выбранную модель из провайдера, чтобы передать её в диалог
+                                              try {
+                                                final currentModel = provider
+                                                    .paymentMethods.firstWhere(
+                                                      (p) =>
+                                                  p.name == point.paymentMethod,
+                                                );
+                                                showDialog(
+                                                  context: context,
+                                                  builder: (_) =>
+                                                      PaymentMethodDialog(
+                                                          paymentMethod: currentModel),
+                                                );
+                                              } catch (_) {
+                                                ScaffoldMessenger
+                                                    .of(context)
+                                                    .showSnackBar(
+                                                  const SnackBar(content: Text(
+                                                      'Для редактирования выберите элемент из списка')),
+                                                );
+                                              }
+                                            },
+                                          ),
+                                        ],
+                                      ),
+
+                                      // Сам интерактивный Дропдаун
+                                      DropdownButtonFormField<String>(
+                                        initialValue: provider.paymentMethods
+                                            .any((p) =>
+                                        p.name == point.paymentMethod)
+                                            ? point.paymentMethod
+                                            : null,
+                                        decoration: const InputDecoration(
+                                          border: OutlineInputBorder(),
+                                          isDense: true,
+                                          contentPadding: EdgeInsets.symmetric(
+                                              horizontal: 12, vertical: 12),
+                                        ),
+                                        hint: const Text(
+                                            'Выберите форму оплаты'),
+                                        items: provider.paymentMethods.map((
+                                            method) {
+                                          return DropdownMenuItem<String>(
+                                            value: method.name,
+                                            child: Text(method.name),
+                                          );
+                                        }).toList(),
+                                        onChanged: (value) =>
+                                            provider.updatePointMeta(
                                           index,
                                           paymentMethod: value,
                                         ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                                 const SizedBox(width: 16),
                                 Expanded(
-                                  child: TextFormField(
-                                    initialValue: point.salesRepresentative,
-                                    readOnly: true,
-                                    // Сделали полем только для чтения
-                                    decoration: const InputDecoration(
-                                      labelText: 'Торговый представитель',
-                                      isDense: true,
-                                      prefixIcon: Icon(
-                                          Icons.badge_outlined, size: 20),
-                                      filled: true, // Слегка подсветим фон, давая понять, что это инфо-поле
-                                    ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment
+                                        .start,
+                                    children: [
+                                      const SizedBox(height: 26),
+                                      // Компенсируем высоту шапки управления соседнего поля
+                                      TextFormField(
+                                        initialValue: point.salesRepresentative,
+                                        readOnly: true,
+                                        decoration: const InputDecoration(
+                                          labelText: 'Торговый представитель',
+                                          isDense: true,
+                                          prefixIcon: Icon(
+                                              Icons.badge_outlined, size: 20),
+                                          filled: true,
+                                          border: OutlineInputBorder(),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
