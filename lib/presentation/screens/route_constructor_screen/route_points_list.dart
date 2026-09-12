@@ -171,18 +171,16 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                 const SizedBox(width: 16),
                                 Expanded(
                                   child: TextFormField(
-                                    initialValue:
-                                    point.salesRepresentative,
+                                    initialValue: point.salesRepresentative,
+                                    readOnly: true,
+                                    // Сделали полем только для чтения
                                     decoration: const InputDecoration(
-                                      labelText:
-                                      'Торговый представитель',
+                                      labelText: 'Торговый представитель',
                                       isDense: true,
+                                      prefixIcon: Icon(
+                                          Icons.badge_outlined, size: 20),
+                                      filled: true, // Слегка подсветим фон, давая понять, что это инфо-поле
                                     ),
-                                    onChanged: (value) =>
-                                        provider.updatePointMeta(
-                                          index,
-                                          salesRep: value,
-                                        ),
                                   ),
                                 ),
                               ],

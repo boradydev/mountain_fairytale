@@ -100,12 +100,16 @@ class RouteConstructorProvider extends ChangeNotifier {
         address: client.address,
         phone: client.phone,
         paymentMethod: 'Наличные',
-        salesRepresentative: 'Основной менеджер',
+        // Если у клиента сохранен представитель — берем его имя, иначе оставляем дефолтное значение
+        salesRepresentative: client.salesRepresentativeName ??
+            'Основной менеджер',
+        // <-- Обновлено
         items: [],
       ),
     );
     notifyListeners();
   }
+
 
   void removePoint(int index) {
     points.removeAt(index);
