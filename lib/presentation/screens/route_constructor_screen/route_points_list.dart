@@ -214,7 +214,7 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                         // ЛОГИКА ФОКУСА:
                                         // 1. Если только что создали элемент через диалог — выбираем его.
                                         // 2. Иначе берем сохраненный метод у точки маршрута.
-                                        value: () {
+                                        initialValue: () {
                                           if (provider
                                               .newlyCreatedPaymentMethodName !=
                                               null &&
