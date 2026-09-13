@@ -8,8 +8,8 @@
     "cooldownUntil": "2026-08-08",
     "address": "г. Михайловск, ул. Ленина, д. 156",
     "sleepingThresholdDays": 14,
-    "salesRepresentativeId": 3,
-    "salesRepresentativeName": "Дмитрий Смирнов"
+    "salesRepresentativeId": null,
+    "salesRepresentativeName": null
   },
   {
     "id": 2,
@@ -20,8 +20,8 @@
     "cooldownUntil": "2026-08-15",
     "address": "г. Ставрополь, ул. Доваторцев, д. 30б",
     "sleepingThresholdDays": 7,
-    "salesRepresentativeId": 1,
-    "salesRepresentativeName": "Мария Иванова"
+    "salesRepresentativeId": null,
+    "salesRepresentativeName": null
   },
   {
     "id": 3,

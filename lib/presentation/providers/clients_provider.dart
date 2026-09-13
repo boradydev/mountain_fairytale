@@ -306,4 +306,10 @@ class ClientsProvider extends ChangeNotifier {
     }
   }
 
+  void syncUpdatedClient(Client updatedClient) {
+    _clients = _clients.map((client) {
+      return client.id == updatedClient.id ? updatedClient : client;
+    }).toList();
+    notifyListeners();
+  }
 }

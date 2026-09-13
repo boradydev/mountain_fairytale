@@ -14,6 +14,7 @@ import 'package:mountain_fairytale/presentation/providers/abcs/repos/driver_cont
 import 'package:mountain_fairytale/presentation/providers/abcs/repos/payment_method_abcs.dart';
 import 'package:mountain_fairytale/presentation/providers/abcs/repos/product_contracts.dart';
 import 'package:mountain_fairytale/presentation/providers/abcs/services.dart';
+import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
 
 class RouteConstructorProvider extends ChangeNotifier {
   final CarRepository _carRepo;
@@ -113,13 +114,9 @@ class RouteConstructorProvider extends ChangeNotifier {
         city: 'г. Ставрополь',
         address: client.address,
         phone: client.phone,
-        // ИЗМЕНЕНО: Сначала ищем дефолтную оплату клиента, если пусто — ставим первую из справочника, иначе "Наличные"
-        paymentMethod: client.defaultPaymentMethod ??
-            (paymentMethods.isNotEmpty
-                ? paymentMethods.first.name
-                : 'Наличные'),
+        paymentMethod: client.defaultPaymentMethod,
         salesRepresentative: client.salesRepresentativeName ??
-            'Основной менеджер',
+            'Нет представителя',
         items: [],
       ),
     );
@@ -183,8 +180,12 @@ class RouteConstructorProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ИСПРАВЛЕНО: Передаем ссылку на ClientsProvider для синхронизации данных
   void updatePointMeta(int pointIndex,
-      {String? paymentMethod, String? salesRep}) async {
+      ClientsProvider clientsProvider, {
+        String? paymentMethod,
+        String? salesRep,
+      }) async {
     final p = points[pointIndex];
 
     final updatedPoint = RoutePoint(
@@ -201,18 +202,24 @@ class RouteConstructorProvider extends ChangeNotifier {
     points[pointIndex] = updatedPoint;
     notifyListeners();
 
-    // Перезапись формы оплаты по умолчанию у клиента "на сервере" (в DataSource кэше)
     if (paymentMethod != null) {
       try {
-        await _clientRepo.updateClient(
+        // 1. Обновляем в DataSource кэше через репозиторий
+        final updatedClientModel = await _clientRepo.updateClient(
           p.clientId,
           UpdateClientRequest(defaultPaymentMethod: paymentMethod),
         );
+
+        // 2. ИСПРАВЛЕНО: Синхронизируем стейт провайдера клиентов,
+        // чтобы в левой панели у этого клиента форма оплаты тоже обновилась!
+        clientsProvider.syncUpdatedClient(updatedClientModel);
+
       } catch (e) {
         print('Не удалось обновить дефолтную оплату клиента: $e');
       }
     }
   }
+
 
   Future<bool> saveRoute() async {
     final sheet = currentRouteSheet;
