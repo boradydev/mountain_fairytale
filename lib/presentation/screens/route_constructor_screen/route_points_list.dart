@@ -93,6 +93,9 @@ class _RoutePointsListState extends State<RoutePointsList> {
 
               Expanded(
                 child: Container(
+                  // Обрезает hover и splash эффекты строго по радиусу скругления corners
+                  clipBehavior: Clip.antiAlias,
+                  // =============================================
                   decoration: BoxDecoration(
                     color: colorScheme.surfaceContainerLow,
                     borderRadius: BorderRadius.circular(12),
@@ -101,6 +104,12 @@ class _RoutePointsListState extends State<RoutePointsList> {
                     ),
                   ),
                   child: ExpansionTile(
+                    // Убираем появление девайдеров (линий) при разворачивании карточки
+                    shape: const Border(),
+                    collapsedShape: const Border(),
+                    backgroundColor: Colors.transparent,
+                    collapsedBackgroundColor: Colors.transparent,
+                    // ====================================
                     title: Text(
                       point.clientName,
                       style: const TextStyle(
