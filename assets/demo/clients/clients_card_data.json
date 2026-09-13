@@ -560,8 +560,8 @@
     "cooldownUntil": "2026-08-18",
     "address": "г. Михайловск, ул. Розы Люксембург, д. 54",
     "sleepingThresholdDays": 7,
-    "salesRepresentativeId": 1,
-    "salesRepresentativeName": "Мария Иванова"
+    "salesRepresentativeId": null,
+    "salesRepresentativeName": null
   },
   {
     "id": 48,
@@ -572,8 +572,8 @@
     "cooldownUntil": null,
     "address": "г. Ставрополь, ул. Булкина, д. 6",
     "sleepingThresholdDays": 21,
-    "salesRepresentativeId": 2,
-    "salesRepresentativeName": "Александр Петров"
+    "salesRepresentativeId": null,
+    "salesRepresentativeName": null
   },
   {
     "id": 49,
