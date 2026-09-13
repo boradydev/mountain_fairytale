@@ -1,33 +1,240 @@
 [
   {
-    "id": 1,
-    "date": "2026-09-07T00:00:00.000Z",
-    "driverName": "Иванов Петр",
+    "id": 1001,
+    "date": "2026-08-27T00:00:00.000",
+    "driverName": "Иванов Иван Иванович",
     "carId": 1,
     "carModelAndNumber": "Газель Некст (А123КХ 126)",
     "startMileage": 120500.0,
-    "endMileage": 120640.0,
+    "endMileage": 120580.0,
     "points": [
       {
-        "clientId": 1,
+        "clientId": 10,
         "clientName": "ООО Вектор",
-        "city": "Ставрополь",
-        "address": "ул. Ленина, д. 21, оф. 4",
-        "phone": "+7 (999) 111-22-33",
-        "paymentMethod": "Безналичный расчет",
-        "salesRepresentative": "Алексей Краснов",
+        "city": "г. Ставрополь",
+        "address": "ул. Ленина, д. 15",
+        "phone": "+7 (900) 123-45-67",
+        "paymentMethod": "Безналичный расчет (Р/С)",
+        "salesRepresentative": "Мария Иванова",
         "items": [
           {
             "productId": 1,
             "productName": "Вода Горная 19л",
-            "quantity": 4,
+            "quantity": 10,
             "price": 350.0
+          },
+          {
+            "productId": 3,
+            "productName": "Стаканы пластиковые (уп. 100 шт)",
+            "quantity": 10,
+            "price": 150.0
+          }
+        ]
+      },
+      {
+        "clientId": 11,
+        "clientName": "ИП Сидоров",
+        "city": "г. Ставрополь",
+        "address": "ул. Мира, д. 45",
+        "phone": "+7 (918) 765-43-21",
+        "paymentMethod": "Наличный расчет",
+        "salesRepresentative": "Нет представителя",
+        "items": [
+          {
+            "productId": 1,
+            "productName": "Вода Горная 19л",
+            "quantity": 12,
+            "price": 350.0
+          },
+          {
+            "productId": 2,
+            "productName": "Бутыль пустая (возврат)",
+            "quantity": 2,
+            "price": 0.0
+          },
+          {
+            "productId": 5,
+            "productName": "Ремонт/Санитария кулера",
+            "quantity": 1,
+            "price": 1500.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 1002,
+    "date": "2026-08-27T00:00:00.000",
+    "driverName": "Петров Петр Петрович",
+    "carId": 2,
+    "carModelAndNumber": "Лада Ларгус Фургон (В456РР 26)",
+    "startMileage": 85400.0,
+    "endMileage": 85495.0,
+    "points": [
+      {
+        "clientId": 12,
+        "clientName": "Кафе Ромашка",
+        "city": "г. Ставрополь",
+        "address": "ул. Артема, д. 12",
+        "phone": "+7 (928) 111-22-33",
+        "paymentMethod": "Оплата картой",
+        "salesRepresentative": "Александр Петров",
+        "items": [
+          {
+            "productId": 2,
+            "productName": "Вода Талая 19л",
+            "quantity": 5,
+            "price": 400.0
+          },
+          {
+            "productId": 2,
+            "productName": "Бутыль пустая (возврат)",
+            "quantity": 1,
+            "price": 0.0
           },
           {
             "productId": 3,
             "productName": "Стаканы пластиковые (уп. 100 шт)",
             "quantity": 2,
             "price": 150.0
+          },
+          {
+            "productId": 4,
+            "productName": "Кулер напольный (Аренда)",
+            "quantity": 1,
+            "price": 1200.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 991,
+    "date": "2026-08-26T00:00:00.000",
+    "driverName": "Сидоров Алексей Владимирович",
+    "carId": 3,
+    "carModelAndNumber": "Hyundai Porter (О777ОО 177)",
+    "startMileage": 42100.0,
+    "endMileage": 42165.0,
+    "points": [
+      {
+        "clientId": 13,
+        "clientName": "Фитнес-клуб Спарк",
+        "city": "г. Ставрополь",
+        "address": "ул. Доваторцев, д. 30",
+        "phone": "+7 (962) 444-55-66",
+        "paymentMethod": "Безналичный расчет (Р/С)",
+        "salesRepresentative": "Дмитрий Смирнов",
+        "items": [
+          {
+            "productId": 1,
+            "productName": "Вода Горная 19л",
+            "quantity": 40,
+            "price": 350.0
+          },
+          {
+            "productId": 3,
+            "productName": "Стаканы пластиковые (уп. 100 шт)",
+            "quantity": 8,
+            "price": 150.0
+          },
+          {
+            "productId": 4,
+            "productName": "Кулер напольный (Аренда)",
+            "quantity": 1,
+            "price": 1200.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 992,
+    "date": "2026-08-26T00:00:00.000",
+    "driverName": "Иванов Иван Иванович",
+    "carId": 1,
+    "carModelAndNumber": "Газель Некст (А123КХ 126)",
+    "startMileage": 120580.0,
+    "endMileage": 120640.0,
+    "points": [
+      {
+        "clientId": 14,
+        "clientName": "Детский сад №5",
+        "city": "г. Ставрополь",
+        "address": "ул. Пирогова, д. 8",
+        "phone": "+7 (8652) 77-88-99",
+        "paymentMethod": "Безналичный расчет (Р/С)",
+        "salesRepresentative": "Мария Иванова",
+        "items": [
+          {
+            "productId": 2,
+            "productName": "Вода Талая 19л",
+            "quantity": 15,
+            "price": 400.0
+          },
+          {
+            "productId": 2,
+            "productName": "Бутыль пустая (возврат)",
+            "quantity": 1,
+            "price": 0.0
+          },
+          {
+            "productId": 1,
+            "productName": "Вода Горная 19л",
+            "quantity": 0,
+            "price": 350.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 981,
+    "date": "2026-08-25T00:00:00.000",
+    "driverName": "Петров Петр Петрович",
+    "carId": 2,
+    "carModelAndNumber": "Лада Ларгус Фургон (В456РР 26)",
+    "startMileage": 85310.0,
+    "endMileage": 85400.0,
+    "points": [
+      {
+        "clientId": 15,
+        "clientName": "Стоматология Дент",
+        "city": "г. Ставрополь",
+        "address": "ул. Морозова, д. 3",
+        "phone": "+7 (905) 444-11-22",
+        "paymentMethod": "Оплата картой",
+        "salesRepresentative": "Александр Петров",
+        "items": [
+          {
+            "productId": 2,
+            "productName": "Вода Талая 19л",
+            "quantity": 6,
+            "price": 400.0
+          },
+          {
+            "productId": 1,
+            "productName": "Вода Горная 19л",
+            "quantity": 17,
+            "price": 250.0
+          },
+          {
+            "productId": 2,
+            "productName": "Бутыль пустая (возврат)",
+            "quantity": 4,
+            "price": 0.0
+          },
+          {
+            "productId": 3,
+            "productName": "Стаканы пластиковые (уп. 100 шт)",
+            "quantity": 1,
+            "price": 150.0
+          },
+          {
+            "productId": 5,
+            "productName": "Ремонт/Санитария кулера",
+            "quantity": 0,
+            "price": 1500.0
           }
         ]
       }
