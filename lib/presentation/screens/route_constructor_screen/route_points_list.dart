@@ -231,7 +231,7 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                               null;
                                             });
                                             provider.updatePointMeta(
-                                                index, clientsProvider,
+                                                index, context, clientsProvider,
                                                 paymentMethod: activeNewMethod);
                                             return activeNewMethod;
                                           }
@@ -268,6 +268,7 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                               ClientsProvider>();
                                           provider.updatePointMeta(
                                             index,
+                                            context,
                                             clientsProvider,
                                             paymentMethod: value,
                                           );

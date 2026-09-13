@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/infra/app_notify.dart';
 import 'package:mountain_fairytale/infra/repos/cars/models/car_model.dart';
 import 'package:mountain_fairytale/infra/repos/clients/models/client_model.dart';
 import 'package:mountain_fairytale/infra/repos/delivery_route/models/delivery_route_sheet_model.dart';
@@ -180,8 +181,9 @@ class RouteConstructorProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ИСПРАВЛЕНО: Передаем ссылку на ClientsProvider для синхронизации данных
+  // Добавили BuildContext и ClientsProvider в параметры метода
   void updatePointMeta(int pointIndex,
+      BuildContext context,
       ClientsProvider clientsProvider, {
         String? paymentMethod,
         String? salesRep,
@@ -210,15 +212,30 @@ class RouteConstructorProvider extends ChangeNotifier {
           UpdateClientRequest(defaultPaymentMethod: paymentMethod),
         );
 
-        // 2. ИСПРАВЛЕНО: Синхронизируем стейт провайдера клиентов,
-        // чтобы в левой панели у этого клиента форма оплаты тоже обновилась!
+        // 2. Синхронизируем стейт провайдера клиентов
         clientsProvider.syncUpdatedClient(updatedClientModel);
 
+        // Показываем красивое уведомление об успешном сохранении
+        if (context.mounted) {
+          AppNotify.show(
+            context,
+            'Форма оплаты «$paymentMethod» сохранена как основная для клиента ${p
+                .clientName}',
+          );
+        }
       } catch (e) {
-        print('Не удалось обновить дефолтную оплату клиента: $e');
+        // Заменяем print на уведомление об ошибке
+        if (context.mounted) {
+          AppNotify.show(
+            context,
+            'Не удалось обновить основную оплату клиента: $e',
+            isError: true,
+          );
+        }
       }
     }
   }
+
 
 
   Future<bool> saveRoute() async {
