@@ -59,10 +59,12 @@ class RouteConstructorProvider extends ChangeNotifier {
   List<RoutePoint> points = [];
 
   String? newlyCreatedPaymentMethodName;
+  int? currentRouteId;
 
   double get grandTotal => points.fold(0.0, (sum, p) => sum + p.totalAmount);
 
   void resetForm() {
+    currentRouteId = null;
     selectedDate = DateTime.now();
     driverName = '';
     selectedDriver = null;
@@ -373,9 +375,7 @@ class RouteConstructorProvider extends ChangeNotifier {
   }
 
 
-
-  /// Загружает существующий маршрут по дате дня доставки
-  Future<void> loadExistingRoute(DateTime date) async {
+  Future<void> loadExistingRouteById(int routeId) async {
     isLoadingDirectories = true;
     notifyListeners();
     try {
@@ -384,44 +384,32 @@ class RouteConstructorProvider extends ChangeNotifier {
       products = await _productRepo.getAvailableProducts();
       paymentMethods = await _paymentMethodRepo.getAllPaymentMethods();
 
-      // 2. Устанавливаем режим "Только для чтения", если дата не сегодняшняя
+      // Запрашиваем конкретный маршрутный лист по ID
+      final sheet = await _routeRepo.getRouteSheetById(routeId);
+
+      currentRouteId = sheet.id;
+      selectedDate = sheet.date;
+      startMileage = sheet.startMileage;
+      points = List.from(sheet.points);
+
+      // Только сегодняшние маршруты можно редактировать (как и было в вашей логике)
       final now = DateTime.now();
-      isReadOnly = !(date.year == now.year && date.month == now.month &&
-          date.day == now.day);
-      selectedDate = date;
+      isReadOnly = !(sheet.date.year == now.year &&
+          sheet.date.month == now.month &&
+          sheet.date.day == now.day);
 
-      // 3. Запрашиваем все маршрутные листы из репозитория
-      final allSheets = await _routeRepo.getRouteSheets();
-
-      // Ищем маршрут, у которого совпадает дата (день, месяц, год)
-      final existingSheet = allSheets.firstWhere(
-            (sheet) =>
-        sheet.date.year == date.year &&
-            sheet.date.month == date.month &&
-            sheet.date.day == date.day,
-      );
-
-      // 4. Наполняем стейт провайдера данными из найденного маршрутного листа
-      startMileage = existingSheet.startMileage;
-      points = List.from(existingSheet.points);
-
-      // Восстанавливаем выбранного водителя
       selectedDriver = drivers.firstWhere(
-            (d) => d.name == existingSheet.driverName,
-        orElse: () => Driver(id: 0, name: existingSheet.driverName),
+            (d) => d.name == sheet.driverName,
+        orElse: () => Driver(id: 0, name: sheet.driverName),
       );
       driverName = selectedDriver?.name ?? '';
 
-      // Восстанавливаем выбранный автомобиль
       try {
-        selectedCar = cars.firstWhere((c) => c.id == existingSheet.carId);
+        selectedCar = cars.firstWhere((c) => c.id == sheet.carId);
       } catch (_) {
-        // Если машина с таким ID не найдена, берем первую доступную или оставляем null
         selectedCar = cars.isNotEmpty ? cars.first : null;
       }
     } catch (e) {
-      // Если маршрутный лист для этого дня не найден в демо-базе,
-      // оставляем форму пустой на эту дату (или можно показать ошибку)
       points = [];
       selectedDriver = null;
       selectedCar = null;
@@ -430,6 +418,7 @@ class RouteConstructorProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
 
   /// Возвращает список всех маршрутных листов за указанную дату
   Future<List<DeliveryRouteSheet>> getRouteSheetsByDate(DateTime date) async {
@@ -446,18 +435,17 @@ class RouteConstructorProvider extends ChangeNotifier {
   }
 
   DeliveryRouteSheet? get currentRouteSheet {
-    if (selectedDriver == null ||
-        selectedCar == null ||
-        points.isEmpty) {
+    if (selectedDriver == null || selectedCar == null || points.isEmpty) {
       return null;
     }
 
     return DeliveryRouteSheet(
+      id: currentRouteId,
+      // Применится существующий ID или null при создании нового
       date: selectedDate,
       driverName: selectedDriver!.name,
       carId: selectedCar!.id,
-      carModelAndNumber:
-      '${selectedCar!.model} (${selectedCar!.number})',
+      carModelAndNumber: '${selectedCar!.model} (${selectedCar!.number})',
       startMileage: startMileage,
       points: points,
     );

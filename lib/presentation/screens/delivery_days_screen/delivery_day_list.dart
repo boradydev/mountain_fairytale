@@ -101,10 +101,10 @@ class _DeliveryDayItem extends StatelessWidget {
       title: day.date.isToday
           ? l10n.deliveryCardTitleToday
           : '${l10n.deliveryCardTitle}: $dateStr',
+      // Внутри метода onTap карточки _DeliveryDayItem:
       onTap: () async {
         final routeProvider = context.read<RouteConstructorProvider>();
 
-        // Показываем индикатор загрузки на время проверки базы данных
         showDialog(
           context: context,
           barrierDismissible: false,
@@ -116,43 +116,45 @@ class _DeliveryDayItem extends StatelessWidget {
         final sheets = await routeProvider.getRouteSheetsByDate(day.date);
 
         if (context.mounted) {
-          Navigator.of(context).pop(); // Закрываем индикатор загрузки
+          Navigator.of(context).pop(); // Закрываем лоадер
         }
 
-        DateTime? targetDate = day.date;
+        int? targetRouteId;
 
-        // Если за этот день создано несколько независимых маршрутных листов
-        if (sheets.length > 1) {
+        if (sheets.isEmpty) {
+          // Если на этот день еще нет маршрутов вообще (новый день)
+          targetRouteId = null;
+        } else if (sheets.length == 1) {
+          // Если маршрут один — сразу открываем его id
+          targetRouteId = sheets.first.id;
+        } else if (sheets.length > 1) {
           if (!context.mounted) return;
 
+          // Открываем развилку выбора конкретной машины/водителя
           final selectedSheet = await showDialog<DeliveryRouteSheet>(
             context: context,
             builder: (context) => SelectRouteDialog(sheets: sheets),
           );
 
-          // Если пользователь нажал "Отмена" в диалоге, прерываем операцию
-          if (selectedSheet == null) return;
-
-          // В демо-логике мы все еще привязываемся к дате,
-          // но в будущем здесь можно передавать конкретный sheet.id
-          targetDate = selectedSheet.date;
+          if (selectedSheet == null) return; // Отмена выбора
+          targetRouteId = selectedSheet.id;
         }
 
         if (!context.mounted) return;
 
-        // Переходим в конструктор маршрутов
+        // Переходим в конструктор, передавая уникальный ID маршрута
         final isUpdated = await Navigator.of(context).push<bool>(
           MaterialPageRoute(
             builder: (context) =>
-                RouteConstructorScreen(existingDate: targetDate),
+                RouteConstructorScreen(existingRouteId: targetRouteId),
           ),
         );
 
-        // Если день был отредактирован и сохранен — обновляем дашборд
         if (isUpdated == true && context.mounted) {
           context.read<DeliveryDaysProvider>().refreshDeliveryDays();
         }
       },
+
       metrics: [
         MetricRow(
           icon: Icons.people_outline_rounded,

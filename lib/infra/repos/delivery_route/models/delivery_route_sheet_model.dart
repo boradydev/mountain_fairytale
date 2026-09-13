@@ -5,19 +5,16 @@ part 'delivery_route_sheet_model.g.dart';
 
 @JsonSerializable(explicitToJson: true)
 class DeliveryRouteSheet {
-  final int? id; // null при создании, присваивается на "сервере"
+  final int? id;
   final DateTime date;
   final String driverName;
   final int carId;
-  final String
-  carModelAndNumber; // Для быстрого отображения (например: "Газель А123ББ")
+  final String carModelAndNumber;
   final double startMileage;
-  final double? endMileage; // null, пока водитель не вернулся
+  final double? endMileage;
 
-  // Все точки (клиенты) в этом выезде
   final List<RoutePoint> points;
 
-  // Общий итог по всему маршрутному листу
   double get grandTotal =>
       points.fold(0.0, (sum, point) => sum + point.totalAmount);
 
@@ -31,6 +28,28 @@ class DeliveryRouteSheet {
     this.endMileage,
     required this.points,
   });
+
+  DeliveryRouteSheet copyWith({
+    int? id,
+    DateTime? date,
+    String? driverName,
+    int? carId,
+    String? carModelAndNumber,
+    double? startMileage,
+    double? endMileage,
+    List<RoutePoint>? points,
+  }) {
+    return DeliveryRouteSheet(
+      id: id ?? this.id,
+      date: date ?? this.date,
+      driverName: driverName ?? this.driverName,
+      carId: carId ?? this.carId,
+      carModelAndNumber: carModelAndNumber ?? this.carModelAndNumber,
+      startMileage: startMileage ?? this.startMileage,
+      endMileage: endMileage ?? this.endMileage,
+      points: points ?? this.points,
+    );
+  }
 
   factory DeliveryRouteSheet.fromJson(Map<String, dynamic> json) =>
       _$DeliveryRouteSheetFromJson(json);

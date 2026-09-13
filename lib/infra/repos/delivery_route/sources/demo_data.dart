@@ -1,12 +1,12 @@
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
-import 'package:mountain_fairytale/presentation/providers/abcs/repos/delivery_route.dart';
 import 'package:mountain_fairytale/infra/repos/delivery_day/sources/demo_data.dart';
+import 'package:mountain_fairytale/presentation/providers/abcs/repos/delivery_route.dart';
 
 class DemoDeliveryRouteDataSource implements DeliveryRouteDataSource {
   final AssetBundle _assetBundle;
-  final DemoDeliveryDataSource _deliveryDayDataSource; // Ссылка для демо-хака
+  final DemoDeliveryDataSource _deliveryDayDataSource;
   List<Map<String, dynamic>>? _routesCache;
 
   DemoDeliveryRouteDataSource({
@@ -29,8 +29,16 @@ class DemoDeliveryRouteDataSource implements DeliveryRouteDataSource {
   }
 
   @override
+  Future<Map<String, dynamic>> getRouteSheetById(int id) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    if (_routesCache == null) await getAllRouteSheets();
+    return _routesCache!.firstWhere((e) => int.parse(e['id'].toString()) == id,
+        orElse: () => throw Exception('Route sheet not found'));
+  }
+
+  @override
   Future<Map<String, dynamic>> createRouteSheet(
-      Map<String, dynamic> sheetJson,) async {
+      Map<String, dynamic> sheetJson) async {
     await Future.delayed(const Duration(milliseconds: 600));
     if (_routesCache == null) await getAllRouteSheets();
 
@@ -38,24 +46,57 @@ class DemoDeliveryRouteDataSource implements DeliveryRouteDataSource {
         ? 1
         : _routesCache!
         .map((r) => int.parse(r['id'].toString()))
-        .reduce((a, b) => a > b ? a : b) +
-        1;
+        .reduce((a, b) => a > b ? a : b) + 1;
 
     final Map<String, dynamic> finalSheet = Map<String, dynamic>.from(
         sheetJson);
     finalSheet['id'] = newId;
 
     _routesCache!.insert(0, finalSheet);
+    await _recalculateDeliveryDayHack(finalSheet['date']);
 
-    // =========================================================================
-    // ДЕМО-ХАК: Считаем агрегированные данные для DeliveryDay на основе ВСЕХ маршрутов за эту дату
-    // =========================================================================
+    return finalSheet;
+  }
+
+  @override
+  Future<Map<String, dynamic>> patchRouteSheet(int id,
+      Map<String, dynamic> json) async {
+    await Future.delayed(const Duration(milliseconds: 400));
+    if (_routesCache == null) await getAllRouteSheets();
+
+    final index = _routesCache!.indexWhere((e) =>
+    int.parse(e['id'].toString()) == id);
+    if (index == -1) throw Exception('Route sheet not found');
+
+    final updated = Map<String, dynamic>.from(_routesCache![index]);
+    json.forEach((key, value) {
+      if (value != null) updated[key] = value;
+    });
+
+    _routesCache![index] = updated;
+    await _recalculateDeliveryDayHack(updated['date']);
+
+    return updated;
+  }
+
+  @override
+  Future<void> deleteRouteSheet(int id) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (_routesCache == null) await getAllRouteSheets();
+
+    final index = _routesCache!.indexWhere((e) =>
+    int.parse(e['id'].toString()) == id);
+    if (index != -1) {
+      final targetDate = _routesCache![index]['date'];
+      _routesCache!.removeAt(index);
+      await _recalculateDeliveryDayHack(targetDate);
+    }
+  }
+
+  Future<void> _recalculateDeliveryDayHack(String? dateStr) async {
+    if (dateStr == null || dateStr.isEmpty) return;
     try {
-      final String sheetDateStr = sheetJson['date'] ??
-          DateTime.now().toIso8601String();
-      final DateTime sheetDate = DateTime.parse(sheetDateStr);
-
-      // 1. Получаем абсолютно все маршруты из кэша (включая только что добавленный)
+      final DateTime sheetDate = DateTime.parse(dateStr);
       final allRoutes = _routesCache ?? [];
 
       int totalClientsCount = 0;
@@ -66,20 +107,16 @@ class DemoDeliveryRouteDataSource implements DeliveryRouteDataSource {
       int coolerRepairCount = 0;
       double totalAmount = 0.0;
 
-      // 2. Бежим по всем маршрутам и собираем статистику ТОЛЬКО за эту дату
       for (var route in allRoutes) {
         final routeDateStr = route['date'] ?? '';
         if (routeDateStr.isEmpty) continue;
 
         final DateTime routeDate = DateTime.parse(routeDateStr);
-
-        // Сравниваем только день, месяц и год
         if (routeDate.year == sheetDate.year &&
             routeDate.month == sheetDate.month &&
             routeDate.day == sheetDate.day) {
           final List<dynamic> points = route['points'] ?? [];
-          totalClientsCount +=
-              points.length; // Плюсуем точки всех машин за день
+          totalClientsCount += points.length;
 
           for (var point in points) {
             final List<dynamic> items = point['items'] ?? [];
@@ -110,9 +147,8 @@ class DemoDeliveryRouteDataSource implements DeliveryRouteDataSource {
         }
       }
 
-      // 3. Формируем единую карту для дня доставки
       final Map<String, dynamic> generatedDayJson = {
-        'date': sheetDateStr,
+        'date': dateStr,
         'clientsCount': totalClientsCount,
         'bottlesCount': bottlesCount,
         'returnsCount': returnsCount,
@@ -122,14 +158,9 @@ class DemoDeliveryRouteDataSource implements DeliveryRouteDataSource {
         'totalAmount': totalAmount,
       };
 
-      // 4. Передаем данные в дата-сорс дней доставки для умного сохранения/обновления
       await _deliveryDayDataSource.updateOrCreateDeliveryDay(generatedDayJson);
     } catch (e) {
-      print('Ошибка работы демо-хака генерации дня доставки: $e');
+      print('Ошибка работы демо-хака: $e');
     }
-    // =========================================================================
-
-
-    return finalSheet;
   }
 }

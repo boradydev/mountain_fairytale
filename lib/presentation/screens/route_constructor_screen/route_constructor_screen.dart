@@ -7,9 +7,9 @@ import 'package:mountain_fairytale/presentation/screens/route_constructor_screen
 import 'package:provider/provider.dart';
 
 class RouteConstructorScreen extends StatefulWidget {
-  final DateTime? existingDate; // Передаем дату, если открываем на просмотр/редактирование
+  final int? existingRouteId; // Передаем ID маршрута вместо даты дня
 
-  const RouteConstructorScreen({super.key, this.existingDate});
+  const RouteConstructorScreen({super.key, this.existingRouteId});
 
   @override
   State<RouteConstructorScreen> createState() => _RouteConstructorScreenState();
@@ -24,11 +24,11 @@ class _RouteConstructorScreenState extends State<RouteConstructorScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final routeProvider = context.read<RouteConstructorProvider>();
 
-      if (widget.existingDate != null) {
-        // Режим просмотра/редактирования существующего дня
-        routeProvider.loadExistingRoute(widget.existingDate!);
+      if (widget.existingRouteId != null) {
+        // Режим редактирования существующего маршрута
+        routeProvider.loadExistingRouteById(widget.existingRouteId!);
       } else {
-        // Режим создания нового маршрута на сегодня
+        // Режим создания нового маршрута
         routeProvider.resetForm();
         routeProvider.loadDirectories();
       }
@@ -41,7 +41,7 @@ class _RouteConstructorScreenState extends State<RouteConstructorScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.existingDate != null
+        title: Text(widget.existingRouteId != null
             ? 'Просмотр маршрутного листа'
             : 'Конструктор маршрутного листа'),
         actions: [
