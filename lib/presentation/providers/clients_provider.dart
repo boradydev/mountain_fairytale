@@ -253,12 +253,14 @@ class ClientsProvider extends ChangeNotifier {
   }
 
   Future<SalesRepresentative?> addSalesRepresentative(String name,
-      String phone) async {
+      String phone, double commissionPercent,) async {
     final normalizedName = name.trim();
     if (normalizedName.isEmpty) return null;
     try {
       final request = CreateSalesRepresentativeRequest(
-          name: normalizedName, phone: phone.trim());
+        name: normalizedName,
+        phone: phone.trim(),
+        commissionPercent: commissionPercent,);
       final created = await _salesRepRepo.createSalesRepresentative(request);
       _salesRepresentatives = [created, ..._salesRepresentatives];
       notifyListeners();
@@ -269,12 +271,14 @@ class ClientsProvider extends ChangeNotifier {
   }
 
   Future<bool> updateSalesRepresentative(int id, String name,
-      String phone) async {
+      String phone, double commissionPercent) async {
     final normalizedName = name.trim();
     if (normalizedName.isEmpty) return false;
     try {
       final request = UpdateSalesRepresentativeRequest(
-          name: normalizedName, phone: phone.trim());
+        name: normalizedName,
+        phone: phone.trim(),
+        commissionPercent: commissionPercent,);
       final updated = await _salesRepRepo.updateSalesRepresentative(
           id, request);
       _salesRepresentatives =

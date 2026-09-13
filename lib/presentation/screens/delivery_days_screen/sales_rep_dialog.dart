@@ -18,8 +18,11 @@ class SalesRepDialog extends StatefulWidget {
 
 class _SalesRepDialogState extends State<SalesRepDialog> {
   final _formKey = GlobalKey<FormState>();
+
   late final TextEditingController _nameController;
   late final TextEditingController _phoneController;
+  late final TextEditingController _commissionPercentController;
+
   final _nameFocusNode = FocusNode();
 
   bool _isCheckingDuplicate = false;
@@ -31,10 +34,21 @@ class _SalesRepDialogState extends State<SalesRepDialog> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.salesRep?.name ?? '');
-    _phoneController = TextEditingController(
-      text: widget.salesRep?.phone ?? '',
+
+    final salesRep = widget.salesRep;
+
+    _nameController = TextEditingController(
+      text: salesRep?.name ?? '',
     );
+
+    _phoneController = TextEditingController(
+      text: salesRep?.phone ?? '',
+    );
+
+    _commissionPercentController = TextEditingController(
+      text: salesRep?.commissionPercent.toString() ?? '',
+    );
+
     _nameFocusNode.addListener(_onFocusChange);
   }
 
@@ -83,6 +97,9 @@ class _SalesRepDialogState extends State<SalesRepDialog> {
     final provider = context.read<ClientsProvider>();
     final name = _nameController.text.trim();
     final phone = _phoneController.text.trim();
+    final commissionPercent = double.parse(
+      _commissionPercentController.text.trim().replaceAll(',', '.'),
+    );
     final bool success;
 
     if (_isEditMode) {
@@ -90,9 +107,14 @@ class _SalesRepDialogState extends State<SalesRepDialog> {
         widget.salesRep!.id,
         name,
         phone,
+        commissionPercent,
       );
     } else {
-      final created = await provider.addSalesRepresentative(name, phone);
+      final created = await provider.addSalesRepresentative(
+        name,
+        phone,
+        commissionPercent,
+      );
       success = created != null;
     }
 
@@ -138,7 +160,10 @@ class _SalesRepDialogState extends State<SalesRepDialog> {
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
+    _commissionPercentController.dispose();
+
     _nameFocusNode.dispose();
+
     super.dispose();
   }
 
@@ -190,6 +215,34 @@ class _SalesRepDialogState extends State<SalesRepDialog> {
             border: OutlineInputBorder(),
             prefixIcon: Icon(Icons.phone_outlined),
           ),
+        ),
+        TextFormField(
+          controller: _commissionPercentController,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: const InputDecoration(
+            labelText: 'Вознаграждение',
+            suffixText: '%',
+          ),
+          validator: (value) {
+            if (value == null || value
+                .trim()
+                .isEmpty) {
+              return 'Укажите процент';
+            }
+
+            final normalized = value.trim().replaceAll(',', '.');
+            final percent = double.tryParse(normalized);
+
+            if (percent == null) {
+              return 'Введите число';
+            }
+
+            if (percent < 0 || percent > 100) {
+              return 'Процент должен быть от 0 до 100';
+            }
+
+            return null;
+          },
         ),
       ],
     );

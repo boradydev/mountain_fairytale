@@ -8,11 +8,13 @@ class SalesRepresentative {
   final int id;
   final String name;
   final String phone;
+  final double commissionPercent;
 
   const SalesRepresentative({
     required this.id,
     required this.name,
     required this.phone,
+    required this.commissionPercent,
   });
 
   factory SalesRepresentative.fromJson(Map<String, dynamic> json) =>
@@ -26,10 +28,12 @@ class SalesRepresentative {
 class CreateSalesRepresentativeRequest {
   final String name;
   final String phone;
+  final double commissionPercent;
 
   const CreateSalesRepresentativeRequest({
     required this.name,
     required this.phone,
+    required this.commissionPercent,
   });
 
   Map<String, dynamic> toJson() =>
@@ -41,8 +45,13 @@ class CreateSalesRepresentativeRequest {
 class UpdateSalesRepresentativeRequest {
   final String? name;
   final String? phone;
+  final double? commissionPercent;
 
-  const UpdateSalesRepresentativeRequest({this.name, this.phone});
+  const UpdateSalesRepresentativeRequest({
+    this.name,
+    this.phone,
+    this.commissionPercent,
+  });
 
   Map<String, dynamic> toJson() =>
       _$UpdateSalesRepresentativeRequestToJson(this);

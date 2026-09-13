@@ -38,6 +38,7 @@ class DemoSalesRepresentativeDataSource
               1;
     final newItem = {...json, 'id': newId};
     _cache!.insert(0, newItem);
+
     return newItem;
   }
 

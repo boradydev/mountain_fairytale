@@ -39,7 +39,7 @@ class _ClientDialogState extends State<ClientDialog> {
   Client? _duplicateClient;
 
   bool get _isEditMode => widget.client != null;
-  SalesRepresentative? _selectedSalesRep;
+  int? _selectedSalesRepId;
 
   @override
   void initState() {
@@ -71,13 +71,8 @@ class _ClientDialogState extends State<ClientDialog> {
     _nameFocusNode.addListener(_onFocusChange);
     _addressFocusNode.addListener(_onFocusChange);
 
-    // Восстанавливаем сохраненного представителя в режиме редактирования
-    if (client != null && client.salesRepresentativeId != null) {
-      _selectedSalesRep = SalesRepresentative(
-        id: client.salesRepresentativeId!,
-        name: client.salesRepresentativeName ?? '',
-        phone: '',
-      );
+    if (client != null) {
+      _selectedSalesRepId = client.salesRepresentativeId;
     }
   }
 
@@ -146,6 +141,15 @@ class _ClientDialogState extends State<ClientDialog> {
     final address = _addressController.text.trim();
     final thresholdDays = int.parse(_thresholdController.text.trim());
 
+    SalesRepresentative? selectedSalesRep;
+
+    for (final rep in provider.salesRepresentatives) {
+      if (rep.id == _selectedSalesRepId) {
+        selectedSalesRep = rep;
+        break;
+      }
+    }
+
     final bool success;
 
     if (_isEditMode) {
@@ -155,9 +159,8 @@ class _ClientDialogState extends State<ClientDialog> {
         phone: phone,
         address: address,
         thresholdDays: thresholdDays,
-        salesRepId: _selectedSalesRep?.id,
-        // <-- Добавлено
-        salesRepName: _selectedSalesRep?.name, // <-- Добавлено
+        salesRepId: _selectedSalesRepId,
+        salesRepName: selectedSalesRep?.name,
       );
     } else {
       success = await provider.addClient(
@@ -165,9 +168,8 @@ class _ClientDialogState extends State<ClientDialog> {
         phone: phone,
         address: address,
         thresholdDays: thresholdDays,
-        salesRepId: _selectedSalesRep?.id,
-        // <-- Добавлено
-        salesRepName: _selectedSalesRep?.name, // <-- Добавлено
+        salesRepId: _selectedSalesRepId,
+        salesRepName: selectedSalesRep?.name,
       );
     }
 
@@ -362,7 +364,7 @@ class _ClientDialogState extends State<ClientDialog> {
 
         const SizedBox(height: 16),
 
-        // Блок Торговый представитель
+// Блок Торговый представитель
         Row(
           children: [
             const Expanded(
@@ -371,52 +373,87 @@ class _ClientDialogState extends State<ClientDialog> {
                 style: TextStyle(fontWeight: FontWeight.w500),
               ),
             ),
+
+            // Добавить торгового представителя
             IconButton(
               onPressed: () async {
-                await showDialog<void>(
+                final result = await showDialog<bool>(
                   context: context,
                   builder: (_) => const SalesRepDialog(),
                 );
+
+                if (result == true && mounted) {
+                  // Список представителей уже обновляется через Provider.
+                  // Ничего дополнительно в локальном состоянии менять не нужно.
+                  setState(() {});
+                }
               },
               icon: const Icon(Icons.add),
               tooltip: 'Добавить торгового представителя',
             ),
-            IconButton(
-              onPressed: _selectedSalesRep != null
-                  ? () async {
-                final result = await showDialog<dynamic>(
-                  context: context,
-                  builder: (_) => SalesRepDialog(salesRep: _selectedSalesRep),
-                );
-                // Если представитель был удален, сбрасываем значение локального выбора
-                if (result == true && !mounted) return;
-                final provider = context.read<ClientsProvider>();
-                if (!provider.salesRepresentatives.contains(
-                    _selectedSalesRep)) {
-                  setState(() {
-                    _selectedSalesRep = null;
-                  });
+
+            // Редактировать выбранного торгового представителя
+            Consumer<ClientsProvider>(
+              builder: (context, provider, child) {
+                SalesRepresentative? selectedSalesRep;
+
+                if (_selectedSalesRepId != null) {
+                  for (final rep in provider.salesRepresentatives) {
+                    if (rep.id == _selectedSalesRepId) {
+                      selectedSalesRep = rep;
+                      break;
+                    }
+                  }
                 }
-              }
-                  : null,
-              icon: const Icon(Icons.edit_outlined),
-              tooltip: 'Редактировать торгового представителя',
+
+                return IconButton(
+                  onPressed: selectedSalesRep == null
+                      ? null
+                      : () async {
+                    final result = await showDialog<bool>(
+                      context: context,
+                      builder: (_) =>
+                          SalesRepDialog(
+                            salesRep: selectedSalesRep,
+                          ),
+                    );
+
+                    if (!mounted) {
+                      return;
+                    }
+
+                    // Если представитель был удалён,
+                    // Provider уже обновил список.
+                    if (result == true) {
+                      final exists = provider.salesRepresentatives.any(
+                            (rep) => rep.id == _selectedSalesRepId,
+                      );
+
+                      if (!exists) {
+                        setState(() {
+                          _selectedSalesRepId = null;
+                        });
+                      }
+                    }
+                  },
+                  icon: const Icon(Icons.edit_outlined),
+                  tooltip: 'Редактировать торгового представителя',
+                );
+              },
             ),
           ],
         ),
 
         Consumer<ClientsProvider>(
           builder: (context, provider, child) {
-            // Находим реальный объект из списка по ID, чтобы у Dropdown совпадали ссылки
             SalesRepresentative? currentSelection;
-            if (_selectedSalesRep != null) {
-              try {
-                currentSelection =
-                    provider.salesRepresentatives.firstWhere((r) =>
-                    r.id ==
-                        _selectedSalesRep!.id);
-              } catch (_) {
-                _selectedSalesRep = null;
+
+            if (_selectedSalesRepId != null) {
+              for (final rep in provider.salesRepresentatives) {
+                if (rep.id == _selectedSalesRepId) {
+                  currentSelection = rep;
+                  break;
+                }
               }
             }
 
@@ -426,7 +463,6 @@ class _ClientDialogState extends State<ClientDialog> {
                 prefixIcon: Icon(Icons.badge_outlined),
               ),
               initialValue: currentSelection,
-              // Используем сопоставленный объект
               hint: const Text('Выберите представителя'),
               items: provider.salesRepresentatives.map((rep) {
                 return DropdownMenuItem<SalesRepresentative>(
@@ -436,12 +472,11 @@ class _ClientDialogState extends State<ClientDialog> {
               }).toList(),
               onChanged: (value) {
                 setState(() {
-                  _selectedSalesRep = value;
+                  _selectedSalesRepId = value?.id;
                 });
               },
             );
           },
-
         ),
 
         const SizedBox(height: 16),
