@@ -56,7 +56,6 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen> {
     final isDarkMode = context.select((ThemeProvider p) => p.isDarkMode);
     final l10n = AppLocalizations.of(context)!;
     final status = context.select((DeliveryDaysProvider p) => p.status);
-    final colorScheme = Theme.of(context).colorScheme;
 
     // Слушаем состояние фильтра, чтобы менять цвет иконки кнопки
     final showOnlySleeping = context.select((ClientsProvider p) =>

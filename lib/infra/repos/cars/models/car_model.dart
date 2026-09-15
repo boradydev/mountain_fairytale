@@ -8,7 +8,17 @@ class Car {
   final String model;
   final String number; // Госномер автомобиля
 
-  const Car({required this.id, required this.model, required this.number});
+  /// Текущий пробег автомобиля.
+  ///
+  /// Обновляется автоматически при завершении маршрутного листа.
+  final double currentMileage;
+
+  const Car({
+    required this.id,
+    required this.model,
+    required this.number,
+    required this.currentMileage,
+  });
 
   factory Car.fromJson(Map<String, dynamic> json) => _$CarFromJson(json);
 
@@ -19,6 +29,7 @@ class Car {
 class CreateCarRequest {
   final String model;
   final String number;
+
 
   const CreateCarRequest({
     required this.model,
@@ -32,10 +43,12 @@ class CreateCarRequest {
 class UpdateCarRequest {
   final String? model;
   final String? number;
+  final double? currentMileage;
 
   const UpdateCarRequest({
     this.model,
     this.number,
+    this.currentMileage,
   });
 
   Map<String, dynamic> toJson() => _$UpdateCarRequestToJson(this);

@@ -56,6 +56,7 @@ class RouteConstructorProvider extends ChangeNotifier {
   Driver? selectedDriver;
   Car? selectedCar;
   double startMileage = 0.0;
+  double? endMileage;
   List<RoutePoint> points = [];
 
   String? newlyCreatedPaymentMethodName;
@@ -70,6 +71,7 @@ class RouteConstructorProvider extends ChangeNotifier {
     selectedDriver = null;
     selectedCar = null;
     startMileage = 0.0;
+    endMileage = null;
     points = [];
     isReadOnly = false;
     notifyListeners();
@@ -249,6 +251,24 @@ class RouteConstructorProvider extends ChangeNotifier {
 
     try {
       await _routeRepo.saveRouteSheet(sheet);
+
+      if (endMileage != null && selectedCar != null) {
+        final updatedCar = await _carRepo.updateCar(
+          selectedCar!.id,
+          UpdateCarRequest(
+            currentMileage: endMileage,
+          ),
+        );
+
+        cars = cars.map((car) {
+          return car.id == updatedCar.id ? updatedCar : car;
+        }).toList();
+
+        selectedCar = updatedCar;
+      }
+
+      notifyListeners();
+
       return true;
     } catch (_) {
       return false;
@@ -388,8 +408,8 @@ class RouteConstructorProvider extends ChangeNotifier {
       final sheet = await _routeRepo.getRouteSheetById(routeId);
 
       currentRouteId = sheet.id;
-      selectedDate = sheet.date;
       startMileage = sheet.startMileage;
+      endMileage = sheet.endMileage;
       points = List.from(sheet.points);
 
       // Только сегодняшние маршруты можно редактировать (как и было в вашей логике)
@@ -447,6 +467,7 @@ class RouteConstructorProvider extends ChangeNotifier {
       carId: selectedCar!.id,
       carModelAndNumber: '${selectedCar!.model} (${selectedCar!.number})',
       startMileage: startMileage,
+      endMileage: endMileage,
       points: points,
     );
   }

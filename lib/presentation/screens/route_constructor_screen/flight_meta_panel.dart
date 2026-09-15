@@ -196,9 +196,77 @@ class _FlightMetaPanelState extends State<FlightMetaPanel> {
               labelText: 'Километраж выезда (км)',
               border: OutlineInputBorder(),
             ),
-            keyboardType: TextInputType.number,
+            keyboardType: const TextInputType.numberWithOptions(
+              decimal: true,
+            ),
             initialValue: provider.startMileage.toString(),
-            onChanged: (v) => provider.startMileage = double.tryParse(v) ?? 0.0,
+            onChanged: (value) {
+              provider.startMileage = double.tryParse(value) ?? 0.0;
+            },
+            validator: (value) {
+              if (value == null || value
+                  .trim()
+                  .isEmpty) {
+                return 'Введите километраж выезда';
+              }
+
+              final mileage = double.tryParse(value);
+
+              if (mileage == null) {
+                return 'Введите корректный километраж';
+              }
+
+              if (mileage < 0) {
+                return 'Километраж не может быть отрицательным';
+              }
+
+              return null;
+            },
+          ),
+
+          const SizedBox(height: 12),
+
+          TextFormField(
+            decoration: const InputDecoration(
+              labelText: 'Километраж заезда (км)',
+              hintText: 'Заполняется после возвращения',
+              border: OutlineInputBorder(),
+            ),
+            keyboardType: const TextInputType.numberWithOptions(
+              decimal: true,
+            ),
+            initialValue: provider.endMileage?.toString() ?? '',
+            onChanged: (value) {
+              final text = value.trim();
+
+              provider.endMileage = text.isEmpty
+                  ? null
+                  : double.tryParse(text);
+            },
+            validator: (value) {
+              // Поле необязательное.
+              if (value == null || value
+                  .trim()
+                  .isEmpty) {
+                return null;
+              }
+
+              final mileage = double.tryParse(value);
+
+              if (mileage == null) {
+                return 'Введите корректный километраж';
+              }
+
+              if (mileage < 0) {
+                return 'Километраж не может быть отрицательным';
+              }
+
+              if (mileage < provider.startMileage) {
+                return 'Не может быть меньше километража выезда';
+              }
+
+              return null;
+            },
           ),
           const Divider(height: 32),
           const SizedBox(height: 8),
