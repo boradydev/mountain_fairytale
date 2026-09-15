@@ -541,4 +541,96 @@ class RouteConstructorProvider extends ChangeNotifier {
     }
   }
 
+  Future<Product?> addProduct({
+    required String name,
+    required double basePrice,
+  }) async {
+    final normalizedName = name.trim();
+
+    if (normalizedName.isEmpty || basePrice < 0) {
+      return null;
+    }
+
+    try {
+      final request = CreateProductRequest(
+        name: normalizedName,
+        basePrice: basePrice,
+      );
+
+      final created = await _productRepo.createProduct(request);
+
+      products.insert(0, created);
+
+      notifyListeners();
+
+      return created;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<bool> updateProduct(int id, {
+    required String name,
+    required double basePrice,
+  }) async {
+    final normalizedName = name.trim();
+
+    if (normalizedName.isEmpty || basePrice < 0) {
+      return false;
+    }
+
+    try {
+      final request = UpdateProductRequest(
+        name: normalizedName,
+        basePrice: basePrice,
+      );
+
+      final updated = await _productRepo.updateProduct(id, request);
+
+      products = products
+          .map((product) => product.id == id ? updated : product)
+          .toList();
+
+      notifyListeners();
+
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> deleteProduct(int id) async {
+    try {
+      await _productRepo.deleteProduct(id);
+
+      products = products
+          .where((product) => product.id != id)
+          .toList();
+
+      notifyListeners();
+
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<Product?> checkProductDuplicate(String name) async {
+    try {
+      final cleanName = name.trim().toLowerCase();
+
+      if (cleanName.isEmpty) {
+        return null;
+      }
+
+      final list = await _productRepo.getAvailableProducts();
+
+      return list.firstWhere(
+            (product) =>
+        product.name.trim().toLowerCase() == cleanName,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
 }
