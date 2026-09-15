@@ -25,33 +25,17 @@ class TaskDialogs {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Expanded(
-                          child: DropdownButtonFormField<Product>(
-                            hint: const Text(
-                              'Выберите товар/услугу',
+                        const Expanded(
+                          child: Text(
+                            'Продукция / услуга',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w500,
                             ),
-                            initialValue: selectedProduct,
-                            items: provider.products.map((product) {
-                              return DropdownMenuItem<Product>(
-                                value: product,
-                                child: Text(
-                                  '${product.name} '
-                                      '(${product.basePrice} ₽)',
-                                ),
-                              );
-                            }).toList(),
-                            onChanged: (product) {
-                              setDialogState(() {
-                                selectedProduct = product;
-                              });
-                            },
                           ),
                         ),
 
-                        const SizedBox(width: 8),
-
+                        // Добавить продукцию / услугу
                         IconButton(
                           tooltip: 'Добавить продукцию/услугу',
                           icon: const Icon(Icons.add),
@@ -71,32 +55,32 @@ class TaskDialogs {
                           },
                         ),
 
+                        // Редактировать выбранную позицию
                         IconButton(
                           tooltip: 'Редактировать выбранную позицию',
                           icon: const Icon(Icons.edit_outlined),
                           onPressed: selectedProduct == null
                               ? null
                               : () async {
-                            final productToEdit =
-                            selectedProduct!;
+                            final productToEdit = selectedProduct!;
 
                             await showDialog<void>(
                               context: context,
-                              builder: (_) =>
-                                  ProductDialog(
-                                    product: productToEdit,
-                                  ),
+                              builder: (_) => ProductDialog(
+                                product: productToEdit,
+                              ),
                             );
 
                             // Получаем актуальную версию
-                            // после редактирования.
-                            final updated = provider.products
-                                .where(
-                                  (product) =>
-                              product.id ==
-                                  productToEdit.id,
-                            )
-                                .firstOrNull;
+                            // после редактирования или удаления.
+                            Product? updated;
+
+                            for (final product in provider.products) {
+                              if (product.id == productToEdit.id) {
+                                updated = product;
+                                break;
+                              }
+                            }
 
                             setDialogState(() {
                               selectedProduct = updated;
@@ -104,6 +88,32 @@ class TaskDialogs {
                           },
                         ),
                       ],
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    DropdownButtonFormField<Product>(
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.inventory_2_outlined),
+                      ),
+                      hint: const Text(
+                        'Выберите товар/услугу',
+                      ),
+                      initialValue: selectedProduct,
+                      items: provider.products.map((product) {
+                        return DropdownMenuItem<Product>(
+                          value: product,
+                          child: Text(
+                            '${product.name} (${product.basePrice} ₽)',
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (product) {
+                        setDialogState(() {
+                          selectedProduct = product;
+                        });
+                      },
                     ),
 
                     const SizedBox(height: 16),
