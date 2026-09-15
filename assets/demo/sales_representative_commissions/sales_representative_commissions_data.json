@@ -1,0 +1,26 @@
+[
+  {
+    "salesRepresentativeId": 1,
+    "salesRepresentativeName": "Иванов Иван Иванович",
+    "commissionPercent": 5.0,
+    "clientsCount": 18,
+    "totalSalesAmount": 245000.0,
+    "commissionAmount": 12250.0
+  },
+  {
+    "salesRepresentativeId": 2,
+    "salesRepresentativeName": "Петров Петр Петрович",
+    "commissionPercent": 7.5,
+    "clientsCount": 11,
+    "totalSalesAmount": 164000.0,
+    "commissionAmount": 12300.0
+  },
+  {
+    "salesRepresentativeId": 3,
+    "salesRepresentativeName": "Сидоров Алексей Сергеевич",
+    "commissionPercent": 6.0,
+    "clientsCount": 7,
+    "totalSalesAmount": 98000.0,
+    "commissionAmount": 5880.0
+  }
+]

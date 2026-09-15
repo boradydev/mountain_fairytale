@@ -82,6 +82,7 @@ flutter:
     - assets/demo/driver/
     - assets/demo/payment_methods/
     - assets/demo/sales_representatives/
+    - assets/demo/sales_representative_commissions/
 
     - assets/fonts/
 

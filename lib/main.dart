@@ -18,6 +18,8 @@ import 'package:mountain_fairytale/infra/repos/payment_methods/repo.dart';
 import 'package:mountain_fairytale/infra/repos/payment_methods/sources/demo_data.dart';
 import 'package:mountain_fairytale/infra/repos/products/repo.dart';
 import 'package:mountain_fairytale/infra/repos/products/sources/demo_data.dart';
+import 'package:mountain_fairytale/infra/repos/sales_representative_commissions/repo.dart';
+import 'package:mountain_fairytale/infra/repos/sales_representative_commissions/sources/demo_data.dart';
 import 'package:mountain_fairytale/infra/repos/sales_representatives/repo.dart';
 import 'package:mountain_fairytale/infra/repos/sales_representatives/sources/demo_data.dart';
 import 'package:mountain_fairytale/infra/window_settings_service.dart';
@@ -75,6 +77,8 @@ Future<void> main() async {
   );
   final clientDataSource = DemoClientDataSource();
   final paymentMethodDataSource = DemoPaymentMethodDataSource();
+  final salesRepCommissionDataSource =
+  DemoSalesRepresentativeCommissionDataSource();
 
   // ===========================================================================
   // 2. ИНИЦИАЛИЗАЦИЯ РЕПОЗИТОРИЕВ
@@ -91,6 +95,9 @@ Future<void> main() async {
       salesRepDataSource);
   final paymentMethodRepository = PaymentMethodRepositoryImpl(
       paymentMethodDataSource);
+  final salesRepCommissionRepository =
+  SalesRepresentativeCommissionRepositoryImpl(
+    salesRepCommissionDataSource,);
 
 
   // ===========================================================================
