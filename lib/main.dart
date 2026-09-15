@@ -28,6 +28,7 @@ import 'package:mountain_fairytale/presentation/providers/clients_provider.dart'
 import 'package:mountain_fairytale/presentation/providers/delivery_days_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/locale_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/route_constructor_provider.dart';
+import 'package:mountain_fairytale/presentation/providers/sales_representative_commission_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/theme_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/delivery_days_screen/dashboard.dart';
 import 'package:provider/provider.dart';
@@ -138,6 +139,12 @@ Future<void> main() async {
             clientRepo: clientRepository,
             printService: routePrintService,
           ),
+        ),
+        ChangeNotifierProvider(
+          create: (_) =>
+              SalesRepresentativeCommissionProvider(
+                salesRepCommissionRepository,
+              ),
         ),
       ],
       child: const MyApp(),

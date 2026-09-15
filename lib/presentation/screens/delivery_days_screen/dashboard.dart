@@ -5,6 +5,7 @@ import 'package:mountain_fairytale/presentation/providers/delivery_days_provider
 import 'package:mountain_fairytale/presentation/providers/theme_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/delivery_days_screen/client_list.dart';
 import 'package:mountain_fairytale/presentation/screens/delivery_days_screen/delivery_day_list.dart';
+import 'package:mountain_fairytale/presentation/screens/sales_representative_commission_screen/sales_representative_commission_screen.dart';
 import 'package:mountain_fairytale/presentation/widgets/locate_toggle_widget.dart';
 import 'package:provider/provider.dart';
 
@@ -67,6 +68,18 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen> {
       appBar: AppBar(
         title: Text(l10n.appTitle),
         actions: [
+          IconButton(
+            tooltip: 'Вознаграждение торговых представителей',
+            icon: const Icon(Icons.payments_outlined),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) =>
+                  const SalesRepresentativeCommissionScreen(),
+                ),
+              );
+            },
+          ),
           // Новая кнопка фильтрации клиентов по просрочке
           IconButton(
             icon: Icon(
