@@ -14,15 +14,36 @@ class SalesRepresentativeCommissionProvider extends ChangeNotifier {
 
   List<SalesRepresentativeCommission> _commissions = const [];
 
+  double _totalCommissionAmount = 0;
+
   String _errorMessage = '';
 
-  DateTime _dateFrom = DateTime(DateTime.now().year, DateTime.now().month, 1);
+  DateTime _dateFrom = DateTime(
+    DateTime
+        .now()
+        .year,
+    DateTime
+        .now()
+        .month,
+    1,
+  );
 
-  DateTime _dateTo = DateTime.now();
+  DateTime _dateTo = DateTime(
+    DateTime
+        .now()
+        .year,
+    DateTime
+        .now()
+        .month + 1,
+    0,
+  );
 
   SalesRepresentativeCommissionStatus get status => _status;
 
-  List<SalesRepresentativeCommission> get commissions => _commissions;
+  List<SalesRepresentativeCommission> get commissions =>
+      _commissions;
+
+  double get totalCommissionAmount => _totalCommissionAmount;
 
   String get errorMessage => _errorMessage;
 
@@ -36,10 +57,14 @@ class SalesRepresentativeCommissionProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _commissions = await _repository.getSalesRepresentativeCommissions(
+      final report =
+      await _repository.getSalesRepresentativeCommissions(
         dateFrom: _dateFrom,
         dateTo: _dateTo,
       );
+
+      _commissions = report.commissions;
+      _totalCommissionAmount = report.totalCommissionAmount;
 
       _status = SalesRepresentativeCommissionStatus.success;
     } catch (e) {
@@ -50,21 +75,10 @@ class SalesRepresentativeCommissionProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> setPeriod({
-    required DateTime dateFrom,
-    required DateTime dateTo,
-  }) async {
-    _dateFrom = dateFrom;
-    _dateTo = dateTo;
+  Future<void> setMonth(DateTime month) async {
+    _dateFrom = DateTime(month.year, month.month, 1);
+    _dateTo = DateTime(month.year, month.month + 1, 0);
 
     await fetchCommissions();
-  }
-
-  Future<void> setMonth(DateTime month) async {
-    final firstDay = DateTime(month.year, month.month, 1);
-
-    final lastDay = DateTime(month.year, month.month + 1, 0);
-
-    await setPeriod(dateFrom: firstDay, dateTo: lastDay);
   }
 }

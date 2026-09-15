@@ -7,40 +7,41 @@ class DemoSalesRepresentativeCommissionDataSource
     implements SalesRepresentativeCommissionDataSource {
   final AssetBundle _assetBundle;
 
-  List<Map<String, dynamic>>? _cache;
+  Map<String, dynamic>? _cache;
 
   static const _dataPath =
       'assets/demo/sales_representative_commissions/'
       'sales_representative_commissions_data.json';
 
-  DemoSalesRepresentativeCommissionDataSource({AssetBundle? assetBundle})
-    : _assetBundle = assetBundle ?? rootBundle;
+  DemoSalesRepresentativeCommissionDataSource({
+    AssetBundle? assetBundle,
+  }) : _assetBundle = assetBundle ?? rootBundle;
 
-  Future<List<Map<String, dynamic>>> _getDemoJson() async {
+  Future<Map<String, dynamic>> _getDemoJson() async {
     if (_cache != null) {
       return _cache!;
     }
 
     final jsonString = await _assetBundle.loadString(_dataPath);
 
-    _cache = List<Map<String, dynamic>>.from(
-      (jsonDecode(jsonString) as List).map(
-        (item) => Map<String, dynamic>.from(item),
-      ),
+    _cache = Map<String, dynamic>.from(
+      jsonDecode(jsonString) as Map,
     );
 
     return _cache!;
   }
 
   @override
-  Future<List<Map<String, dynamic>>> getSalesRepresentativeCommissions({
+  Future<Map<String, dynamic>> getSalesRepresentativeCommissions({
     required String dateFrom,
     required String dateTo,
   }) async {
     // Имитируем сетевой запрос.
-    await Future<void>.delayed(const Duration(milliseconds: 500));
+    await Future<void>.delayed(
+      const Duration(milliseconds: 500),
+    );
 
-    // Пока Demo-источник не фильтрует данные по периоду.
+    // Demo-источник пока не фильтрует данные по периоду.
     // В реальном API dateFrom/dateTo будут переданы backend.
     return _getDemoJson();
   }

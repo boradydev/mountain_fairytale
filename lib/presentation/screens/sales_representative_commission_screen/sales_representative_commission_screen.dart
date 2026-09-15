@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:mountain_fairytale/core/utils/datetime_extensions.dart';
 import 'package:mountain_fairytale/infra/repos/sales_representative_commissions/models/sales_representative_commission_model.dart';
 import 'package:mountain_fairytale/presentation/providers/sales_representative_commission_provider.dart';
+import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
 import 'package:provider/provider.dart';
 
 class SalesRepresentativeCommissionScreen extends StatefulWidget {
@@ -43,58 +43,152 @@ class _SalesRepresentativeCommissionScreenState
       ),
       body: Column(
         children: [
-          _PeriodPanel(provider: provider),
-          const Divider(height: 1),
-          Expanded(child: _Content(provider: provider)),
+          const _PeriodPanel(),
+          const SizedBox(height: 12),
+          const _TotalCommissionCard(),
+          const SizedBox(height: 12),
+          Expanded(
+            child: _Content(provider: provider),
+          ),
         ],
-      ),
+      )
     );
   }
 }
 
 class _PeriodPanel extends StatelessWidget {
-  final SalesRepresentativeCommissionProvider provider;
+  const _PeriodPanel();
 
-  const _PeriodPanel({required this.provider});
+  static const _months = [
+    'Январь',
+    'Февраль',
+    'Март',
+    'Апрель',
+    'Май',
+    'Июнь',
+    'Июль',
+    'Август',
+    'Сентябрь',
+    'Октябрь',
+    'Ноябрь',
+    'Декабрь',
+  ];
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          const Text('Период:', style: TextStyle(fontWeight: FontWeight.w500)),
-          const SizedBox(width: 12),
-          OutlinedButton.icon(
-            icon: const Icon(Icons.calendar_month),
-            label: Text(
-              '${provider.dateFrom.toFormattedString()}'
-              ' — '
-              '${provider.dateTo.toFormattedString()}',
+    final provider =
+    context.watch<SalesRepresentativeCommissionProvider>();
+
+    final month = _months[provider.dateFrom.month - 1];
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.calendar_month_outlined),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                '$month ${provider.dateFrom.year}',
+                style: Theme
+                    .of(context)
+                    .textTheme
+                    .titleMedium,
+              ),
             ),
-            onPressed: () => _selectMonth(context),
-          ),
-        ],
+            AppSecondaryButton(
+              text: 'Выбрать месяц',
+              onPressed: () => _selectMonth(context),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Future<void> _selectMonth(BuildContext context) async {
-    final provider = context.read<SalesRepresentativeCommissionProvider>();
+    final provider =
+    context.read<SalesRepresentativeCommissionProvider>();
 
-    final picked = await showDatePicker(
+    final selected = await showDialog<DateTime>(
       context: context,
-      initialDate: provider.dateFrom,
-      firstDate: DateTime(2024),
-      lastDate: DateTime.now(),
-      helpText: 'Выберите месяц',
+      builder: (_) =>
+          _MonthPickerDialog(
+            initialMonth: provider.dateFrom,
+          ),
     );
 
-    if (picked == null || !context.mounted) {
-      return;
+    if (selected != null) {
+      await provider.setMonth(selected);
     }
+  }
+}
 
-    await provider.setMonth(picked);
+class _TotalCommissionCard extends StatelessWidget {
+  const _TotalCommissionCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final total = context.select(
+          (SalesRepresentativeCommissionProvider p) =>
+      p.totalCommissionAmount,
+    );
+
+    final colorScheme = Theme
+        .of(context)
+        .colorScheme;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          children: [
+            Icon(
+              Icons.account_balance_wallet_outlined,
+              size: 32,
+              color: colorScheme.primary,
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Всего к выплате',
+                    style: Theme
+                        .of(context)
+                        .textTheme
+                        .titleMedium,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'За выбранный месяц',
+                    style: Theme
+                        .of(context)
+                        .textTheme
+                        .bodyMedium,
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              '${total.toStringAsFixed(2)} ₽',
+              style: Theme
+                  .of(context)
+                  .textTheme
+                  .headlineSmall
+                  ?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -303,3 +397,137 @@ class _ErrorView extends StatelessWidget {
     );
   }
 }
+
+class _MonthPickerDialog extends StatefulWidget {
+  final DateTime initialMonth;
+
+  const _MonthPickerDialog({
+    required this.initialMonth,
+  });
+
+  @override
+  State<_MonthPickerDialog> createState() => _MonthPickerDialogState();
+}
+
+class _MonthPickerDialogState extends State<_MonthPickerDialog> {
+  late int _year;
+  late int _month;
+
+  static const _months = [
+    'Январь',
+    'Февраль',
+    'Март',
+    'Апрель',
+    'Май',
+    'Июнь',
+    'Июль',
+    'Август',
+    'Сентябрь',
+    'Октябрь',
+    'Ноябрь',
+    'Декабрь',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+
+    _year = widget.initialMonth.year;
+    _month = widget.initialMonth.month;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Выбор месяца'),
+      content: SizedBox(
+        width: 320,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _year--;
+                    });
+                  },
+                  icon: const Icon(Icons.chevron_left),
+                ),
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      '$_year',
+                      style: Theme
+                          .of(context)
+                          .textTheme
+                          .titleLarge,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _year++;
+                    });
+                  },
+                  icon: const Icon(Icons.chevron_right),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            GridView.builder(
+              shrinkWrap: true,
+              itemCount: 12,
+              gridDelegate:
+              const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                mainAxisExtent: 44,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+              ),
+              itemBuilder: (context, index) {
+                final month = index + 1;
+                final selected = month == _month;
+
+                return OutlinedButton(
+                  onPressed: () {
+                    setState(() {
+                      _month = month;
+                    });
+                  },
+                  style: OutlinedButton.styleFrom(
+                    backgroundColor: selected
+                        ? Theme
+                        .of(context)
+                        .colorScheme
+                        .primaryContainer
+                        : null,
+                  ),
+                  child: Text(_months[index]),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        AppSecondaryButton(
+          text: 'Отмена',
+          onPressed: () => Navigator.pop(context),
+        ),
+        AppPrimaryButton(
+          text: 'Выбрать',
+          onPressed: () {
+            Navigator.pop(
+              context,
+              DateTime(_year, _month),
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+

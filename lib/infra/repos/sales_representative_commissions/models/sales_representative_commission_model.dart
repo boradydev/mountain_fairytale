@@ -2,6 +2,24 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'sales_representative_commission_model.g.dart';
 
+@JsonSerializable()
+class SalesRepresentativeCommissionReport {
+  final List<SalesRepresentativeCommission> commissions;
+  final double totalCommissionAmount;
+
+  const SalesRepresentativeCommissionReport({
+    required this.commissions,
+    required this.totalCommissionAmount,
+  });
+
+  factory SalesRepresentativeCommissionReport.fromJson(
+    Map<String, dynamic> json,
+  ) => _$SalesRepresentativeCommissionReportFromJson(json);
+
+  Map<String, dynamic> toJson() =>
+      _$SalesRepresentativeCommissionReportToJson(this);
+}
+
 /// Готовые данные о вознаграждении торгового представителя.
 ///
 /// Все расчёты выполняются на стороне backend/repository.

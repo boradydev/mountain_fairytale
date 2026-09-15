@@ -8,17 +8,17 @@ class SalesRepresentativeCommissionRepositoryImpl
   SalesRepresentativeCommissionRepositoryImpl(this.dataSource);
 
   @override
-  Future<List<SalesRepresentativeCommission>>
+  Future<SalesRepresentativeCommissionReport>
   getSalesRepresentativeCommissions({
     required DateTime dateFrom,
     required DateTime dateTo,
   }) async {
-    final list = await dataSource.getSalesRepresentativeCommissions(
+    final json = await dataSource.getSalesRepresentativeCommissions(
       dateFrom: _formatDate(dateFrom),
       dateTo: _formatDate(dateTo),
     );
 
-    return list.map(SalesRepresentativeCommission.fromJson).toList();
+    return SalesRepresentativeCommissionReport.fromJson(json);
   }
 
   String _formatDate(DateTime date) {
