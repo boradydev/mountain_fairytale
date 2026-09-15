@@ -216,11 +216,16 @@ class _SalesRepDialogState extends State<SalesRepDialog> {
             prefixIcon: Icon(Icons.phone_outlined),
           ),
         ),
+        const SizedBox(height: 16),
         TextFormField(
           controller: _commissionPercentController,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          keyboardType: const TextInputType.numberWithOptions(
+            decimal: true,
+          ),
           decoration: const InputDecoration(
             labelText: 'Вознаграждение',
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.payments_outlined),
             suffixText: '%',
           ),
           validator: (value) {
