@@ -60,9 +60,6 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen> {
     // Слушаем состояние фильтра, чтобы менять цвет иконки кнопки
     final showOnlySleeping = context.select((ClientsProvider p) =>
     p.showOnlySleeping);
-    final colorScheme = Theme
-        .of(context)
-        .colorScheme;
 
     return Scaffold(
       appBar: AppBar(
