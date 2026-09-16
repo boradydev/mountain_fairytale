@@ -8,6 +8,9 @@ on:
     branches:
       - deploy # Сборка запустится для проверки, когда вы ОТКРОЕТЕ Pull Request в ветку main
 
+permissions:
+  contents: write # Дает право скрипту создавать релизы и загружать туда файлы
+
 
 jobs:
   build:
