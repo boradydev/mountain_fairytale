@@ -26,7 +26,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          cache: false
+          cache: true
 
       # 3. Включаем поддержку Windows-сборок во Flutter
       - name: Enable Windows build
