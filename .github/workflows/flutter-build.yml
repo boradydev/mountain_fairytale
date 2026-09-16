@@ -35,7 +35,7 @@ jobs:
 
       # 5. Собираем релизную версию для Windows
       - name: Build Windows App
-        run: flutter build windows --release --no-sound-null-safety
+        run: flutter build windows --release
 
       # 6. Упаковываем готовую папку с приложением в один ZIP-архив
       # (Flutter собирает .exe + сопутствующие .dll файлы, их нужно переносить вместе)
