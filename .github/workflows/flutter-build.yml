@@ -23,6 +23,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          cache: true
 
       # 3. Включаем поддержку Windows-сборок во Flutter
       - name: Enable Windows build
@@ -34,7 +35,7 @@ jobs:
 
       # 5. Собираем релизную версию для Windows
       - name: Build Windows App
-        run: flutter build windows --release
+        run: flutter build windows --release --no-sound-null-safety
 
       # 6. Упаковываем готовую папку с приложением в один ZIP-архив
       # (Flutter собирает .exe + сопутствующие .dll файлы, их нужно переносить вместе)
