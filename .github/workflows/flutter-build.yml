@@ -3,7 +3,11 @@ name: Flutter Windows Build
 on:
   push:
     branches:
-      - main # Запуск сборки при каждом пуше в main
+      - deploy # Сборка и создание релиза сработают, когда код попадет в main
+  pull_request:
+    branches:
+      - deploy # Сборка запустится для проверки, когда вы ОТКРОЕТЕ Pull Request в ветку main
+
 
 jobs:
   build:
