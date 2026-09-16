@@ -1,0 +1,50 @@
+name: Flutter Windows Build
+
+on:
+  push:
+    branches:
+      - main # Запуск сборки при каждом пуше в main
+
+jobs:
+  build:
+    runs-on: windows-latest # Запускаем на чистой Windows-машине от GitHub
+
+    steps:
+      # 1. Скачиваем код репозитория
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Устанавливаем Flutter
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      # 3. Включаем поддержку Windows-сборок во Flutter
+      - name: Enable Windows build
+        run: flutter config --enable-windows-desktop
+
+      # 4. Получаем зависимости проекта
+      - name: Install dependencies
+        run: flutter pub get
+
+      # 5. Собираем релизную версию для Windows
+      - name: Build Windows App
+        run: flutter build windows --release
+
+      # 6. Упаковываем готовую папку с приложением в один ZIP-архив
+      # (Flutter собирает .exe + сопутствующие .dll файлы, их нужно переносить вместе)
+      - name: Archive production artifacts
+        run: Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath build\windows\app-windows-release.zip
+
+      # 7. Публикуем архив в GitHub Releases
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v0.1.${{ github.run_number }}
+          name: Release v0.1.${{ github.run_number }}
+          draft: false
+          prerelease: false
+          files: build/windows/app-windows-release.zip # Загружаем готовый ZIP-архив
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
