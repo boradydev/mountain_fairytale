@@ -5,7 +5,9 @@ import 'package:mountain_fairytale/infra/repos/delivery_route/models/delivery_ro
 import 'package:mountain_fairytale/l10n/app_localizations.dart';
 import 'package:mountain_fairytale/presentation/providers/delivery_days_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/route_constructor_provider.dart';
+import 'package:mountain_fairytale/presentation/screens/delivery_days_screen/select_delivery_type_dialog.dart';
 import 'package:mountain_fairytale/presentation/screens/delivery_days_screen/select_route_dialog.dart';
+import 'package:mountain_fairytale/presentation/screens/pickup_constructor_screen/pickup_constructor_screen.dart';
 import 'package:mountain_fairytale/presentation/screens/route_constructor_screen/route_constructor_screen.dart';
 import 'package:mountain_fairytale/presentation/widgets/add_action_card.dart';
 import 'package:mountain_fairytale/presentation/widgets/card_widget.dart';
@@ -50,13 +52,33 @@ class DeliveryDaysListView extends StatelessWidget {
             label: l10n.deliveryCardAddDelivery,
             icon: Icons.add_circle_outline,
             onTap: () async {
-              // Ждем результат закрытия экрана конструктора
-              final isSaved = await Navigator.of(context).push<bool>(
-                MaterialPageRoute(
-                    builder: (context) => const RouteConstructorScreen()),
+              final type = await showDialog<DeliveryType>(
+                context: context,
+                builder: (_) => const SelectDeliveryTypeDialog(),
               );
 
-              // Если маршрут успешно сохранился, обновляем список на дашборде
+              if (!context.mounted || type == null) {
+                return;
+              }
+
+              bool? isSaved;
+
+              switch (type) {
+                case DeliveryType.delivery:
+                  isSaved = await Navigator.of(context).push<bool>(
+                    MaterialPageRoute(
+                      builder: (_) => const RouteConstructorScreen(),
+                    ),
+                  );
+
+                case DeliveryType.pickup:
+                  isSaved = await Navigator.of(context).push<bool>(
+                    MaterialPageRoute(
+                      builder: (_) => const PickupConstructorScreen(),
+                    ),
+                  );
+              }
+
               if (isSaved == true && context.mounted) {
                 context.read<DeliveryDaysProvider>().refreshDeliveryDays();
               }
