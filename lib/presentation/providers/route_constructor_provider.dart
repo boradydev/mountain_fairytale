@@ -1,54 +1,38 @@
-import 'package:flutter/material.dart';
-import 'package:mountain_fairytale/infra/app_notify.dart';
 import 'package:mountain_fairytale/infra/repos/cars/models/car_model.dart';
-import 'package:mountain_fairytale/infra/repos/clients/models/client_model.dart';
 import 'package:mountain_fairytale/infra/repos/delivery_route/models/delivery_route_sheet_model.dart';
-import 'package:mountain_fairytale/infra/repos/delivery_route/models/delivery_task_item_model.dart';
-import 'package:mountain_fairytale/infra/repos/delivery_route/models/route_point_model.dart';
 import 'package:mountain_fairytale/infra/repos/drivers/models/driver_model.dart';
 import 'package:mountain_fairytale/infra/repos/payment_methods/models/payment_method_model.dart';
 import 'package:mountain_fairytale/infra/repos/products/models/product_model.dart';
 import 'package:mountain_fairytale/presentation/providers/abcs/repos/car_contracts.dart';
-import 'package:mountain_fairytale/presentation/providers/abcs/repos/client_contracts.dart';
 import 'package:mountain_fairytale/presentation/providers/abcs/repos/delivery_route.dart';
 import 'package:mountain_fairytale/presentation/providers/abcs/repos/driver_contracts.dart';
-import 'package:mountain_fairytale/presentation/providers/abcs/repos/payment_method_abcs.dart';
-import 'package:mountain_fairytale/presentation/providers/abcs/repos/product_contracts.dart';
 import 'package:mountain_fairytale/presentation/providers/abcs/services.dart';
-import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
+import 'package:mountain_fairytale/presentation/providers/order_points_provider.dart';
 
-class RouteConstructorProvider extends ChangeNotifier {
+class RouteConstructorProvider extends OrderPointsProvider {
+  // 1. Объявляем ТОЛЬКО свои собственные репозитории, которых нет в родителе
   final CarRepository _carRepo;
   final DriverRepository _driverRepo;
-  final ProductRepository _productRepo;
   final DeliveryRouteRepository _routeRepo;
-  final PaymentMethodRepository _paymentMethodRepo;
-  final ClientRepository _clientRepo;
   final RoutePrintService _printService;
 
+  // 2. Инициализируем всё в одно действие
   RouteConstructorProvider({
-    required CarRepository carRepo,
-    required DriverRepository driverRepo,
-    required ProductRepository productRepo,
-    required DeliveryRouteRepository routeRepo,
-    required PaymentMethodRepository paymentMethodRepo,
-    required ClientRepository clientRepo,
-    required RoutePrintService printService,
-  })
-      : _carRepo = carRepo,
-        _driverRepo = driverRepo,
-        _productRepo = productRepo,
-        _routeRepo = routeRepo,
-        _paymentMethodRepo = paymentMethodRepo,
-        _clientRepo = clientRepo,
-        _printService = printService;
+    // Свои поля инициализируем через this._
+    required this._carRepo,
+    required this._driverRepo,
+    required this._routeRepo,
+    required this._printService,
+    // Поля родителя передаем напрямую через super.
+    required super.productRepo,
+    required super.paymentMethodRepo,
+    required super.clientRepo,
+  });
+
 
   List<Car> cars = [];
   List<Driver> drivers = [];
-  List<Product> products = [];
-  List<PaymentMethod> paymentMethods = [];
 
-  bool isLoadingDirectories = false;
   bool isReadOnly = false;
 
   DateTime selectedDate = DateTime.now();
@@ -57,12 +41,10 @@ class RouteConstructorProvider extends ChangeNotifier {
   Car? selectedCar;
   double startMileage = 0.0;
   double? endMileage;
-  List<RoutePoint> points = [];
 
   String? newlyCreatedPaymentMethodName;
   int? currentRouteId;
 
-  double get grandTotal => points.fold(0.0, (sum, p) => sum + p.totalAmount);
 
   void resetForm() {
     currentRouteId = null;
@@ -84,13 +66,14 @@ class RouteConstructorProvider extends ChangeNotifier {
     try {
       cars = await _carRepo.getAvailableCars();
       drivers = await _driverRepo.getAvailableDrivers();
-      products = await _productRepo.getAvailableProducts();
-      paymentMethods =
-      await _paymentMethodRepo.getAllPaymentMethods();
-    } catch (_) {}
 
-    isLoadingDirectories = false;
-    notifyListeners();
+      products = await productRepo.getAvailableProducts();
+      paymentMethods =
+      await paymentMethodRepo.getAllPaymentMethods();
+    } finally {
+      isLoadingDirectories = false;
+      notifyListeners();
+    }
   }
 
   void selectDriver(Driver? driver) {
@@ -108,139 +91,6 @@ class RouteConstructorProvider extends ChangeNotifier {
     selectedDate = date;
     notifyListeners();
   }
-
-  void addClientPoint(Client client) {
-    if (points.any((p) => p.clientId == client.id)) return;
-
-    points.add(
-      RoutePoint(
-        clientId: client.id,
-        clientName: client.name,
-        city: 'г. Ставрополь',
-        address: client.address,
-        phone: client.phone,
-        paymentMethod: client.defaultPaymentMethod,
-        salesRepresentative: client.salesRepresentativeName ??
-            'Нет представителя',
-        items: [],
-      ),
-    );
-    notifyListeners();
-  }
-
-  void removePoint(int index) {
-    points.removeAt(index);
-    notifyListeners();
-  }
-
-  void reorderPoints(int oldIndex, int newIndex) {
-    if (oldIndex < newIndex) {
-      newIndex -= 1;
-    }
-    final RoutePoint item = points.removeAt(oldIndex);
-    points.insert(newIndex, item);
-    notifyListeners();
-  }
-
-  void addTaskToPoint(int pointIndex, Product product, int quantity) {
-    final currentPoint = points[pointIndex];
-    final updatedItems = List<DeliveryTaskItem>.from(currentPoint.items);
-
-    final existingIndex = updatedItems.indexWhere((i) =>
-    i.productId == product.id);
-    if (existingIndex != -1) {
-      final oldItem = updatedItems[existingIndex];
-      updatedItems[existingIndex] = DeliveryTaskItem(
-        productId: product.id,
-        productName: product.name,
-        quantity: oldItem.quantity + quantity,
-        price: product.basePrice,
-      );
-    } else {
-      updatedItems.add(
-        DeliveryTaskItem(
-          productId: product.id,
-          productName: product.name,
-          quantity: quantity,
-          price: product.basePrice,
-        ),
-      );
-    }
-
-    points[pointIndex] = RoutePoint(
-      clientId: currentPoint.clientId,
-      clientName: currentPoint.clientName,
-      city: currentPoint.city,
-      address: currentPoint.address,
-      phone: currentPoint.phone,
-      paymentMethod: currentPoint.paymentMethod,
-      salesRepresentative: currentPoint.salesRepresentative,
-      items: updatedItems,
-    );
-    notifyListeners();
-  }
-
-  void removeTaskFromPoint(int pointIndex, int taskIndex) {
-    points[pointIndex].items.removeAt(taskIndex);
-    notifyListeners();
-  }
-
-  // Добавили BuildContext и ClientsProvider в параметры метода
-  void updatePointMeta(int pointIndex,
-      BuildContext context,
-      ClientsProvider clientsProvider, {
-        String? paymentMethod,
-        String? salesRep,
-      }) async {
-    final p = points[pointIndex];
-
-    final updatedPoint = RoutePoint(
-      clientId: p.clientId,
-      clientName: p.clientName,
-      city: p.city,
-      address: p.address,
-      phone: p.phone,
-      paymentMethod: paymentMethod ?? p.paymentMethod,
-      salesRepresentative: salesRep ?? p.salesRepresentative,
-      items: p.items,
-    );
-
-    points[pointIndex] = updatedPoint;
-    notifyListeners();
-
-    if (paymentMethod != null) {
-      try {
-        // 1. Обновляем в DataSource кэше через репозиторий
-        final updatedClientModel = await _clientRepo.updateClient(
-          p.clientId,
-          UpdateClientRequest(defaultPaymentMethod: paymentMethod),
-        );
-
-        // 2. Синхронизируем стейт провайдера клиентов
-        clientsProvider.syncUpdatedClient(updatedClientModel);
-
-        // Показываем красивое уведомление об успешном сохранении
-        if (context.mounted) {
-          AppNotify.show(
-            context,
-            'Форма оплаты «$paymentMethod» сохранена как основная для клиента ${p
-                .clientName}',
-          );
-        }
-      } catch (e) {
-        // Заменяем print на уведомление об ошибке
-        if (context.mounted) {
-          AppNotify.show(
-            context,
-            'Не удалось обновить основную оплату клиента: $e',
-            isError: true,
-          );
-        }
-      }
-    }
-  }
-
-
 
   Future<bool> saveRoute() async {
     final sheet = currentRouteSheet;
@@ -401,8 +251,8 @@ class RouteConstructorProvider extends ChangeNotifier {
     try {
       cars = await _carRepo.getAvailableCars();
       drivers = await _driverRepo.getAvailableDrivers();
-      products = await _productRepo.getAvailableProducts();
-      paymentMethods = await _paymentMethodRepo.getAllPaymentMethods();
+      products = await productRepo.getAvailableProducts();
+      paymentMethods = await paymentMethodRepo.getAllPaymentMethods();
 
       // Запрашиваем конкретный маршрутный лист по ID
       final sheet = await _routeRepo.getRouteSheetById(routeId);
@@ -497,11 +347,11 @@ class RouteConstructorProvider extends ChangeNotifier {
 
     try {
       final request = CreatePaymentMethodRequest(name: normalizedName);
-      final created = await _paymentMethodRepo.createPaymentMethod(request);
+      final created = await paymentMethodRepo.createPaymentMethod(request);
 
       paymentMethods.insert(0, created);
       newlyCreatedPaymentMethodName =
-          created.name; // <-- ЗАПОМИНАЕМ для фокуса дропдауна
+          created.name;
       notifyListeners();
       return created;
     } catch (_) {
@@ -515,7 +365,7 @@ class RouteConstructorProvider extends ChangeNotifier {
 
     try {
       final request = UpdatePaymentMethodRequest(name: normalizedName);
-      final updated = await _paymentMethodRepo.updatePaymentMethod(id, request);
+      final updated = await paymentMethodRepo.updatePaymentMethod(id, request);
 
       paymentMethods =
           paymentMethods.map((p) => p.id == id ? updated : p).toList();
@@ -537,7 +387,7 @@ class RouteConstructorProvider extends ChangeNotifier {
 
   Future<bool> deletePaymentMethod(int id, String fallbackName) async {
     try {
-      await _paymentMethodRepo.deletePaymentMethod(id);
+      await paymentMethodRepo.deletePaymentMethod(id);
       paymentMethods = paymentMethods.where((p) => p.id != id).toList();
       notifyListeners();
       return true;
@@ -551,8 +401,7 @@ class RouteConstructorProvider extends ChangeNotifier {
       final cleanName = name.trim().toLowerCase();
       if (cleanName.isEmpty) return null;
 
-      // В демо-датасорсе нет встроенного checkDuplicate для оплат, сделаем локальную проверку по кэшу
-      final list = await _paymentMethodRepo.getAllPaymentMethods();
+      final list = await paymentMethodRepo.getAllPaymentMethods();
       final duplicate = list.firstWhere(
             (p) => p.name.trim().toLowerCase() == cleanName,
       );
@@ -578,7 +427,7 @@ class RouteConstructorProvider extends ChangeNotifier {
         basePrice: basePrice,
       );
 
-      final created = await _productRepo.createProduct(request);
+      final created = await productRepo.createProduct(request);
 
       products.insert(0, created);
 
@@ -606,7 +455,7 @@ class RouteConstructorProvider extends ChangeNotifier {
         basePrice: basePrice,
       );
 
-      final updated = await _productRepo.updateProduct(id, request);
+      final updated = await productRepo.updateProduct(id, request);
 
       products = products
           .map((product) => product.id == id ? updated : product)
@@ -622,7 +471,7 @@ class RouteConstructorProvider extends ChangeNotifier {
 
   Future<bool> deleteProduct(int id) async {
     try {
-      await _productRepo.deleteProduct(id);
+      await productRepo.deleteProduct(id);
 
       products = products
           .where((product) => product.id != id)
@@ -644,7 +493,7 @@ class RouteConstructorProvider extends ChangeNotifier {
         return null;
       }
 
-      final list = await _productRepo.getAvailableProducts();
+      final list = await productRepo.getAvailableProducts();
 
       return list.firstWhere(
             (product) =>

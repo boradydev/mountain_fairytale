@@ -29,6 +29,7 @@ import 'package:mountain_fairytale/l10n/app_localizations.dart';
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/delivery_days_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/locale_provider.dart';
+import 'package:mountain_fairytale/presentation/providers/pickup_constructor_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/route_constructor_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/sales_representative_commission_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/theme_provider.dart';
@@ -149,6 +150,15 @@ Future<void> main() async {
           create: (_) =>
               SalesRepresentativeCommissionProvider(
                 salesRepCommissionRepository,
+              ),
+        ),
+        ChangeNotifierProvider(
+          create: (context) =>
+              PickupConstructorProvider(
+                pickupRepo: pickupRepository,
+                productRepo: productRepository,
+                paymentMethodRepo: paymentMethodRepository,
+                clientRepo: clientRepository,
               ),
         ),
       ],
