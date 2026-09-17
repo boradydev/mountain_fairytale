@@ -16,6 +16,8 @@ import 'package:mountain_fairytale/infra/repos/drivers/repo.dart';
 import 'package:mountain_fairytale/infra/repos/drivers/sources/demo_data.dart';
 import 'package:mountain_fairytale/infra/repos/payment_methods/repo.dart';
 import 'package:mountain_fairytale/infra/repos/payment_methods/sources/demo_data.dart';
+import 'package:mountain_fairytale/infra/repos/pickup/repo.dart';
+import 'package:mountain_fairytale/infra/repos/pickup/sources/demo_data.dart';
 import 'package:mountain_fairytale/infra/repos/products/repo.dart';
 import 'package:mountain_fairytale/infra/repos/products/sources/demo_data.dart';
 import 'package:mountain_fairytale/infra/repos/sales_representative_commissions/repo.dart';
@@ -80,6 +82,7 @@ Future<void> main() async {
   final paymentMethodDataSource = DemoPaymentMethodDataSource();
   final salesRepCommissionDataSource =
   DemoSalesRepresentativeCommissionDataSource();
+  final pickupDataSource = DemoPickupDataSource();
 
   // ===========================================================================
   // 2. ИНИЦИАЛИЗАЦИЯ РЕПОЗИТОРИЕВ
@@ -99,7 +102,9 @@ Future<void> main() async {
   final salesRepCommissionRepository =
   SalesRepresentativeCommissionRepositoryImpl(
     salesRepCommissionDataSource,);
-
+  final pickupRepository = PickupRepositoryImpl(
+    pickupDataSource,
+  );
 
   // ===========================================================================
   // 3. ИНИЦИАЛИЗАЦИЯ СЕРВИСОВ
