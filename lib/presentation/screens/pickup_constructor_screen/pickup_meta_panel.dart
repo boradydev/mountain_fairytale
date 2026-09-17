@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
+import 'package:mountain_fairytale/core/utils/datetime_extensions.dart';
+import 'package:mountain_fairytale/infra/app_notify.dart';
 import 'package:mountain_fairytale/presentation/providers/pickup_constructor_provider.dart';
+import 'package:mountain_fairytale/presentation/screens/common/clients_selection_panel.dart';
+import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
 import 'package:provider/provider.dart';
 
 class PickupMetaPanel extends StatefulWidget {
-  const PickupMetaPanel({super.key});
+  final GlobalKey<FormState> formKey;
+
+  const PickupMetaPanel({super.key, required this.formKey});
 
   @override
   State<PickupMetaPanel> createState() => _PickupMetaPanelState();
@@ -22,20 +27,8 @@ class _PickupMetaPanelState extends State<PickupMetaPanel> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<PickupConstructorProvider>();
-    final clientsProvider = context.watch<ClientsProvider>();
     final colorScheme = Theme.of(context).colorScheme;
 
-    final searchQuery = _clientSearchController.text.trim().toLowerCase();
-
-    final filteredClients = clientsProvider.clients.where((client) {
-      if (searchQuery.isEmpty) {
-        return true;
-      }
-
-      return client.name.toLowerCase().contains(searchQuery) ||
-          client.address.toLowerCase().contains(searchQuery) ||
-          client.phone.toLowerCase().contains(searchQuery);
-    }).toList();
 
     return Container(
       width: 360,
@@ -46,114 +39,66 @@ class _PickupMetaPanelState extends State<PickupMetaPanel> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(Icons.storefront_outlined, color: colorScheme.primary),
-              const SizedBox(width: 8),
-              Text('Самовывоз', style: Theme.of(context).textTheme.titleMedium),
-            ],
+          const Text(
+            '1. Данные самовывоза',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
-
-          const SizedBox(height: 24),
-
-          const Text('Дата', style: TextStyle(fontWeight: FontWeight.w600)),
-          const SizedBox(height: 8),
-
-          InkWell(
-            onTap: provider.isReadOnly
-                ? null
-                : () async {
-                    final selected = await showDatePicker(
-                      context: context,
-                      initialDate: provider.selectedDate,
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime(2100),
-                    );
-
-                    if (selected != null) {
-                      provider.setDate(selected);
-                    }
-                  },
-            borderRadius: BorderRadius.circular(12),
-            child: InputDecorator(
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.calendar_today_outlined),
-              ),
-              child: Text(_formatDate(provider.selectedDate)),
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          const Text('Клиенты', style: TextStyle(fontWeight: FontWeight.w600)),
-          const SizedBox(height: 8),
-
-          TextField(
-            controller: _clientSearchController,
-            enabled: !provider.isReadOnly,
-            onChanged: (_) {
-              setState(() {});
+          const SizedBox(height: 12),
+          TextButton.icon(
+            icon: const Icon(Icons.calendar_today),
+            label: Text('Дата: ${provider.selectedDate.toFormattedString()}'),
+            onPressed: () async {
+              final picked = await showDatePicker(
+                context: context,
+                initialDate: provider.selectedDate,
+                firstDate: DateTime.now().subtract(const Duration(days: 30)),
+                lastDate: DateTime.now().add(const Duration(days: 30)),
+              );
+              if (picked != null) provider.setDate(picked);
             },
-            decoration: const InputDecoration(
-              hintText: 'Поиск клиента...',
-              prefixIcon: Icon(Icons.search),
-              border: OutlineInputBorder(),
-              isDense: true,
-            ),
           ),
-
+          const SizedBox(height: 12),
+          const Divider(height: 32),
           const SizedBox(height: 8),
 
           Expanded(
-            child: ListView.builder(
-              itemCount: filteredClients.length,
-              itemBuilder: (context, index) {
-                final client = filteredClients[index];
+            child: ClientSelectionPanel(),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: AppPrimaryButton(
+              text: provider.isReadOnly
+                  ? 'Самовывоз заблокирован'
+                  : 'Сохранить самовывоз',
+              // Если режим "Только для чтения", передаем null в onPressed, что автоматически делает кнопку неактивной
+              onPressed: provider.isReadOnly
+                  ? null
+                  : () async {
+                if (widget.formKey.currentState!.validate()) {
+                  final success = await provider.savePickup();
 
-                final alreadyAdded = provider.points.any(
-                  (point) => point.clientId == client.id,
-                );
+                  if (!context.mounted) return;
 
-                return ListTile(
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                  enabled: !provider.isReadOnly && !alreadyAdded,
-                  leading: Icon(
-                    alreadyAdded
-                        ? Icons.check_circle_outline
-                        : Icons.person_add_alt_1_outlined,
-                    color: alreadyAdded
-                        ? colorScheme.outline
-                        : colorScheme.primary,
-                  ),
-                  title: Text(
-                    client.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  subtitle: Text(
-                    client.address,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  onTap: alreadyAdded
-                      ? null
-                      : () {
-                          provider.addClientPoint(client);
-                        },
-                );
+                  if (success) {
+                    AppNotify.show(
+                      context,
+                      'Самовывоз успешно обновлен',
+                    );
+                    Navigator.pop(context, true);
+                  } else {
+                    AppNotify.show(
+                      context,
+                      'Ошибка при сохранении самовывоза',
+                      isError: true,
+                    );
+                  }
+                }
               },
             ),
           ),
         ],
       ),
     );
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}.'
-        '${date.month.toString().padLeft(2, '0')}.'
-        '${date.year}';
   }
 }

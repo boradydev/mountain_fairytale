@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/infra/app_notify.dart';
 import 'package:mountain_fairytale/presentation/providers/pickup_constructor_provider.dart';
+import 'package:mountain_fairytale/presentation/screens/pickup_constructor_screen/pickup_meta_panel.dart';
 import 'package:mountain_fairytale/presentation/screens/route_constructor_screen/route_points_list.dart';
+import 'package:mountain_fairytale/presentation/screens/route_constructor_screen/route_sheet_preview_dialog.dart';
 import 'package:provider/provider.dart';
+
 
 class PickupConstructorScreen extends StatefulWidget {
   final int? existingPickupId;
@@ -15,18 +18,22 @@ class PickupConstructorScreen extends StatefulWidget {
 }
 
 class _PickupConstructorScreenState extends State<PickupConstructorScreen> {
+  final _formKey = GlobalKey<FormState>();
+
   @override
   void initState() {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = context.read<PickupConstructorProvider>();
+      final pickupProvider = context.read<PickupConstructorProvider>();
 
       if (widget.existingPickupId != null) {
-        provider.loadExistingPickupById(widget.existingPickupId!);
+        // Режим редактирования существующего маршрута
+        pickupProvider.loadExistingPickupById(widget.existingPickupId!);
       } else {
-        provider.resetForm();
-        provider.loadDirectories();
+        // Режим создания нового маршрута
+        pickupProvider.resetForm();
+        pickupProvider.loadDirectories();
       }
     });
   }
@@ -38,31 +45,56 @@ class _PickupConstructorScreenState extends State<PickupConstructorScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.existingPickupId != null ? 'Просмотр самовывоза' : 'Самовывоз',
+          widget.existingPickupId != null
+              ? 'Просмотр самовывоза'
+              : 'Самовывоз',
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.save_outlined),
-            tooltip: 'Сохранить',
-            onPressed: provider.isReadOnly
-                ? null
-                : () async {
-                    final success = await provider.savePickup();
+            icon: const Icon(Icons.print),
+            tooltip: 'Печать самовывоза',
+            onPressed: () {
+              if (provider.points.isEmpty) {
+                AppNotify.show(
+                  context,
+                  'Добавьте хотя бы один самовывоз перед печатью',
+                  isError: true,
+                );
+                return;
+              }
 
-                    if (!context.mounted) {
-                      return;
-                    }
+              final hasProducts = provider.points.any(
+                    (point) => point.items.isNotEmpty,
+              );
 
-                    if (success) {
-                      Navigator.of(context).pop(true);
-                    } else {
-                      AppNotify.show(
-                        context,
-                        'Не удалось сохранить самовывоз',
-                        isError: true,
-                      );
-                    }
-                  },
+              if (!hasProducts) {
+                AppNotify.show(
+                  context,
+                  'Добавьте продукцию хотя бы в один самовывоз перед печатью',
+                  isError: true,
+                );
+                return;
+              }
+
+              // final sheet = provider.currentPickupSheet;
+
+              // if (sheet == null) {
+              //   AppNotify.show(
+              //     context,
+              //     'Не удалось подготовить самовывоз к печати',
+              //     isError: true,
+              //   );
+              //   return;
+              // }
+
+              // showDialog(
+              //   context: context,
+              //   builder: (_) =>
+              //       RouteSheetPreviewDialog(
+              //         sheet: sheet,
+              //       ),
+              // );
+            },
           ),
           Padding(
             padding: const EdgeInsets.only(right: 16),
@@ -81,95 +113,20 @@ class _PickupConstructorScreenState extends State<PickupConstructorScreen> {
       ),
       body: provider.isLoadingDirectories
           ? const Center(child: CircularProgressIndicator())
-          : Row(
-              children: [
-                const _PickupMetaPanel(),
-                Expanded(child: RoutePointsList(
-                  provider: context.watch<PickupConstructorProvider>(),
-                )),
-              ],
+          : Form(
+        key: _formKey,
+        child: Row(
+          children: [
+            PickupMetaPanel(formKey: _formKey,),
+            Expanded(
+              child: RoutePointsList(
+                provider: provider,
+              ),
             ),
-    );
-  }
-}
-
-class _PickupMetaPanel extends StatelessWidget {
-  const _PickupMetaPanel();
-
-  @override
-  Widget build(BuildContext context) {
-    final provider = context.watch<PickupConstructorProvider>();
-
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return SizedBox(
-      width: 300,
-      child: Card(
-        margin: const EdgeInsets.fromLTRB(16, 16, 8, 16),
-        elevation: 0,
-        color: colorScheme.surfaceContainerLow,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: colorScheme.outlineVariant),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.storefront_outlined),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Самовывоз',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              const Text('Дата', style: TextStyle(fontWeight: FontWeight.w600)),
-              const SizedBox(height: 8),
-              InkWell(
-                onTap: provider.isReadOnly
-                    ? null
-                    : () async {
-                        final selected = await showDatePicker(
-                          context: context,
-                          initialDate: provider.selectedDate,
-                          firstDate: DateTime(2020),
-                          lastDate: DateTime(2100),
-                        );
-
-                        if (selected != null) {
-                          provider.setDate(selected);
-                        }
-                      },
-                borderRadius: BorderRadius.circular(12),
-                child: InputDecorator(
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.calendar_today_outlined),
-                  ),
-                  child: Text(_formatDate(provider.selectedDate)),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Text('Клиентов: ${provider.points.length}'),
-              const SizedBox(height: 8),
-              Text(
-                'Позиций: ${provider.points.fold<int>(0, (sum, point) => sum + point.items.length)}',
-              ),
-            ],
-          ),
+          ],
         ),
       ),
     );
   }
-
-  String _formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}.'
-        '${date.month.toString().padLeft(2, '0')}.'
-        '${date.year}';
-  }
 }
+
