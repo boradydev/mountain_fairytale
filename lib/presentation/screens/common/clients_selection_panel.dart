@@ -5,9 +5,7 @@ import 'package:mountain_fairytale/presentation/screens/delivery_days_screen/add
 import 'package:provider/provider.dart';
 
 class ClientSelectionPanel extends StatefulWidget {
-  final GlobalKey<FormState> formKey;
-
-  const ClientSelectionPanel({super.key, required this.formKey});
+  const ClientSelectionPanel({super.key});
 
   @override
   State<ClientSelectionPanel> createState() => _ClientSelectionPanelState();

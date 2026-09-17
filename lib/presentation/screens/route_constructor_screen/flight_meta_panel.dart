@@ -245,7 +245,7 @@ class _FlightMetaPanelState extends State<FlightMetaPanel> {
           const SizedBox(height: 8),
 
           Expanded(
-            child: ClientSelectionPanel(formKey: widget.formKey),
+            child: ClientSelectionPanel(),
           ),
           const SizedBox(height: 16),
           SizedBox(
