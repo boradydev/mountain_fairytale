@@ -131,7 +131,9 @@ class _RouteConstructorScreenState extends State<RouteConstructorScreen> {
         child: Row(
           children: [
             FlightMetaPanel(formKey: _formKey),
-            const Expanded(child: RoutePointsList()),
+            Expanded(child: RoutePointsList(
+              provider: context.watch<RouteConstructorProvider>(),
+            )),
           ],
         ),
       ),

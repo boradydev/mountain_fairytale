@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/infra/app_notify.dart';
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
-import 'package:mountain_fairytale/presentation/providers/route_constructor_provider.dart';
+import 'package:mountain_fairytale/presentation/providers/order_points_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/route_constructor_screen/payment_method_dialog.dart';
 import 'package:mountain_fairytale/presentation/screens/route_constructor_screen/task_dialogs.dart';
 import 'package:provider/provider.dart';
 
 class RoutePointsList extends StatefulWidget {
-  const RoutePointsList({super.key});
+  final OrderPointsProvider provider;
+
+  const RoutePointsList({
+    super.key,
+    required this.provider,
+  });
 
   @override
   State<RoutePointsList> createState() => _RoutePointsListState();
@@ -27,7 +32,7 @@ class _RoutePointsListState extends State<RoutePointsList> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<RouteConstructorProvider>();
+    final provider = widget.provider;
     final colorScheme = Theme.of(context).colorScheme;
     final clientsProvider = context.read<ClientsProvider>();
 

@@ -1,8 +1,6 @@
 import 'package:mountain_fairytale/infra/repos/cars/models/car_model.dart';
 import 'package:mountain_fairytale/infra/repos/delivery_route/models/delivery_route_sheet_model.dart';
 import 'package:mountain_fairytale/infra/repos/drivers/models/driver_model.dart';
-import 'package:mountain_fairytale/infra/repos/payment_methods/models/payment_method_model.dart';
-import 'package:mountain_fairytale/infra/repos/products/models/product_model.dart';
 import 'package:mountain_fairytale/presentation/providers/abcs/repos/car_contracts.dart';
 import 'package:mountain_fairytale/presentation/providers/abcs/repos/delivery_route.dart';
 import 'package:mountain_fairytale/presentation/providers/abcs/repos/driver_contracts.dart';
@@ -42,7 +40,6 @@ class RouteConstructorProvider extends OrderPointsProvider {
   double startMileage = 0.0;
   double? endMileage;
 
-  String? newlyCreatedPaymentMethodName;
   int? currentRouteId;
 
 
@@ -182,7 +179,6 @@ class RouteConstructorProvider extends OrderPointsProvider {
     }
   }
 
-
   Future<Car?> addCar({required String model, required String number}) async {
     final normalizedModel = model.trim();
     final normalizedNumber = number.trim();
@@ -244,7 +240,6 @@ class RouteConstructorProvider extends OrderPointsProvider {
     }
   }
 
-
   Future<void> loadExistingRouteById(int routeId) async {
     isLoadingDirectories = true;
     notifyListeners();
@@ -289,8 +284,6 @@ class RouteConstructorProvider extends OrderPointsProvider {
     }
   }
 
-
-  /// Возвращает список всех маршрутных листов за указанную дату
   Future<List<DeliveryRouteSheet>> getRouteSheetsByDate(DateTime date) async {
     try {
       final allSheets = await _routeRepo.getRouteSheets();
@@ -337,170 +330,4 @@ class RouteConstructorProvider extends OrderPointsProvider {
     }
   }
 
-  // =========================================================================
-  // МЕТОДЫ УПРАВЛЕНИЯ СПРАВОЧНИКОМ ФОРМ ОПЛАТЫ
-  // =========================================================================
-
-  Future<PaymentMethod?> addPaymentMethod(String name) async {
-    final normalizedName = name.trim();
-    if (normalizedName.isEmpty) return null;
-
-    try {
-      final request = CreatePaymentMethodRequest(name: normalizedName);
-      final created = await paymentMethodRepo.createPaymentMethod(request);
-
-      paymentMethods.insert(0, created);
-      newlyCreatedPaymentMethodName =
-          created.name;
-      notifyListeners();
-      return created;
-    } catch (_) {
-      return null;
-    }
-  }
-
-  Future<bool> updatePaymentMethod(int id, String name) async {
-    final normalizedName = name.trim();
-    if (normalizedName.isEmpty) return false;
-
-    try {
-      final request = UpdatePaymentMethodRequest(name: normalizedName);
-      final updated = await paymentMethodRepo.updatePaymentMethod(id, request);
-
-      paymentMethods =
-          paymentMethods.map((p) => p.id == id ? updated : p).toList();
-
-      // Обновляем форму оплаты во всех точках текущего маршрута, если она там использовалась
-      for (int i = 0; i < points.length; i++) {
-        if (points[i].paymentMethod ==
-            points[i].paymentMethod) { // Сверяем по строке (или логике UI)
-          // Дополнительное обновление метаданных при необходимости
-        }
-      }
-
-      notifyListeners();
-      return true;
-    } catch (_) {
-      return false;
-    }
-  }
-
-  Future<bool> deletePaymentMethod(int id, String fallbackName) async {
-    try {
-      await paymentMethodRepo.deletePaymentMethod(id);
-      paymentMethods = paymentMethods.where((p) => p.id != id).toList();
-      notifyListeners();
-      return true;
-    } catch (_) {
-      return false;
-    }
-  }
-
-  Future<PaymentMethod?> checkPaymentMethodDuplicate(String name) async {
-    try {
-      final cleanName = name.trim().toLowerCase();
-      if (cleanName.isEmpty) return null;
-
-      final list = await paymentMethodRepo.getAllPaymentMethods();
-      final duplicate = list.firstWhere(
-            (p) => p.name.trim().toLowerCase() == cleanName,
-      );
-      return duplicate;
-    } catch (_) {
-      return null;
-    }
-  }
-
-  Future<Product?> addProduct({
-    required String name,
-    required double basePrice,
-  }) async {
-    final normalizedName = name.trim();
-
-    if (normalizedName.isEmpty || basePrice < 0) {
-      return null;
-    }
-
-    try {
-      final request = CreateProductRequest(
-        name: normalizedName,
-        basePrice: basePrice,
-      );
-
-      final created = await productRepo.createProduct(request);
-
-      products.insert(0, created);
-
-      notifyListeners();
-
-      return created;
-    } catch (_) {
-      return null;
-    }
-  }
-
-  Future<bool> updateProduct(int id, {
-    required String name,
-    required double basePrice,
-  }) async {
-    final normalizedName = name.trim();
-
-    if (normalizedName.isEmpty || basePrice < 0) {
-      return false;
-    }
-
-    try {
-      final request = UpdateProductRequest(
-        name: normalizedName,
-        basePrice: basePrice,
-      );
-
-      final updated = await productRepo.updateProduct(id, request);
-
-      products = products
-          .map((product) => product.id == id ? updated : product)
-          .toList();
-
-      notifyListeners();
-
-      return true;
-    } catch (_) {
-      return false;
-    }
-  }
-
-  Future<bool> deleteProduct(int id) async {
-    try {
-      await productRepo.deleteProduct(id);
-
-      products = products
-          .where((product) => product.id != id)
-          .toList();
-
-      notifyListeners();
-
-      return true;
-    } catch (_) {
-      return false;
-    }
-  }
-
-  Future<Product?> checkProductDuplicate(String name) async {
-    try {
-      final cleanName = name.trim().toLowerCase();
-
-      if (cleanName.isEmpty) {
-        return null;
-      }
-
-      final list = await productRepo.getAvailableProducts();
-
-      return list.firstWhere(
-            (product) =>
-        product.name.trim().toLowerCase() == cleanName,
-      );
-    } catch (_) {
-      return null;
-    }
-  }
 }

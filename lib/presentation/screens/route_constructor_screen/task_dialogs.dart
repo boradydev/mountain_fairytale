@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/infra/repos/products/models/product_model.dart';
-import 'package:mountain_fairytale/presentation/providers/route_constructor_provider.dart';
+import 'package:mountain_fairytale/presentation/providers/order_points_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/route_constructor_screen/product_dialog.dart';
 
 class TaskDialogs {
   static Future<void> showAddTask(BuildContext context,
-      RouteConstructorProvider provider,
+      OrderPointsProvider provider,
       int pointIndex,) async {
     Product? selectedProduct;
     int quantity = 1;
