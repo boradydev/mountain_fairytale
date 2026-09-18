@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
-import 'package:mountain_fairytale/presentation/providers/route_constructor_provider.dart';
+import 'package:mountain_fairytale/presentation/providers/order_points_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/delivery_days_screen/add_client_dialog.dart';
 import 'package:provider/provider.dart';
 
 class ClientSelectionPanel extends StatefulWidget {
-  const ClientSelectionPanel({super.key});
+  final OrderPointsProvider provider;
+
+  const ClientSelectionPanel({super.key, required this.provider});
 
   @override
   State<ClientSelectionPanel> createState() => _ClientSelectionPanelState();
@@ -29,7 +31,7 @@ class _ClientSelectionPanelState extends State<ClientSelectionPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<RouteConstructorProvider>();
+    final provider = widget.provider;
     final clientProvider = context.watch<ClientsProvider>();
     final colorScheme = Theme.of(context).colorScheme;
     final searchQuery = _clientSearchController.text.trim().toLowerCase();

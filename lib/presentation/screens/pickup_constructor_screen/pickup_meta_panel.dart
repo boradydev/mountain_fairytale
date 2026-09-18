@@ -62,7 +62,7 @@ class _PickupMetaPanelState extends State<PickupMetaPanel> {
           const SizedBox(height: 8),
 
           Expanded(
-            child: ClientSelectionPanel(),
+            child: ClientSelectionPanel(provider: provider),
           ),
           const SizedBox(height: 16),
           SizedBox(

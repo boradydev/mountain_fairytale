@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:mountain_fairytale/infra/app_notify.dart';
 import 'package:mountain_fairytale/presentation/providers/pickup_constructor_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/pickup_constructor_screen/pickup_meta_panel.dart';
 import 'package:mountain_fairytale/presentation/screens/route_constructor_screen/route_points_list.dart';
-import 'package:mountain_fairytale/presentation/screens/route_constructor_screen/route_sheet_preview_dialog.dart';
 import 'package:provider/provider.dart';
 
 
@@ -50,52 +48,6 @@ class _PickupConstructorScreenState extends State<PickupConstructorScreen> {
               : 'Самовывоз',
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.print),
-            tooltip: 'Печать самовывоза',
-            onPressed: () {
-              if (provider.points.isEmpty) {
-                AppNotify.show(
-                  context,
-                  'Добавьте хотя бы один самовывоз перед печатью',
-                  isError: true,
-                );
-                return;
-              }
-
-              final hasProducts = provider.points.any(
-                    (point) => point.items.isNotEmpty,
-              );
-
-              if (!hasProducts) {
-                AppNotify.show(
-                  context,
-                  'Добавьте продукцию хотя бы в один самовывоз перед печатью',
-                  isError: true,
-                );
-                return;
-              }
-
-              // final sheet = provider.currentPickupSheet;
-
-              // if (sheet == null) {
-              //   AppNotify.show(
-              //     context,
-              //     'Не удалось подготовить самовывоз к печати',
-              //     isError: true,
-              //   );
-              //   return;
-              // }
-
-              // showDialog(
-              //   context: context,
-              //   builder: (_) =>
-              //       RouteSheetPreviewDialog(
-              //         sheet: sheet,
-              //       ),
-              // );
-            },
-          ),
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: Center(
