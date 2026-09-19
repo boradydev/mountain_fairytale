@@ -41,9 +41,23 @@ class _RouteConstructorScreenState extends State<RouteConstructorScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.existingRouteId != null
-            ? 'Просмотр маршрутного листа'
-            : 'Конструктор маршрутного листа'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(widget.existingRouteId != null
+                ? 'Просмотр маршрутного листа'
+                : 'Конструктор маршрутного листа'),
+            if (provider.isOldDocument)
+              Text(
+                'Маршрут недельной давности и более',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Theme.of(context).colorScheme.error,
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
+          ],
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.print),
@@ -168,12 +182,8 @@ class _RouteConstructorScreenState extends State<RouteConstructorScreen> {
               const SizedBox(width: 16),
               // Кнопка Сохранить
               AppPrimaryButton(
-                text: provider.isReadOnly
-                    ? 'Маршрут заблокирован'
-                    : 'Сохранить маршрут',
-                onPressed: provider.isReadOnly
-                    ? null
-                    : () async {
+                text: 'Сохранить маршрут',
+                onPressed: () async {
                   if (_formKey.currentState!.validate()) {
                     final success = await provider.saveRoute();
                     if (!context.mounted) return;

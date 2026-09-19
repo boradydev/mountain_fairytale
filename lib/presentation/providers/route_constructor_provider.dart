@@ -31,7 +31,7 @@ class RouteConstructorProvider extends OrderPointsProvider {
   List<Car> cars = [];
   List<Driver> drivers = [];
 
-  bool isReadOnly = false;
+  bool isOldDocument = false;
 
   DateTime selectedDate = DateTime.now();
   String driverName = '';
@@ -52,7 +52,7 @@ class RouteConstructorProvider extends OrderPointsProvider {
     startMileage = 0.0;
     endMileage = null;
     points = [];
-    isReadOnly = false;
+    isOldDocument = false;
     notifyListeners();
   }
 
@@ -257,11 +257,9 @@ class RouteConstructorProvider extends OrderPointsProvider {
       endMileage = sheet.endMileage;
       points = List.from(sheet.points);
 
-      // Только сегодняшние маршруты можно редактировать (как и было в вашей логике)
       final now = DateTime.now();
-      isReadOnly = !(sheet.date.year == now.year &&
-          sheet.date.month == now.month &&
-          sheet.date.day == now.day);
+      final difference = now.difference(sheet.date).inDays;
+      isOldDocument = difference >= 7;
 
       selectedDriver = drivers.firstWhere(
             (d) => d.name == sheet.driverName,
