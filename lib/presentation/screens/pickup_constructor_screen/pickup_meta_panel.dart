@@ -28,9 +28,7 @@ class _PickupMetaPanelState extends State<PickupMetaPanel> {
 
 
     return Container(
-      decoration: BoxDecoration(
-        border: Border(right: BorderSide(color: colorScheme.outlineVariant)),
-      ),
+      width: double.infinity,
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
