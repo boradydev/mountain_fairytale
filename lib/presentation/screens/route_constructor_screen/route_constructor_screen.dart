@@ -23,11 +23,26 @@ class _RouteConstructorScreenState extends State<RouteConstructorScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // 1. Проверяем mounted самого State перед использованием context
+      if (!mounted) return;
+
       final routeProvider = context.read<RouteConstructorProvider>();
 
       if (widget.existingRouteId != null) {
-        routeProvider.loadExistingRouteById(widget.existingRouteId!);
+        await routeProvider.loadExistingRouteById(widget.existingRouteId!);
+
+        // 2. ВАЖНО: Снова проверяем именно 'mounted' (свойство State),
+        // так как далее мы используем 'context' текущего State-класса.
+        if (!mounted) return;
+
+        if (routeProvider.isOldDocument) {
+          AppNotify.show(
+            context,
+            'Маршрут недельной давности и более',
+            isWarning: true,
+          );
+        }
       } else {
         routeProvider.resetForm();
         routeProvider.loadDirectories();
@@ -41,23 +56,9 @@ class _RouteConstructorScreenState extends State<RouteConstructorScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(widget.existingRouteId != null
-                ? 'Просмотр маршрутного листа'
-                : 'Конструктор маршрутного листа'),
-            if (provider.isOldDocument)
-              Text(
-                'Маршрут недельной давности и более',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Theme.of(context).colorScheme.error,
-                  fontWeight: FontWeight.normal,
-                ),
-              ),
-          ],
-        ),
+        title: Text(widget.existingRouteId != null
+            ? 'Просмотр маршрутного листа'
+            : 'Конструктор маршрутного листа'),
         actions: [
           IconButton(
             icon: const Icon(Icons.print),
