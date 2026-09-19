@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/infra/app_notify.dart';
 import 'package:mountain_fairytale/presentation/providers/pickup_constructor_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/common/clients_selection_panel.dart';
+import 'package:mountain_fairytale/presentation/screens/pickup_constructor_screen/pickup_meta_panel.dart';
 import 'package:mountain_fairytale/presentation/screens/route_constructor_screen/route_points_list.dart';
 import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
 import 'package:provider/provider.dart';
@@ -54,8 +56,8 @@ class _PickupConstructorScreenState extends State<PickupConstructorScreen> {
             padding: const EdgeInsets.only(right: 16),
             child: Center(
               child: Text(
-                'Итого: '
-                '${provider.grandTotal.toStringAsFixed(2)} ₽',
+                'Итого по самовывозу: ${provider.grandTotal.toStringAsFixed(
+                    2)} ₽',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -70,59 +72,85 @@ class _PickupConstructorScreenState extends State<PickupConstructorScreen> {
           : Form(
         key: _formKey,
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Заменяем PickupMetaPanel на ClientSelectionPanel с фиксированной шириной и стилизацией
-            Container(
+            // ЛЕВАЯ ЧАСТЬ: Фиксированная колонка панелей
+            SizedBox(
               width: 360,
-              decoration: BoxDecoration(
-                border: Border(right: BorderSide(color: colorScheme.outlineVariant)),
+              child: Column(
+                children: [
+                  PickupMetaPanel(formKey: _formKey),
+                  const Divider(height: 1),
+                  Expanded(
+                    child: ClientSelectionPanel(
+                      provider: context.watch<PickupConstructorProvider>(),
+                    ),
+                  ),
+                ],
               ),
-              padding: const EdgeInsets.all(16),
-              child: ClientSelectionPanel(provider: provider),
             ),
+            const VerticalDivider(width: 1),
+
+            // ПРАВАЯ ЧАСТЬ: Полностью отведена под список точек маршрута
             Expanded(
               child: RoutePointsList(
-                provider: provider,
+                provider: context.watch<PickupConstructorProvider>(),
               ),
             ),
           ],
         ),
       ),
-      // Добавлена кнопка сохранения для экрана самовывоза
-      bottomNavigationBar: Padding(
+      // Кнопки управления теперь железно зафиксированы внизу экрана
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(color: colorScheme
+                .outlineVariant, width: 1),
+          ),
+        ),
         padding: const EdgeInsets.all(16.0),
-        child: SizedBox(
-          width: double.infinity,
-          child: AppPrimaryButton(
-            text: provider.isReadOnly
-                ? 'Самовывоз заблокирован'
-                : 'Сохранить самовывоз',
-            // Если режим "Только для чтения", передаем null в onPressed, что автоматически делает кнопку неактивной
-            onPressed: provider.isReadOnly
-                ? null
-                : () async {
-              if (_formKey.currentState!.validate()) {
-                final success = await provider.savePickup();
+        child: Padding(
+          // Левый отступ 361px (360px ширина панели + 1px разделитель)
+          // идеально центрирует кнопки относительно правого списка точек
+          padding: const EdgeInsets.only(left: 361.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              // Кнопка Отмена
+              AppSecondaryButton(
+                text: 'Отмена',
+                onPressed: () {
+                  Navigator.pop(context, false);
+                },
+              ),
+              const SizedBox(width: 16),
+              // Кнопка Сохранить
+              AppPrimaryButton(
+                text: provider.isReadOnly
+                    ? 'Самовывоз заблокирован'
+                    : 'Сохранить самовывоз',
+                onPressed: provider.isReadOnly
+                    ? null
+                    : () async {
+                  if (_formKey.currentState!.validate()) {
+                    final success = await provider.savePickup();
 
-                if (!context.mounted) return;
+                    if (!context.mounted) return;
 
-                if (success) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Самовывоз успешно обновлен'),
-                    ),
-                  );
-                  Navigator.pop(context, true);
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Ошибка при сохранении самовывоза'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              }
-            },
+                    if (success) {
+                      AppNotify.show(
+                          context, 'Самовывоз успешно обновлен');
+                      Navigator.pop(context, true);
+                    } else {
+                      AppNotify.show(
+                          context, 'Ошибка при сохранении самовывоза',
+                          isError: true);
+                    }
+                  }
+                },
+              ),
+            ],
           ),
         ),
       ),

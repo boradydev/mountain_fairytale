@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/core/utils/datetime_extensions.dart';
-import 'package:mountain_fairytale/infra/app_notify.dart';
 import 'package:mountain_fairytale/presentation/providers/pickup_constructor_provider.dart';
-import 'package:mountain_fairytale/presentation/screens/common/clients_selection_panel.dart';
-import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
 import 'package:provider/provider.dart';
 
 class PickupMetaPanel extends StatefulWidget {
@@ -31,7 +28,6 @@ class _PickupMetaPanelState extends State<PickupMetaPanel> {
 
 
     return Container(
-      width: 360,
       decoration: BoxDecoration(
         border: Border(right: BorderSide(color: colorScheme.outlineVariant)),
       ),
@@ -58,45 +54,6 @@ class _PickupMetaPanelState extends State<PickupMetaPanel> {
             },
           ),
           const SizedBox(height: 12),
-          const Divider(height: 32),
-          const SizedBox(height: 8),
-
-          Expanded(
-            child: ClientSelectionPanel(provider: provider),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: AppPrimaryButton(
-              text: provider.isReadOnly
-                  ? 'Самовывоз заблокирован'
-                  : 'Сохранить самовывоз',
-              // Если режим "Только для чтения", передаем null в onPressed, что автоматически делает кнопку неактивной
-              onPressed: provider.isReadOnly
-                  ? null
-                  : () async {
-                if (widget.formKey.currentState!.validate()) {
-                  final success = await provider.savePickup();
-
-                  if (!context.mounted) return;
-
-                  if (success) {
-                    AppNotify.show(
-                      context,
-                      'Самовывоз успешно обновлен',
-                    );
-                    Navigator.pop(context, true);
-                  } else {
-                    AppNotify.show(
-                      context,
-                      'Ошибка при сохранении самовывоза',
-                      isError: true,
-                    );
-                  }
-                }
-              },
-            ),
-          ),
         ],
       ),
     );
