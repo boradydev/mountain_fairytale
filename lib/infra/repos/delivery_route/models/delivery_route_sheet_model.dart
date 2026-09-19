@@ -3,8 +3,14 @@ import 'package:mountain_fairytale/infra/repos/delivery_route/models/route_point
 
 part 'delivery_route_sheet_model.g.dart';
 
+abstract class RouteDocument {
+  int? get id;
+  DateTime get date;
+  String get title;
+}
+
 @JsonSerializable(explicitToJson: true)
-class DeliveryRouteSheet {
+class DeliveryRouteSheet implements RouteDocument {
   final int? id;
   final DateTime date;
   final String driverName;
@@ -14,6 +20,9 @@ class DeliveryRouteSheet {
   final double? endMileage;
 
   final List<RoutePoint> points;
+
+  @override
+  String get title => 'Доставка: $driverName';
 
   double get grandTotal =>
       points.fold(0.0, (sum, point) => sum + point.totalAmount);

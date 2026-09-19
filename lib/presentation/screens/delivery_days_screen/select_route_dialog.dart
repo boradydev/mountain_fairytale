@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/infra/repos/delivery_route/models/delivery_route_sheet_model.dart';
+import 'package:mountain_fairytale/infra/repos/pickup/models/pickup_sheet_model.dart';
 import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
 
 class SelectRouteDialog extends StatelessWidget {
-  final List<DeliveryRouteSheet> sheets;
+  final List<RouteDocument> documents;
 
-  const SelectRouteDialog({super.key, required this.sheets});
+  const SelectRouteDialog({super.key, required this.documents});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +22,7 @@ class SelectRouteDialog extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Выберите маршрутный лист',
+              'Выберите документ',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -30,7 +31,7 @@ class SelectRouteDialog extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              'На этот день запланировано несколько выездов:',
+              'На этот день запланировано несколько документов:',
               style: TextStyle(
                 fontSize: 14,
                 color: colorScheme.onSurfaceVariant,
@@ -42,9 +43,9 @@ class SelectRouteDialog extends StatelessWidget {
               // Ограничиваем высоту списка
               child: ListView.builder(
                 shrinkWrap: true,
-                itemCount: sheets.length,
+                itemCount: documents.length,
                 itemBuilder: (context, index) {
-                  final sheet = sheets[index];
+                  final document = documents[index];
                   return Card(
                     elevation: 0,
                     margin: const EdgeInsets.symmetric(vertical: 6),
@@ -58,15 +59,17 @@ class SelectRouteDialog extends StatelessWidget {
                     clipBehavior: Clip.antiAlias,
                     child: InkWell(
                       onTap: () {
-                        // Возвращаем выбранный маршрутный лист обратно в вызывающий метод
-                        Navigator.of(context).pop(sheet);
+                        // Возвращаем выбранный документ обратно в вызывающий метод
+                        Navigator.of(context).pop(document);
                       },
                       child: Padding(
                         padding: const EdgeInsets.all(14),
                         child: Row(
                           children: [
                             Icon(
-                              Icons.local_shipping_outlined,
+                              document is PickupSheet
+                                  ? Icons.inventory_2_outlined
+                                  : Icons.local_shipping_outlined,
                               color: colorScheme.primary,
                               size: 28,
                             ),
@@ -76,7 +79,7 @@ class SelectRouteDialog extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    sheet.driverName,
+                                    document.title,
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 15,
@@ -86,7 +89,9 @@ class SelectRouteDialog extends StatelessWidget {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    sheet.carModelAndNumber,
+                                    document is DeliveryRouteSheet
+                                        ? document.carModelAndNumber
+                                        : 'Общий сбор',
                                     style: TextStyle(
                                       color: colorScheme.onSurfaceVariant,
                                       fontSize: 13,

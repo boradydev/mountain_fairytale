@@ -111,4 +111,16 @@ class PickupConstructorProvider extends OrderPointsProvider {
       return false;
     }
   }
+
+  Future<List<PickupSheet>> getPickupSheetsByDate(DateTime date) async {
+    try {
+      final allSheets = await _pickupRepo.getPickupSheets();
+      return allSheets.where((sheet) =>
+          sheet.date.year == date.year &&
+          sheet.date.month == date.month &&
+          sheet.date.day == date.day).toList();
+    } catch (_) {
+      return const [];
+    }
+  }
 }
