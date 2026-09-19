@@ -65,6 +65,12 @@ class DemoDeliveryDataSource implements DeliveryDataSource {
       await _getDemoJson();
     }
 
+    // ГАРАНТИЯ: Добавляем пустой список продуктов, если он не передан, 
+    // чтобы избежать ошибки 'Null' is not a subtype of 'List<dynamic>'
+    if (dayJson['products'] == null) {
+      dayJson['products'] = [];
+    }
+
     final String targetDateStr = dayJson['date'] ?? '';
     if (targetDateStr.isEmpty) return;
 
