@@ -1,25 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/core/utils/datetime_extensions.dart';
-import 'package:mountain_fairytale/infra/app_notify.dart';
 import 'package:mountain_fairytale/infra/repos/cars/models/car_model.dart';
 import 'package:mountain_fairytale/infra/repos/drivers/models/driver_model.dart';
 import 'package:mountain_fairytale/presentation/providers/route_constructor_provider.dart';
-import 'package:mountain_fairytale/presentation/screens/common/clients_selection_panel.dart';
 import 'package:mountain_fairytale/presentation/screens/route_constructor_screen/car_dialog.dart';
 import 'package:mountain_fairytale/presentation/screens/route_constructor_screen/driver_dialog.dart';
-import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
 import 'package:provider/provider.dart';
 
-class FlightMetaPanel extends StatefulWidget {
+class RouteMetaPanel extends StatefulWidget {
   final GlobalKey<FormState> formKey;
 
-  const FlightMetaPanel({super.key, required this.formKey});
+  const RouteMetaPanel({super.key, required this.formKey});
 
   @override
-  State<FlightMetaPanel> createState() => _FlightMetaPanelState();
+  State<RouteMetaPanel> createState() => _RouteMetaPanelState();
 }
 
-class _FlightMetaPanelState extends State<FlightMetaPanel> {
+class _RouteMetaPanelState extends State<RouteMetaPanel> {
   // Метод открытия диалога для водителя
   Future<void> _showDriverDialog(BuildContext context, {Driver? driver}) async {
     await showDialog<void>(
@@ -43,7 +40,6 @@ class _FlightMetaPanelState extends State<FlightMetaPanel> {
 
 
     return Container(
-      width: 360,
       decoration: BoxDecoration(
         border: Border(right: BorderSide(color: colorScheme.outlineVariant)),
       ),
@@ -71,7 +67,6 @@ class _FlightMetaPanelState extends State<FlightMetaPanel> {
           ),
           const SizedBox(height: 12),
 
-          // Водитель
           // Водитель
           Row(
             children: [
@@ -241,14 +236,6 @@ class _FlightMetaPanelState extends State<FlightMetaPanel> {
               return null;
             },
           ),
-          const Divider(height: 32),
-          const SizedBox(height: 8),
-
-          Expanded(
-            child: ClientSelectionPanel(provider: provider),
-          ),
-          const SizedBox(height: 16),
-          // Удалена кнопка сохранения из FlightMetaPanel
         ],
       ),
     );
