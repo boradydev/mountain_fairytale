@@ -180,7 +180,7 @@ class _RouteConstructorScreenState extends State<RouteConstructorScreen> {
 
                     if (success) {
                       AppNotify.show(
-                          context, 'Маршрутный лист успешно обновлен');
+                          context, 'Маршрутный лист сохранен');
                       Navigator.pop(context, true);
                     } else {
                       AppNotify.show(context, 'Ошибка при сохранении маршрута',

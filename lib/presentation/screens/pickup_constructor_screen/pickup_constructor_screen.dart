@@ -140,7 +140,7 @@ class _PickupConstructorScreenState extends State<PickupConstructorScreen> {
 
                     if (success) {
                       AppNotify.show(
-                          context, 'Самовывоз успешно обновлен');
+                          context, 'Самовывоз успешно сохранен');
                       Navigator.pop(context, true);
                     } else {
                       AppNotify.show(
