@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/infra/repos/delivery_route/models/route_point_model.dart';
 import 'package:mountain_fairytale/infra/repos/payment_methods/models/payment_method_model.dart';
 import 'package:mountain_fairytale/infra/repos/pickup/models/pickup_sheet_model.dart';
@@ -20,13 +19,13 @@ class PickupConstructorProvider extends OrderPointsProvider {
 
   int? currentPickupId;
 
-  bool isReadOnly = false;
+  bool isOldDocument = false;
 
   void resetForm() {
     currentPickupId = null;
     selectedDate = DateTime.now();
     points = [];
-    isReadOnly = false;
+    isOldDocument = false;
 
     notifyListeners();
   }
@@ -60,7 +59,9 @@ class PickupConstructorProvider extends OrderPointsProvider {
       selectedDate = sheet.date;
       points = List<RoutePoint>.from(sheet.points);
 
-      isReadOnly = !DateUtils.isSameDay(sheet.date, DateTime.now());
+      final now = DateTime.now();
+      final difference = now.difference(sheet.date).inDays;
+      isOldDocument = difference >= 7;
     } finally {
       isLoadingDirectories = false;
       notifyListeners();

@@ -25,12 +25,24 @@ class _PickupConstructorScreenState extends State<PickupConstructorScreen> {
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+
       final pickupProvider = context.read<PickupConstructorProvider>();
 
       if (widget.existingPickupId != null) {
         // Режим редактирования существующего маршрута
-        pickupProvider.loadExistingPickupById(widget.existingPickupId!);
+        await pickupProvider.loadExistingPickupById(widget.existingPickupId!);
+
+        if (!mounted) return;
+
+        if (pickupProvider.isOldDocument) {
+          AppNotify.show(
+            context,
+            'Самовывоз недельной давности и более',
+            isWarning: true,
+          );
+        }
       } else {
         // Режим создания нового маршрута
         pickupProvider.resetForm();
@@ -127,12 +139,8 @@ class _PickupConstructorScreenState extends State<PickupConstructorScreen> {
               const SizedBox(width: 16),
               // Кнопка Сохранить
               AppPrimaryButton(
-                text: provider.isReadOnly
-                    ? 'Самовывоз заблокирован'
-                    : 'Сохранить самовывоз',
-                onPressed: provider.isReadOnly
-                    ? null
-                    : () async {
+                text: 'Сохранить самовывоз',
+                onPressed: () async {
                   if (_formKey.currentState!.validate()) {
                     final success = await provider.savePickup();
 
