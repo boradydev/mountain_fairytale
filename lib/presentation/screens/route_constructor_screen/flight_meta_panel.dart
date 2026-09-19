@@ -248,38 +248,7 @@ class _FlightMetaPanelState extends State<FlightMetaPanel> {
             child: ClientSelectionPanel(provider: provider),
           ),
           const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: AppPrimaryButton(
-              text: provider.isReadOnly
-                  ? 'Маршрут заблокирован'
-                  : 'Сохранить маршрут',
-              // Если режим "Только для чтения", передаем null в onPressed, что автоматически делает кнопку неактивной
-              onPressed: provider.isReadOnly
-                  ? null
-                  : () async {
-                if (widget.formKey.currentState!.validate()) {
-                  final success = await provider.saveRoute();
-
-                  if (!context.mounted) return;
-
-                  if (success) {
-                    AppNotify.show(
-                      context,
-                      'Маршрутный лист успешно обновлен',
-                    );
-                    Navigator.pop(context, true);
-                  } else {
-                    AppNotify.show(
-                      context,
-                      'Ошибка при сохранении маршрута',
-                      isError: true,
-                    );
-                  }
-                }
-              },
-            ),
-          ),
+          // Удалена кнопка сохранения из FlightMetaPanel
         ],
       ),
     );

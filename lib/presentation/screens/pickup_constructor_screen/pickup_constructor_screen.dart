@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/presentation/providers/pickup_constructor_provider.dart';
-import 'package:mountain_fairytale/presentation/screens/pickup_constructor_screen/pickup_meta_panel.dart';
+import 'package:mountain_fairytale/presentation/screens/common/clients_selection_panel.dart';
 import 'package:mountain_fairytale/presentation/screens/route_constructor_screen/route_points_list.dart';
+import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
 import 'package:provider/provider.dart';
 
 
@@ -39,6 +40,7 @@ class _PickupConstructorScreenState extends State<PickupConstructorScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<PickupConstructorProvider>();
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
@@ -69,7 +71,15 @@ class _PickupConstructorScreenState extends State<PickupConstructorScreen> {
         key: _formKey,
         child: Row(
           children: [
-            PickupMetaPanel(formKey: _formKey,),
+            // Заменяем PickupMetaPanel на ClientSelectionPanel с фиксированной шириной и стилизацией
+            Container(
+              width: 360,
+              decoration: BoxDecoration(
+                border: Border(right: BorderSide(color: colorScheme.outlineVariant)),
+              ),
+              padding: const EdgeInsets.all(16),
+              child: ClientSelectionPanel(provider: provider),
+            ),
             Expanded(
               child: RoutePointsList(
                 provider: provider,
@@ -78,7 +88,44 @@ class _PickupConstructorScreenState extends State<PickupConstructorScreen> {
           ],
         ),
       ),
+      // Добавлена кнопка сохранения для экрана самовывоза
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: SizedBox(
+          width: double.infinity,
+          child: AppPrimaryButton(
+            text: provider.isReadOnly
+                ? 'Самовывоз заблокирован'
+                : 'Сохранить самовывоз',
+            // Если режим "Только для чтения", передаем null в onPressed, что автоматически делает кнопку неактивной
+            onPressed: provider.isReadOnly
+                ? null
+                : () async {
+              if (_formKey.currentState!.validate()) {
+                final success = await provider.savePickup();
+
+                if (!context.mounted) return;
+
+                if (success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Самовывоз успешно обновлен'),
+                    ),
+                  );
+                  Navigator.pop(context, true);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Ошибка при сохранении самовывоза'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+          ),
+        ),
+      ),
     );
   }
 }
-

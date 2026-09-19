@@ -4,6 +4,7 @@ import 'package:mountain_fairytale/presentation/providers/route_constructor_prov
 import 'package:mountain_fairytale/presentation/screens/route_constructor_screen/flight_meta_panel.dart';
 import 'package:mountain_fairytale/presentation/screens/route_constructor_screen/route_points_list.dart';
 import 'package:mountain_fairytale/presentation/screens/route_constructor_screen/route_sheet_preview_dialog.dart';
+import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
 import 'package:provider/provider.dart';
 
 class RouteConstructorScreen extends StatefulWidget {
@@ -38,6 +39,7 @@ class _RouteConstructorScreenState extends State<RouteConstructorScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<RouteConstructorProvider>();
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
@@ -130,11 +132,47 @@ class _RouteConstructorScreenState extends State<RouteConstructorScreen> {
         key: _formKey,
         child: Row(
           children: [
-            FlightMetaPanel(formKey: _formKey),
+            FlightMetaPanel(formKey: _formKey), // Теперь FlightMetaPanel занимает фиксированную ширину
             Expanded(child: RoutePointsList(
               provider: context.watch<RouteConstructorProvider>(),
             )),
           ],
+        ),
+      ),
+      // Кнопка сохранения перемещена сюда из FlightMetaPanel
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: SizedBox(
+          width: double.infinity,
+          child: AppPrimaryButton(
+            text: provider.isReadOnly
+                ? 'Маршрут заблокирован'
+                : 'Сохранить маршрут',
+            // Если режим "Только для чтения", передаем null в onPressed, что автоматически делает кнопку неактивной
+            onPressed: provider.isReadOnly
+                ? null
+                : () async {
+              if (_formKey.currentState!.validate()) {
+                final success = await provider.saveRoute();
+
+                if (!context.mounted) return;
+
+                if (success) {
+                  AppNotify.show(
+                    context,
+                    'Маршрутный лист успешно обновлен',
+                  );
+                  Navigator.pop(context, true);
+                } else {
+                  AppNotify.show(
+                    context,
+                    'Ошибка при сохранении маршрута',
+                    isError: true,
+                  );
+                }
+              }
+            },
+          ),
         ),
       ),
     );
