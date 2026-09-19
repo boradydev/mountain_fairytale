@@ -130,7 +130,7 @@ class _Dashboard extends StatelessWidget {
     return Row(
       children: [
         SizedBox(
-          width: 300,
+          width: 500,
           child: DeliveryDaysListView(
             scrollController: scrollController,
           ),

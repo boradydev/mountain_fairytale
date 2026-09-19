@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/core/utils/datetime_extensions.dart';
 import 'package:mountain_fairytale/infra/repos/delivery_day/models/delivery_day_model.dart';
+import 'package:mountain_fairytale/infra/repos/delivery_day/models/delivery_day_product_model.dart';
 import 'package:mountain_fairytale/infra/repos/delivery_route/models/delivery_route_sheet_model.dart';
 import 'package:mountain_fairytale/infra/repos/pickup/models/pickup_sheet_model.dart';
+import 'package:mountain_fairytale/infra/repos/products/models/product_model.dart';
 import 'package:mountain_fairytale/l10n/app_localizations.dart';
+import 'package:mountain_fairytale/presentation/providers/abcs/repos/product_contracts.dart';
 import 'package:mountain_fairytale/presentation/providers/delivery_days_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/pickup_constructor_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/route_constructor_provider.dart';
@@ -119,138 +122,139 @@ class _DeliveryDayItem extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     final dateStr = day.date.toFormattedString();
-    final labelWight = 100.0;
+    final labelWight = 300.0;
 
-    return DeliveryDayCard(
-      title: day.date.isToday
-          ? l10n.deliveryCardTitleToday
-          : '${l10n.deliveryCardTitle}: $dateStr',
-      // Внутри метода onTap карточки _DeliveryDayItem:
-      onTap: () async {
-        final routeProvider = context.read<RouteConstructorProvider>();
-        final pickupProvider = context.read<PickupConstructorProvider>();
+    return FutureBuilder<List<Product>>(
+      future: context.read<ProductRepository>().getAvailableProducts(),
+      builder: (context, snapshot) {
+        final allProducts = snapshot.data ?? [];
 
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) =>
-          const Center(child: CircularProgressIndicator()),
+        // Генерируем метрики для каждого продукта из общего списка
+        final productMetrics = allProducts.map((product) {
+          final dayProduct = day.products.firstWhere(
+                (p) => p.productId == product.id,
+            orElse: () =>
+                DeliveryDayProduct(productId: product.id, quantity: 0),
+          );
+
+          return MetricRow(
+            icon: Icons.inventory_2_outlined,
+            label: product.name,
+            labelWidth: labelWight,
+            value: '${dayProduct.quantity} шт.',
+          );
+        }).toList();
+
+        return DeliveryDayCard(
+          title: day.date.isToday
+              ? l10n.deliveryCardTitleToday
+              : '${l10n.deliveryCardTitle}: $dateStr',
+          // Внутри метода onTap карточки _DeliveryDayItem:
+          onTap: () async {
+            final routeProvider = context.read<RouteConstructorProvider>();
+            final pickupProvider = context.read<PickupConstructorProvider>();
+
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (context) =>
+              const Center(child: CircularProgressIndicator()),
+            );
+
+            // Получаем списки всех маршрутов и самовывозов за выбранный день
+            final routes = await routeProvider.getRouteSheetsByDate(day.date);
+            final pickups = await pickupProvider.getPickupSheetsByDate(
+                day.date);
+            final allDocs = <RouteDocument>[...routes, ...pickups];
+
+            if (context.mounted) {
+              Navigator.of(context).pop(); // Закрываем лоадер
+            }
+
+            int? targetRouteId;
+            RouteDocument? selectedDoc;
+
+            if (allDocs.isEmpty) {
+              // Если на этот день нет документов вообще (новый день)
+              targetRouteId = null;
+            } else if (allDocs.length == 1) {
+              // Если документ один — сразу используем его
+              selectedDoc = allDocs.first;
+            } else if (allDocs.length > 1) {
+              if (!context.mounted) return;
+
+              // Открываем развилку выбора конкретного документа
+              selectedDoc = await showDialog<RouteDocument>(
+                context: context,
+                builder: (context) => SelectRouteDialog(documents: allDocs),
+              );
+
+              if (selectedDoc == null) return; // Отмена выбора
+            }
+
+            if (!context.mounted) return;
+
+            bool? isUpdated;
+
+            if (selectedDoc is DeliveryRouteSheet) {
+              // Переходим в конструктор маршрута
+              isUpdated = await Navigator.of(context).push<bool>(
+                MaterialPageRoute(
+                  builder: (context) =>
+                      RouteConstructorScreen(existingRouteId: selectedDoc?.id),
+                ),
+              );
+            } else if (selectedDoc is PickupSheet) {
+              // Переходим в конструктор самовывоза
+              isUpdated = await Navigator.of(context).push<bool>(
+                MaterialPageRoute(
+                  builder: (context) =>
+                      PickupConstructorScreen(
+                          existingPickupId: selectedDoc?.id),
+                ),
+              );
+            } else if (targetRouteId == null && allDocs.isEmpty) {
+              // Создание нового маршрута по умолчанию, если ничего не найдено
+              isUpdated = await Navigator.of(context).push<bool>(
+                MaterialPageRoute(
+                  builder: (context) => const RouteConstructorScreen(),
+                ),
+              );
+            }
+
+            if (isUpdated == true && context.mounted) {
+              context.read<DeliveryDaysProvider>().refreshDeliveryDays();
+            }
+          },
+
+          metrics: [
+            MetricRow(
+              icon: Icons.people_outline_rounded,
+              label: l10n.deliveryCardClients,
+              labelWidth: labelWight,
+              value: '${day.clientsCount} ${l10n.deliveryCardClientsMetrics}',
+            ),
+            ...productMetrics,
+            MetricRow(
+              icon: Icons.assignment_return_outlined,
+              label: l10n.deliveryCardReturns,
+              labelWidth: labelWight,
+              value: '${day.returnsCount} ${l10n.deliveryCardReturnsMetrics}',
+              // Выделяем возвраты цветом ошибки, если они есть
+              valueColor: day.returnsCount > 0 ? colorScheme.error : null,
+            ),
+            MetricRow(
+              icon: Icons.payments_outlined,
+              label: l10n.deliveryCardTotal,
+              labelWidth: labelWight,
+              value:
+              '${day.totalAmount.toStringAsFixed(2)} ${l10n
+                  .deliveryCardTotalMetrics}',
+              valueColor: colorScheme.primary,
+            ),
+          ],
         );
-
-        // Получаем списки всех маршрутов и самовывозов за выбранный день
-        final routes = await routeProvider.getRouteSheetsByDate(day.date);
-        final pickups = await pickupProvider.getPickupSheetsByDate(day.date);
-        final allDocs = <RouteDocument>[...routes, ...pickups];
-
-        if (context.mounted) {
-          Navigator.of(context).pop(); // Закрываем лоадер
-        }
-
-        int? targetRouteId;
-        RouteDocument? selectedDoc;
-
-        if (allDocs.isEmpty) {
-          // Если на этот день нет документов вообще (новый день)
-          targetRouteId = null;
-        } else if (allDocs.length == 1) {
-          // Если документ один — сразу используем его
-          selectedDoc = allDocs.first;
-        } else if (allDocs.length > 1) {
-          if (!context.mounted) return;
-
-          // Открываем развилку выбора конкретного документа
-          selectedDoc = await showDialog<RouteDocument>(
-            context: context,
-            builder: (context) => SelectRouteDialog(documents: allDocs),
-          );
-
-          if (selectedDoc == null) return; // Отмена выбора
-        }
-
-        if (!context.mounted) return;
-
-        bool? isUpdated;
-
-        if (selectedDoc is DeliveryRouteSheet) {
-          // Переходим в конструктор маршрута
-          isUpdated = await Navigator.of(context).push<bool>(
-            MaterialPageRoute(
-              builder: (context) =>
-                  RouteConstructorScreen(existingRouteId: selectedDoc?.id),
-            ),
-          );
-        } else if (selectedDoc is PickupSheet) {
-          // Переходим в конструктор самовывоза
-          isUpdated = await Navigator.of(context).push<bool>(
-            MaterialPageRoute(
-              builder: (context) =>
-                  PickupConstructorScreen(existingPickupId: selectedDoc?.id),
-            ),
-          );
-        } else if (targetRouteId == null && allDocs.isEmpty) {
-          // Создание нового маршрута по умолчанию, если ничего не найдено
-          isUpdated = await Navigator.of(context).push<bool>(
-            MaterialPageRoute(
-              builder: (context) => const RouteConstructorScreen(),
-            ),
-          );
-        }
-
-        if (isUpdated == true && context.mounted) {
-          context.read<DeliveryDaysProvider>().refreshDeliveryDays();
-        }
       },
-
-      metrics: [
-        MetricRow(
-          icon: Icons.people_outline_rounded,
-          label: l10n.deliveryCardClients,
-          labelWidth: labelWight,
-          value: '${day.clientsCount} ${l10n.deliveryCardClientsMetrics}',
-        ),
-        MetricRow(
-          icon: Icons.water_drop_outlined,
-          label: l10n.deliveryCardBottles,
-          labelWidth: labelWight,
-          value: '${day.bottlesCount} ${l10n.deliveryCardBottlesMetrics}',
-        ),
-        MetricRow(
-          icon: Icons.assignment_return_outlined,
-          label: l10n.deliveryCardReturns,
-          labelWidth: labelWight,
-          value: '${day.returnsCount} ${l10n.deliveryCardReturnsMetrics}',
-          // Выделяем возвраты цветом ошибки, если они есть
-          valueColor: day.returnsCount > 0 ? colorScheme.error : null,
-        ),
-        MetricRow(
-          icon: Icons.wine_bar_outlined,
-          label: l10n.deliveryCardGlasses,
-          labelWidth: labelWight,
-          value: '${day.glassesCount} ${l10n.deliveryCardGlassesMetrics}',
-        ),
-        MetricRow(
-          icon: Icons.kitchen_outlined,
-          label: l10n.deliveryCardWaterCooler,
-          labelWidth: labelWight,
-          value:
-              '${day.waterCoolerCount} ${l10n.deliveryCardWaterCoolerMetrics}',
-        ),
-        MetricRow(
-          icon: Icons.build_circle_outlined,
-          label: l10n.deliveryCardCoolerRepair,
-          labelWidth: labelWight,
-          value:
-              '${day.coolerRepairCount} ${l10n.deliveryCardCoolerRepairMetrics}',
-        ),
-        MetricRow(
-          icon: Icons.payments_outlined,
-          label: l10n.deliveryCardTotal,
-          labelWidth: labelWight,
-          value:
-              '${day.totalAmount.toStringAsFixed(2)} ${l10n.deliveryCardTotalMetrics}',
-          valueColor: colorScheme.primary,
-        ),
-      ],
     );
   }
 }

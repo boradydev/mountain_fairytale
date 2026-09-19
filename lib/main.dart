@@ -34,6 +34,7 @@ import 'package:mountain_fairytale/presentation/providers/route_constructor_prov
 import 'package:mountain_fairytale/presentation/providers/sales_representative_commission_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/theme_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/delivery_days_screen/dashboard.dart';
+import 'package:mountain_fairytale/presentation/providers/abcs/repos/product_contracts.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
@@ -122,6 +123,11 @@ Future<void> main() async {
         // Системные настройки (Тема и Локализация)
         ChangeNotifierProvider(create: (_) => ThemeProvider(prefs)),
         ChangeNotifierProvider(create: (_) => LocaleProvider(prefs)),
+
+        // Репозитории (доступны через context.read<T>())
+        Provider<ProductRepository>(
+          create: (_) => productRepository,
+        ),
 
         // Провайдер дашборда дней доставки
         ChangeNotifierProvider(
