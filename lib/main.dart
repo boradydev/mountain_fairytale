@@ -33,7 +33,7 @@ import 'package:mountain_fairytale/presentation/providers/pickup_constructor_pro
 import 'package:mountain_fairytale/presentation/providers/route_constructor_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/sales_representative_commission_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/theme_provider.dart';
-import 'package:mountain_fairytale/presentation/screens/delivery_days_screen/dashboard.dart';
+import 'package:mountain_fairytale/presentation/screens/delivery_days/dashboard.dart';
 import 'package:mountain_fairytale/presentation/providers/abcs/repos/product_contracts.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';

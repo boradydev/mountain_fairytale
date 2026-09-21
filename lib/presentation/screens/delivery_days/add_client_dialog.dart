@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/infra/repos/clients/models/client_model.dart';
 import 'package:mountain_fairytale/infra/repos/sales_representatives/models/sales_representative_model.dart';
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
-import 'package:mountain_fairytale/presentation/screens/delivery_days_screen/sales_rep_dialog.dart';
+import 'package:mountain_fairytale/presentation/screens/delivery_days/sales_rep_dialog.dart';
 import 'package:mountain_fairytale/presentation/widgets/base_form_dialog_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/confirm_delete_dialog.dart';
 import 'package:mountain_fairytale/presentation/widgets/duplicate_check_status_widget.dart';

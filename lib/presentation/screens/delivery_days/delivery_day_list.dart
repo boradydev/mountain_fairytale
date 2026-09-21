@@ -10,10 +10,10 @@ import 'package:mountain_fairytale/presentation/providers/abcs/repos/product_con
 import 'package:mountain_fairytale/presentation/providers/delivery_days_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/pickup_constructor_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/route_constructor_provider.dart';
-import 'package:mountain_fairytale/presentation/screens/delivery_days_screen/select_delivery_type_dialog.dart';
-import 'package:mountain_fairytale/presentation/screens/delivery_days_screen/select_route_dialog.dart';
-import 'package:mountain_fairytale/presentation/screens/pickup_constructor_screen/pickup_constructor_screen.dart';
-import 'package:mountain_fairytale/presentation/screens/route_constructor_screen/route_constructor_screen.dart';
+import 'package:mountain_fairytale/presentation/screens/delivery_days/select_delivery_type_dialog.dart';
+import 'package:mountain_fairytale/presentation/screens/delivery_days/select_route_dialog.dart';
+import 'package:mountain_fairytale/presentation/screens/orders/pickup_constructor/pickup_constructor_screen.dart';
+import 'package:mountain_fairytale/presentation/screens/orders/route_constructor/route_constructor_screen.dart';
 import 'package:mountain_fairytale/presentation/widgets/add_action_card.dart';
 import 'package:mountain_fairytale/presentation/widgets/card_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/metric_row_widget.dart';

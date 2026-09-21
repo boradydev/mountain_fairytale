@@ -3,9 +3,9 @@ import 'package:mountain_fairytale/l10n/app_localizations.dart';
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/delivery_days_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/theme_provider.dart';
-import 'package:mountain_fairytale/presentation/screens/delivery_days_screen/client_list.dart';
-import 'package:mountain_fairytale/presentation/screens/delivery_days_screen/delivery_day_list.dart';
-import 'package:mountain_fairytale/presentation/screens/sales_representative_commission_screen/sales_representative_commission_screen.dart';
+import 'package:mountain_fairytale/presentation/screens/delivery_days/client_list.dart';
+import 'package:mountain_fairytale/presentation/screens/delivery_days/delivery_day_list.dart';
+import 'package:mountain_fairytale/presentation/screens/sales_analytics/sales_analytics_screen.dart';
 import 'package:mountain_fairytale/presentation/widgets/locate_toggle_widget.dart';
 import 'package:provider/provider.dart';
 

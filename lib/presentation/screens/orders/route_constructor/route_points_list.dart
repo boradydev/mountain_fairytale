@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/infra/app_notify.dart';
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/order_points_provider.dart';
-import 'package:mountain_fairytale/presentation/screens/route_constructor_screen/payment_method_dialog.dart';
-import 'package:mountain_fairytale/presentation/screens/route_constructor_screen/task_dialogs.dart';
+import 'package:mountain_fairytale/presentation/screens/common/payment_method_dialog.dart';
+import 'package:mountain_fairytale/presentation/screens/orders/common/task_dialogs.dart';
 import 'package:provider/provider.dart';
 
 class RoutePointsList extends StatefulWidget {

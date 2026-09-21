@@ -3,8 +3,8 @@ import 'package:mountain_fairytale/core/utils/datetime_extensions.dart';
 import 'package:mountain_fairytale/infra/repos/cars/models/car_model.dart';
 import 'package:mountain_fairytale/infra/repos/drivers/models/driver_model.dart';
 import 'package:mountain_fairytale/presentation/providers/route_constructor_provider.dart';
-import 'package:mountain_fairytale/presentation/screens/route_constructor_screen/car_dialog.dart';
-import 'package:mountain_fairytale/presentation/screens/route_constructor_screen/driver_dialog.dart';
+import 'package:mountain_fairytale/presentation/screens/common/car_dialog.dart';
+import 'package:mountain_fairytale/presentation/screens/common/driver_dialog.dart';
 import 'package:provider/provider.dart';
 
 class RouteMetaPanel extends StatefulWidget {
