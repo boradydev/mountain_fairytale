@@ -137,7 +137,7 @@ class _DeliveryDayItem extends StatelessWidget {
           );
 
           return MetricRow(
-            icon: Icons.inventory_2_outlined,
+            icon: Icons.shopping_bag_outlined,
             label: product.name,
             labelWidth: labelWight,
             value: '${dayProduct.quantity} шт.',
