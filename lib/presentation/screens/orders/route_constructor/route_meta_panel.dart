@@ -37,7 +37,6 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<RouteConstructorProvider>();
-    final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
       width: double.infinity,

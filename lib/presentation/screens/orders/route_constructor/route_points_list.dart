@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mountain_fairytale/infra/app_notify.dart';
 import 'package:mountain_fairytale/infra/repos/payment_methods/models/payment_method_model.dart';
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/order_points_provider.dart';
