@@ -45,7 +45,6 @@ class DeliveryDaysListView extends StatelessWidget {
     final loaderCount = showLoader ? 1 : 0;
     final l10n = AppLocalizations.of(context)!;
 
-
     return ListView.builder(
       controller: scrollController,
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -132,7 +131,7 @@ class _DeliveryDayItem extends StatelessWidget {
         // Генерируем метрики для каждого продукта из общего списка
         final productMetrics = allProducts.map((product) {
           final dayProduct = day.products.firstWhere(
-                (p) => p.productId == product.id,
+            (p) => p.productId == product.id,
             orElse: () =>
                 DeliveryDayProduct(productId: product.id, quantity: 0),
           );
@@ -158,13 +157,14 @@ class _DeliveryDayItem extends StatelessWidget {
               context: context,
               barrierDismissible: false,
               builder: (context) =>
-              const Center(child: CircularProgressIndicator()),
+                  const Center(child: CircularProgressIndicator()),
             );
 
             // Получаем списки всех маршрутов и самовывозов за выбранный день
             final routes = await routeProvider.getRouteSheetsByDate(day.date);
             final pickups = await pickupProvider.getPickupSheetsByDate(
-                day.date);
+              day.date,
+            );
             final allDocs = <RouteDocument>[...routes, ...pickups];
 
             if (context.mounted) {
@@ -208,9 +208,9 @@ class _DeliveryDayItem extends StatelessWidget {
               // Переходим в конструктор самовывоза
               isUpdated = await Navigator.of(context).push<bool>(
                 MaterialPageRoute(
-                  builder: (context) =>
-                      PickupConstructorScreen(
-                          existingPickupId: selectedDoc?.id),
+                  builder: (context) => PickupConstructorScreen(
+                    existingPickupId: selectedDoc?.id,
+                  ),
                 ),
               );
             } else if (targetRouteId == null && allDocs.isEmpty) {
@@ -248,8 +248,7 @@ class _DeliveryDayItem extends StatelessWidget {
               label: l10n.deliveryCardTotal,
               labelWidth: labelWight,
               value:
-              '${day.totalAmount.toStringAsFixed(2)} ${l10n
-                  .deliveryCardTotalMetrics}',
+                  '${day.totalAmount.toStringAsFixed(2)} ${l10n.deliveryCardTotalMetrics}',
               valueColor: colorScheme.primary,
             ),
           ],

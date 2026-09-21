@@ -11,10 +11,8 @@ class DemoDeliveryRouteDataSource implements DeliveryRouteDataSource {
 
   DemoDeliveryRouteDataSource({
     AssetBundle? assetBundle,
-    required DemoDeliveryDataSource deliveryDayDataSource,
-  })
-      : _assetBundle = assetBundle ?? rootBundle,
-        _deliveryDayDataSource = deliveryDayDataSource;
+    required this._deliveryDayDataSource,
+  }) : _assetBundle = assetBundle ?? rootBundle;
 
   @override
   Future<List<Map<String, dynamic>>> getAllRouteSheets() async {
@@ -32,24 +30,29 @@ class DemoDeliveryRouteDataSource implements DeliveryRouteDataSource {
   Future<Map<String, dynamic>> getRouteSheetById(int id) async {
     await Future.delayed(const Duration(milliseconds: 200));
     if (_routesCache == null) await getAllRouteSheets();
-    return _routesCache!.firstWhere((e) => int.parse(e['id'].toString()) == id,
-        orElse: () => throw Exception('Route sheet not found'));
+    return _routesCache!.firstWhere(
+      (e) => int.parse(e['id'].toString()) == id,
+      orElse: () => throw Exception('Route sheet not found'),
+    );
   }
 
   @override
   Future<Map<String, dynamic>> createRouteSheet(
-      Map<String, dynamic> sheetJson) async {
+    Map<String, dynamic> sheetJson,
+  ) async {
     await Future.delayed(const Duration(milliseconds: 600));
     if (_routesCache == null) await getAllRouteSheets();
 
     final int newId = _routesCache!.isEmpty
         ? 1
         : _routesCache!
-        .map((r) => int.parse(r['id'].toString()))
-        .reduce((a, b) => a > b ? a : b) + 1;
+                  .map((r) => int.parse(r['id'].toString()))
+                  .reduce((a, b) => a > b ? a : b) +
+              1;
 
     final Map<String, dynamic> finalSheet = Map<String, dynamic>.from(
-        sheetJson);
+      sheetJson,
+    );
     finalSheet['id'] = newId;
 
     _routesCache!.insert(0, finalSheet);
@@ -59,13 +62,16 @@ class DemoDeliveryRouteDataSource implements DeliveryRouteDataSource {
   }
 
   @override
-  Future<Map<String, dynamic>> patchRouteSheet(int id,
-      Map<String, dynamic> json) async {
+  Future<Map<String, dynamic>> patchRouteSheet(
+    int id,
+    Map<String, dynamic> json,
+  ) async {
     await Future.delayed(const Duration(milliseconds: 400));
     if (_routesCache == null) await getAllRouteSheets();
 
-    final index = _routesCache!.indexWhere((e) =>
-    int.parse(e['id'].toString()) == id);
+    final index = _routesCache!.indexWhere(
+      (e) => int.parse(e['id'].toString()) == id,
+    );
     if (index == -1) throw Exception('Route sheet not found');
 
     final updated = Map<String, dynamic>.from(_routesCache![index]);
@@ -84,8 +90,9 @@ class DemoDeliveryRouteDataSource implements DeliveryRouteDataSource {
     await Future.delayed(const Duration(milliseconds: 300));
     if (_routesCache == null) await getAllRouteSheets();
 
-    final index = _routesCache!.indexWhere((e) =>
-    int.parse(e['id'].toString()) == id);
+    final index = _routesCache!.indexWhere(
+      (e) => int.parse(e['id'].toString()) == id,
+    );
     if (index != -1) {
       final targetDate = _routesCache![index]['date'];
       _routesCache!.removeAt(index);
@@ -124,10 +131,10 @@ class DemoDeliveryRouteDataSource implements DeliveryRouteDataSource {
               final String name = (item['productName'] ?? '')
                   .toString()
                   .toLowerCase();
-              final int quantity = int.tryParse(item['quantity'].toString()) ??
-                  0;
-              final double price = double.tryParse(item['price'].toString()) ??
-                  0.0;
+              final int quantity =
+                  int.tryParse(item['quantity'].toString()) ?? 0;
+              final double price =
+                  double.tryParse(item['price'].toString()) ?? 0.0;
 
               totalAmount += quantity * price;
 

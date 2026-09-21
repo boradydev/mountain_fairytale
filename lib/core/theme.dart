@@ -38,8 +38,8 @@ class AppTheme {
               : const Color(0xFF2E7D32),
           // Мягкий зеленый фон для плашки
           successContainer: isDark
-              ? const Color(0xFF1B5E20).withAlpha(
-              40) // Ненасыщенный темно-зеленый
+              ? const Color(0xFF1B5E20)
+                    .withAlpha(40) // Ненасыщенный темно-зеленый
               : const Color(0xFFE8F5E9), // Приятный светло-зеленый
         ),
       ],

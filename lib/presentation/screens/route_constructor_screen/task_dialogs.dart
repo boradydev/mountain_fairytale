@@ -4,9 +4,11 @@ import 'package:mountain_fairytale/presentation/providers/order_points_provider.
 import 'package:mountain_fairytale/presentation/screens/route_constructor_screen/product_dialog.dart';
 
 class TaskDialogs {
-  static Future<void> showAddTask(BuildContext context,
-      OrderPointsProvider provider,
-      int pointIndex,) async {
+  static Future<void> showAddTask(
+    BuildContext context,
+    OrderPointsProvider provider,
+    int pointIndex,
+  ) async {
     Product? selectedProduct;
     int quantity = 1;
 
@@ -62,30 +64,30 @@ class TaskDialogs {
                           onPressed: selectedProduct == null
                               ? null
                               : () async {
-                            final productToEdit = selectedProduct!;
+                                  final productToEdit = selectedProduct!;
 
-                            await showDialog<void>(
-                              context: context,
-                              builder: (_) => ProductDialog(
-                                product: productToEdit,
-                              ),
-                            );
+                                  await showDialog<void>(
+                                    context: context,
+                                    builder: (_) => ProductDialog(
+                                      product: productToEdit,
+                                    ),
+                                  );
 
-                            // Получаем актуальную версию
-                            // после редактирования или удаления.
-                            Product? updated;
+                                  // Получаем актуальную версию
+                                  // после редактирования или удаления.
+                                  Product? updated;
 
-                            for (final product in provider.products) {
-                              if (product.id == productToEdit.id) {
-                                updated = product;
-                                break;
-                              }
-                            }
+                                  for (final product in provider.products) {
+                                    if (product.id == productToEdit.id) {
+                                      updated = product;
+                                      break;
+                                    }
+                                  }
 
-                            setDialogState(() {
-                              selectedProduct = updated;
-                            });
-                          },
+                                  setDialogState(() {
+                                    selectedProduct = updated;
+                                  });
+                                },
                         ),
                       ],
                     ),
@@ -119,8 +121,7 @@ class TaskDialogs {
                     const SizedBox(height: 16),
 
                     Row(
-                      mainAxisAlignment:
-                      MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text('Количество:'),
 
@@ -130,10 +131,10 @@ class TaskDialogs {
                               icon: const Icon(Icons.remove),
                               onPressed: quantity > 1
                                   ? () {
-                                setDialogState(() {
-                                  quantity--;
-                                });
-                              }
+                                      setDialogState(() {
+                                        quantity--;
+                                      });
+                                    }
                                   : null,
                             ),
 
@@ -169,14 +170,14 @@ class TaskDialogs {
                   onPressed: selectedProduct == null
                       ? null
                       : () {
-                    provider.addTaskToPoint(
-                      pointIndex,
-                      selectedProduct!,
-                      quantity,
-                    );
+                          provider.addTaskToPoint(
+                            pointIndex,
+                            selectedProduct!,
+                            quantity,
+                          );
 
-                    Navigator.pop(context);
-                  },
+                          Navigator.pop(context);
+                        },
                   child: const Text('Добавить'),
                 ),
               ],

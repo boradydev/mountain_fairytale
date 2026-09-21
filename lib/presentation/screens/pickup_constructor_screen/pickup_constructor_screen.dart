@@ -7,7 +7,6 @@ import 'package:mountain_fairytale/presentation/screens/route_constructor_screen
 import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
 import 'package:provider/provider.dart';
 
-
 class PickupConstructorScreen extends StatefulWidget {
   final int? existingPickupId;
 
@@ -59,17 +58,14 @@ class _PickupConstructorScreenState extends State<PickupConstructorScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.existingPickupId != null
-              ? 'Просмотр самовывоза'
-              : 'Самовывоз',
+          widget.existingPickupId != null ? 'Просмотр самовывоза' : 'Самовывоз',
         ),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: Center(
               child: Text(
-                'Итого по самовывозу: ${provider.grandTotal.toStringAsFixed(
-                    2)} ₽',
+                'Итого по самовывозу: ${provider.grandTotal.toStringAsFixed(2)} ₽',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -82,42 +78,42 @@ class _PickupConstructorScreenState extends State<PickupConstructorScreen> {
       body: provider.isLoadingDirectories
           ? const Center(child: CircularProgressIndicator())
           : Form(
-        key: _formKey,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // ЛЕВАЯ ЧАСТЬ: Фиксированная колонка панелей
-            SizedBox(
-              width: 360,
-              child: Column(
+              key: _formKey,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  PickupMetaPanel(formKey: _formKey),
-                  const Divider(height: 1),
+                  // ЛЕВАЯ ЧАСТЬ: Фиксированная колонка панелей
+                  SizedBox(
+                    width: 360,
+                    child: Column(
+                      children: [
+                        PickupMetaPanel(formKey: _formKey),
+                        const Divider(height: 1),
+                        Expanded(
+                          child: ClientSelectionPanel(
+                            provider: context
+                                .watch<PickupConstructorProvider>(),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const VerticalDivider(width: 1),
+
+                  // ПРАВАЯ ЧАСТЬ: Полностью отведена под список точек маршрута
                   Expanded(
-                    child: ClientSelectionPanel(
+                    child: RoutePointsList(
                       provider: context.watch<PickupConstructorProvider>(),
                     ),
                   ),
                 ],
               ),
             ),
-            const VerticalDivider(width: 1),
-
-            // ПРАВАЯ ЧАСТЬ: Полностью отведена под список точек маршрута
-            Expanded(
-              child: RoutePointsList(
-                provider: context.watch<PickupConstructorProvider>(),
-              ),
-            ),
-          ],
-        ),
-      ),
       // Кнопки управления теперь железно зафиксированы внизу экрана
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           border: Border(
-            top: BorderSide(color: colorScheme
-                .outlineVariant, width: 1),
+            top: BorderSide(color: colorScheme.outlineVariant, width: 1),
           ),
         ),
         padding: const EdgeInsets.all(16.0),
@@ -147,13 +143,14 @@ class _PickupConstructorScreenState extends State<PickupConstructorScreen> {
                     if (!context.mounted) return;
 
                     if (success) {
-                      AppNotify.show(
-                          context, 'Самовывоз успешно сохранен');
+                      AppNotify.show(context, 'Самовывоз успешно сохранен');
                       Navigator.pop(context, true);
                     } else {
                       AppNotify.show(
-                          context, 'Ошибка при сохранении самовывоза',
-                          isError: true);
+                        context,
+                        'Ошибка при сохранении самовывоза',
+                        isError: true,
+                      );
                     }
                   }
                 },

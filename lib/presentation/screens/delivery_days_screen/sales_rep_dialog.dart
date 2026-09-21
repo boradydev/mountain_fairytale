@@ -229,9 +229,7 @@ class _SalesRepDialogState extends State<SalesRepDialog> {
             suffixText: '%',
           ),
           validator: (value) {
-            if (value == null || value
-                .trim()
-                .isEmpty) {
+            if (value == null || value.trim().isEmpty) {
               return 'Укажите процент';
             }
 

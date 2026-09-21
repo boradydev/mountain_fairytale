@@ -7,7 +7,8 @@ class DemoDeliveryDataSource implements DeliveryDataSource {
   final AssetBundle _assetBundle;
   List<Map<String, dynamic>>? _cache;
 
-  static const _deliveryDaysPath = 'assets/demo/delivery_days/delivery_days_card_data.json';
+  static const _deliveryDaysPath =
+      'assets/demo/delivery_days/delivery_days_card_data.json';
 
   // Конструктор принимает бандл, по умолчанию инициализируется системным rootBundle
   DemoDeliveryDataSource({AssetBundle? assetBundle})
@@ -58,14 +59,13 @@ class DemoDeliveryDataSource implements DeliveryDataSource {
     return deliveryDays.firstWhere((deliveryDay) => deliveryDay['id'] == id);
   }
 
-
   /// ДЕМО-ХАК: Умное добавление или обновление существующего дня доставки в кэше
   Future<void> updateOrCreateDeliveryDay(Map<String, dynamic> dayJson) async {
     if (_cache == null) {
       await _getDemoJson();
     }
 
-    // ГАРАНТИЯ: Добавляем пустой список продуктов, если он не передан, 
+    // ГАРАНТИЯ: Добавляем пустой список продуктов, если он не передан,
     // чтобы избежать ошибки 'Null' is not a subtype of 'List<dynamic>'
     if (dayJson['products'] == null) {
       dayJson['products'] = [];
@@ -97,8 +97,10 @@ class DemoDeliveryDataSource implements DeliveryDataSource {
       // ДЕНЬ НЕ НАЙДЕН: Создаем новую запись
       final int newId = _cache!.isEmpty
           ? 1
-          : _cache!.map((d) => int.parse(d['id'].toString())).reduce((a,
-          b) => a > b ? a : b) + 1;
+          : _cache!
+                    .map((d) => int.parse(d['id'].toString()))
+                    .reduce((a, b) => a > b ? a : b) +
+                1;
 
       final finalDay = {
         ...dayJson,
@@ -109,5 +111,4 @@ class DemoDeliveryDataSource implements DeliveryDataSource {
       _cache!.insert(0, finalDay);
     }
   }
-
 }

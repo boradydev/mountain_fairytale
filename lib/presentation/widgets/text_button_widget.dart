@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-
 /// Полноцветная кнопка для основного/предпочтительного действия.
 class AppPrimaryButton extends StatelessWidget {
   final String text;
@@ -18,27 +17,28 @@ class AppPrimaryButton extends StatelessWidget {
 
     return FilledButton(
       onPressed: onPressed,
-      style: FilledButton.styleFrom(
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.onPrimary,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-      ).copyWith(
-        // Настраиваем поведение цвета при наведении и нажатии
-        overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
-          if (states.contains(WidgetState.pressed)) {
-            // При нажатии кнопка станет еще темнее
-            return colorScheme.onPrimary.withAlpha(40);
-          }
-          if (states.contains(WidgetState.hovered)) {
-            // При наведении мыши накладываем полупрозрачный черный слой (затемняем primary-цвет)
-            return Colors.black.withAlpha(25);
-          }
-          return null; // Стандартное состояние
-        }),
-      ),
+      style:
+          FilledButton.styleFrom(
+            backgroundColor: colorScheme.primary,
+            foregroundColor: colorScheme.onPrimary,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ).copyWith(
+            // Настраиваем поведение цвета при наведении и нажатии
+            overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
+              if (states.contains(WidgetState.pressed)) {
+                // При нажатии кнопка станет еще темнее
+                return colorScheme.onPrimary.withAlpha(40);
+              }
+              if (states.contains(WidgetState.hovered)) {
+                // При наведении мыши накладываем полупрозрачный черный слой (затемняем primary-цвет)
+                return Colors.black.withAlpha(25);
+              }
+              return null; // Стандартное состояние
+            }),
+          ),
       child: Text(
         text,
         style: const TextStyle(
@@ -49,7 +49,6 @@ class AppPrimaryButton extends StatelessWidget {
     );
   }
 }
-
 
 /// Кнопка в окантовке (Outlined) для второстепенного/альтернативного действия (например, "Отмена", "Назад").
 class AppSecondaryButton extends StatelessWidget {

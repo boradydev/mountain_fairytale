@@ -51,7 +51,7 @@ class _SalesRepresentativeCommissionScreenState
             child: _Content(provider: provider),
           ),
         ],
-      )
+      ),
     );
   }
 }
@@ -76,8 +76,7 @@ class _PeriodPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final provider =
-    context.watch<SalesRepresentativeCommissionProvider>();
+    final provider = context.watch<SalesRepresentativeCommissionProvider>();
 
     final month = _months[provider.dateFrom.month - 1];
 
@@ -94,10 +93,7 @@ class _PeriodPanel extends StatelessWidget {
             Expanded(
               child: Text(
                 '$month ${provider.dateFrom.year}',
-                style: Theme
-                    .of(context)
-                    .textTheme
-                    .titleMedium,
+                style: Theme.of(context).textTheme.titleMedium,
               ),
             ),
             AppSecondaryButton(
@@ -111,15 +107,13 @@ class _PeriodPanel extends StatelessWidget {
   }
 
   Future<void> _selectMonth(BuildContext context) async {
-    final provider =
-    context.read<SalesRepresentativeCommissionProvider>();
+    final provider = context.read<SalesRepresentativeCommissionProvider>();
 
     final selected = await showDialog<DateTime>(
       context: context,
-      builder: (_) =>
-          _MonthPickerDialog(
-            initialMonth: provider.dateFrom,
-          ),
+      builder: (_) => _MonthPickerDialog(
+        initialMonth: provider.dateFrom,
+      ),
     );
 
     if (selected != null) {
@@ -134,13 +128,10 @@ class _TotalCommissionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final total = context.select(
-          (SalesRepresentativeCommissionProvider p) =>
-      p.totalCommissionAmount,
+      (SalesRepresentativeCommissionProvider p) => p.totalCommissionAmount,
     );
 
-    final colorScheme = Theme
-        .of(context)
-        .colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Card(
       child: Padding(
@@ -159,29 +150,19 @@ class _TotalCommissionCard extends StatelessWidget {
                 children: [
                   Text(
                     'Всего к выплате',
-                    style: Theme
-                        .of(context)
-                        .textTheme
-                        .titleMedium,
+                    style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'За выбранный месяц',
-                    style: Theme
-                        .of(context)
-                        .textTheme
-                        .bodyMedium,
+                    style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ],
               ),
             ),
             Text(
               '${total.toStringAsFixed(2)} ₽',
-              style: Theme
-                  .of(context)
-                  .textTheme
-                  .headlineSmall
-                  ?.copyWith(
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -459,10 +440,7 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
                   child: Center(
                     child: Text(
                       '$_year',
-                      style: Theme
-                          .of(context)
-                          .textTheme
-                          .titleLarge,
+                      style: Theme.of(context).textTheme.titleLarge,
                     ),
                   ),
                 ),
@@ -480,8 +458,7 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
             GridView.builder(
               shrinkWrap: true,
               itemCount: 12,
-              gridDelegate:
-              const SliverGridDelegateWithFixedCrossAxisCount(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 3,
                 mainAxisExtent: 44,
                 crossAxisSpacing: 8,
@@ -499,10 +476,7 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
                   },
                   style: OutlinedButton.styleFrom(
                     backgroundColor: selected
-                        ? Theme
-                        .of(context)
-                        .colorScheme
-                        .primaryContainer
+                        ? Theme.of(context).colorScheme.primaryContainer
                         : null,
                   ),
                   child: Text(_months[index]),
@@ -530,4 +504,3 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
     );
   }
 }
-

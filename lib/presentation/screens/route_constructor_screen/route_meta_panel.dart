@@ -38,7 +38,6 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
     final provider = context.watch<RouteConstructorProvider>();
     final colorScheme = Theme.of(context).colorScheme;
 
-
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -84,8 +83,10 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
               IconButton(
                 // Кнопка активна только когда водитель выбран в дропдауне
                 onPressed: provider.selectedDriver != null
-                    ? () =>
-                    _showDriverDialog(context, driver: provider.selectedDriver)
+                    ? () => _showDriverDialog(
+                        context,
+                        driver: provider.selectedDriver,
+                      )
                     : null,
                 icon: const Icon(Icons.edit_outlined),
                 tooltip: 'Редактировать выбранного водителя',
@@ -106,8 +107,7 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
               );
             }).toList(),
             onChanged: provider.selectDriver,
-            validator: (value) =>
-            value == null ? 'Выберите водителя' : null,
+            validator: (value) => value == null ? 'Выберите водителя' : null,
           ),
 
           const SizedBox(height: 12),
@@ -153,8 +153,7 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
               );
             }).toList(),
             onChanged: provider.selectCar,
-            validator: (value) =>
-            value == null ? 'Выберите автомобиль' : null,
+            validator: (value) => value == null ? 'Выберите автомобиль' : null,
           ),
           const SizedBox(height: 12),
           TextFormField(
@@ -170,9 +169,7 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
               provider.startMileage = double.tryParse(value) ?? 0.0;
             },
             validator: (value) {
-              if (value == null || value
-                  .trim()
-                  .isEmpty) {
+              if (value == null || value.trim().isEmpty) {
                 return 'Введите километраж выезда';
               }
 
@@ -205,15 +202,11 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
             onChanged: (value) {
               final text = value.trim();
 
-              provider.endMileage = text.isEmpty
-                  ? null
-                  : double.tryParse(text);
+              provider.endMileage = text.isEmpty ? null : double.tryParse(text);
             },
             validator: (value) {
               // Поле необязательное.
-              if (value == null || value
-                  .trim()
-                  .isEmpty) {
+              if (value == null || value.trim().isEmpty) {
                 return null;
               }
 

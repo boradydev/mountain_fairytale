@@ -57,7 +57,7 @@ class BaseFormDialog extends StatelessWidget {
 
                 Row(
                   children: [
-                    if (leadingAction != null) leadingAction!,
+                    ?leadingAction,
 
                     const Spacer(),
 

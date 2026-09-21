@@ -19,29 +19,20 @@ class SalesRepresentativeCommissionProvider extends ChangeNotifier {
   String _errorMessage = '';
 
   DateTime _dateFrom = DateTime(
-    DateTime
-        .now()
-        .year,
-    DateTime
-        .now()
-        .month,
+    DateTime.now().year,
+    DateTime.now().month,
     1,
   );
 
   DateTime _dateTo = DateTime(
-    DateTime
-        .now()
-        .year,
-    DateTime
-        .now()
-        .month + 1,
+    DateTime.now().year,
+    DateTime.now().month + 1,
     0,
   );
 
   SalesRepresentativeCommissionStatus get status => _status;
 
-  List<SalesRepresentativeCommission> get commissions =>
-      _commissions;
+  List<SalesRepresentativeCommission> get commissions => _commissions;
 
   double get totalCommissionAmount => _totalCommissionAmount;
 
@@ -57,8 +48,7 @@ class SalesRepresentativeCommissionProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final report =
-      await _repository.getSalesRepresentativeCommissions(
+      final report = await _repository.getSalesRepresentativeCommissions(
         dateFrom: _dateFrom,
         dateTo: _dateTo,
       );

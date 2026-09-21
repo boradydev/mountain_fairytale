@@ -46,9 +46,7 @@ class ClientsProvider extends ChangeNotifier {
     // Вспомогательная функция для расчета коэффициента просрочки (K)
     double getUrgencyCoefficient(Client client) {
       if (client.lastDeliveryDate == null) return 999.0;
-      final differenceDays = now
-          .difference(client.lastDeliveryDate!)
-          .inDays;
+      final differenceDays = now.difference(client.lastDeliveryDate!).inDays;
       return differenceDays / client.sleepingThresholdDays;
     }
 
@@ -84,8 +82,9 @@ class ClientsProvider extends ChangeNotifier {
     // РЕЖИМ 2: Обычный режим (Сортировка по ID от новых к старым)
     // ----------------------------------------------------
     final allClients = [..._clients];
-    allClients.sort((a, b) =>
-        b.id.compareTo(a.id)); // Новые (больший ID) будут сверху
+    allClients.sort(
+      (a, b) => b.id.compareTo(a.id),
+    ); // Новые (больший ID) будут сверху
     return allClients;
   }
 
@@ -118,7 +117,9 @@ class ClientsProvider extends ChangeNotifier {
 
       // Обновляем на "сервере" (в репозитории)
       final updatedClient = await _repository.updateCooldown(
-          clientId, cooldownDate);
+        clientId,
+        cooldownDate,
+      );
 
       // Обновляем локальный список в стейте провайдера
       _clients = _clients.map((client) {
@@ -142,7 +143,6 @@ class ClientsProvider extends ChangeNotifier {
       return null;
     }
   }
-
 
   Future<bool> addClient({
     required String name,
@@ -230,9 +230,7 @@ class ClientsProvider extends ChangeNotifier {
     try {
       await _repository.deleteClient(clientId);
 
-      _clients = _clients
-          .where((client) => client.id != clientId)
-          .toList();
+      _clients = _clients.where((client) => client.id != clientId).toList();
 
       _status = ClientStatus.success;
 
@@ -252,15 +250,19 @@ class ClientsProvider extends ChangeNotifier {
     } catch (_) {}
   }
 
-  Future<SalesRepresentative?> addSalesRepresentative(String name,
-      String phone, double commissionPercent,) async {
+  Future<SalesRepresentative?> addSalesRepresentative(
+    String name,
+    String phone,
+    double commissionPercent,
+  ) async {
     final normalizedName = name.trim();
     if (normalizedName.isEmpty) return null;
     try {
       final request = CreateSalesRepresentativeRequest(
         name: normalizedName,
         phone: phone.trim(),
-        commissionPercent: commissionPercent,);
+        commissionPercent: commissionPercent,
+      );
       final created = await _salesRepRepo.createSalesRepresentative(request);
       _salesRepresentatives = [created, ..._salesRepresentatives];
       notifyListeners();
@@ -270,19 +272,27 @@ class ClientsProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> updateSalesRepresentative(int id, String name,
-      String phone, double commissionPercent) async {
+  Future<bool> updateSalesRepresentative(
+    int id,
+    String name,
+    String phone,
+    double commissionPercent,
+  ) async {
     final normalizedName = name.trim();
     if (normalizedName.isEmpty) return false;
     try {
       final request = UpdateSalesRepresentativeRequest(
         name: normalizedName,
         phone: phone.trim(),
-        commissionPercent: commissionPercent,);
+        commissionPercent: commissionPercent,
+      );
       final updated = await _salesRepRepo.updateSalesRepresentative(
-          id, request);
-      _salesRepresentatives =
-          _salesRepresentatives.map((r) => r.id == id ? updated : r).toList();
+        id,
+        request,
+      );
+      _salesRepresentatives = _salesRepresentatives
+          .map((r) => r.id == id ? updated : r)
+          .toList();
       notifyListeners();
       return true;
     } catch (_) {
@@ -293,8 +303,9 @@ class ClientsProvider extends ChangeNotifier {
   Future<bool> deleteSalesRepresentative(int id) async {
     try {
       await _salesRepRepo.deleteSalesRepresentative(id);
-      _salesRepresentatives =
-          _salesRepresentatives.where((r) => r.id != id).toList();
+      _salesRepresentatives = _salesRepresentatives
+          .where((r) => r.id != id)
+          .toList();
       notifyListeners();
       return true;
     } catch (_) {

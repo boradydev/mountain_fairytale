@@ -56,9 +56,11 @@ class _RouteConstructorScreenState extends State<RouteConstructorScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.existingRouteId != null
-            ? 'Просмотр маршрутного листа'
-            : 'Конструктор маршрутного листа'),
+        title: Text(
+          widget.existingRouteId != null
+              ? 'Просмотр маршрутного листа'
+              : 'Конструктор маршрутного листа',
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.print),
@@ -66,37 +68,48 @@ class _RouteConstructorScreenState extends State<RouteConstructorScreen> {
             onPressed: () {
               if (provider.selectedDriver == null) {
                 AppNotify.show(
-                    context, 'Укажите водителя перед печатью маршрутного листа',
-                    isError: true);
+                  context,
+                  'Укажите водителя перед печатью маршрутного листа',
+                  isError: true,
+                );
                 return;
               }
               if (provider.selectedCar == null) {
-                AppNotify.show(context,
-                    'Укажите автомобиль перед печатью маршрутного листа',
-                    isError: true);
+                AppNotify.show(
+                  context,
+                  'Укажите автомобиль перед печатью маршрутного листа',
+                  isError: true,
+                );
                 return;
               }
               if (provider.points.isEmpty) {
-                AppNotify.show(context,
-                    'Добавьте хотя бы один маршрут перед печатью маршрутного листа',
-                    isError: true);
+                AppNotify.show(
+                  context,
+                  'Добавьте хотя бы один маршрут перед печатью маршрутного листа',
+                  isError: true,
+                );
                 return;
               }
 
-              final hasProducts = provider.points.any((point) =>
-              point.items.isNotEmpty);
+              final hasProducts = provider.points.any(
+                (point) => point.items.isNotEmpty,
+              );
               if (!hasProducts) {
-                AppNotify.show(context,
-                    'Добавьте продукцию хотя бы в один маршрут перед печатью маршрутного листа',
-                    isError: true);
+                AppNotify.show(
+                  context,
+                  'Добавьте продукцию хотя бы в один маршрут перед печатью маршрутного листа',
+                  isError: true,
+                );
                 return;
               }
 
               final sheet = provider.currentRouteSheet;
               if (sheet == null) {
                 AppNotify.show(
-                    context, 'Не удалось подготовить маршрутный лист к печати',
-                    isError: true);
+                  context,
+                  'Не удалось подготовить маршрутный лист к печати',
+                  isError: true,
+                );
                 return;
               }
 
@@ -110,8 +123,7 @@ class _RouteConstructorScreenState extends State<RouteConstructorScreen> {
             padding: const EdgeInsets.only(right: 16.0),
             child: Center(
               child: Text(
-                'Итого по маршруту: ${provider.grandTotal.toStringAsFixed(
-                    2)} ₽',
+                'Итого по маршруту: ${provider.grandTotal.toStringAsFixed(2)} ₽',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -124,44 +136,44 @@ class _RouteConstructorScreenState extends State<RouteConstructorScreen> {
       body: provider.isLoadingDirectories
           ? const Center(child: CircularProgressIndicator())
           : Form(
-        key: _formKey,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // ЛЕВАЯ ЧАСТЬ: Фиксированная колонка панелей
-            SizedBox(
-              width: 360,
-              child: Column(
+              key: _formKey,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  RouteMetaPanel(formKey: _formKey),
-                  const Divider(height: 1),
+                  // ЛЕВАЯ ЧАСТЬ: Фиксированная колонка панелей
+                  SizedBox(
+                    width: 360,
+                    child: Column(
+                      children: [
+                        RouteMetaPanel(formKey: _formKey),
+                        const Divider(height: 1),
+                        Expanded(
+                          child: ClientSelectionPanel(
+                            provider: context.watch<RouteConstructorProvider>(),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const VerticalDivider(width: 1),
+
+                  // ПРАВАЯ ЧАСТЬ: Полностью отведена под список точек маршрута
                   Expanded(
-                    child: ClientSelectionPanel(
+                    child: RoutePointsList(
                       provider: context.watch<RouteConstructorProvider>(),
                     ),
                   ),
                 ],
               ),
             ),
-            const VerticalDivider(width: 1),
-
-            // ПРАВАЯ ЧАСТЬ: Полностью отведена под список точек маршрута
-            Expanded(
-              child: RoutePointsList(
-                provider: context.watch<RouteConstructorProvider>(),
-              ),
-            ),
-          ],
-        ),
-      ),
       // Кнопки управления теперь железно зафиксированы внизу экрана
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           border: Border(
-            top: BorderSide(color: Theme
-                .of(context)
-                .colorScheme
-                .outlineVariant, width: 1),
+            top: BorderSide(
+              color: Theme.of(context).colorScheme.outlineVariant,
+              width: 1,
+            ),
           ),
         ),
         padding: const EdgeInsets.all(16.0),
@@ -190,12 +202,14 @@ class _RouteConstructorScreenState extends State<RouteConstructorScreen> {
                     if (!context.mounted) return;
 
                     if (success) {
-                      AppNotify.show(
-                          context, 'Маршрутный лист сохранен');
+                      AppNotify.show(context, 'Маршрутный лист сохранен');
                       Navigator.pop(context, true);
                     } else {
-                      AppNotify.show(context, 'Ошибка при сохранении маршрута',
-                          isError: true);
+                      AppNotify.show(
+                        context,
+                        'Ошибка при сохранении маршрута',
+                        isError: true,
+                      );
                     }
                   }
                 },

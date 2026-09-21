@@ -14,8 +14,10 @@ void main() {
 
   test('should load and save delivery route sheets via repository', () async {
     // Используем декомпозированный DataSource и реализацию репозитория
-    final dataSource = DemoDeliveryRouteDataSource(assetBundle: demoBundle,
-        deliveryDayDataSource: DemoDeliveryDataSource(assetBundle: demoBundle));
+    final dataSource = DemoDeliveryRouteDataSource(
+      assetBundle: demoBundle,
+      deliveryDayDataSource: DemoDeliveryDataSource(assetBundle: demoBundle),
+    );
     final repository = DeliveryRouteRepositoryImpl(dataSource);
 
     // 1. Проверяем чтение изначального списка маршрутных листов

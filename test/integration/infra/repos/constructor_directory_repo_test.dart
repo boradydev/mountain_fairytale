@@ -14,8 +14,7 @@ import 'print_model.dart';
 void main() {
   final demoBundle = DemoAssetBundle.instance;
 
-  test(
-      'should load available cars and products, and manage drivers via split repositories', () async {
+  test('should load available cars and products, and manage drivers via split repositories', () async {
     // Инициализируем декомпозированные источники данных и репозитории
     final carDataSource = DemoCarDataSource(assetBundle: demoBundle);
     final carRepository = CarRepositoryImpl(carDataSource);

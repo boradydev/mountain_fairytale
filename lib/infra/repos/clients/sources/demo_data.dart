@@ -12,7 +12,7 @@ class DemoClientDataSource implements ClientDataSource {
   static const _clientsPath = 'assets/demo/clients/clients_card_data.json';
 
   DemoClientDataSource({AssetBundle? assetBundle})
-      : _assetBundle = assetBundle ?? rootBundle;
+    : _assetBundle = assetBundle ?? rootBundle;
 
   Future<List<Map<String, dynamic>>> _getDemoJson() async {
     if (_cache != null) {
@@ -29,25 +29,27 @@ class DemoClientDataSource implements ClientDataSource {
     return jsonData;
   }
 
-
   @override
   Future<List<Map<String, dynamic>>> getAllClients() async {
     await Future<void>.delayed(const Duration(milliseconds: 600));
     return _getDemoJson(); // Просто возвращаем весь кэш
   }
 
-
   @override
   Future<Map<String, dynamic>> getClientById(int id) async {
     await Future.delayed(const Duration(milliseconds: 200));
     if (_cache == null) await _getDemoJson();
-    return _cache!.firstWhere((e) => e['id'] == id,
-        orElse: () => throw Exception('Client not found'));
+    return _cache!.firstWhere(
+      (e) => e['id'] == id,
+      orElse: () => throw Exception('Client not found'),
+    );
   }
 
   @override
-  Future<Map<String, dynamic>> patchClient(int id,
-      Map<String, dynamic> json) async {
+  Future<Map<String, dynamic>> patchClient(
+    int id,
+    Map<String, dynamic> json,
+  ) async {
     await Future.delayed(const Duration(milliseconds: 400));
     if (_cache == null) await _getDemoJson();
     final index = _cache!.indexWhere((e) => e['id'] == id);
@@ -67,10 +69,11 @@ class DemoClientDataSource implements ClientDataSource {
     _cache!.removeWhere((e) => e['id'] == id);
   }
 
-
   @override
-  Future<Map<String, dynamic>> updateCooldown(int clientId,
-      String cooldownUntilIso) async {
+  Future<Map<String, dynamic>> updateCooldown(
+    int clientId,
+    String cooldownUntilIso,
+  ) async {
     // Имитируем задержку сети
     await Future<void>.delayed(const Duration(milliseconds: 400));
 
@@ -93,10 +96,13 @@ class DemoClientDataSource implements ClientDataSource {
   }
 
   @override
-  Future<Map<String, dynamic>?> checkDuplicate(String name,
-      String address) async {
+  Future<Map<String, dynamic>?> checkDuplicate(
+    String name,
+    String address,
+  ) async {
     await Future<void>.delayed(
-        const Duration(milliseconds: 300)); // Имитируем сеть
+      const Duration(milliseconds: 300),
+    ); // Имитируем сеть
 
     if (_cache == null) {
       await _getDemoJson();
@@ -110,8 +116,8 @@ class DemoClientDataSource implements ClientDataSource {
     // Ищем точное совпадение по имени и адресу в кэше
     try {
       final duplicate = _cache!.firstWhere(
-            (client) =>
-        client['name'].toString().toLowerCase() == cleanName &&
+        (client) =>
+            client['name'].toString().toLowerCase() == cleanName &&
             client['address'].toString().toLowerCase() == cleanAddress,
       );
       return duplicate;
@@ -123,7 +129,8 @@ class DemoClientDataSource implements ClientDataSource {
   // Реализуем метод добавления внутри дата-сорса:
   @override
   Future<Map<String, dynamic>> createClient(
-      Map<String, dynamic> clientJson) async {
+    Map<String, dynamic> clientJson,
+  ) async {
     await Future<void>.delayed(const Duration(milliseconds: 500));
 
     if (_cache == null) {
@@ -132,8 +139,10 @@ class DemoClientDataSource implements ClientDataSource {
 
     final int newId = _cache!.isEmpty
         ? 1
-        : _cache!.map((c) => int.parse(c['id'].toString())).reduce((a, b) =>
-    a > b ? a : b) + 1;
+        : _cache!
+                  .map((c) => int.parse(c['id'].toString()))
+                  .reduce((a, b) => a > b ? a : b) +
+              1;
 
     // Формируем финальную структуру на основе пришедшего JSON
     final newClientJson = {
@@ -147,6 +156,4 @@ class DemoClientDataSource implements ClientDataSource {
     _cache!.insert(0, newClientJson);
     return newClientJson;
   }
-
-
 }

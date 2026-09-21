@@ -32,7 +32,6 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen> {
     _scrollController.addListener(_onScroll);
   }
 
-
   void _onScroll() {
     if (!_scrollController.hasClients) {
       return;
@@ -58,8 +57,9 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen> {
     final status = context.select((DeliveryDaysProvider p) => p.status);
 
     // Слушаем состояние фильтра, чтобы менять цвет иконки кнопки
-    final showOnlySleeping = context.select((ClientsProvider p) =>
-    p.showOnlySleeping);
+    final showOnlySleeping = context.select(
+      (ClientsProvider p) => p.showOnlySleeping,
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -71,8 +71,7 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen> {
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) =>
-                  const SalesRepresentativeCommissionScreen(),
+                  builder: (_) => const SalesRepresentativeCommissionScreen(),
                 ),
               );
             },
@@ -80,8 +79,9 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen> {
           // Новая кнопка фильтрации клиентов по просрочке
           IconButton(
             icon: Icon(
-              showOnlySleeping ? Icons.warning_rounded : Icons
-                  .warning_amber_rounded,
+              showOnlySleeping
+                  ? Icons.warning_rounded
+                  : Icons.warning_amber_rounded,
               // Если фильтр включен — красим его в акцентный цвет (например, оранжевый или primary)
               color: showOnlySleeping ? Colors.orange.shade700 : null,
             ),
@@ -92,10 +92,10 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen> {
                 context.read<ClientsProvider>().toggleSleepingFilter(),
           ),
           VerticalDivider(
-            thickness: 2,       // Толщина линии
-            width: 20,          // Отступы вокруг линии (общая ширина виджета)
-            indent: 10,          // Отступ сверху
-            endIndent: 10,       // Отступ снизу
+            thickness: 2, // Толщина линии
+            width: 20, // Отступы вокруг линии (общая ширина виджета)
+            indent: 10, // Отступ сверху
+            endIndent: 10, // Отступ снизу
           ),
           const LocaleToggleButton(),
           IconButton(
@@ -109,10 +109,9 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen> {
           child: CircularProgressIndicator(),
         ),
         DeliveryStatus.failure => _ErrorView(),
-        DeliveryStatus.success =>
-            _Dashboard(
-              scrollController: _scrollController,
-            ),
+        DeliveryStatus.success => _Dashboard(
+          scrollController: _scrollController,
+        ),
       },
     );
   }
@@ -143,7 +142,6 @@ class _Dashboard extends StatelessWidget {
     );
   }
 }
-
 
 /// Изолированный виджет ошибки
 class _ErrorView extends StatelessWidget {
@@ -177,4 +175,3 @@ class _ErrorView extends StatelessWidget {
     );
   }
 }
-

@@ -29,14 +29,20 @@ void main() {
     const clientId = 1;
     final newCooldownUntil = DateTime.now().add(Duration(days: 7));
 
-    final updatedClient = await repository.updateCooldown(clientId, newCooldownUntil);
+    final updatedClient = await repository.updateCooldown(
+      clientId,
+      newCooldownUntil,
+    );
 
     expect(updatedClient.id, clientId);
     expect(updatedClient.cooldownUntil, newCooldownUntil);
 
     print('\n');
     // Вывод одной модели
-    printModel(updatedClient.toJson(), title: 'ОБНОВЛЕННЫЙ КЛИЕНТ ID: $clientId');
+    printModel(
+      updatedClient.toJson(),
+      title: 'ОБНОВЛЕННЫЙ КЛИЕНТ ID: $clientId',
+    );
   });
 
   test('should check for duplicate client', () async {

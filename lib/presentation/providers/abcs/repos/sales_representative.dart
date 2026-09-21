@@ -5,10 +5,13 @@ abstract interface class SalesRepresentativeDataSource {
   Future<Map<String, dynamic>> getSalesRepresentativeById(int id);
 
   Future<Map<String, dynamic>> createSalesRepresentative(
-      Map<String, dynamic> json);
+    Map<String, dynamic> json,
+  );
 
-  Future<Map<String, dynamic>> patchSalesRepresentative(int id,
-      Map<String, dynamic> json);
+  Future<Map<String, dynamic>> patchSalesRepresentative(
+    int id,
+    Map<String, dynamic> json,
+  );
   Future<void> deleteSalesRepresentative(int id);
 
   Future<Map<String, dynamic>?> checkDuplicate(String name);
@@ -19,10 +22,13 @@ abstract interface class SalesRepresentativeRepository {
   Future<SalesRepresentative> getSalesRepresentativeById(int id);
 
   Future<SalesRepresentative> createSalesRepresentative(
-      CreateSalesRepresentativeRequest request);
+    CreateSalesRepresentativeRequest request,
+  );
 
-  Future<SalesRepresentative> updateSalesRepresentative(int id,
-      UpdateSalesRepresentativeRequest request);
+  Future<SalesRepresentative> updateSalesRepresentative(
+    int id,
+    UpdateSalesRepresentativeRequest request,
+  );
   Future<void> deleteSalesRepresentative(int id);
 
   Future<SalesRepresentative?> checkDuplicate(String name);

@@ -27,7 +27,6 @@ class RouteConstructorProvider extends OrderPointsProvider {
     required super.clientRepo,
   });
 
-
   List<Car> cars = [];
   List<Driver> drivers = [];
 
@@ -41,7 +40,6 @@ class RouteConstructorProvider extends OrderPointsProvider {
   double? endMileage;
 
   int? currentRouteId;
-
 
   void resetForm() {
     currentRouteId = null;
@@ -65,8 +63,7 @@ class RouteConstructorProvider extends OrderPointsProvider {
       drivers = await _driverRepo.getAvailableDrivers();
 
       products = await productRepo.getAvailableProducts();
-      paymentMethods =
-      await paymentMethodRepo.getAllPaymentMethods();
+      paymentMethods = await paymentMethodRepo.getAllPaymentMethods();
     } finally {
       isLoadingDirectories = false;
       notifyListeners();
@@ -186,7 +183,9 @@ class RouteConstructorProvider extends OrderPointsProvider {
 
     try {
       final request = CreateCarRequest(
-          model: normalizedModel, number: normalizedNumber);
+        model: normalizedModel,
+        number: normalizedNumber,
+      );
       final createdCar = await _carRepo.createCar(request);
 
       cars.insert(0, createdCar);
@@ -197,15 +196,20 @@ class RouteConstructorProvider extends OrderPointsProvider {
     }
   }
 
-  Future<bool> updateCar(int id,
-      {required String model, required String number}) async {
+  Future<bool> updateCar(
+    int id, {
+    required String model,
+    required String number,
+  }) async {
     final normalizedModel = model.trim();
     final normalizedNumber = number.trim();
     if (normalizedModel.isEmpty || normalizedNumber.isEmpty) return false;
 
     try {
       final request = UpdateCarRequest(
-          model: normalizedModel, number: normalizedNumber);
+        model: normalizedModel,
+        number: normalizedNumber,
+      );
       final updatedCar = await _carRepo.updateCar(id, request);
 
       cars = cars.map((c) => c.id == id ? updatedCar : c).toList();
@@ -262,7 +266,7 @@ class RouteConstructorProvider extends OrderPointsProvider {
       isOldDocument = difference >= 7;
 
       selectedDriver = drivers.firstWhere(
-            (d) => d.name == sheet.driverName,
+        (d) => d.name == sheet.driverName,
         orElse: () => Driver(id: 0, name: sheet.driverName),
       );
       driverName = selectedDriver?.name ?? '';
@@ -285,11 +289,14 @@ class RouteConstructorProvider extends OrderPointsProvider {
   Future<List<DeliveryRouteSheet>> getRouteSheetsByDate(DateTime date) async {
     try {
       final allSheets = await _routeRepo.getRouteSheets();
-      return allSheets.where((sheet) =>
-      sheet.date.year == date.year &&
-          sheet.date.month == date.month &&
-          sheet.date.day == date.day
-      ).toList();
+      return allSheets
+          .where(
+            (sheet) =>
+                sheet.date.year == date.year &&
+                sheet.date.month == date.month &&
+                sheet.date.day == date.day,
+          )
+          .toList();
     } catch (_) {
       return const [];
     }
@@ -327,5 +334,4 @@ class RouteConstructorProvider extends OrderPointsProvider {
       return false;
     }
   }
-
 }

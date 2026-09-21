@@ -6,8 +6,10 @@ abstract interface class DeliveryRouteDataSource {
   Future<Map<String, dynamic>> getRouteSheetById(int id);
   Future<Map<String, dynamic>> createRouteSheet(Map<String, dynamic> sheetJson);
 
-  Future<Map<String, dynamic>> patchRouteSheet(int id,
-      Map<String, dynamic> json);
+  Future<Map<String, dynamic>> patchRouteSheet(
+    int id,
+    Map<String, dynamic> json,
+  );
 
   Future<void> deleteRouteSheet(int id);
 }

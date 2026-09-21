@@ -30,7 +30,6 @@ class CreateCarRequest {
   final String model;
   final String number;
 
-
   const CreateCarRequest({
     required this.model,
     required this.number,

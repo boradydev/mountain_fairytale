@@ -162,8 +162,8 @@ class _CarDialogState extends State<CarDialog> {
           hasDuplicate: _duplicateCar != null,
           warningText: _duplicateCar != null
               ? 'Найден похожий автомобиль: '
-              '${_duplicateCar!.model}'
-              '\nГосномер: ${_duplicateCar!.number}'
+                    '${_duplicateCar!.model}'
+                    '\nГосномер: ${_duplicateCar!.number}'
               : '',
         ),
         const SizedBox(height: 8),
@@ -191,8 +191,9 @@ class _CarDialogState extends State<CarDialog> {
             hintText: 'А123ББ',
           ),
           validator: (value) {
-            if (value == null || value.trim().isEmpty)
+            if (value == null || value.trim().isEmpty) {
               return 'Введите госномер';
+            }
             return null;
           },
         ),

@@ -166,8 +166,8 @@ class _RoutePointsListState extends State<RoutePointsList> {
                               children: [
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment
-                                        .start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       // Шапка управления элементами справочника
                                       Row(
@@ -176,41 +176,49 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                             child: Text(
                                               'Форма оплаты *',
                                               style: TextStyle(
-                                                  fontWeight: FontWeight.w500,
-                                                  fontSize: 13),
+                                                fontWeight: FontWeight.w500,
+                                                fontSize: 13,
+                                              ),
                                             ),
                                           ),
                                           IconButton(
-                                            visualDensity: VisualDensity
-                                                .compact,
+                                            visualDensity:
+                                                VisualDensity.compact,
                                             icon: const Icon(
-                                                Icons.add, size: 18),
+                                              Icons.add,
+                                              size: 18,
+                                            ),
                                             tooltip: 'Добавить форму оплаты',
-                                            onPressed: () =>
-                                                showDialog(
-                                                  context: context,
-                                                  builder: (
-                                                      _) => const PaymentMethodDialog(),
-                                                ),
+                                            onPressed: () => showDialog(
+                                              context: context,
+                                              builder: (_) =>
+                                                  const PaymentMethodDialog(),
+                                            ),
                                           ),
                                           IconButton(
-                                            visualDensity: VisualDensity
-                                                .compact,
+                                            visualDensity:
+                                                VisualDensity.compact,
                                             icon: const Icon(
-                                                Icons.edit_outlined, size: 18),
+                                              Icons.edit_outlined,
+                                              size: 18,
+                                            ),
                                             tooltip: 'Редактировать выбранную оплату',
                                             onPressed: () {
                                               try {
                                                 final currentModel = provider
-                                                    .paymentMethods.firstWhere(
+                                                    .paymentMethods
+                                                    .firstWhere(
                                                       (p) =>
-                                                  p.name == point.paymentMethod,
-                                                );
+                                                          p.name ==
+                                                          point.paymentMethod,
+                                                    );
                                                 showDialog(
                                                   context: context,
                                                   builder: (_) =>
                                                       PaymentMethodDialog(
-                                                          paymentMethod: currentModel),
+                                                        paymentMethod:
+                                                            currentModel,
+                                                      ),
                                                 );
                                               } catch (_) {
                                                 // ЗАМЕНЕНО: Использование системного кастомного менеджера уведомлений
@@ -230,31 +238,37 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                         // Внутри DropdownButtonFormField<String> в файле route_points_list.dart
                                         initialValue: () {
                                           // 1. Обработка фокуса для только что созданного метода
-                                          if (provider
-                                              .newlyCreatedPaymentMethodName !=
-                                              null &&
-                                              provider.paymentMethods.any((p) =>
-                                              p.name == provider
-                                                  .newlyCreatedPaymentMethodName)) {
+                                          if (provider.newlyCreatedPaymentMethodName !=
+                                                  null &&
+                                              provider.paymentMethods.any(
+                                                (p) =>
+                                                    p.name ==
+                                                    provider
+                                                        .newlyCreatedPaymentMethodName,
+                                              )) {
                                             final activeNewMethod = provider
                                                 .newlyCreatedPaymentMethodName!;
                                             WidgetsBinding.instance
                                                 .addPostFrameCallback((_) {
-                                              provider
-                                                  .newlyCreatedPaymentMethodName =
-                                              null;
-                                            });
+                                                  provider.newlyCreatedPaymentMethodName =
+                                                      null;
+                                                });
                                             provider.updatePointMeta(
-                                                index, context, clientsProvider,
-                                                paymentMethod: activeNewMethod);
+                                              index,
+                                              context,
+                                              clientsProvider,
+                                              paymentMethod: activeNewMethod,
+                                            );
                                             return activeNewMethod;
                                           }
 
                                           // 2. ИСПРАВЛЕНО: Если у точки метод null или его нет в справочнике, возвращаем null (покажется hint)
                                           if (point.paymentMethod == null ||
-                                              !provider.paymentMethods.any((
-                                                  p) =>
-                                              p.name == point.paymentMethod)) {
+                                              !provider.paymentMethods.any(
+                                                (p) =>
+                                                    p.name ==
+                                                    point.paymentMethod,
+                                              )) {
                                             return null;
                                           }
 
@@ -265,21 +279,25 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                           border: OutlineInputBorder(),
                                           isDense: true,
                                           contentPadding: EdgeInsets.symmetric(
-                                              horizontal: 12, vertical: 12),
+                                            horizontal: 12,
+                                            vertical: 12,
+                                          ),
                                         ),
                                         hint: const Text(
-                                            'Выберите форму оплаты'),
+                                          'Выберите форму оплаты',
+                                        ),
                                         // Будет показываться, если initialValue == null
                                         items: provider.paymentMethods.map((
-                                            method) {
+                                          method,
+                                        ) {
                                           return DropdownMenuItem<String>(
                                             value: method.name,
                                             child: Text(method.name),
                                           );
                                         }).toList(),
                                         onChanged: (value) {
-                                          final clientsProvider = context.read<
-                                              ClientsProvider>();
+                                          final clientsProvider = context
+                                              .read<ClientsProvider>();
                                           provider.updatePointMeta(
                                             index,
                                             context,
@@ -288,15 +306,14 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                           );
                                         },
                                       ),
-
                                     ],
                                   ),
                                 ),
                                 const SizedBox(width: 16),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment
-                                        .start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       const SizedBox(height: 26),
                                       // Компенсируем высоту шапки управления соседнего поля
@@ -307,7 +324,9 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                           labelText: 'Торговый представитель',
                                           isDense: true,
                                           prefixIcon: Icon(
-                                              Icons.badge_outlined, size: 20),
+                                            Icons.badge_outlined,
+                                            size: 20,
+                                          ),
                                           filled: true,
                                           border: OutlineInputBorder(),
                                         ),
@@ -327,10 +346,7 @@ class _RoutePointsListState extends State<RoutePointsList> {
                               ),
                             ),
 
-                            ...point.items
-                                .asMap()
-                                .entries
-                                .map((entry) {
+                            ...point.items.asMap().entries.map((entry) {
                               final taskIndex = entry.key;
                               final item = entry.value;
 
@@ -346,11 +362,10 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                     Icons.remove_circle_outline,
                                     color: Colors.red,
                                   ),
-                                  onPressed: () =>
-                                      provider.removeTaskFromPoint(
-                                        index,
-                                        taskIndex,
-                                      ),
+                                  onPressed: () => provider.removeTaskFromPoint(
+                                    index,
+                                    taskIndex,
+                                  ),
                                 ),
                                 trailing: Text(
                                   '${item.amount.toStringAsFixed(2)} ₽',
@@ -361,25 +376,22 @@ class _RoutePointsListState extends State<RoutePointsList> {
                             const SizedBox(height: 8),
 
                             Row(
-                              mainAxisAlignment:
-                              MainAxisAlignment.spaceBetween,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 TextButton.icon(
                                   icon: const Icon(Icons.add),
                                   label: const Text(
                                     'Добавить продукцию/услугу',
                                   ),
-                                  onPressed: () =>
-                                      TaskDialogs.showAddTask(
-                                        context,
-                                        provider,
-                                        index,
-                                      ),
+                                  onPressed: () => TaskDialogs.showAddTask(
+                                    context,
+                                    provider,
+                                    index,
+                                  ),
                                 ),
                                 Text(
                                   'Итого по точке: '
-                                      '${point.totalAmount.toStringAsFixed(
-                                      2)} ₽',
+                                  '${point.totalAmount.toStringAsFixed(2)} ₽',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                   ),

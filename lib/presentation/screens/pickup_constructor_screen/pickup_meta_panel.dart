@@ -26,7 +26,6 @@ class _PickupMetaPanelState extends State<PickupMetaPanel> {
     final provider = context.watch<PickupConstructorProvider>();
     final colorScheme = Theme.of(context).colorScheme;
 
-
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),

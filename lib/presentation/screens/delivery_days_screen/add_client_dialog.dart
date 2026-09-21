@@ -76,7 +76,6 @@ class _ClientDialogState extends State<ClientDialog> {
     }
   }
 
-
   void _onFocusChange() {
     if (_nameFocusNode.hasFocus || _addressFocusNode.hasFocus) {
       return;
@@ -201,9 +200,9 @@ class _ClientDialogState extends State<ClientDialog> {
       return;
     }
 
-    final success = await context
-        .read<ClientsProvider>()
-        .deleteClient(client.id);
+    final success = await context.read<ClientsProvider>().deleteClient(
+      client.id,
+    );
 
     if (!mounted) {
       return;
@@ -223,9 +222,7 @@ class _ClientDialogState extends State<ClientDialog> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          error.isEmpty
-              ? 'Не удалось сохранить изменения'
-              : 'Ошибка: $error',
+          error.isEmpty ? 'Не удалось сохранить изменения' : 'Ошибка: $error',
         ),
       ),
     );
@@ -251,20 +248,18 @@ class _ClientDialogState extends State<ClientDialog> {
           ? 'Редактирование клиента'
           : 'Добавление нового клиента',
 
-      submitButtonText: _isEditMode
-          ? 'Сохранить'
-          : 'Создать клиента',
+      submitButtonText: _isEditMode ? 'Сохранить' : 'Создать клиента',
 
       formKey: _formKey,
       onSubmit: _submitForm,
 
       leadingAction: _isEditMode
           ? AppIconButton(
-        icon: Icons.delete_outline,
-        tooltip: 'Удалить клиента',
-        destructive: true,
-        onPressed: _deleteClient,
-      )
+              icon: Icons.delete_outline,
+              tooltip: 'Удалить клиента',
+              destructive: true,
+              onPressed: _deleteClient,
+            )
           : null,
 
       children: [
@@ -274,9 +269,9 @@ class _ClientDialogState extends State<ClientDialog> {
           hasDuplicate: _duplicateClient != null,
           warningText: _duplicateClient != null
               ? 'Найден похожий клиент: '
-              '${_duplicateClient!.name}\n'
-              '${_duplicateClient!.address}\n'
-              '${_duplicateClient!.phone}'
+                    '${_duplicateClient!.name}\n'
+                    '${_duplicateClient!.address}\n'
+                    '${_duplicateClient!.phone}'
               : '',
         ),
 
@@ -364,7 +359,7 @@ class _ClientDialogState extends State<ClientDialog> {
 
         const SizedBox(height: 16),
 
-// Блок Торговый представитель
+        // Блок Торговый представитель
         Row(
           children: [
             const Expanded(
@@ -410,32 +405,31 @@ class _ClientDialogState extends State<ClientDialog> {
                   onPressed: selectedSalesRep == null
                       ? null
                       : () async {
-                    final result = await showDialog<bool>(
-                      context: context,
-                      builder: (_) =>
-                          SalesRepDialog(
-                            salesRep: selectedSalesRep,
-                          ),
-                    );
+                          final result = await showDialog<bool>(
+                            context: context,
+                            builder: (_) => SalesRepDialog(
+                              salesRep: selectedSalesRep,
+                            ),
+                          );
 
-                    if (!mounted) {
-                      return;
-                    }
+                          if (!mounted) {
+                            return;
+                          }
 
-                    // Если представитель был удалён,
-                    // Provider уже обновил список.
-                    if (result == true) {
-                      final exists = provider.salesRepresentatives.any(
-                            (rep) => rep.id == _selectedSalesRepId,
-                      );
+                          // Если представитель был удалён,
+                          // Provider уже обновил список.
+                          if (result == true) {
+                            final exists = provider.salesRepresentatives.any(
+                              (rep) => rep.id == _selectedSalesRepId,
+                            );
 
-                      if (!exists) {
-                        setState(() {
-                          _selectedSalesRepId = null;
-                        });
-                      }
-                    }
-                  },
+                            if (!exists) {
+                              setState(() {
+                                _selectedSalesRepId = null;
+                              });
+                            }
+                          }
+                        },
                   icon: const Icon(Icons.edit_outlined),
                   tooltip: 'Редактировать торгового представителя',
                 );
@@ -480,7 +474,6 @@ class _ClientDialogState extends State<ClientDialog> {
         ),
 
         const SizedBox(height: 16),
-
       ],
     );
   }

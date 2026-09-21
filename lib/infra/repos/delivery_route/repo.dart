@@ -24,7 +24,9 @@ class DeliveryRouteRepositoryImpl implements DeliveryRouteRepository {
     if (sheet.id != null) {
       // Маршрут уже существует -> Обновляем (PATCH)
       final updatedJson = await dataSource.patchRouteSheet(
-          sheet.id!, jsonToSend);
+        sheet.id!,
+        jsonToSend,
+      );
       return DeliveryRouteSheet.fromJson(updatedJson);
     } else {
       // Маршрута еще нет -> Создаем (POST)

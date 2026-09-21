@@ -8,7 +8,6 @@ import 'package:mountain_fairytale/presentation/widgets/base_card_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/metric_row_widget.dart';
 import 'package:provider/provider.dart';
 
-
 class ClientsAttentionListView extends StatelessWidget {
   const ClientsAttentionListView({super.key});
 
@@ -28,8 +27,9 @@ class ClientsAttentionListView extends StatelessWidget {
     final clients = context.select((ClientsProvider p) => p.sortedClients);
 
     // Читаем из провайдера, включен ли сейчас фильтр просрочки
-    final showOnlySleeping = context.select((ClientsProvider p) =>
-    p.showOnlySleeping);
+    final showOnlySleeping = context.select(
+      (ClientsProvider p) => p.showOnlySleeping,
+    );
 
     // Если фильтр включен — карточку добавления НЕ показываем (count = 0), иначе показываем (count = 1)
     final addCardCount = showOnlySleeping ? 0 : 1;
@@ -70,16 +70,17 @@ class _AddClientCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
-    return AddActionButton(label: 'Добавить клиента',
-        icon: Icons.person_add_alt_1_outlined,
-        onTap: () {
-          showDialog(
-            context: context,
-            barrierDismissible: true, // Клик вне окна закроет его
-            builder: (context) => const ClientDialog(),
-          );
-        });
+    return AddActionButton(
+      label: 'Добавить клиента',
+      icon: Icons.person_add_alt_1_outlined,
+      onTap: () {
+        showDialog(
+          context: context,
+          barrierDismissible: true, // Клик вне окна закроет его
+          builder: (context) => const ClientDialog(),
+        );
+      },
+    );
   }
 }
 
@@ -100,10 +101,9 @@ class _ClientAttentionCard extends StatelessWidget {
       onTap: () {
         showDialog(
           context: context,
-          builder: (context) =>
-              ClientDialog(
-                client: client,
-              ),
+          builder: (context) => ClientDialog(
+            client: client,
+          ),
         );
       },
       child: IntrinsicHeight(
@@ -140,30 +140,40 @@ class _ClientAttentionCard extends StatelessWidget {
                       ),
                       // Кнопка вызова меню откладывания
                       PopupMenuButton<int>(
-                        icon: Icon(Icons.access_time_rounded,
-                          color: statusConfig.badgeTextColor,),
+                        icon: Icon(
+                          Icons.access_time_rounded,
+                          color: statusConfig.badgeTextColor,
+                        ),
                         tooltip: 'Отложить обработку',
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                         onSelected: (weeks) {
                           context.read<ClientsProvider>().updateClientCooldown(
-                              client.id, weeks);
+                            client.id,
+                            weeks,
+                          );
                         },
                         itemBuilder: (BuildContext context) =>
-                        <PopupMenuEntry<int>>[
-                          const PopupMenuItem<int>(
-                              value: 1, child: Text('Отложить на 1 неделю')),
-                          const PopupMenuItem<int>(
-                              value: 2, child: Text('Отложить на 2 недели')),
-                          const PopupMenuItem<int>(
-                              value: 3, child: Text('Отложить на 3 недели')),
-                        ],
+                            <PopupMenuEntry<int>>[
+                              const PopupMenuItem<int>(
+                                value: 1,
+                                child: Text('Отложить на 1 неделю'),
+                              ),
+                              const PopupMenuItem<int>(
+                                value: 2,
+                                child: Text('Отложить на 2 недели'),
+                              ),
+                              const PopupMenuItem<int>(
+                                value: 3,
+                                child: Text('Отложить на 3 недели'),
+                              ),
+                            ],
                       ),
-                      MetricRow(label: 'Статус доставок:',
+                      MetricRow(
+                        label: 'Статус доставок:',
                         value: statusConfig.statusText,
                         valueWidth: 170,
                       ),
-
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -184,7 +194,8 @@ class _ClientAttentionCard extends StatelessWidget {
                       ),
                       MetricRow(
                         label: 'Последняя доставка:',
-                        value: client.lastDeliveryDate?.toFormattedString() ??
+                        value:
+                            client.lastDeliveryDate?.toFormattedString() ??
                             'никогда',
                         valueWidth: 170,
                       ),
@@ -236,9 +247,7 @@ class _ClientStatusConfig {
     }
 
     // Вычисляем просрочку в днях и коэффициент K
-    final differenceDays = now
-        .difference(client.lastDeliveryDate!)
-        .inDays;
+    final differenceDays = now.difference(client.lastDeliveryDate!).inDays;
     final k = differenceDays / client.sleepingThresholdDays;
 
     // 3. Состояние: Критическое (Красный)
@@ -280,4 +289,3 @@ class _ClientStatusConfig {
     );
   }
 }
-

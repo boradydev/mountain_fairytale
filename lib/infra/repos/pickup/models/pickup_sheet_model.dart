@@ -6,7 +6,9 @@ part 'pickup_sheet_model.g.dart';
 
 @JsonSerializable(explicitToJson: true)
 class PickupSheet implements RouteDocument {
+  @override
   final int? id;
+  @override
   final DateTime date;
   final List<RoutePoint> points;
 

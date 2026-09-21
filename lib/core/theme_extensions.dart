@@ -36,10 +36,16 @@ class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
     return AppColorsExtension(
       warningColor: Color.lerp(warningColor, other.warningColor, t)!,
       warningContainer: Color.lerp(
-          warningContainer, other.warningContainer, t)!,
+        warningContainer,
+        other.warningContainer,
+        t,
+      )!,
       successColor: Color.lerp(successColor, other.successColor, t)!,
       successContainer: Color.lerp(
-          successContainer, other.successContainer, t)!,
+        successContainer,
+        other.successContainer,
+        t,
+      )!,
     );
   }
 }

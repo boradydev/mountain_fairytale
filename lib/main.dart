@@ -78,12 +78,12 @@ Future<void> main() async {
   final productDataSource = DemoProductDataSource();
   final deliveryDayDataSource = DemoDeliveryDataSource();
   final routeDataSource = DemoDeliveryRouteDataSource(
-      deliveryDayDataSource: deliveryDayDataSource
+    deliveryDayDataSource: deliveryDayDataSource,
   );
   final clientDataSource = DemoClientDataSource();
   final paymentMethodDataSource = DemoPaymentMethodDataSource();
   final salesRepCommissionDataSource =
-  DemoSalesRepresentativeCommissionDataSource();
+      DemoSalesRepresentativeCommissionDataSource();
   final pickupDataSource = DemoPickupDataSource();
 
   // ===========================================================================
@@ -98,12 +98,15 @@ Future<void> main() async {
   final deliveryDayRepository = ApiDeliveryRepository(deliveryDayDataSource);
   final salesRepDataSource = DemoSalesRepresentativeDataSource();
   final salesRepRepository = SalesRepresentativeRepositoryImpl(
-      salesRepDataSource);
+    salesRepDataSource,
+  );
   final paymentMethodRepository = PaymentMethodRepositoryImpl(
-      paymentMethodDataSource);
+    paymentMethodDataSource,
+  );
   final salesRepCommissionRepository =
-  SalesRepresentativeCommissionRepositoryImpl(
-    salesRepCommissionDataSource,);
+      SalesRepresentativeCommissionRepositoryImpl(
+        salesRepCommissionDataSource,
+      );
   final pickupRepository = PickupRepositoryImpl(
     pickupDataSource,
   );
@@ -153,19 +156,17 @@ Future<void> main() async {
           ),
         ),
         ChangeNotifierProvider(
-          create: (_) =>
-              SalesRepresentativeCommissionProvider(
-                salesRepCommissionRepository,
-              ),
+          create: (_) => SalesRepresentativeCommissionProvider(
+            salesRepCommissionRepository,
+          ),
         ),
         ChangeNotifierProvider(
-          create: (context) =>
-              PickupConstructorProvider(
-                pickupRepo: pickupRepository,
-                productRepo: productRepository,
-                paymentMethodRepo: paymentMethodRepository,
-                clientRepo: clientRepository,
-              ),
+          create: (context) => PickupConstructorProvider(
+            pickupRepo: pickupRepository,
+            productRepo: productRepository,
+            paymentMethodRepo: paymentMethodRepository,
+            clientRepo: clientRepository,
+          ),
         ),
       ],
       child: const MyApp(),

@@ -8,14 +8,15 @@ class DemoCarDataSource implements CarDataSource {
   List<Map<String, dynamic>>? _carsCache;
 
   DemoCarDataSource({AssetBundle? assetBundle})
-      : _assetBundle = assetBundle ?? rootBundle;
+    : _assetBundle = assetBundle ?? rootBundle;
 
   @override
   Future<List<Map<String, dynamic>>> getAllCars() async {
     await Future.delayed(const Duration(milliseconds: 300));
     if (_carsCache != null) return _carsCache!;
     final jsonString = await _assetBundle.loadString(
-        'assets/demo/cars/cars_data.json');
+      'assets/demo/cars/cars_data.json',
+    );
     _carsCache = List<Map<String, dynamic>>.from(jsonDecode(jsonString));
     return _carsCache!;
   }
@@ -24,24 +25,32 @@ class DemoCarDataSource implements CarDataSource {
   Future<Map<String, dynamic>> getCarById(int id) async {
     await Future.delayed(const Duration(milliseconds: 200));
     if (_carsCache == null) await getAllCars();
-    return _carsCache!.firstWhere((e) => e['id'] == id,
-        orElse: () => throw Exception('Car not found'));
+    return _carsCache!.firstWhere(
+      (e) => e['id'] == id,
+      orElse: () => throw Exception('Car not found'),
+    );
   }
 
   @override
   Future<Map<String, dynamic>> createCar(Map<String, dynamic> carJson) async {
     await Future.delayed(const Duration(milliseconds: 400));
     if (_carsCache == null) await getAllCars();
-    final newId = _carsCache!.isEmpty ? 1 : _carsCache!.map((item) =>
-        int.parse(item['id'].toString())).reduce((a, b) => a > b ? a : b) + 1;
+    final newId = _carsCache!.isEmpty
+        ? 1
+        : _carsCache!
+                  .map((item) => int.parse(item['id'].toString()))
+                  .reduce((a, b) => a > b ? a : b) +
+              1;
     final newCar = {...carJson, 'id': newId};
     _carsCache!.insert(0, newCar);
     return newCar;
   }
 
   @override
-  Future<Map<String, dynamic>> patchCar(int id,
-      Map<String, dynamic> json) async {
+  Future<Map<String, dynamic>> patchCar(
+    int id,
+    Map<String, dynamic> json,
+  ) async {
     await Future.delayed(const Duration(milliseconds: 400));
     if (_carsCache == null) await getAllCars();
     final index = _carsCache!.indexWhere((e) => e['id'] == id);
@@ -71,16 +80,13 @@ class DemoCarDataSource implements CarDataSource {
 
     try {
       final duplicate = _carsCache!.firstWhere(
-            (car) =>
-        car['number']
-            .toString()
-            .replaceAll(' ', '')
-            .toLowerCase() == cleanNumber,
+        (car) =>
+            car['number'].toString().replaceAll(' ', '').toLowerCase() ==
+            cleanNumber,
       );
       return duplicate;
     } catch (_) {
       return null;
     }
   }
-
 }

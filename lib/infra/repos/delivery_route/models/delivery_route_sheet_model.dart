@@ -11,7 +11,9 @@ abstract class RouteDocument {
 
 @JsonSerializable(explicitToJson: true)
 class DeliveryRouteSheet implements RouteDocument {
+  @override
   final int? id;
+  @override
   final DateTime date;
   final String driverName;
   final int carId;

@@ -52,16 +52,17 @@ class RouteSheetPdfBuilder {
             ),
             pw.TextSpan(
               text: 'от ${_formatDate(sheet.date)}',
-              style: pw.TextStyle(fontSize: 13,
-                  fontWeight: pw.FontWeight.normal,
-                  color: PdfColors.grey800),
+              style: pw.TextStyle(
+                fontSize: 13,
+                fontWeight: pw.FontWeight.normal,
+                color: PdfColors.grey800,
+              ),
             ),
           ],
         ),
       ),
     );
   }
-
 
   pw.Widget _buildRouteInfo(DeliveryRouteSheet sheet) {
     return pw.Container(
@@ -143,28 +144,31 @@ class RouteSheetPdfBuilder {
                 child: pw.RichText(
                   text: pw.TextSpan(
                     style: const pw.TextStyle(
-                        fontSize: 7.5, color: PdfColors.black),
+                      fontSize: 7.5,
+                      color: PdfColors.black,
+                    ),
                     children: [
                       pw.TextSpan(text: 'Клиент: '),
-                      pw.TextSpan(text: '${point.clientName}\n',
-                          style: pw.TextStyle(fontWeight: pw.FontWeight
-                              .bold)),
+                      pw.TextSpan(
+                        text: '${point.clientName}\n',
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                      ),
                       pw.TextSpan(text: 'Адрес: '),
                       pw.TextSpan(
-                        text: '${point.address}\n', style: pw.TextStyle(
-                          fontWeight: pw.FontWeight.bold
-                      ),
+                        text: '${point.address}\n',
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
                       ),
                       pw.TextSpan(text: 'Тел: '),
-                      pw.TextSpan(text: '${point.phone}\n', style: pw.TextStyle(
-                          fontWeight: pw.FontWeight.bold
-                      ),
+                      pw.TextSpan(
+                        text: '${point.phone}\n',
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
                       ),
                       const pw.TextSpan(text: 'Форма оплаты: '),
                       pw.TextSpan(
                         text: point.paymentMethod,
-                        style: pw.TextStyle(fontWeight: pw.FontWeight
-                            .bold), // ДЕЛАЕМ ЖИРНЫМ
+                        style: pw.TextStyle(
+                          fontWeight: pw.FontWeight.bold,
+                        ), // ДЕЛАЕМ ЖИРНЫМ
                       ),
                     ],
                   ),
@@ -210,10 +214,7 @@ class RouteSheetPdfBuilder {
           ],
         ),
         // Строки самих продуктов
-        ...items
-            .asMap()
-            .entries
-            .map((itemEntry) {
+        ...items.asMap().entries.map((itemEntry) {
           final subIndex = itemEntry.key;
           final item = itemEntry.value;
 
@@ -222,17 +223,20 @@ class RouteSheetPdfBuilder {
               _tableCell('${subIndex + 1}', align: pw.TextAlign.center),
               _tableCell(item.productName),
               _tableCell('${item.quantity}', align: pw.TextAlign.center),
-              _tableCell('${item.price.toStringAsFixed(2)} ₽',
-                  align: pw.TextAlign.right),
-              _tableCell('${item.amount.toStringAsFixed(2)} ₽',
-                  align: pw.TextAlign.right),
+              _tableCell(
+                '${item.price.toStringAsFixed(2)} ₽',
+                align: pw.TextAlign.right,
+              ),
+              _tableCell(
+                '${item.amount.toStringAsFixed(2)} ₽',
+                align: pw.TextAlign.right,
+              ),
             ],
           );
         }),
       ],
     );
   }
-
 
   pw.Widget _tableHeader(String text) {
     return pw.Padding(
@@ -265,7 +269,6 @@ class RouteSheetPdfBuilder {
       ),
     );
   }
-
 
   pw.Widget _buildTotal(DeliveryRouteSheet sheet) {
     return pw.Row(

@@ -90,7 +90,8 @@ class CreateClientRequest {
 }
 
 @JsonSerializable(
-    includeIfNull: true) // Поменяли на true, чтобы можно было занулить / перетереть при редактировании
+  includeIfNull: true,
+) // Поменяли на true, чтобы можно было занулить / перетереть при редактировании
 class UpdateClientRequest {
   final String? name;
   final String? phone;
@@ -99,7 +100,6 @@ class UpdateClientRequest {
   final int? salesRepresentativeId;
   final String? salesRepresentativeName;
   final String? defaultPaymentMethod;
-
 
   const UpdateClientRequest({
     this.name,
@@ -113,4 +113,3 @@ class UpdateClientRequest {
 
   Map<String, dynamic> toJson() => _$UpdateClientRequestToJson(this);
 }
-
