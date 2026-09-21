@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/core/utils/datetime_extensions.dart';
 import 'package:mountain_fairytale/infra/repos/clients/models/client_model.dart';
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
-import 'package:mountain_fairytale/presentation/screens/delivery_days/add_client_dialog.dart';
+import 'package:mountain_fairytale/presentation/screens/common/client_dialog.dart';
 import 'package:mountain_fairytale/presentation/widgets/add_action_card.dart';
 import 'package:mountain_fairytale/presentation/widgets/base_card_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/metric_row_widget.dart';

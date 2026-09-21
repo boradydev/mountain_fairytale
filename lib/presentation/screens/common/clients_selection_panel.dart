@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/order_points_provider.dart';
-import 'package:mountain_fairytale/presentation/screens/delivery_days/add_client_dialog.dart';
+import 'package:mountain_fairytale/presentation/screens/common/client_dialog.dart';
 import 'package:provider/provider.dart';
 
 class ClientSelectionPanel extends StatefulWidget {
