@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/infra/app_notify.dart';
 import 'package:mountain_fairytale/infra/repos/clients/models/client_model.dart';
 import 'package:mountain_fairytale/infra/repos/sales_representatives/models/sales_representative_model.dart';
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
@@ -7,6 +8,7 @@ import 'package:mountain_fairytale/presentation/widgets/base_form_dialog_widget.
 import 'package:mountain_fairytale/presentation/widgets/confirm_delete_dialog.dart';
 import 'package:mountain_fairytale/presentation/widgets/duplicate_check_status_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/icon_button_widget.dart';
+import 'package:mountain_fairytale/presentation/widgets/dropdown_widget.dart';
 import 'package:provider/provider.dart';
 
 class ClientDialog extends StatefulWidget {
@@ -219,12 +221,10 @@ class _ClientDialogState extends State<ClientDialog> {
   void _showError() {
     final error = context.read<ClientsProvider>().errorMessage;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          error.isEmpty ? 'Не удалось сохранить изменения' : 'Ошибка: $error',
-        ),
-      ),
+    AppNotify.show(
+      context,
+      error.isEmpty ? 'Не удалось сохранить изменения' : 'Ошибка: $error',
+      isError: true,
     );
   }
 
@@ -359,85 +359,6 @@ class _ClientDialogState extends State<ClientDialog> {
 
         const SizedBox(height: 16),
 
-        // Блок Торговый представитель
-        Row(
-          children: [
-            const Expanded(
-              child: Text(
-                'Торговый представитель',
-                style: TextStyle(fontWeight: FontWeight.w500),
-              ),
-            ),
-
-            // Добавить торгового представителя
-            IconButton(
-              onPressed: () async {
-                final result = await showDialog<bool>(
-                  context: context,
-                  builder: (_) => const SalesRepDialog(),
-                );
-
-                if (result == true && mounted) {
-                  // Список представителей уже обновляется через Provider.
-                  // Ничего дополнительно в локальном состоянии менять не нужно.
-                  setState(() {});
-                }
-              },
-              icon: const Icon(Icons.add),
-              tooltip: 'Добавить торгового представителя',
-            ),
-
-            // Редактировать выбранного торгового представителя
-            Consumer<ClientsProvider>(
-              builder: (context, provider, child) {
-                SalesRepresentative? selectedSalesRep;
-
-                if (_selectedSalesRepId != null) {
-                  for (final rep in provider.salesRepresentatives) {
-                    if (rep.id == _selectedSalesRepId) {
-                      selectedSalesRep = rep;
-                      break;
-                    }
-                  }
-                }
-
-                return IconButton(
-                  onPressed: selectedSalesRep == null
-                      ? null
-                      : () async {
-                          final result = await showDialog<bool>(
-                            context: context,
-                            builder: (_) => SalesRepDialog(
-                              salesRep: selectedSalesRep,
-                            ),
-                          );
-
-                          if (!mounted) {
-                            return;
-                          }
-
-                          // Если представитель был удалён,
-                          // Provider уже обновил список.
-                          if (result == true) {
-                            final exists = provider.salesRepresentatives.any(
-                              (rep) => rep.id == _selectedSalesRepId,
-                            );
-
-                            if (!exists) {
-                              setState(() {
-                                _selectedSalesRepId = null;
-                              });
-                            }
-                          }
-                        },
-                  icon: const Icon(Icons.edit_outlined),
-                  tooltip: 'Редактировать торгового представителя',
-                );
-              },
-            ),
-          ],
-        ),
-
         Consumer<ClientsProvider>(
           builder: (context, provider, child) {
             SalesRepresentative? currentSelection;
@@ -451,24 +372,52 @@ class _ClientDialogState extends State<ClientDialog> {
               }
             }
 
-            return DropdownButtonFormField<SalesRepresentative>(
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.badge_outlined),
-              ),
-              initialValue: currentSelection,
-              hint: const Text('Выберите представителя'),
-              items: provider.salesRepresentatives.map((rep) {
-                return DropdownMenuItem<SalesRepresentative>(
-                  value: rep,
-                  child: Text(rep.name),
-                );
-              }).toList(),
+            return AppDropdown<SalesRepresentative>(
+              label: 'Торговый представитель',
+              items: provider.salesRepresentatives,
+              value: currentSelection,
+              prefixIcon: Icons.badge_outlined,
+              hint: 'Выберите представителя',
+              itemLabelBuilder: (rep) => rep.name,
               onChanged: (value) {
                 setState(() {
                   _selectedSalesRepId = value?.id;
                 });
               },
+              onAdd: () async {
+                final result = await showDialog<bool>(
+                  context: context,
+                  builder: (_) => const SalesRepDialog(),
+                );
+
+                if (result == true && mounted) {
+                  setState(() {});
+                }
+              },
+              onEdit: currentSelection == null
+                  ? null
+                  : () async {
+                      final result = await showDialog<bool>(
+                        context: context,
+                        builder: (_) => SalesRepDialog(
+                          salesRep: currentSelection,
+                        ),
+                      );
+
+                      if (!mounted) return;
+
+                      if (result == true) {
+                        final exists = provider.salesRepresentatives.any(
+                          (rep) => rep.id == _selectedSalesRepId,
+                        );
+
+                        if (!exists) {
+                          setState(() {
+                            _selectedSalesRepId = null;
+                          });
+                        }
+                      }
+                    },
             );
           },
         ),

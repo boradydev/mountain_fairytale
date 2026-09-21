@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/infra/app_notify.dart';
+import 'package:mountain_fairytale/infra/repos/payment_methods/models/payment_method_model.dart';
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/order_points_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/common/payment_method_dialog.dart';
 import 'package:mountain_fairytale/presentation/screens/orders/common/task_dialogs.dart';
+import 'package:mountain_fairytale/presentation/widgets/dropdown_widget.dart';
 import 'package:provider/provider.dart';
 
 class RoutePointsList extends StatefulWidget {
@@ -169,75 +171,11 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      // Шапка управления элементами справочника
-                                      Row(
-                                        children: [
-                                          const Expanded(
-                                            child: Text(
-                                              'Форма оплаты *',
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.w500,
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                          ),
-                                          IconButton(
-                                            visualDensity:
-                                                VisualDensity.compact,
-                                            icon: const Icon(
-                                              Icons.add,
-                                              size: 18,
-                                            ),
-                                            tooltip: 'Добавить форму оплаты',
-                                            onPressed: () => showDialog(
-                                              context: context,
-                                              builder: (_) =>
-                                                  const PaymentMethodDialog(),
-                                            ),
-                                          ),
-                                          IconButton(
-                                            visualDensity:
-                                                VisualDensity.compact,
-                                            icon: const Icon(
-                                              Icons.edit_outlined,
-                                              size: 18,
-                                            ),
-                                            tooltip: 'Редактировать выбранную оплату',
-                                            onPressed: () {
-                                              try {
-                                                final currentModel = provider
-                                                    .paymentMethods
-                                                    .firstWhere(
-                                                      (p) =>
-                                                          p.name ==
-                                                          point.paymentMethod,
-                                                    );
-                                                showDialog(
-                                                  context: context,
-                                                  builder: (_) =>
-                                                      PaymentMethodDialog(
-                                                        paymentMethod:
-                                                            currentModel,
-                                                      ),
-                                                );
-                                              } catch (_) {
-                                                // ЗАМЕНЕНО: Использование системного кастомного менеджера уведомлений
-                                                AppNotify.show(
-                                                  context,
-                                                  'Сначала выберите существующую форму оплаты из выпадающего списка для её редактирования',
-                                                  isWarning: true,
-                                                );
-                                              }
-                                            },
-                                          ),
-                                        ],
-                                      ),
-
-                                      // Интерактивный Дропдаун
-                                      DropdownButtonFormField<String>(
-                                        // Внутри DropdownButtonFormField<String> в файле route_points_list.dart
-                                        initialValue: () {
-                                          // 1. Обработка фокуса для только что созданного метода
+                                      // Интерактивный Дропдаун для формы оплаты
+                                      Builder(
+                                        builder: (context) {
+                                          // Логика определения текущего значения
+                                          String? currentMethod;
                                           if (provider.newlyCreatedPaymentMethodName !=
                                                   null &&
                                               provider.paymentMethods.any(
@@ -246,7 +184,7 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                                     provider
                                                         .newlyCreatedPaymentMethodName,
                                               )) {
-                                            final activeNewMethod = provider
+                                            currentMethod = provider
                                                 .newlyCreatedPaymentMethodName!;
                                             WidgetsBinding.instance
                                                 .addPostFrameCallback((_) {
@@ -257,52 +195,53 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                               index,
                                               context,
                                               clientsProvider,
-                                              paymentMethod: activeNewMethod,
+                                              paymentMethod: currentMethod,
                                             );
-                                            return activeNewMethod;
-                                          }
-
-                                          // 2. ИСПРАВЛЕНО: Если у точки метод null или его нет в справочнике, возвращаем null (покажется hint)
-                                          if (point.paymentMethod == null ||
-                                              !provider.paymentMethods.any(
+                                          } else if (point.paymentMethod !=
+                                                  null &&
+                                              provider.paymentMethods.any(
                                                 (p) =>
                                                     p.name ==
                                                     point.paymentMethod,
                                               )) {
-                                            return null;
+                                            currentMethod = point.paymentMethod;
                                           }
 
-                                          return point.paymentMethod;
-                                        }(),
+                                          final selectedModel = provider
+                                              .paymentMethods
+                                              .firstWhereOrNull(
+                                                (p) => p.name == currentMethod,
+                                              );
 
-                                        decoration: const InputDecoration(
-                                          border: OutlineInputBorder(),
-                                          isDense: true,
-                                          contentPadding: EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                            vertical: 12,
-                                          ),
-                                        ),
-                                        hint: const Text(
-                                          'Выберите форму оплаты',
-                                        ),
-                                        // Будет показываться, если initialValue == null
-                                        items: provider.paymentMethods.map((
-                                          method,
-                                        ) {
-                                          return DropdownMenuItem<String>(
-                                            value: method.name,
-                                            child: Text(method.name),
-                                          );
-                                        }).toList(),
-                                        onChanged: (value) {
-                                          final clientsProvider = context
-                                              .read<ClientsProvider>();
-                                          provider.updatePointMeta(
-                                            index,
-                                            context,
-                                            clientsProvider,
-                                            paymentMethod: value,
+                                          return AppDropdown<PaymentMethod>(
+                                            label: 'Форма оплаты *',
+                                            items: provider.paymentMethods,
+                                            value: selectedModel,
+                                            hint: 'Выберите форму оплаты',
+                                            itemLabelBuilder: (p) => p.name,
+                                            onChanged: (value) {
+                                              provider.updatePointMeta(
+                                                index,
+                                                context,
+                                                clientsProvider,
+                                                paymentMethod: value?.name,
+                                              );
+                                            },
+                                            onAdd: () => showDialog(
+                                              context: context,
+                                              builder: (_) =>
+                                                  const PaymentMethodDialog(),
+                                            ),
+                                            onEdit: selectedModel == null
+                                                ? null
+                                                : () => showDialog(
+                                                    context: context,
+                                                    builder: (_) =>
+                                                        PaymentMethodDialog(
+                                                          paymentMethod:
+                                                              selectedModel,
+                                                        ),
+                                                  ),
                                           );
                                         },
                                       ),
@@ -410,5 +349,16 @@ class _RoutePointsListState extends State<RoutePointsList> {
         );
       },
     );
+  }
+}
+
+// Вспомогательный метод для поиска в списке
+extension ListX<T> on List<T> {
+  T? firstWhereOrNull(bool Function(T element) test) {
+    try {
+      return firstWhere(test);
+    } catch (_) {
+      return null;
+    }
   }
 }

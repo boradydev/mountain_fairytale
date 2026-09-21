@@ -5,6 +5,7 @@ import 'package:mountain_fairytale/infra/repos/drivers/models/driver_model.dart'
 import 'package:mountain_fairytale/presentation/providers/route_constructor_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/common/car_dialog.dart';
 import 'package:mountain_fairytale/presentation/screens/common/driver_dialog.dart';
+import 'package:mountain_fairytale/presentation/widgets/dropdown_widget.dart';
 import 'package:provider/provider.dart';
 
 class RouteMetaPanel extends StatefulWidget {
@@ -65,96 +66,38 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
           const SizedBox(height: 12),
 
           // Водитель
-          Row(
-            children: [
-              const Expanded(
-                child: Text(
-                  'Водитель *',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              IconButton(
-                onPressed: () => _showDriverDialog(context),
-                icon: const Icon(Icons.add),
-                tooltip: 'Добавить водителя',
-              ),
-              IconButton(
-                // Кнопка активна только когда водитель выбран в дропдауне
-                onPressed: provider.selectedDriver != null
-                    ? () => _showDriverDialog(
-                        context,
-                        driver: provider.selectedDriver,
-                      )
-                    : null,
-                icon: const Icon(Icons.edit_outlined),
-                tooltip: 'Редактировать выбранного водителя',
-              ),
-            ],
-          ),
-
-          DropdownButtonFormField<Driver>(
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-            ),
-            initialValue: provider.selectedDriver,
-            // Меняем на value, чтобы сброс в null мгновенно очищал поле
-            items: provider.drivers.map((driver) {
-              return DropdownMenuItem<Driver>(
-                value: driver,
-                child: Text(driver.name),
-              );
-            }).toList(),
+          AppDropdown<Driver>(
+            label: 'Водитель *',
+            items: provider.drivers,
+            value: provider.selectedDriver,
+            itemLabelBuilder: (driver) => driver.name,
             onChanged: provider.selectDriver,
             validator: (value) => value == null ? 'Выберите водителя' : null,
+            onAdd: () => _showDriverDialog(context),
+            onEdit: provider.selectedDriver == null
+                ? null
+                : () => _showDriverDialog(
+                    context,
+                    driver: provider.selectedDriver,
+                  ),
           ),
 
           const SizedBox(height: 12),
 
           // Автомобиль
-          // Автомобиль
-          Row(
-            children: [
-              const Expanded(
-                child: Text(
-                  'Автомобиль *',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              IconButton(
-                onPressed: () => _showCarDialog(context),
-                icon: const Icon(Icons.add),
-                tooltip: 'Добавить автомобиль',
-              ),
-              IconButton(
-                // Активна только если машина выбрана
-                onPressed: provider.selectedCar != null
-                    ? () => _showCarDialog(context, car: provider.selectedCar)
-                    : null,
-                icon: const Icon(Icons.edit_outlined),
-                tooltip: 'Редактировать выбранный автомобиль',
-              ),
-            ],
-          ),
-
-          DropdownButtonFormField<Car>(
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-            ),
-            initialValue: provider.selectedCar,
-            // Используем value для реактивного сброса
-            items: provider.cars.map((car) {
-              return DropdownMenuItem<Car>(
-                value: car,
-                child: Text('${car.model} (${car.number})'),
-              );
-            }).toList(),
+          AppDropdown<Car>(
+            label: 'Автомобиль *',
+            items: provider.cars,
+            value: provider.selectedCar,
+            itemLabelBuilder: (car) => '${car.model} (${car.number})',
             onChanged: provider.selectCar,
             validator: (value) => value == null ? 'Выберите автомобиль' : null,
+            onAdd: () => _showCarDialog(context),
+            onEdit: provider.selectedCar == null
+                ? null
+                : () => _showCarDialog(context, car: provider.selectedCar),
           ),
+
           const SizedBox(height: 12),
           TextFormField(
             decoration: const InputDecoration(

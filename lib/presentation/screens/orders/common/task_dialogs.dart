@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/infra/repos/products/models/product_model.dart';
 import 'package:mountain_fairytale/presentation/providers/order_points_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/common/product_dialog.dart';
+import 'package:mountain_fairytale/presentation/widgets/dropdown_widget.dart';
 
 class TaskDialogs {
   static Future<void> showAddTask(
@@ -26,96 +27,57 @@ class TaskDialogs {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Row(
-                      children: [
-                        const Expanded(
-                          child: Text(
-                            'Продукция / услуга',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-
-                        // Добавить продукцию / услугу
-                        IconButton(
-                          tooltip: 'Добавить продукцию/услугу',
-                          icon: const Icon(Icons.add),
-                          onPressed: () async {
-                            final created = await showDialog<Product>(
-                              context: context,
-                              builder: (_) => const ProductDialog(),
-                            );
-
-                            if (created == null) {
-                              return;
-                            }
-
-                            setDialogState(() {
-                              selectedProduct = created;
-                            });
-                          },
-                        ),
-
-                        // Редактировать выбранную позицию
-                        IconButton(
-                          tooltip: 'Редактировать выбранную позицию',
-                          icon: const Icon(Icons.edit_outlined),
-                          onPressed: selectedProduct == null
-                              ? null
-                              : () async {
-                                  final productToEdit = selectedProduct!;
-
-                                  await showDialog<void>(
-                                    context: context,
-                                    builder: (_) => ProductDialog(
-                                      product: productToEdit,
-                                    ),
-                                  );
-
-                                  // Получаем актуальную версию
-                                  // после редактирования или удаления.
-                                  Product? updated;
-
-                                  for (final product in provider.products) {
-                                    if (product.id == productToEdit.id) {
-                                      updated = product;
-                                      break;
-                                    }
-                                  }
-
-                                  setDialogState(() {
-                                    selectedProduct = updated;
-                                  });
-                                },
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    DropdownButtonFormField<Product>(
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.inventory_2_outlined),
-                      ),
-                      hint: const Text(
-                        'Выберите товар/услугу',
-                      ),
-                      initialValue: selectedProduct,
-                      items: provider.products.map((product) {
-                        return DropdownMenuItem<Product>(
-                          value: product,
-                          child: Text(
-                            '${product.name} (${product.basePrice} ₽)',
-                          ),
-                        );
-                      }).toList(),
+                    AppDropdown<Product>(
+                      label: 'Продукция / услуга',
+                      items: provider.products,
+                      value: selectedProduct,
+                      hint: 'Выберите товар/услугу',
+                      itemLabelBuilder: (product) =>
+                          '${product.name} (${product.basePrice} ₽)',
                       onChanged: (product) {
                         setDialogState(() {
                           selectedProduct = product;
                         });
                       },
+                      onAdd: () async {
+                        final created = await showDialog<Product>(
+                          context: context,
+                          builder: (_) => const ProductDialog(),
+                        );
+
+                        if (created != null) {
+                          setDialogState(() {
+                            selectedProduct = created;
+                          });
+                        }
+                      },
+                      onEdit: selectedProduct == null
+                          ? null
+                          : () async {
+                              final productToEdit = selectedProduct!;
+
+                              await showDialog<void>(
+                                context: context,
+                                builder: (_) => ProductDialog(
+                                  product: productToEdit,
+                                ),
+                              );
+
+                              // Получаем актуальную версию
+                              // после редактирования или удаления.
+                              Product? updated;
+
+                              for (final product in provider.products) {
+                                if (product.id == productToEdit.id) {
+                                  updated = product;
+                                  break;
+                                }
+                              }
+
+                              setDialogState(() {
+                                selectedProduct = updated;
+                              });
+                            },
                     ),
 
                     const SizedBox(height: 16),
