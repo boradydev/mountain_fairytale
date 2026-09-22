@@ -46,7 +46,7 @@ Future<void> main() async {
 
   final prefs = await SharedPreferences.getInstance();
 
-  double width = prefs.getDouble('window_width') ?? 1000;
+  double width = prefs.getDouble('window_width') ?? 1200;
   double height = prefs.getDouble('window_height') ?? 600;
   double? posX = prefs.getDouble('window_x');
   double? posY = prefs.getDouble('window_y');
@@ -54,7 +54,7 @@ Future<void> main() async {
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     WindowOptions windowOptions = WindowOptions(
       size: Size(width, height),
-      minimumSize: Size(1000, 630),
+      minimumSize: Size(1200, 600),
       center: posX == null,
       title: "Mountain Fairytale",
     );

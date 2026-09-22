@@ -190,6 +190,7 @@ class _ClientAttentionCard extends StatelessWidget {
                         child: MetricRow(
                           label: 'Адрес:',
                           value: client.address,
+                          valueOverflow: TextOverflow.ellipsis,
                         ),
                       ),
                       MetricRow(

@@ -8,6 +8,7 @@ class MetricRow extends StatelessWidget {
   final double? valueWidth;
   final Color? iconColor;
   final Color? valueColor;
+  final TextOverflow? valueOverflow;
 
   const MetricRow({
     super.key,
@@ -18,6 +19,7 @@ class MetricRow extends StatelessWidget {
     this.valueWidth,
     this.iconColor,
     this.valueColor,
+    this.valueOverflow,
   });
 
   @override
@@ -62,7 +64,7 @@ class MetricRow extends StatelessWidget {
                 ),
               ),
               textAlign: TextAlign.left,
-              overflow: TextOverflow.ellipsis,
+              overflow: valueOverflow ?? TextOverflow.ellipsis,
               maxLines: 1,
             ),
           ),
