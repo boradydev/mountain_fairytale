@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/infra/repos/sales_representative_clients/models/sales_representative_client_model.dart';
-import 'package:mountain_fairytale/infra/repos/sales_representative_clients/repo.dart';
+import 'package:mountain_fairytale/presentation/providers/abcs/repos/sales_representative_client.dart';
 
 enum SalesRepClientsStatus { initial, loading, success, failure }
 
