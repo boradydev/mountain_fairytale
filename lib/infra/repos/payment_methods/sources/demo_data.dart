@@ -12,7 +12,7 @@ class DemoPaymentMethodDataSource implements PaymentMethodDataSource {
 
   @override
   Future<List<Map<String, dynamic>>> getAllPaymentMethods() async {
-    await Future.delayed(const Duration(milliseconds: 300));
+    await Future.delayed(const Duration(milliseconds: 40));
     if (_cache != null) return _cache!;
 
     final jsonString = await _assetBundle.loadString(
@@ -26,7 +26,7 @@ class DemoPaymentMethodDataSource implements PaymentMethodDataSource {
   Future<Map<String, dynamic>> createPaymentMethod(
     Map<String, dynamic> json,
   ) async {
-    await Future.delayed(const Duration(milliseconds: 400));
+    await Future.delayed(const Duration(milliseconds: 60));
     if (_cache == null) await getAllPaymentMethods();
 
     final newId = _cache!.isEmpty
@@ -45,7 +45,7 @@ class DemoPaymentMethodDataSource implements PaymentMethodDataSource {
     int id,
     Map<String, dynamic> json,
   ) async {
-    await Future.delayed(const Duration(milliseconds: 400));
+    await Future.delayed(const Duration(milliseconds: 60));
     if (_cache == null) await getAllPaymentMethods();
 
     final index = _cache!.indexWhere((e) => e['id'] == id);
@@ -67,14 +67,14 @@ class DemoPaymentMethodDataSource implements PaymentMethodDataSource {
 
   @override
   Future<void> deletePaymentMethod(int id) async {
-    await Future.delayed(const Duration(milliseconds: 300));
+    await Future.delayed(const Duration(milliseconds: 40));
     if (_cache == null) await getAllPaymentMethods();
     _cache!.removeWhere((e) => e['id'] == id);
   }
 
   @override
   Future<Map<String, dynamic>> getPaymentMethodById(int id) async {
-    await Future.delayed(const Duration(milliseconds: 200));
+    await Future.delayed(const Duration(milliseconds: 30));
     if (_cache == null) await getAllPaymentMethods();
     return _cache!.firstWhere(
       (e) => e['id'] == id,

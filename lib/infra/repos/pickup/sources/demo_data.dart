@@ -15,7 +15,7 @@ class DemoPickupDataSource implements PickupDataSource {
 
   @override
   Future<List<Map<String, dynamic>>> getAllPickupSheets() async {
-    await Future.delayed(const Duration(milliseconds: 400));
+    await Future.delayed(const Duration(milliseconds: 60));
 
     if (_pickupCache != null) {
       return _pickupCache!;
@@ -30,7 +30,7 @@ class DemoPickupDataSource implements PickupDataSource {
 
   @override
   Future<Map<String, dynamic>> getPickupSheetById(int id) async {
-    await Future.delayed(const Duration(milliseconds: 200));
+    await Future.delayed(const Duration(milliseconds: 30));
 
     if (_pickupCache == null) {
       await getAllPickupSheets();
@@ -71,7 +71,7 @@ class DemoPickupDataSource implements PickupDataSource {
     int id,
     Map<String, dynamic> json,
   ) async {
-    await Future.delayed(const Duration(milliseconds: 400));
+    await Future.delayed(const Duration(milliseconds: 60));
 
     if (_pickupCache == null) {
       await getAllPickupSheets();
@@ -100,7 +100,7 @@ class DemoPickupDataSource implements PickupDataSource {
 
   @override
   Future<void> deletePickupSheet(int id) async {
-    await Future.delayed(const Duration(milliseconds: 300));
+    await Future.delayed(const Duration(milliseconds: 40));
 
     if (_pickupCache == null) {
       await getAllPickupSheets();

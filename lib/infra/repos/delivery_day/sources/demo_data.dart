@@ -51,7 +51,7 @@ class DemoDeliveryDataSource implements DeliveryDataSource {
   Future<Map<String, dynamic>> getDeliveryDay(int id) async {
     // Эмулируем задержку сети.
     await Future<void>.delayed(
-      const Duration(milliseconds: 300),
+      const Duration(milliseconds: 40),
     );
 
     final deliveryDays = await _getDemoJson();

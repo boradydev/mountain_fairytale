@@ -12,7 +12,7 @@ class DemoProductDataSource implements ProductDataSource {
 
   @override
   Future<List<Map<String, dynamic>>> getAllProducts() async {
-    await Future.delayed(const Duration(milliseconds: 300));
+    await Future.delayed(const Duration(milliseconds: 40));
     if (_productsCache != null) return _productsCache!;
     final jsonString = await _assetBundle.loadString(
       'assets/demo/products/products_data.json',
@@ -23,7 +23,7 @@ class DemoProductDataSource implements ProductDataSource {
 
   @override
   Future<Map<String, dynamic>> getProductById(int id) async {
-    await Future.delayed(const Duration(milliseconds: 200));
+    await Future.delayed(const Duration(milliseconds: 30));
     if (_productsCache == null) await getAllProducts();
     return _productsCache!.firstWhere(
       (e) => e['id'] == id,
@@ -33,7 +33,7 @@ class DemoProductDataSource implements ProductDataSource {
 
   @override
   Future<Map<String, dynamic>> createProduct(Map<String, dynamic> json) async {
-    await Future.delayed(const Duration(milliseconds: 400));
+    await Future.delayed(const Duration(milliseconds: 60));
     if (_productsCache == null) await getAllProducts();
     final newId = _productsCache!.isEmpty
         ? 1
@@ -51,7 +51,7 @@ class DemoProductDataSource implements ProductDataSource {
     int id,
     Map<String, dynamic> json,
   ) async {
-    await Future.delayed(const Duration(milliseconds: 400));
+    await Future.delayed(const Duration(milliseconds: 60));
     if (_productsCache == null) await getAllProducts();
     final index = _productsCache!.indexWhere((e) => e['id'] == id);
     if (index == -1) throw Exception('Product not found');
@@ -65,7 +65,7 @@ class DemoProductDataSource implements ProductDataSource {
 
   @override
   Future<void> deleteProduct(int id) async {
-    await Future.delayed(const Duration(milliseconds: 300));
+    await Future.delayed(const Duration(milliseconds: 40));
     if (_productsCache == null) await getAllProducts();
     _productsCache!.removeWhere((e) => e['id'] == id);
   }

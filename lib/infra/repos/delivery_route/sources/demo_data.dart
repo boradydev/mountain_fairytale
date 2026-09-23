@@ -16,7 +16,7 @@ class DemoDeliveryRouteDataSource implements DeliveryRouteDataSource {
 
   @override
   Future<List<Map<String, dynamic>>> getAllRouteSheets() async {
-    await Future.delayed(const Duration(milliseconds: 400));
+    await Future.delayed(const Duration(milliseconds: 60));
     if (_routesCache != null) return _routesCache!;
 
     final jsonString = await _assetBundle.loadString(
@@ -28,7 +28,7 @@ class DemoDeliveryRouteDataSource implements DeliveryRouteDataSource {
 
   @override
   Future<Map<String, dynamic>> getRouteSheetById(int id) async {
-    await Future.delayed(const Duration(milliseconds: 200));
+    await Future.delayed(const Duration(milliseconds: 30));
     if (_routesCache == null) await getAllRouteSheets();
     return _routesCache!.firstWhere(
       (e) => int.parse(e['id'].toString()) == id,
@@ -66,7 +66,7 @@ class DemoDeliveryRouteDataSource implements DeliveryRouteDataSource {
     int id,
     Map<String, dynamic> json,
   ) async {
-    await Future.delayed(const Duration(milliseconds: 400));
+    await Future.delayed(const Duration(milliseconds: 60));
     if (_routesCache == null) await getAllRouteSheets();
 
     final index = _routesCache!.indexWhere(
@@ -87,7 +87,7 @@ class DemoDeliveryRouteDataSource implements DeliveryRouteDataSource {
 
   @override
   Future<void> deleteRouteSheet(int id) async {
-    await Future.delayed(const Duration(milliseconds: 300));
+    await Future.delayed(const Duration(milliseconds: 40));
     if (_routesCache == null) await getAllRouteSheets();
 
     final index = _routesCache!.indexWhere(

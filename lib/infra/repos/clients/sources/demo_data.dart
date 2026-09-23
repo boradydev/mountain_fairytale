@@ -37,7 +37,7 @@ class DemoClientDataSource implements ClientDataSource {
 
   @override
   Future<Map<String, dynamic>> getClientById(int id) async {
-    await Future.delayed(const Duration(milliseconds: 200));
+    await Future.delayed(const Duration(milliseconds: 30));
     if (_cache == null) await _getDemoJson();
     return _cache!.firstWhere(
       (e) => e['id'] == id,
@@ -50,7 +50,7 @@ class DemoClientDataSource implements ClientDataSource {
     int id,
     Map<String, dynamic> json,
   ) async {
-    await Future.delayed(const Duration(milliseconds: 400));
+    await Future.delayed(const Duration(milliseconds: 60));
     if (_cache == null) await _getDemoJson();
     final index = _cache!.indexWhere((e) => e['id'] == id);
     if (index == -1) throw Exception('Client not found');
@@ -64,7 +64,7 @@ class DemoClientDataSource implements ClientDataSource {
 
   @override
   Future<void> deleteClient(int id) async {
-    await Future.delayed(const Duration(milliseconds: 300));
+    await Future.delayed(const Duration(milliseconds: 40));
     if (_cache == null) await _getDemoJson();
     _cache!.removeWhere((e) => e['id'] == id);
   }
@@ -75,7 +75,7 @@ class DemoClientDataSource implements ClientDataSource {
     String cooldownUntilIso,
   ) async {
     // Имитируем задержку сети
-    await Future<void>.delayed(const Duration(milliseconds: 400));
+    await Future<void>.delayed(const Duration(milliseconds: 60));
 
     // Гарантируем, что кэш инициализирован
     if (_cache == null) {
@@ -101,7 +101,7 @@ class DemoClientDataSource implements ClientDataSource {
     String address,
   ) async {
     await Future<void>.delayed(
-      const Duration(milliseconds: 300),
+      const Duration(milliseconds: 40),
     ); // Имитируем сеть
 
     if (_cache == null) {

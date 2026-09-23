@@ -12,7 +12,7 @@ class DemoCarDataSource implements CarDataSource {
 
   @override
   Future<List<Map<String, dynamic>>> getAllCars() async {
-    await Future.delayed(const Duration(milliseconds: 300));
+    await Future.delayed(const Duration(milliseconds: 40));
     if (_carsCache != null) return _carsCache!;
     final jsonString = await _assetBundle.loadString(
       'assets/demo/cars/cars_data.json',
@@ -23,7 +23,7 @@ class DemoCarDataSource implements CarDataSource {
 
   @override
   Future<Map<String, dynamic>> getCarById(int id) async {
-    await Future.delayed(const Duration(milliseconds: 200));
+    await Future.delayed(const Duration(milliseconds: 30));
     if (_carsCache == null) await getAllCars();
     return _carsCache!.firstWhere(
       (e) => e['id'] == id,
@@ -33,7 +33,7 @@ class DemoCarDataSource implements CarDataSource {
 
   @override
   Future<Map<String, dynamic>> createCar(Map<String, dynamic> carJson) async {
-    await Future.delayed(const Duration(milliseconds: 400));
+    await Future.delayed(const Duration(milliseconds: 60));
     if (_carsCache == null) await getAllCars();
     final newId = _carsCache!.isEmpty
         ? 1
@@ -51,7 +51,7 @@ class DemoCarDataSource implements CarDataSource {
     int id,
     Map<String, dynamic> json,
   ) async {
-    await Future.delayed(const Duration(milliseconds: 400));
+    await Future.delayed(const Duration(milliseconds: 60));
     if (_carsCache == null) await getAllCars();
     final index = _carsCache!.indexWhere((e) => e['id'] == id);
     if (index == -1) throw Exception('Car not found');
@@ -65,14 +65,14 @@ class DemoCarDataSource implements CarDataSource {
 
   @override
   Future<void> deleteCar(int id) async {
-    await Future.delayed(const Duration(milliseconds: 300));
+    await Future.delayed(const Duration(milliseconds: 40));
     if (_carsCache == null) await getAllCars();
     _carsCache?.removeWhere((e) => e['id'] == id);
   }
 
   @override
   Future<Map<String, dynamic>?> checkDuplicate(String number) async {
-    await Future<void>.delayed(const Duration(milliseconds: 300));
+    await Future<void>.delayed(const Duration(milliseconds: 40));
     if (_carsCache == null) await getAllCars();
 
     final cleanNumber = number.replaceAll(' ', '').toLowerCase();

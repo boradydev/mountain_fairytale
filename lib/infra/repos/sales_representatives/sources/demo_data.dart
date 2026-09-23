@@ -13,7 +13,7 @@ class DemoSalesRepresentativeDataSource
 
   @override
   Future<List<Map<String, dynamic>>> getAllSalesRepresentatives() async {
-    await Future.delayed(const Duration(milliseconds: 300));
+    await Future.delayed(const Duration(milliseconds: 40));
     if (_cache != null) return _cache!;
 
     final jsonString = await _assetBundle.loadString(
@@ -27,7 +27,7 @@ class DemoSalesRepresentativeDataSource
   Future<Map<String, dynamic>> createSalesRepresentative(
     Map<String, dynamic> json,
   ) async {
-    await Future.delayed(const Duration(milliseconds: 400));
+    await Future.delayed(const Duration(milliseconds: 60));
     if (_cache == null) await getAllSalesRepresentatives();
 
     final newId = _cache!.isEmpty
@@ -47,7 +47,7 @@ class DemoSalesRepresentativeDataSource
     int id,
     Map<String, dynamic> json,
   ) async {
-    await Future.delayed(const Duration(milliseconds: 400));
+    await Future.delayed(const Duration(milliseconds: 60));
     if (_cache == null) await getAllSalesRepresentatives();
 
     final index = _cache!.indexWhere((e) => e['id'] == id);
@@ -73,14 +73,14 @@ class DemoSalesRepresentativeDataSource
 
   @override
   Future<void> deleteSalesRepresentative(int id) async {
-    await Future.delayed(const Duration(milliseconds: 300));
+    await Future.delayed(const Duration(milliseconds: 40));
     if (_cache == null) await getAllSalesRepresentatives();
     _cache!.removeWhere((e) => e['id'] == id);
   }
 
   @override
   Future<Map<String, dynamic>> getSalesRepresentativeById(int id) async {
-    await Future.delayed(const Duration(milliseconds: 200));
+    await Future.delayed(const Duration(milliseconds: 30));
     if (_cache == null) await getAllSalesRepresentatives();
     return _cache!.firstWhere(
       (e) => e['id'] == id,
@@ -91,7 +91,7 @@ class DemoSalesRepresentativeDataSource
 
   @override
   Future<Map<String, dynamic>?> checkDuplicate(String name) async {
-    await Future<void>.delayed(const Duration(milliseconds: 300));
+    await Future<void>.delayed(const Duration(milliseconds: 40));
     if (_cache == null) await getAllSalesRepresentatives();
 
     final cleanName = name.trim().toLowerCase();

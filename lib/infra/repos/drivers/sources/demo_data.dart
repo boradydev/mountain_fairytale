@@ -12,7 +12,7 @@ class DemoDriverDataSource implements DriverDataSource {
 
   @override
   Future<List<Map<String, dynamic>>> getAllDrivers() async {
-    await Future.delayed(const Duration(milliseconds: 300));
+    await Future.delayed(const Duration(milliseconds: 40));
     if (_driversCache != null) return _driversCache!;
     final jsonString = await _assetBundle.loadString(
       'assets/demo/driver/drivers_data.json',
@@ -23,7 +23,7 @@ class DemoDriverDataSource implements DriverDataSource {
 
   @override
   Future<Map<String, dynamic>> getDriverById(int id) async {
-    await Future.delayed(const Duration(milliseconds: 200));
+    await Future.delayed(const Duration(milliseconds: 30));
     if (_driversCache == null) await getAllDrivers();
     return _driversCache!.firstWhere(
       (e) => e['id'] == id,
@@ -35,7 +35,7 @@ class DemoDriverDataSource implements DriverDataSource {
   Future<Map<String, dynamic>> createDriver(
     Map<String, dynamic> driverJson,
   ) async {
-    await Future.delayed(const Duration(milliseconds: 400));
+    await Future.delayed(const Duration(milliseconds: 60));
     if (_driversCache == null) await getAllDrivers();
     final newId = _driversCache!.isEmpty
         ? 1
@@ -53,7 +53,7 @@ class DemoDriverDataSource implements DriverDataSource {
     int id,
     Map<String, dynamic> json,
   ) async {
-    await Future.delayed(const Duration(milliseconds: 400));
+    await Future.delayed(const Duration(milliseconds: 60));
     if (_driversCache == null) await getAllDrivers();
     final index = _driversCache!.indexWhere((e) => e['id'] == id);
     if (index == -1) throw Exception('Driver not found');
@@ -67,14 +67,14 @@ class DemoDriverDataSource implements DriverDataSource {
 
   @override
   Future<void> deleteDriver(int id) async {
-    await Future.delayed(const Duration(milliseconds: 300));
+    await Future.delayed(const Duration(milliseconds: 40));
     if (_driversCache == null) await getAllDrivers();
     _driversCache!.removeWhere((e) => e['id'] == id);
   }
 
   @override
   Future<Map<String, dynamic>?> checkDuplicate(String name) async {
-    await Future<void>.delayed(const Duration(milliseconds: 300));
+    await Future<void>.delayed(const Duration(milliseconds: 40));
     if (_driversCache == null) await getAllDrivers();
 
     final cleanName = name.trim().toLowerCase();
