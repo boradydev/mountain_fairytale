@@ -40,7 +40,7 @@ class MonthPickerDialogState extends State<MonthPickerDialog> {
     return AlertDialog(
       title: const Text('Выбор месяца'),
       content: SizedBox(
-        width: 320,
+        width: 360,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
