@@ -126,6 +126,11 @@ class SalesRepresentativeDetailsDialog extends StatelessWidget {
             Row(
               children: [
                 AppSecondaryButton(
+                  text: 'Отмена',
+                  onPressed: () => Navigator.pop(context),
+                ),
+                const Spacer(),
+                AppSecondaryButton(
                   text: 'Снять представителя',
                   onPressed: () async {
                     final confirmed = await ConfirmDialog.show(
@@ -145,7 +150,7 @@ class SalesRepresentativeDetailsDialog extends StatelessWidget {
                     }
                   },
                 ),
-                const Spacer(),
+                const SizedBox(width: 12),
                 AppPrimaryButton(
                   text: 'Передать клиентов',
                   onPressed: () async {
@@ -156,13 +161,23 @@ class SalesRepresentativeDetailsDialog extends StatelessWidget {
                         reps: repProvider.salesRepresentatives,
                       ),
                     );
+                    
                     if (selected != null) {
-                      await clientsProvider.assignClientsTo(selected.id);
-                      AppNotify.show(
-                        'Клиенты переданы представителю ${selected.name}',
+                      final confirmed = await ConfirmDialog.show(
+                        context,
+                        title: 'Передать клиентов?',
+                        content: 'Вы действительно хотите передать всех клиентов представителю ${selected.name}?',
+                        confirmText: 'Подтвердить',
                       );
-                      commProvider.fetchCommissions();
-                      if (context.mounted) Navigator.pop(context);
+                      
+                      if (confirmed) {
+                        await clientsProvider.assignClientsTo(selected.id);
+                        AppNotify.show(
+                          'Клиенты переданы представителю ${selected.name}',
+                        );
+                        commProvider.fetchCommissions();
+                        if (context.mounted) Navigator.pop(context);
+                      }
                     }
                   },
                 ),

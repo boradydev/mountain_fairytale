@@ -75,5 +75,6 @@ flutter:
     - assets/demo/sales_representatives/
     - assets/demo/sales_representative_commissions/
     - assets/demo/pickup/
+    - assets/demo/sales_representative_clients/
     # Application fonts
     - assets/fonts/
