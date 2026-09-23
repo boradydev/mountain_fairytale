@@ -46,6 +46,7 @@ class DemoSalesRepresentativeClientDataSource
           // Добавляем недостающие поля, которые ожидает модель SalesRepresentativeClient
           item['clientName'] = clientInfo['name'];
           item['phone'] = clientInfo['phone'];
+          item['commissionAmount'] = e['commissionAmount'] ?? 0.0;
 
           // Приводим 'amount' из JSON к 'totalSalesAmount' для модели
           if (item.containsKey('amount')) {

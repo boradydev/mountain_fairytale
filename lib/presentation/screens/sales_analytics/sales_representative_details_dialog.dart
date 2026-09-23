@@ -27,7 +27,7 @@ class SalesRepresentativeDetailsDialog extends StatelessWidget {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
-        width: 600,
+        width: 1100,
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -88,8 +88,9 @@ class SalesRepresentativeDetailsDialog extends StatelessWidget {
                         return AppBaseCard(
                           child: Row(
                             children: [
+                              // Левая часть: Имя и телефон
                               Expanded(
-                                child: Column(
+                                child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
@@ -98,6 +99,7 @@ class SalesRepresentativeDetailsDialog extends StatelessWidget {
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
+                                    const SizedBox(width: 8),
                                     Text(
                                       client.phone,
                                       style: const TextStyle(fontSize: 13),
@@ -105,16 +107,28 @@ class SalesRepresentativeDetailsDialog extends StatelessWidget {
                                   ],
                                 ),
                               ),
-                              MetricRow(
-                                label: 'Заказов',
-                                value: client.ordersCount.toString(),
-                                labelWidth: 60,
-                              ),
-                              MetricRow(
-                                label: 'Сумма',
-                                value:
-                                    '${client.totalSalesAmount.toStringAsFixed(2)} ₽',
-                                labelWidth: 60,
+                              // Правая часть: Метрики
+                              Row(
+                                children: [
+                                  MetricRow(
+                                    label: 'Заказов',
+                                    value: client.ordersCount.toString(),
+                                    valueWidth: 30,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  MetricRow(
+                                    label: 'Оборот',
+                                    value:
+                                        '${client.totalSalesAmount.toStringAsFixed(2)} ₽',
+                                    valueWidth: 70,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  MetricRow(
+                                    label: 'К выплате',
+                                    value: '${client.commissionAmount.toStringAsFixed(2)} ₽',
+                                    valueWidth: 70,
+                                  ),
+                                ],
                               ),
                             ],
                           ),

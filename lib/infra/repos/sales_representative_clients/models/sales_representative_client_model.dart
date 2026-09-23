@@ -10,6 +10,7 @@ class SalesRepresentativeClient {
   final int ordersCount;
   final double totalSalesAmount;
   final DateTime? lastOrderDate;
+  final double commissionAmount;
 
   const SalesRepresentativeClient({
     required this.clientId,
@@ -18,6 +19,7 @@ class SalesRepresentativeClient {
     required this.ordersCount,
     required this.totalSalesAmount,
     this.lastOrderDate,
+    required this.commissionAmount,
   });
 
   factory SalesRepresentativeClient.fromJson(Map<String, dynamic> json) =>

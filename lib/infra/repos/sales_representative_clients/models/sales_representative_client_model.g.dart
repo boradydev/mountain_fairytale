@@ -17,6 +17,7 @@ SalesRepresentativeClient _$SalesRepresentativeClientFromJson(
   lastOrderDate: json['lastOrderDate'] == null
       ? null
       : DateTime.parse(json['lastOrderDate'] as String),
+  commissionAmount: (json['commissionAmount'] as num).toDouble(),
 );
 
 Map<String, dynamic> _$SalesRepresentativeClientToJson(
@@ -28,4 +29,5 @@ Map<String, dynamic> _$SalesRepresentativeClientToJson(
   'ordersCount': instance.ordersCount,
   'totalSalesAmount': instance.totalSalesAmount,
   'lastOrderDate': instance.lastOrderDate?.toIso8601String(),
+  'commissionAmount': instance.commissionAmount,
 };
