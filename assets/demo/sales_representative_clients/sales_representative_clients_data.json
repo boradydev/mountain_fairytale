@@ -1,37 +1,33 @@
 [
-  {
-    "clientId": 1,
-    "salesRepresentativeId": 1,
-    "date": "2026-08-10",
-    "amount": 1200.0,
-    "ordersCount": 3
-  },
-  {
-    "clientId": 5,
-    "salesRepresentativeId": 1,
-    "date": "2026-08-12",
-    "amount": 800.0,
-    "ordersCount": 2
-  },
-  {
-    "clientId": 3,
-    "salesRepresentativeId": 2,
-    "date": "2026-08-05",
-    "amount": 2500.0,
-    "ordersCount": 5
-  },
-  {
-    "clientId": 6,
-    "salesRepresentativeId": 2,
-    "date": "2026-08-15",
-    "amount": 1100.0,
-    "ordersCount": 2
-  },
-  {
-    "clientId": 4,
-    "salesRepresentativeId": 3,
-    "date": "2026-08-20",
-    "amount": 3000.0,
-    "ordersCount": 6
-  }
+  { "clientId": 1, "salesRepresentativeId": 1, "date": "2026-08-10", "amount": 1200.0, "ordersCount": 3 },
+  { "clientId": 5, "salesRepresentativeId": 1, "date": "2026-08-12", "amount": 800.0, "ordersCount": 2 },
+  { "clientId": 7, "salesRepresentativeId": 1, "date": "2026-08-14", "amount": 1500.0, "ordersCount": 4 },
+  { "clientId": 8, "salesRepresentativeId": 1, "date": "2026-08-15", "amount": 600.0, "ordersCount": 1 },
+  { "clientId": 10, "salesRepresentativeId": 1, "date": "2026-08-18", "amount": 2100.0, "ordersCount": 5 },
+  { "clientId": 17, "salesRepresentativeId": 1, "date": "2026-08-19", "amount": 1100.0, "ordersCount": 2 },
+  { "clientId": 18, "salesRepresentativeId": 1, "date": "2026-08-20", "amount": 950.0, "ordersCount": 2 },
+  { "clientId": 19, "salesRepresentativeId": 1, "date": "2026-08-21", "amount": 3200.0, "ordersCount": 7 },
+  { "clientId": 20, "salesRepresentativeId": 1, "date": "2026-08-22", "amount": 400.0, "ordersCount": 1 },
+  { "clientId": 21, "salesRepresentativeId": 1, "date": "2026-08-23", "amount": 1800.0, "ordersCount": 4 },
+  { "clientId": 3, "salesRepresentativeId": 2, "date": "2026-08-05", "amount": 2500.0, "ordersCount": 5 },
+  { "clientId": 6, "salesRepresentativeId": 2, "date": "2026-08-15", "amount": 1100.0, "ordersCount": 2 },
+  { "clientId": 9, "salesRepresentativeId": 2, "date": "2026-08-16", "amount": 1300.0, "ordersCount": 3 },
+  { "clientId": 11, "salesRepresentativeId": 2, "date": "2026-08-17", "amount": 900.0, "ordersCount": 2 },
+  { "clientId": 12, "salesRepresentativeId": 2, "date": "2026-08-20", "amount": 1700.0, "ordersCount": 4 },
+  { "clientId": 22, "salesRepresentativeId": 2, "date": "2026-08-21", "amount": 2100.0, "ordersCount": 5 },
+  { "clientId": 23, "salesRepresentativeId": 2, "date": "2026-08-22", "amount": 1400.0, "ordersCount": 3 },
+  { "clientId": 24, "salesRepresentativeId": 2, "date": "2026-08-23", "amount": 700.0, "ordersCount": 1 },
+  { "clientId": 25, "salesRepresentativeId": 2, "date": "2026-08-24", "amount": 1900.0, "ordersCount": 4 },
+  { "clientId": 26, "salesRepresentativeId": 2, "date": "2026-08-25", "amount": 1100.0, "ordersCount": 2 },
+  { "clientId": 4, "salesRepresentativeId": 3, "date": "2026-08-20", "amount": 3000.0, "ordersCount": 6 },
+  { "clientId": 13, "salesRepresentativeId": 3, "date": "2026-08-21", "amount": 1100.0, "ordersCount": 2 },
+  { "clientId": 14, "salesRepresentativeId": 3, "date": "2026-08-22", "amount": 1400.0, "ordersCount": 3 },
+  { "clientId": 15, "salesRepresentativeId": 3, "date": "2026-08-23", "amount": 800.0, "ordersCount": 1 },
+  { "clientId": 16, "salesRepresentativeId": 3, "date": "2026-08-25", "amount": 2200.0, "ordersCount": 5 },
+  { "clientId": 27, "salesRepresentativeId": 3, "date": "2026-08-26", "amount": 1600.0, "ordersCount": 3 },
+  { "clientId": 28, "salesRepresentativeId": 3, "date": "2026-08-27", "amount": 1200.0, "ordersCount": 2 },
+  { "clientId": 29, "salesRepresentativeId": 3, "date": "2026-08-28", "amount": 2800.0, "ordersCount": 6 },
+  { "clientId": 30, "salesRepresentativeId": 3, "date": "2026-08-29", "amount": 500.0, "ordersCount": 1 },
+  { "clientId": 31, "salesRepresentativeId": 3, "date": "2026-08-30", "amount": 1700.0, "ordersCount": 4 },
+  { "clientId": 32, "salesRepresentativeId": 3, "date": "2026-08-31", "amount": 1300.0, "ordersCount": 3 }
 ]

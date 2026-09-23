@@ -28,19 +28,32 @@ class DemoSalesRepresentativeClientDataSource
     final jsonString = await rootBundle.loadString(_clientsPath);
     final List<dynamic> data = jsonDecode(jsonString);
 
-    final from = DateTime.parse(dateFrom);
-    final to = DateTime.parse(dateTo);
+    // Получаем всех клиентов для обогащения данных (имена, телефоны)
+    final allClients = await clientDataSource.getAllClients();
 
     return data
-        .where((e) {
-          if (e['salesRepresentativeId'] != salesRepresentativeId) return false;
-          if (e['date'] == null) return true;
+        .where((e) => e['salesRepresentativeId'] == salesRepresentativeId)
+        .map((e) {
+          final item = Map<String, dynamic>.from(e);
+          final clientId = item['clientId'] as int;
 
-          final date = DateTime.parse(e['date']);
-          // Используем сравнение, которое включает границы периода (date >= from && date <= to)
-          return !date.isBefore(from) && !date.isAfter(to);
+          // Ищем данные клиента в общем списке
+          final clientInfo = allClients.firstWhere(
+            (c) => c['id'] == clientId,
+            orElse: () => {'name': 'Неизвестный клиент', 'phone': 'Нет данных'},
+          );
+
+          // Добавляем недостающие поля, которые ожидает модель SalesRepresentativeClient
+          item['clientName'] = clientInfo['name'];
+          item['phone'] = clientInfo['phone'];
+
+          // Приводим 'amount' из JSON к 'totalSalesAmount' для модели
+          if (item.containsKey('amount')) {
+            item['totalSalesAmount'] = item['amount'];
+          }
+
+          return item;
         })
-        .cast<Map<String, dynamic>>()
         .toList();
   }
 
