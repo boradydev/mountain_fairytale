@@ -5,7 +5,7 @@ import 'package:mountain_fairytale/infra/repos/sales_representatives/models/sale
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/common/sales_rep_dialog.dart';
 import 'package:mountain_fairytale/presentation/widgets/base_form_dialog_widget.dart';
-import 'package:mountain_fairytale/presentation/widgets/confirm_delete_dialog.dart';
+import 'package:mountain_fairytale/presentation/widgets/confirm_dialog.dart';
 import 'package:mountain_fairytale/presentation/widgets/duplicate_check_status_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/icon_button_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/dropdown_widget.dart';
@@ -193,9 +193,12 @@ class _ClientDialogState extends State<ClientDialog> {
       return;
     }
 
-    final confirmed = await ConfirmDeleteDialog.show(
+    final confirmed = await ConfirmDialog.show(
       context,
-      entityName: 'клиента «${client.name}»',
+      title: 'Удалить клиента?',
+      content: 'Вы действительно хотите удалить клиента «${client.name}»?',
+      confirmText: 'Удалить',
+      destructive: true,
     );
 
     if (!confirmed || !mounted) {
