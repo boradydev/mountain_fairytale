@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/infra/repos/sales_representative_commissions/models/sales_representative_commission_model.dart';
 import 'package:mountain_fairytale/presentation/providers/sales_representative_commission_provider.dart';
+import 'package:mountain_fairytale/presentation/providers/sales_representative_clients_provider.dart';
 import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
+import 'package:mountain_fairytale/presentation/widgets/base_card_widget.dart';
+import 'package:mountain_fairytale/presentation/widgets/dropdown_widget.dart';
+import 'package:mountain_fairytale/infra/repos/sales_representatives/models/sales_representative_model.dart';
+import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
+import 'package:mountain_fairytale/presentation/widgets/metric_row_widget.dart';
+import 'package:mountain_fairytale/presentation/widgets/confirm_delete_dialog.dart';
+import 'package:mountain_fairytale/infra/app_notify.dart';
 import 'package:provider/provider.dart';
 
 class SalesRepresentativeCommissionScreen extends StatefulWidget {
@@ -77,15 +85,11 @@ class _PeriodPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<SalesRepresentativeCommissionProvider>();
-
     final month = _months[provider.dateFrom.month - 1];
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 12,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
             const Icon(Icons.calendar_month_outlined),
@@ -108,14 +112,10 @@ class _PeriodPanel extends StatelessWidget {
 
   Future<void> _selectMonth(BuildContext context) async {
     final provider = context.read<SalesRepresentativeCommissionProvider>();
-
     final selected = await showDialog<DateTime>(
       context: context,
-      builder: (_) => _MonthPickerDialog(
-        initialMonth: provider.dateFrom,
-      ),
+      builder: (_) => _MonthPickerDialog(initialMonth: provider.dateFrom),
     );
-
     if (selected != null) {
       await provider.setMonth(selected);
     }
@@ -130,7 +130,6 @@ class _TotalCommissionCard extends StatelessWidget {
     final total = context.select(
       (SalesRepresentativeCommissionProvider p) => p.totalCommissionAmount,
     );
-
     final colorScheme = Theme.of(context).colorScheme;
 
     return Card(
@@ -162,9 +161,8 @@ class _TotalCommissionCard extends StatelessWidget {
             ),
             Text(
               '${total.toStringAsFixed(2)} ₽',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(context).textTheme.headlineSmall
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -175,7 +173,6 @@ class _TotalCommissionCard extends StatelessWidget {
 
 class _Content extends StatelessWidget {
   final SalesRepresentativeCommissionProvider provider;
-
   const _Content({required this.provider});
 
   @override
@@ -184,18 +181,15 @@ class _Content extends StatelessWidget {
       case SalesRepresentativeCommissionStatus.initial:
       case SalesRepresentativeCommissionStatus.loading:
         return const Center(child: CircularProgressIndicator());
-
       case SalesRepresentativeCommissionStatus.failure:
         return _ErrorView(
           message: provider.errorMessage,
           onRetry: provider.fetchCommissions,
         );
-
       case SalesRepresentativeCommissionStatus.success:
         if (provider.commissions.isEmpty) {
           return const Center(child: Text('Нет данных за выбранный период'));
         }
-
         return _CommissionList(commissions: provider.commissions);
     }
   }
@@ -203,7 +197,6 @@ class _Content extends StatelessWidget {
 
 class _CommissionList extends StatelessWidget {
   final List<SalesRepresentativeCommission> commissions;
-
   const _CommissionList({required this.commissions});
 
   @override
@@ -211,95 +204,92 @@ class _CommissionList extends StatelessWidget {
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: commissions.length,
-      itemBuilder: (context, index) {
-        return _CommissionCard(commission: commissions[index]);
-      },
+      itemBuilder: (context, index) =>
+          _CommissionCard(commission: commissions[index]),
     );
   }
 }
 
 class _CommissionCard extends StatelessWidget {
   final SalesRepresentativeCommission commission;
-
   const _CommissionCard({required this.commission});
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final commProvider = context.read<SalesRepresentativeCommissionProvider>();
 
-    return Card(
-      elevation: 0,
-      margin: const EdgeInsets.only(bottom: 12),
-      color: colorScheme.surfaceContainerLow,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: colorScheme.outlineVariant),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    commission.salesRepresentativeName,
-                    style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                _PercentBadge(percent: commission.commissionPercent),
-              ],
-            ),
+    return AppBaseCard(
+      onTap: () async {
+        final clientsProvider = context
+            .read<SalesRepresentativeClientsProvider>();
+        await clientsProvider.selectRepresentative(
+          commission.salesRepresentativeId,
+          commProvider.dateFrom,
+          commProvider.dateTo,
+        );
 
-            const SizedBox(height: 16),
-
-            Row(
-              children: [
-                Expanded(
-                  child: _Metric(
-                    label: 'Клиентов',
-                    value: commission.clientsCount.toString(),
+        if (!context.mounted) return;
+        await showDialog(
+          context: context,
+          builder: (_) => const SalesRepresentativeDetailsDialog(),
+        );
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  commission.salesRepresentativeName,
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                Expanded(
-                  child: _Metric(
-                    label: 'Оборот',
-                    value: _formatMoney(commission.totalSalesAmount),
-                  ),
+              ),
+              _PercentBadge(percent: commission.commissionPercent),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _Metric(
+                  label: 'Клиентов',
+                  value: commission.clientsCount.toString(),
                 ),
-                Expanded(
-                  child: _Metric(
-                    label: 'К выплате',
-                    value: _formatMoney(commission.commissionAmount),
-                    emphasized: true,
-                  ),
+              ),
+              Expanded(
+                child: _Metric(
+                  label: 'Оборот',
+                  value: _formatMoney(commission.totalSalesAmount),
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+              Expanded(
+                child: _Metric(
+                  label: 'К выплате',
+                  value: _formatMoney(commission.commissionAmount),
+                  emphasized: true,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
-  String _formatMoney(double value) {
-    return '${value.toStringAsFixed(2)} ₽';
-  }
+  String _formatMoney(double value) => '${value.toStringAsFixed(2)} ₽';
 }
 
 class _PercentBadge extends StatelessWidget {
   final double percent;
-
   const _PercentBadge({required this.percent});
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
@@ -321,7 +311,6 @@ class _Metric extends StatelessWidget {
   final String label;
   final String value;
   final bool emphasized;
-
   const _Metric({
     required this.label,
     required this.value,
@@ -356,7 +345,6 @@ class _Metric extends StatelessWidget {
 class _ErrorView extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;
-
   const _ErrorView({required this.message, required this.onRetry});
 
   @override
@@ -381,10 +369,7 @@ class _ErrorView extends StatelessWidget {
 
 class _MonthPickerDialog extends StatefulWidget {
   final DateTime initialMonth;
-
-  const _MonthPickerDialog({
-    required this.initialMonth,
-  });
+  const _MonthPickerDialog({required this.initialMonth});
 
   @override
   State<_MonthPickerDialog> createState() => _MonthPickerDialogState();
@@ -412,7 +397,6 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
   @override
   void initState() {
     super.initState();
-
     _year = widget.initialMonth.year;
     _month = widget.initialMonth.month;
   }
@@ -429,11 +413,7 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
             Row(
               children: [
                 IconButton(
-                  onPressed: () {
-                    setState(() {
-                      _year--;
-                    });
-                  },
+                  onPressed: () => setState(() => _year--),
                   icon: const Icon(Icons.chevron_left),
                 ),
                 Expanded(
@@ -445,11 +425,7 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
                   ),
                 ),
                 IconButton(
-                  onPressed: () {
-                    setState(() {
-                      _year++;
-                    });
-                  },
+                  onPressed: () => setState(() => _year++),
                   icon: const Icon(Icons.chevron_right),
                 ),
               ],
@@ -467,13 +443,8 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
               itemBuilder: (context, index) {
                 final month = index + 1;
                 final selected = month == _month;
-
                 return OutlinedButton(
-                  onPressed: () {
-                    setState(() {
-                      _month = month;
-                    });
-                  },
+                  onPressed: () => setState(() => _month = month),
                   style: OutlinedButton.styleFrom(
                     backgroundColor: selected
                         ? Theme.of(context).colorScheme.primaryContainer
@@ -493,12 +464,203 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
         ),
         AppPrimaryButton(
           text: 'Выбрать',
-          onPressed: () {
-            Navigator.pop(
-              context,
-              DateTime(_year, _month),
-            );
-          },
+          onPressed: () => Navigator.pop(context, DateTime(_year, _month)),
+        ),
+      ],
+    );
+  }
+}
+
+class SalesRepresentativeDetailsDialog extends StatelessWidget {
+  const SalesRepresentativeDetailsDialog({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final clientsProvider = context.watch<SalesRepresentativeClientsProvider>();
+    final commProvider = context.read<SalesRepresentativeCommissionProvider>();
+    final clientsProviderRepo = context
+        .read<SalesRepresentativeClientsProvider>();
+
+    // Находим данные по текущему представителю из списка комиссий
+    final commission = commProvider.commissions.firstWhere(
+      (c) => c.salesRepresentativeId == clientsProvider.currentRepresentativeId,
+    );
+
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        width: 600,
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              commission.salesRepresentativeName,
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: MetricRow(
+                    label: 'Процент',
+                    value: '${commission.commissionPercent}%',
+                  ),
+                ),
+                Expanded(
+                  child: MetricRow(
+                    label: 'Оборот',
+                    value:
+                        '${commission.totalSalesAmount.toStringAsFixed(2)} ₽',
+                  ),
+                ),
+                Expanded(
+                  child: MetricRow(
+                    label: 'К выплате',
+                    value:
+                        '${commission.commissionAmount.toStringAsFixed(2)} ₽',
+                    valueColor: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+            const Divider(height: 32),
+            Text(
+              'Клиенты за период',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              decoration: const InputDecoration(
+                hintText: 'Поиск клиента...',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(),
+              ),
+              onChanged: (val) => clientsProvider.setSearchQuery(val),
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: clientsProvider.status == SalesRepClientsStatus.loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                      itemCount: clientsProvider.filteredClients.length,
+                      itemBuilder: (context, index) {
+                        final client = clientsProvider.filteredClients[index];
+                        return AppBaseCard(
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      client.clientName,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text(
+                                      client.phone,
+                                      style: const TextStyle(fontSize: 13),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              MetricRow(
+                                label: 'Заказов',
+                                value: client.ordersCount.toString(),
+                                labelWidth: 60,
+                              ),
+                              MetricRow(
+                                label: 'Сумма',
+                                value:
+                                    '${client.totalSalesAmount.toStringAsFixed(2)} ₽',
+                                labelWidth: 60,
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                AppSecondaryButton(
+                  text: 'Снять представителя',
+                  onPressed: () async {
+                    final confirmed = await ConfirmDeleteDialog.show(
+                      context,
+                      entityName: 'всех клиентов у представителя',
+                    );
+                    if (confirmed) {
+                      await clientsProvider.clearRepresentative();
+                      if (!context.mounted) return;
+                      AppNotify.show(
+                        context,
+                        'Представитель снят со всех клиентов',
+                      );
+                      commProvider.fetchCommissions();
+                      if (context.mounted) Navigator.pop(context);
+                    }
+                  },
+                ),
+                const Spacer(),
+                AppPrimaryButton(
+                  text: 'Передать клиентов',
+                  onPressed: () async {
+                    final repProvider = context.read<ClientsProvider>();
+                    final selected = await showDialog<SalesRepresentative?>(
+                      context: context,
+                      builder: (_) => _SalesRepSelectDialog(
+                        reps: repProvider.salesRepresentatives,
+                      ),
+                    );
+                    if (selected != null) {
+                      await clientsProvider.assignClientsTo(selected.id);
+                      AppNotify.show(
+                        context,
+                        'Клиенты переданы представителю ${selected.name}',
+                      );
+                      commProvider.fetchCommissions();
+                      if (context.mounted) Navigator.pop(context);
+                    }
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SalesRepSelectDialog extends StatelessWidget {
+  final List<SalesRepresentative> reps;
+  const _SalesRepSelectDialog({required this.reps});
+
+  @override
+  Widget build(BuildContext context) {
+    SalesRepresentative? selected;
+    return AlertDialog(
+      title: const Text('Выберите представителя'),
+      content: AppDropdown<SalesRepresentative>(
+        label: 'Кому передать клиентов?',
+        items: reps,
+        itemLabelBuilder: (rep) => rep.name,
+        onChanged: (val) => selected = val,
+        value: null,
+      ),
+      actions: [
+        AppSecondaryButton(
+          text: 'Отмена',
+          onPressed: () => Navigator.pop(context),
+        ),
+        AppPrimaryButton(
+          text: 'Выбрать',
+          onPressed: () => Navigator.pop(context, selected),
         ),
       ],
     );

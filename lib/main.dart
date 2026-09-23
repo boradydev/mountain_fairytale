@@ -20,6 +20,8 @@ import 'package:mountain_fairytale/infra/repos/pickup/repo.dart';
 import 'package:mountain_fairytale/infra/repos/pickup/sources/demo_data.dart';
 import 'package:mountain_fairytale/infra/repos/products/repo.dart';
 import 'package:mountain_fairytale/infra/repos/products/sources/demo_data.dart';
+import 'package:mountain_fairytale/infra/repos/sales_representative_clients/repo.dart';
+import 'package:mountain_fairytale/infra/repos/sales_representative_clients/sources/demo_data.dart';
 import 'package:mountain_fairytale/infra/repos/sales_representative_commissions/repo.dart';
 import 'package:mountain_fairytale/infra/repos/sales_representative_commissions/sources/demo_data.dart';
 import 'package:mountain_fairytale/infra/repos/sales_representatives/repo.dart';
@@ -31,6 +33,7 @@ import 'package:mountain_fairytale/presentation/providers/delivery_days_provider
 import 'package:mountain_fairytale/presentation/providers/locale_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/pickup_constructor_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/route_constructor_provider.dart';
+import 'package:mountain_fairytale/presentation/providers/sales_representative_clients_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/sales_representative_commission_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/theme_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/delivery_days/dashboard.dart';
@@ -82,6 +85,7 @@ Future<void> main() async {
   );
   final clientDataSource = DemoClientDataSource();
   final paymentMethodDataSource = DemoPaymentMethodDataSource();
+  final salesRepDataSource = DemoSalesRepresentativeDataSource();
   final salesRepCommissionDataSource =
       DemoSalesRepresentativeCommissionDataSource();
   final pickupDataSource = DemoPickupDataSource();
@@ -96,7 +100,6 @@ Future<void> main() async {
   final routeRepository = DeliveryRouteRepositoryImpl(routeDataSource);
   final clientRepository = ClientRepositoryImpl(clientDataSource);
   final deliveryDayRepository = ApiDeliveryRepository(deliveryDayDataSource);
-  final salesRepDataSource = DemoSalesRepresentativeDataSource();
   final salesRepRepository = SalesRepresentativeRepositoryImpl(
     salesRepDataSource,
   );
@@ -109,6 +112,15 @@ Future<void> main() async {
       );
   final pickupRepository = PickupRepositoryImpl(
     pickupDataSource,
+  );
+
+  // Инициализация модуля клиентов торгового представителя
+  final salesRepClientDataSource = DemoSalesRepresentativeClientDataSource(
+    clientDataSource: clientDataSource,
+    salesRepRepo: salesRepRepository,
+  );
+  final salesRepClientRepository = SalesRepresentativeClientRepositoryImpl(
+    salesRepClientDataSource,
   );
 
   // ===========================================================================
@@ -141,6 +153,12 @@ Future<void> main() async {
         ChangeNotifierProvider(
           create: (context) =>
               ClientsProvider(clientRepository, salesRepRepository),
+        ),
+
+        // Провайдер деталей клиентов торгового представителя
+        ChangeNotifierProvider(
+          create: (context) =>
+              SalesRepresentativeClientsProvider(salesRepClientRepository),
         ),
 
         // Обновленный провайдер конструктора маршрутов со строго изолированными репозиториями

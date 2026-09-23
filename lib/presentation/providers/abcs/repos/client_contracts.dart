@@ -15,6 +15,12 @@ abstract interface class ClientDataSource {
   ); // Принимает JSON-карту
   Future<Map<String, dynamic>> patchClient(int id, Map<String, dynamic> json);
   Future<void> deleteClient(int id);
+
+  Future<void> massUpdateSalesRepresentative({
+    required int fromId,
+    required int? toId,
+    required String? toName,
+  });
 }
 
 abstract interface class ClientRepository {
@@ -29,4 +35,10 @@ abstract interface class ClientRepository {
     UpdateClientRequest request,
   ); // ИСПРАВЛЕНО
   Future<void> deleteClient(int id);
+
+  Future<void> massUpdateSalesRepresentative({
+    required int fromId,
+    required int? toId,
+    required String? toName,
+  });
 }

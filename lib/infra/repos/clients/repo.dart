@@ -53,4 +53,17 @@ class ClientRepositoryImpl implements ClientRepository {
   Future<void> deleteClient(int id) async {
     await dataSource.deleteClient(id);
   }
+
+  @override
+  Future<void> massUpdateSalesRepresentative({
+    required int fromId,
+    required int? toId,
+    required String? toName,
+  }) async {
+    await dataSource.massUpdateSalesRepresentative(
+      fromId: fromId,
+      toId: toId,
+      toName: toName,
+    );
+  }
 }

@@ -156,4 +156,21 @@ class DemoClientDataSource implements ClientDataSource {
     _cache!.insert(0, newClientJson);
     return newClientJson;
   }
+
+  @override
+  Future<void> massUpdateSalesRepresentative({
+    required int fromId,
+    required int? toId,
+    required String? toName,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (_cache == null) await _getDemoJson();
+
+    for (var client in _cache!) {
+      if (client['salesRepresentativeId'] == fromId) {
+        client['salesRepresentativeId'] = toId;
+        client['salesRepresentativeName'] = toName;
+      }
+    }
+  }
 }
