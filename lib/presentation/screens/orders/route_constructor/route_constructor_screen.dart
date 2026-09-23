@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:mountain_fairytale/infra/app_notify.dart';
 import 'package:mountain_fairytale/presentation/providers/route_constructor_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/common/clients_selection_panel.dart';
 import 'package:mountain_fairytale/presentation/screens/orders/route_constructor/route_meta_panel.dart';
 import 'package:mountain_fairytale/presentation/screens/orders/route_constructor/route_points_list.dart';
 import 'package:mountain_fairytale/presentation/screens/orders/route_constructor/route_sheet_preview_dialog.dart';
+import 'package:mountain_fairytale/presentation/widgets/app_notify.dart';
 import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
 import 'package:provider/provider.dart';
 
@@ -32,13 +32,8 @@ class _RouteConstructorScreenState extends State<RouteConstructorScreen> {
       if (widget.existingRouteId != null) {
         await routeProvider.loadExistingRouteById(widget.existingRouteId!);
 
-        // 2. ВАЖНО: Снова проверяем именно 'mounted' (свойство State),
-        // так как далее мы используем 'context' текущего State-класса.
-        if (!mounted) return;
-
         if (routeProvider.isOldDocument) {
           AppNotify.show(
-            context,
             'Маршрут недельной давности и более',
             isWarning: true,
           );
@@ -68,7 +63,6 @@ class _RouteConstructorScreenState extends State<RouteConstructorScreen> {
             onPressed: () {
               if (provider.selectedDriver == null) {
                 AppNotify.show(
-                  context,
                   'Укажите водителя перед печатью маршрутного листа',
                   isError: true,
                 );
@@ -76,7 +70,6 @@ class _RouteConstructorScreenState extends State<RouteConstructorScreen> {
               }
               if (provider.selectedCar == null) {
                 AppNotify.show(
-                  context,
                   'Укажите автомобиль перед печатью маршрутного листа',
                   isError: true,
                 );
@@ -84,7 +77,6 @@ class _RouteConstructorScreenState extends State<RouteConstructorScreen> {
               }
               if (provider.points.isEmpty) {
                 AppNotify.show(
-                  context,
                   'Добавьте хотя бы один маршрут перед печатью маршрутного листа',
                   isError: true,
                 );
@@ -96,7 +88,6 @@ class _RouteConstructorScreenState extends State<RouteConstructorScreen> {
               );
               if (!hasProducts) {
                 AppNotify.show(
-                  context,
                   'Добавьте продукцию хотя бы в один маршрут перед печатью маршрутного листа',
                   isError: true,
                 );
@@ -106,7 +97,6 @@ class _RouteConstructorScreenState extends State<RouteConstructorScreen> {
               final sheet = provider.currentRouteSheet;
               if (sheet == null) {
                 AppNotify.show(
-                  context,
                   'Не удалось подготовить маршрутный лист к печати',
                   isError: true,
                 );
@@ -178,7 +168,6 @@ class _RouteConstructorScreenState extends State<RouteConstructorScreen> {
         ),
         padding: const EdgeInsets.all(16.0),
         child: Padding(
-          // Левый отступ 361px (360px ширина панели + 1px разделитель)
           // идеально центрирует кнопки относительно правого списка точек
           padding: const EdgeInsets.only(left: 361.0),
           child: Row(
@@ -202,11 +191,10 @@ class _RouteConstructorScreenState extends State<RouteConstructorScreen> {
                     if (!context.mounted) return;
 
                     if (success) {
-                      AppNotify.show(context, 'Маршрутный лист сохранен');
+                      AppNotify.show('Маршрутный лист сохранен');
                       Navigator.pop(context, true);
                     } else {
                       AppNotify.show(
-                        context,
                         'Ошибка при сохранении маршрута',
                         isError: true,
                       );

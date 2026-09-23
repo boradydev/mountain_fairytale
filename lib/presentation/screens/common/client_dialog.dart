@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mountain_fairytale/infra/app_notify.dart';
+import 'package:mountain_fairytale/presentation/widgets/app_notify.dart';
 import 'package:mountain_fairytale/infra/repos/clients/models/client_model.dart';
 import 'package:mountain_fairytale/infra/repos/sales_representatives/models/sales_representative_model.dart';
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
@@ -222,7 +222,6 @@ class _ClientDialogState extends State<ClientDialog> {
     final error = context.read<ClientsProvider>().errorMessage;
 
     AppNotify.show(
-      context,
       error.isEmpty ? 'Не удалось сохранить изменения' : 'Ошибка: $error',
       isError: true,
     );

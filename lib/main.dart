@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/core/utils/scaffold_messenger_key.dart';
 import 'package:mountain_fairytale/infra/printing/pdf/route_sheet_pdf_builder.dart';
 import 'package:mountain_fairytale/infra/printing/windows_route_print_service.dart';
 import 'package:mountain_fairytale/infra/repos/cars/repo.dart';
@@ -215,6 +216,7 @@ class MyApp extends StatelessWidget {
       themeMode: themeProvider.themeMode,
       theme: themeProvider.lightTheme,
       darkTheme: themeProvider.darkTheme,
+      scaffoldMessengerKey: scaffoldMessengerKey,
 
       home: const DeliveryDaysScreen(),
     );

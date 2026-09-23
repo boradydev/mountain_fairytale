@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mountain_fairytale/infra/app_notify.dart';
+import 'package:mountain_fairytale/presentation/widgets/app_notify.dart';
 import 'package:mountain_fairytale/presentation/providers/pickup_constructor_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/common/clients_selection_panel.dart';
 import 'package:mountain_fairytale/presentation/screens/orders/pickup_constructor/pickup_meta_panel.dart';
@@ -37,7 +37,6 @@ class _PickupConstructorScreenState extends State<PickupConstructorScreen> {
 
         if (pickupProvider.isOldDocument) {
           AppNotify.show(
-            context,
             'Самовывоз недельной давности и более',
             isWarning: true,
           );
@@ -118,7 +117,6 @@ class _PickupConstructorScreenState extends State<PickupConstructorScreen> {
         ),
         padding: const EdgeInsets.all(16.0),
         child: Padding(
-          // Левый отступ 361px (360px ширина панели + 1px разделитель)
           // идеально центрирует кнопки относительно правого списка точек
           padding: const EdgeInsets.only(left: 361.0),
           child: Row(
@@ -143,11 +141,10 @@ class _PickupConstructorScreenState extends State<PickupConstructorScreen> {
                     if (!context.mounted) return;
 
                     if (success) {
-                      AppNotify.show(context, 'Самовывоз успешно сохранен');
+                      AppNotify.show('Самовывоз успешно сохранен');
                       Navigator.pop(context, true);
                     } else {
                       AppNotify.show(
-                        context,
                         'Ошибка при сохранении самовывоза',
                         isError: true,
                       );

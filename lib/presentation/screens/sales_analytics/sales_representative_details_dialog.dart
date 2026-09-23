@@ -8,7 +8,7 @@ import 'package:mountain_fairytale/presentation/widgets/metric_row_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/base_card_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/confirm_delete_dialog.dart';
-import 'package:mountain_fairytale/infra/app_notify.dart';
+import 'package:mountain_fairytale/presentation/widgets/app_notify.dart';
 import 'package:mountain_fairytale/presentation/widgets/dropdown_widget.dart';
 
 class SalesRepresentativeDetailsDialog extends StatelessWidget {
@@ -134,9 +134,7 @@ class SalesRepresentativeDetailsDialog extends StatelessWidget {
                     );
                     if (confirmed) {
                       await clientsProvider.clearRepresentative();
-                      if (!context.mounted) return;
                       AppNotify.show(
-                        context,
                         'Представитель снят со всех клиентов',
                       );
                       commProvider.fetchCommissions();
@@ -158,7 +156,6 @@ class SalesRepresentativeDetailsDialog extends StatelessWidget {
                     if (selected != null) {
                       await clientsProvider.assignClientsTo(selected.id);
                       AppNotify.show(
-                        context,
                         'Клиенты переданы представителю ${selected.name}',
                       );
                       commProvider.fetchCommissions();
