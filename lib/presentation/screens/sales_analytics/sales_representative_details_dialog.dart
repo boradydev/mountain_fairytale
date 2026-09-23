@@ -7,7 +7,7 @@ import 'package:mountain_fairytale/infra/repos/sales_representatives/models/sale
 import 'package:mountain_fairytale/presentation/widgets/metric_row_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/base_card_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
-import 'package:mountain_fairytale/presentation/widgets/confirm_delete_dialog.dart';
+import 'package:mountain_fairytale/presentation/widgets/confirm_dialog.dart';
 import 'package:mountain_fairytale/presentation/widgets/app_notify.dart';
 import 'package:mountain_fairytale/presentation/widgets/dropdown_widget.dart';
 
@@ -128,9 +128,12 @@ class SalesRepresentativeDetailsDialog extends StatelessWidget {
                 AppSecondaryButton(
                   text: 'Снять представителя',
                   onPressed: () async {
-                    final confirmed = await ConfirmDeleteDialog.show(
+                    final confirmed = await ConfirmDialog.show(
                       context,
-                      entityName: 'всех клиентов у представителя',
+                      title: 'Снять представителя?',
+                      content: 'Вы действительно хотите снять всех клиентов у представителя?',
+                      confirmText: 'Подтвердить',
+                      destructive: true,
                     );
                     if (confirmed) {
                       await clientsProvider.clearRepresentative();

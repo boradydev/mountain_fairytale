@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/infra/repos/payment_methods/models/payment_method_model.dart';
 import 'package:mountain_fairytale/presentation/providers/route_constructor_provider.dart';
 import 'package:mountain_fairytale/presentation/widgets/base_form_dialog_widget.dart';
-import 'package:mountain_fairytale/presentation/widgets/confirm_delete_dialog.dart';
+import 'package:mountain_fairytale/presentation/widgets/confirm_dialog.dart';
 import 'package:mountain_fairytale/presentation/widgets/duplicate_check_status_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/icon_button_widget.dart';
 import 'package:provider/provider.dart';
@@ -108,9 +108,13 @@ class _PaymentMethodDialogState extends State<PaymentMethodDialog> {
   Future<void> _deleteMethod() async {
     if (widget.paymentMethod == null) return;
 
-    final confirmed = await ConfirmDeleteDialog.show(
+    final confirmed = await ConfirmDialog.show(
       context,
-      entityName: 'формы оплаты «${widget.paymentMethod!.name}»',
+      title: 'Удалить форму оплаты?',
+      content:
+          'Вы действительно хотите удалить форму оплаты «${widget.paymentMethod!.name}»?',
+      confirmText: 'Удалить',
+      destructive: true,
     );
 
     if (!confirmed || !mounted) return;

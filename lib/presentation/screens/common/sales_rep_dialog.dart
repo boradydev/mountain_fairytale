@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/infra/repos/sales_representatives/models/sales_representative_model.dart';
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
 import 'package:mountain_fairytale/presentation/widgets/base_form_dialog_widget.dart';
-import 'package:mountain_fairytale/presentation/widgets/confirm_delete_dialog.dart';
+import 'package:mountain_fairytale/presentation/widgets/confirm_dialog.dart';
 import 'package:mountain_fairytale/presentation/widgets/duplicate_check_status_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/icon_button_widget.dart';
 import 'package:provider/provider.dart';
@@ -132,9 +132,13 @@ class _SalesRepDialogState extends State<SalesRepDialog> {
   Future<void> _deleteSalesRep() async {
     if (widget.salesRep == null) return;
 
-    final confirmed = await ConfirmDeleteDialog.show(
+    final confirmed = await ConfirmDialog.show(
       context,
-      entityName: 'представителя «${widget.salesRep!.name}»',
+      title: 'Удалить представителя?',
+      content:
+          'Вы действительно хотите удалить представителя «${widget.salesRep!.name}»?',
+      confirmText: 'Удалить',
+      destructive: true,
     );
 
     if (!confirmed || !mounted) return;

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/infra/repos/products/models/product_model.dart';
 import 'package:mountain_fairytale/presentation/providers/route_constructor_provider.dart';
 import 'package:mountain_fairytale/presentation/widgets/base_form_dialog_widget.dart';
-import 'package:mountain_fairytale/presentation/widgets/confirm_delete_dialog.dart';
+import 'package:mountain_fairytale/presentation/widgets/confirm_dialog.dart';
 import 'package:mountain_fairytale/presentation/widgets/duplicate_check_status_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/icon_button_widget.dart';
 import 'package:provider/provider.dart';
@@ -141,9 +141,13 @@ class _ProductDialogState extends State<ProductDialog> {
       return;
     }
 
-    final confirmed = await ConfirmDeleteDialog.show(
+    final confirmed = await ConfirmDialog.show(
       context,
-      entityName: 'позиции «${widget.product!.name}»',
+      title: 'Удалить позицию?',
+      content:
+          'Вы действительно хотите удалить позицию «${widget.product!.name}»?',
+      confirmText: 'Удалить',
+      destructive: true,
     );
 
     if (!confirmed || !mounted) {

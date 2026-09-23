@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/infra/repos/cars/models/car_model.dart';
 import 'package:mountain_fairytale/presentation/providers/route_constructor_provider.dart';
 import 'package:mountain_fairytale/presentation/widgets/base_form_dialog_widget.dart';
-import 'package:mountain_fairytale/presentation/widgets/confirm_delete_dialog.dart';
+import 'package:mountain_fairytale/presentation/widgets/confirm_dialog.dart';
 import 'package:mountain_fairytale/presentation/widgets/duplicate_check_status_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/icon_button_widget.dart';
 import 'package:provider/provider.dart';
@@ -108,9 +108,13 @@ class _CarDialogState extends State<CarDialog> {
   Future<void> _deleteCar() async {
     if (widget.car == null) return;
 
-    final confirmed = await ConfirmDeleteDialog.show(
+    final confirmed = await ConfirmDialog.show(
       context,
-      entityName: 'автомобиля «${widget.car!.model} (${widget.car!.number})»',
+      title: 'Удалить автомобиль?',
+      content:
+          'Вы действительно хотите удалить автомобиль «${widget.car!.model} (${widget.car!.number})»?',
+      confirmText: 'Удалить',
+      destructive: true,
     );
 
     if (!confirmed || !mounted) return;
