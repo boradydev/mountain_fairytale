@@ -5,6 +5,7 @@ class AppIconButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final String tooltip;
   final bool destructive;
+  final Color? color;
 
   const AppIconButton({
     super.key,
@@ -12,21 +13,22 @@ class AppIconButton extends StatelessWidget {
     required this.onPressed,
     required this.tooltip,
     this.destructive = false,
+    this.color,
   });
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    final color = destructive
-        ? colorScheme.error
-        : colorScheme.onSurfaceVariant;
+    final iconColor =
+        color ??
+        (destructive ? colorScheme.error : colorScheme.onSurfaceVariant);
 
     return IconButton(
       onPressed: onPressed,
       tooltip: tooltip,
       icon: Icon(icon),
-      color: color,
+      color: iconColor,
       visualDensity: VisualDensity.compact,
     );
   }

@@ -276,59 +276,133 @@ class _RoutePointsListState extends State<RoutePointsList> {
                               ],
                             ),
 
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 24),
 
-                            const Text(
-                              'Задание для водителя:',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-
-                            ...point.items.asMap().entries.map((entry) {
-                              final taskIndex = entry.key;
-                              final item = entry.value;
-
-                              return TaskItemRow(
-                                item: item,
-                                onDelete: () => provider.removeTaskFromPoint(
-                                  index,
-                                  taskIndex,
-                                ),
-                                onQuantityChanged: (quantity) {
-                                  provider.updateTaskQuantity(
-                                    index,
-                                    taskIndex,
-                                    quantity,
-                                  );
-                                },
-                              );
-                            }),
-
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 28),
 
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                TextButton.icon(
-                                  icon: const Icon(Icons.add),
-                                  label: const Text(
-                                    'Добавить продукцию/услугу',
-                                  ),
-                                  onPressed: () => TaskDialogs.showAddTask(
-                                    context,
-                                    provider,
-                                    index,
-                                  ),
+                                Icon(
+                                  Icons.assignment_outlined,
+                                  size: 20,
+                                  color: colorScheme.primary,
                                 ),
+                                const SizedBox(width: 8),
                                 Text(
-                                  'Итого по точке: '
-                                  '${point.totalAmount.toStringAsFixed(2)} ₽',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
+                                  'Задание для водителя',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15,
+                                    color: colorScheme.onSurface,
                                   ),
                                 ),
                               ],
+                            ),
+
+                            const SizedBox(height: 12),
+
+                            Container(
+                              clipBehavior: Clip.antiAlias,
+                              decoration: BoxDecoration(
+                                color: colorScheme.surfaceContainerLowest,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: colorScheme.outlineVariant,
+                                ),
+                              ),
+                              child: Column(
+                                children: [
+                                  if (point.items.isEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 18,
+                                      ),
+                                      child: Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: Text(
+                                          'Продукция или услуги не добавлены',
+                                          style: TextStyle(
+                                            color: colorScheme.onSurfaceVariant,
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                  else
+                                    ...point.items.asMap().entries.map((entry) {
+                                      final taskIndex = entry.key;
+                                      final item = entry.value;
+
+                                      return Column(
+                                        children: [
+                                          TaskItemRow(
+                                            item: item,
+                                            onDelete: () =>
+                                                provider.removeTaskFromPoint(
+                                                  index,
+                                                  taskIndex,
+                                                ),
+                                            onQuantityChanged: (quantity) {
+                                              provider.updateTaskQuantity(
+                                                index,
+                                                taskIndex,
+                                                quantity,
+                                              );
+                                            },
+                                          ),
+                                          if (taskIndex <
+                                              point.items.length - 1)
+                                            Divider(
+                                              height: 1,
+                                              thickness: 1,
+                                              indent: 16,
+                                              endIndent: 16,
+                                              color: colorScheme.outlineVariant,
+                                            ),
+                                        ],
+                                      );
+                                    }),
+
+                                  Divider(
+                                    height: 1,
+                                    thickness: 1,
+                                    color: colorScheme.outlineVariant,
+                                  ),
+
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 10,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        TextButton.icon(
+                                          icon: const Icon(Icons.add, size: 18),
+                                          label: const Text(
+                                            'Добавить продукцию/услугу',
+                                            style: TextStyle(fontSize: 13),
+                                          ),
+                                          onPressed: () =>
+                                              TaskDialogs.showAddTask(
+                                                context,
+                                                provider,
+                                                index,
+                                              ),
+                                        ),
+                                        const Spacer(),
+                                        Text(
+                                          'Итого: ${point.totalAmount.toStringAsFixed(2)} ₽',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 15,
+                                            color: colorScheme.onSurface,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),

@@ -52,20 +52,22 @@ class _TaskItemRowState extends State<TaskItemRow> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Expanded(
-            child: Text(
-              widget.item.productName,
-              style: const TextStyle(fontWeight: FontWeight.w500),
-              overflow: TextOverflow.ellipsis,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 20),
+              child: Text(
+                widget.item.productName,
+                style: const TextStyle(fontWeight: FontWeight.w500),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ),
-
-          // Блок количества
           SizedBox(
-            width: 110,
+            width: 125,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
@@ -74,9 +76,11 @@ class _TaskItemRowState extends State<TaskItemRow> {
                     '${widget.item.quantity} шт.',
                     style: TextStyle(color: colorScheme.onSurfaceVariant),
                   ),
+                  const SizedBox(width: 4),
                   AppIconButton(
                     icon: Icons.edit,
                     tooltip: 'Изменить количество',
+                    color: colorScheme.primary,
                     onPressed: _startEditing,
                   ),
                 ] else ...[
@@ -95,27 +99,27 @@ class _TaskItemRowState extends State<TaskItemRow> {
                       ),
                     ),
                   ),
+                  const SizedBox(width: 4),
                   AppIconButton(
                     icon: Icons.check,
                     tooltip: 'Подтвердить',
+                    color: colorScheme.primary,
                     onPressed: _saveEditing,
                   ),
                 ],
               ],
             ),
           ),
-
-          // Сумма
+          const SizedBox(width: 16),
           SizedBox(
-            width: 100,
+            width: 105,
             child: Text(
               '${widget.item.amount.toStringAsFixed(2)} ₽',
               textAlign: TextAlign.end,
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
-
-          // Удаление
+          const SizedBox(width: 8),
           AppIconButton(
             icon: Icons.delete_outline,
             destructive: true,
