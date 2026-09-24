@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:mountain_fairytale/infra/repos/sales_representatives/models/sales_representative_model.dart';
+import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
 import 'package:mountain_fairytale/presentation/widgets/base_form_dialog_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/dropdown_widget.dart';
 import 'package:mountain_fairytale/presentation/screens/common/sales_rep_dialog.dart';
@@ -29,46 +31,48 @@ class _SalesRepSelectDialogState extends State<SalesRepSelectDialog> {
         }
       },
       children: [
-        AppDropdown<SalesRepresentative>(
-          label: 'Кому передать клиентов?',
-          items: widget.reps,
-          value: _selectedRep,
-          prefixIcon: Icons.badge_outlined,
-          hint: 'Выберите представителя',
-          itemLabelBuilder: (rep) => rep.name,
-          onChanged: (val) {
-            setState(() {
-              _selectedRep = val;
-            });
-          },
-          onAdd: () async {
-            final result = await showDialog<bool>(
-              context: context,
-              builder: (_) => const SalesRepDialog(),
+        Consumer<ClientsProvider>(
+          builder: (context, provider, child) {
+            return AppDropdown<SalesRepresentative>(
+              label: 'Кому передать клиентов?',
+              items: provider.salesRepresentatives,
+              value: _selectedRep,
+              prefixIcon: Icons.badge_outlined,
+              hint: 'Выберите представителя',
+              itemLabelBuilder: (rep) => rep.name,
+              onChanged: (val) {
+                setState(() {
+                  _selectedRep = val;
+                });
+              },
+              onAdd: () async {
+                final result = await showDialog<bool>(
+                  context: context,
+                  builder: (_) => const SalesRepDialog(),
+                );
+
+                if (result == true && mounted) {
+                  // Получаем последнего добавленного представителя (он первый в списке)
+                  final lastAddedRep = provider.salesRepresentatives.first;
+                  setState(() {
+                    _selectedRep = lastAddedRep;
+                  });
+                }
+              },
+              onEdit: _selectedRep == null
+                  ? null
+                  : () async {
+                      final result = await showDialog<bool>(
+                        context: context,
+                        builder: (_) => SalesRepDialog(salesRep: _selectedRep),
+                      );
+
+                      if (result == true && mounted) {
+                        setState(() {});
+                      }
+                    },
             );
-
-            if (result == true && mounted) {
-              // В данном контексте список reps передается извне,
-              // поэтому после добавления нужно либо обновить список в родителе,
-              // либо полагаться на то, что родитель переоткроет диалог.
-              // Но для консистентности с ClientDialog, мы просто закрываем текущий
-              // выбор, чтобы обновить данные.
-              Navigator.of(context).pop(null);
-            }
           },
-          onEdit: _selectedRep == null
-              ? null
-              : () async {
-                  final result = await showDialog<bool>(
-                    context: context,
-                    builder: (_) => SalesRepDialog(salesRep: _selectedRep),
-                  );
-
-                  if (result == true && mounted) {
-                    // После редактирования обновляем выбор, если представитель не был удален
-                    setState(() {});
-                  }
-                },
         ),
       ],
     );
