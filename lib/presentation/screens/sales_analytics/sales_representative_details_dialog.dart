@@ -9,7 +9,7 @@ import 'package:mountain_fairytale/presentation/widgets/base_card_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/confirm_dialog.dart';
 import 'package:mountain_fairytale/presentation/widgets/app_notify.dart';
-import 'package:mountain_fairytale/presentation/widgets/dropdown_widget.dart';
+import 'package:mountain_fairytale/presentation/screens/common/sales_rep_select_dialog.dart';
 
 class SalesRepresentativeDetailsDialog extends StatelessWidget {
   const SalesRepresentativeDetailsDialog({super.key});
@@ -125,7 +125,8 @@ class SalesRepresentativeDetailsDialog extends StatelessWidget {
                                   const SizedBox(width: 12),
                                   MetricRow(
                                     label: 'К выплате',
-                                    value: '${client.commissionAmount.toStringAsFixed(2)} ₽',
+                                    value:
+                                        '${client.commissionAmount.toStringAsFixed(2)} ₽',
                                     valueWidth: 70,
                                   ),
                                 ],
@@ -171,19 +172,20 @@ class SalesRepresentativeDetailsDialog extends StatelessWidget {
                     final repProvider = context.read<ClientsProvider>();
                     final selected = await showDialog<SalesRepresentative?>(
                       context: context,
-                      builder: (_) => _SalesRepSelectDialog(
+                      builder: (_) => SalesRepSelectDialog(
                         reps: repProvider.salesRepresentatives,
                       ),
                     );
-                    
+
                     if (selected != null) {
                       final confirmed = await ConfirmDialog.show(
                         context,
                         title: 'Передать клиентов?',
-                        content: 'Вы действительно хотите передать всех клиентов представителю ${selected.name}?',
+                        content:
+                            'Вы действительно хотите передать всех клиентов представителю ${selected.name}?',
                         confirmText: 'Подтвердить',
                       );
-                      
+
                       if (confirmed) {
                         await clientsProvider.assignClientsTo(selected.id);
                         AppNotify.show(
@@ -200,36 +202,6 @@ class SalesRepresentativeDetailsDialog extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _SalesRepSelectDialog extends StatelessWidget {
-  final List<SalesRepresentative> reps;
-  const _SalesRepSelectDialog({required this.reps});
-
-  @override
-  Widget build(BuildContext context) {
-    SalesRepresentative? selected;
-    return AlertDialog(
-      title: const Text('Выберите представителя'),
-      content: AppDropdown<SalesRepresentative>(
-        label: 'Кому передать клиентов?',
-        items: reps,
-        itemLabelBuilder: (rep) => rep.name,
-        onChanged: (val) => selected = val,
-        value: null,
-      ),
-      actions: [
-        AppSecondaryButton(
-          text: 'Отмена',
-          onPressed: () => Navigator.pop(context),
-        ),
-        AppPrimaryButton(
-          text: 'Выбрать',
-          onPressed: () => Navigator.pop(context, selected),
-        ),
-      ],
     );
   }
 }
