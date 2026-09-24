@@ -36,6 +36,7 @@ import 'package:mountain_fairytale/presentation/providers/pickup_constructor_pro
 import 'package:mountain_fairytale/presentation/providers/route_constructor_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/sales_representative_clients_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/sales_representative_commission_provider.dart';
+import 'package:mountain_fairytale/presentation/providers/sales_representative_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/theme_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/delivery_days/dashboard.dart';
 import 'package:mountain_fairytale/presentation/providers/abcs/repos/product_contracts.dart';
@@ -152,8 +153,12 @@ Future<void> main() async {
 
         // Провайдер списка клиентов (контроль засыпания, дубликаты)
         ChangeNotifierProvider(
-          create: (context) =>
-              ClientsProvider(clientRepository, salesRepRepository),
+          create: (context) => ClientsProvider(clientRepository),
+        ),
+
+        // Провайдер торговых представителей
+        ChangeNotifierProvider(
+          create: (_) => SalesRepresentativeProvider(salesRepRepository),
         ),
 
         // Провайдер деталей клиентов торгового представителя

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:mountain_fairytale/presentation/providers/sales_representative_commission_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/sales_representative_clients_provider.dart';
-import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
+import 'package:mountain_fairytale/presentation/providers/sales_representative_provider.dart';
 import 'package:mountain_fairytale/infra/repos/sales_representatives/models/sales_representative_model.dart';
 import 'package:mountain_fairytale/presentation/widgets/metric_row_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/base_card_widget.dart';
@@ -169,7 +169,8 @@ class SalesRepresentativeDetailsDialog extends StatelessWidget {
                 AppPrimaryButton(
                   text: 'Передать клиентов',
                   onPressed: () async {
-                    final repProvider = context.read<ClientsProvider>();
+                    final repProvider = context
+                        .read<SalesRepresentativeProvider>();
                     final selected = await showDialog<SalesRepresentative?>(
                       context: context,
                       builder: (_) => SalesRepSelectDialog(

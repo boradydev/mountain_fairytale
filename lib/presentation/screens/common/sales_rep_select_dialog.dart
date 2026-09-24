@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:mountain_fairytale/infra/repos/sales_representatives/models/sales_representative_model.dart';
-import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
+import 'package:mountain_fairytale/presentation/providers/sales_representative_provider.dart';
 import 'package:mountain_fairytale/presentation/widgets/base_form_dialog_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/dropdown_widget.dart';
 import 'package:mountain_fairytale/presentation/screens/common/sales_rep_dialog.dart';
@@ -31,7 +31,7 @@ class _SalesRepSelectDialogState extends State<SalesRepSelectDialog> {
         }
       },
       children: [
-        Consumer<ClientsProvider>(
+        Consumer<SalesRepresentativeProvider>(
           builder: (context, provider, child) {
             return AppDropdown<SalesRepresentative>(
               label: 'Кому передать клиентов?',

@@ -3,6 +3,7 @@ import 'package:mountain_fairytale/presentation/widgets/app_notify.dart';
 import 'package:mountain_fairytale/infra/repos/clients/models/client_model.dart';
 import 'package:mountain_fairytale/infra/repos/sales_representatives/models/sales_representative_model.dart';
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
+import 'package:mountain_fairytale/presentation/providers/sales_representative_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/common/sales_rep_dialog.dart';
 import 'package:mountain_fairytale/presentation/widgets/base_form_dialog_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/confirm_dialog.dart';
@@ -49,7 +50,7 @@ class _ClientDialogState extends State<ClientDialog> {
 
     // Подгружаем торговых представителей при открытии диалога
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ClientsProvider>().fetchSalesRepresentatives();
+      context.read<SalesRepresentativeProvider>().fetchSalesRepresentatives();
     });
 
     final client = widget.client;
@@ -135,7 +136,8 @@ class _ClientDialogState extends State<ClientDialog> {
       return;
     }
 
-    final provider = context.read<ClientsProvider>();
+    final clientsProvider = context.read<ClientsProvider>();
+    final salesRepProvider = context.read<SalesRepresentativeProvider>();
 
     final name = _nameController.text.trim();
     final phone = _phoneController.text.trim();
@@ -144,7 +146,7 @@ class _ClientDialogState extends State<ClientDialog> {
 
     SalesRepresentative? selectedSalesRep;
 
-    for (final rep in provider.salesRepresentatives) {
+    for (final rep in salesRepProvider.salesRepresentatives) {
       if (rep.id == _selectedSalesRepId) {
         selectedSalesRep = rep;
         break;
@@ -154,7 +156,7 @@ class _ClientDialogState extends State<ClientDialog> {
     final bool success;
 
     if (_isEditMode) {
-      success = await provider.updateClient(
+      success = await clientsProvider.updateClient(
         clientId: widget.client!.id,
         name: name,
         phone: phone,
@@ -164,7 +166,7 @@ class _ClientDialogState extends State<ClientDialog> {
         salesRepName: selectedSalesRep?.name,
       );
     } else {
-      success = await provider.addClient(
+      success = await clientsProvider.addClient(
         name: name,
         phone: phone,
         address: address,
@@ -361,7 +363,7 @@ class _ClientDialogState extends State<ClientDialog> {
 
         const SizedBox(height: 16),
 
-        Consumer<ClientsProvider>(
+        Consumer<SalesRepresentativeProvider>(
           builder: (context, provider, child) {
             SalesRepresentative? currentSelection;
 

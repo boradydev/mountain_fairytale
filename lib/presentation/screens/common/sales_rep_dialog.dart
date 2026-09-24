@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/infra/repos/sales_representatives/models/sales_representative_model.dart';
-import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
+import 'package:mountain_fairytale/presentation/providers/sales_representative_provider.dart';
 import 'package:mountain_fairytale/presentation/widgets/base_form_dialog_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/confirm_dialog.dart';
 import 'package:mountain_fairytale/presentation/widgets/duplicate_check_status_widget.dart';
@@ -79,7 +79,7 @@ class _SalesRepDialogState extends State<SalesRepDialog> {
     });
 
     final duplicate = await context
-        .read<ClientsProvider>()
+        .read<SalesRepresentativeProvider>()
         .checkSalesRepDuplicate(name);
 
     if (!mounted) return;
@@ -94,7 +94,7 @@ class _SalesRepDialogState extends State<SalesRepDialog> {
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final provider = context.read<ClientsProvider>();
+    final provider = context.read<SalesRepresentativeProvider>();
     final name = _nameController.text.trim();
     final phone = _phoneController.text.trim();
     final commissionPercent = double.parse(
@@ -144,7 +144,7 @@ class _SalesRepDialogState extends State<SalesRepDialog> {
     if (!confirmed || !mounted) return;
 
     final success = await context
-        .read<ClientsProvider>()
+        .read<SalesRepresentativeProvider>()
         .deleteSalesRepresentative(widget.salesRep!.id);
 
     if (!mounted) return;
