@@ -136,6 +136,40 @@ abstract class OrderPointsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void updateTaskQuantity(
+    int pointIndex,
+    int taskIndex,
+    int quantity,
+  ) {
+    if (pointIndex < 0 || pointIndex >= points.length) return;
+    if (taskIndex < 0 || taskIndex >= points[pointIndex].items.length) return;
+    if (quantity <= 0) return;
+
+    final currentPoint = points[pointIndex];
+    final items = List<DeliveryTaskItem>.from(currentPoint.items);
+    final oldItem = items[taskIndex];
+
+    items[taskIndex] = DeliveryTaskItem(
+      productId: oldItem.productId,
+      productName: oldItem.productName,
+      quantity: quantity,
+      price: oldItem.price,
+    );
+
+    points[pointIndex] = RoutePoint(
+      clientId: currentPoint.clientId,
+      clientName: currentPoint.clientName,
+      city: currentPoint.city,
+      address: currentPoint.address,
+      phone: currentPoint.phone,
+      paymentMethod: currentPoint.paymentMethod,
+      salesRepresentative: currentPoint.salesRepresentative,
+      items: items,
+    );
+
+    notifyListeners();
+  }
+
   Future<void> updatePointMeta(
     int pointIndex,
     BuildContext context,

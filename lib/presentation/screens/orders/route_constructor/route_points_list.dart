@@ -4,6 +4,7 @@ import 'package:mountain_fairytale/presentation/providers/clients_provider.dart'
 import 'package:mountain_fairytale/presentation/providers/order_points_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/common/payment_method_dialog.dart';
 import 'package:mountain_fairytale/presentation/screens/orders/common/task_dialogs.dart';
+import 'package:mountain_fairytale/presentation/screens/orders/route_constructor/task_item_row.dart';
 import 'package:mountain_fairytale/presentation/widgets/dropdown_widget.dart';
 import 'package:provider/provider.dart';
 
@@ -288,26 +289,19 @@ class _RoutePointsListState extends State<RoutePointsList> {
                               final taskIndex = entry.key;
                               final item = entry.value;
 
-                              return ListTile(
-                                contentPadding: EdgeInsets.zero,
-                                title: Text(item.productName),
-                                subtitle: Text(
-                                  '${item.quantity} шт. × ${item.price} ₽',
+                              return TaskItemRow(
+                                item: item,
+                                onDelete: () => provider.removeTaskFromPoint(
+                                  index,
+                                  taskIndex,
                                 ),
-                                leading: IconButton(
-                                  tooltip: 'Удалить позицию',
-                                  icon: const Icon(
-                                    Icons.remove_circle_outline,
-                                    color: Colors.red,
-                                  ),
-                                  onPressed: () => provider.removeTaskFromPoint(
+                                onQuantityChanged: (quantity) {
+                                  provider.updateTaskQuantity(
                                     index,
                                     taskIndex,
-                                  ),
-                                ),
-                                trailing: Text(
-                                  '${item.amount.toStringAsFixed(2)} ₽',
-                                ),
+                                    quantity,
+                                  );
+                                },
                               );
                             }),
 
