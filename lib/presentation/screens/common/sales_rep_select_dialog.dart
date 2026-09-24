@@ -20,6 +20,15 @@ class _SalesRepSelectDialogState extends State<SalesRepSelectDialog> {
   SalesRepresentative? _selectedRep;
 
   @override
+  void initState() {
+    super.initState();
+    // Подгружаем список представителей при открытии диалога
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<SalesRepresentativeProvider>().fetchSalesRepresentatives();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return BaseFormDialog(
       title: 'Выберите представителя',
