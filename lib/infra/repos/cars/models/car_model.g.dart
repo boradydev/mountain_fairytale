@@ -24,10 +24,15 @@ CreateCarRequest _$CreateCarRequestFromJson(Map<String, dynamic> json) =>
     CreateCarRequest(
       model: json['model'] as String,
       number: json['number'] as String,
+      currentMileage: (json['currentMileage'] as num?)?.toDouble() ?? 0,
     );
 
 Map<String, dynamic> _$CreateCarRequestToJson(CreateCarRequest instance) =>
-    <String, dynamic>{'model': instance.model, 'number': instance.number};
+    <String, dynamic>{
+      'model': instance.model,
+      'number': instance.number,
+      'currentMileage': instance.currentMileage,
+    };
 
 UpdateCarRequest _$UpdateCarRequestFromJson(Map<String, dynamic> json) =>
     UpdateCarRequest(

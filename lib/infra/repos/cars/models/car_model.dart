@@ -29,10 +29,12 @@ class Car {
 class CreateCarRequest {
   final String model;
   final String number;
+  final double? currentMileage;
 
   const CreateCarRequest({
     required this.model,
     required this.number,
+    this.currentMileage = 0,
   });
 
   Map<String, dynamic> toJson() => _$CreateCarRequestToJson(this);
