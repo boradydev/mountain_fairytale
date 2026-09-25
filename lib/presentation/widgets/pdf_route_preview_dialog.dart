@@ -2,6 +2,14 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart';
+import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
+import 'package:printing/printing.dart';
+
+enum _PrintMode {
+  all,
+  range,
+  current,
+}
 
 class PdfRoutePreviewDialog extends StatefulWidget {
   final Uint8List pdfBytes;
@@ -23,7 +31,8 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
   int _currentPage = 1;
   int _pageCount = 0;
 
-  bool _printAllPages = true;
+  _PrintMode _printMode = _PrintMode.all;
+  bool _isPrinting = false;
 
   late final TextEditingController _fromPageController;
   late final TextEditingController _toPageController;
@@ -68,6 +77,11 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
 
     setState(() {
       _currentPage = pageNumber;
+
+      if (_printMode == _PrintMode.current) {
+        _fromPageController.text = pageNumber.toString();
+        _toPageController.text = pageNumber.toString();
+      }
     });
   }
 
@@ -89,19 +103,6 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
 
     await _controller.goToPage(
       pageNumber: _currentPage + 1,
-      anchor: PdfPageAnchor.top,
-    );
-  }
-
-  Future<void> _goToPage(int pageNumber) async {
-    if (_pageCount == 0) {
-      return;
-    }
-
-    final normalizedPage = pageNumber.clamp(1, _pageCount);
-
-    await _controller.goToPage(
-      pageNumber: normalizedPage,
       anchor: PdfPageAnchor.top,
     );
   }
@@ -139,57 +140,127 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
     return true;
   }
 
-  void _showPrintSelection() {
-    if (_pageCount == 0) {
+  void _selectPrintMode(_PrintMode mode) {
+    setState(() {
+      _printMode = mode;
+
+      switch (mode) {
+        case _PrintMode.all:
+          _fromPageController.text = '1';
+          _toPageController.text = _pageCount.toString();
+          break;
+
+        case _PrintMode.range:
+          if (_fromPageController.text.isEmpty) {
+            _fromPageController.text = '1';
+          }
+
+          if (_toPageController.text.isEmpty) {
+            _toPageController.text = _pageCount.toString();
+          }
+          break;
+
+        case _PrintMode.current:
+          _fromPageController.text = _currentPage.toString();
+          _toPageController.text = _currentPage.toString();
+          break;
+      }
+    });
+  }
+
+  Future<Uint8List> _buildPrintPdf(
+    int fromPage,
+    int toPage,
+  ) async {
+    final sourceDocument = await PdfDocument.openData(
+      widget.pdfBytes,
+      sourceName: 'route_sheet.pdf',
+    );
+
+    final printDocument = await PdfDocument.createNew(
+      sourceName: 'route_sheet_print.pdf',
+    );
+
+    try {
+      printDocument.pages = [
+        ...sourceDocument.pages.sublist(
+          fromPage - 1,
+          toPage,
+        ),
+      ];
+
+      return await printDocument.encodePdf();
+    } finally {
+      await printDocument.dispose();
+      await sourceDocument.dispose();
+    }
+  }
+
+  Future<void> _print() async {
+    if (_pageCount == 0 || _isPrinting) {
       return;
     }
 
-    setState(() {
-      _printAllPages = true;
-      _fromPageController.text = '1';
-      _toPageController.text = _pageCount.toString();
-    });
-  }
+    int from;
+    int to;
 
-  void _selectCurrentPageForPrint() {
-    setState(() {
-      _printAllPages = false;
-      _fromPageController.text = _currentPage.toString();
-      _toPageController.text = _currentPage.toString();
-    });
-  }
+    switch (_printMode) {
+      case _PrintMode.all:
+        from = 1;
+        to = _pageCount;
+        break;
 
-  void _selectCustomRangeForPrint() {
-    setState(() {
-      _printAllPages = false;
-    });
-  }
+      case _PrintMode.range:
+        if (!_validatePageRange()) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Укажите корректный диапазон страниц'),
+            ),
+          );
+          return;
+        }
 
-  void _print() {
-    if (_pageCount == 0) {
-      return;
+        from = _parsePage(_fromPageController)!;
+        to = _parsePage(_toPageController)!;
+        break;
+
+      case _PrintMode.current:
+        from = _currentPage;
+        to = _currentPage;
+        break;
     }
 
-    if (!_printAllPages && !_validatePageRange()) {
+    setState(() {
+      _isPrinting = true;
+    });
+
+    try {
+      final pdfBytes = await _buildPrintPdf(from, to);
+
+      if (!mounted) {
+        return;
+      }
+
+      await Printing.layoutPdf(
+        onLayout: (_) async => pdfBytes,
+      );
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Укажите корректный диапазон страниц'),
+          content: Text('Не удалось отправить документ на печать'),
         ),
       );
-
-      return;
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isPrinting = false;
+        });
+      }
     }
-
-    final from = _printAllPages ? 1 : _parsePage(_fromPageController)!;
-
-    final to = _printAllPages ? _pageCount : _parsePage(_toPageController)!;
-
-    Navigator.of(context).pop(
-      PdfPrintRange(
-        fromPage: from,
-        toPage: to,
-      ),
-    );
   }
 
   @override
@@ -273,6 +344,14 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
         children: [
           _buildPageNavigation(),
 
+          const SizedBox(width: 20),
+
+          const VerticalDivider(),
+
+          const SizedBox(width: 20),
+
+          _buildZoomControls(),
+
           const SizedBox(width: 24),
 
           const VerticalDivider(),
@@ -285,17 +364,16 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
 
           const SizedBox(width: 20),
 
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Отмена'),
+          AppSecondaryButton(
+            text: 'Отмена',
+            onPressed: _isPrinting ? null : () => Navigator.of(context).pop(),
           ),
 
           const SizedBox(width: 8),
 
-          FilledButton.icon(
-            onPressed: _print,
-            icon: const Icon(Icons.print),
-            label: const Text('Печать'),
+          AppPrimaryButton(
+            text: _isPrinting ? 'Печать...' : 'Печать',
+            onPressed: _isPrinting ? null : _print,
           ),
         ],
       ),
@@ -343,37 +421,39 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
           ),
         ),
 
-        const SizedBox(width: 16),
-
-        Radio<bool>(
-          value: true,
-          groupValue: _printAllPages,
-          onChanged: (_) {
-            _showPrintSelection();
-          },
-        ),
-
-        const Text('Все страницы'),
-
         const SizedBox(width: 12),
 
-        Radio<bool>(
-          value: false,
-          groupValue: _printAllPages,
-          onChanged: (_) {
-            _selectCustomRangeForPrint();
+        Radio<_PrintMode>(
+          value: _PrintMode.all,
+          groupValue: _printMode,
+          onChanged: (value) {
+            if (value != null) {
+              _selectPrintMode(value);
+            }
           },
         ),
+        const Text('Все страницы'),
 
+        const SizedBox(width: 8),
+
+        Radio<_PrintMode>(
+          value: _PrintMode.range,
+          groupValue: _printMode,
+          onChanged: (value) {
+            if (value != null) {
+              _selectPrintMode(value);
+            }
+          },
+        ),
         const Text('Диапазон'),
 
         const SizedBox(width: 8),
 
         SizedBox(
-          width: 65,
+          width: 58,
           child: TextField(
             controller: _fromPageController,
-            enabled: !_printAllPages,
+            enabled: _printMode == _PrintMode.range,
             keyboardType: TextInputType.number,
             textAlign: TextAlign.center,
             decoration: const InputDecoration(
@@ -384,15 +464,15 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
         ),
 
         const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 8),
+          padding: EdgeInsets.symmetric(horizontal: 6),
           child: Text('—'),
         ),
 
         SizedBox(
-          width: 65,
+          width: 58,
           child: TextField(
             controller: _toPageController,
-            enabled: !_printAllPages,
+            enabled: _printMode == _PrintMode.range,
             keyboardType: TextInputType.number,
             textAlign: TextAlign.center,
             decoration: const InputDecoration(
@@ -402,11 +482,62 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
           ),
         ),
 
-        const SizedBox(width: 12),
+        const SizedBox(width: 8),
 
-        TextButton(
-          onPressed: _selectCurrentPageForPrint,
-          child: const Text('Текущая'),
+        Radio<_PrintMode>(
+          value: _PrintMode.current,
+          groupValue: _printMode,
+          onChanged: (value) {
+            if (value != null) {
+              _selectPrintMode(value);
+            }
+          },
+        ),
+        const Text('Текущая'),
+      ],
+    );
+  }
+
+  Future<void> _zoomOut() async {
+    await _controller.zoomDown();
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Future<void> _zoomIn() async {
+    await _controller.zoomUp();
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Widget _buildZoomControls() {
+    final zoom = (_controller.currentZoom * 100).round();
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          tooltip: 'Уменьшить',
+          onPressed: _zoomOut,
+          icon: const Icon(Icons.remove),
+        ),
+        SizedBox(
+          width: 56,
+          child: Center(
+            child: Text(
+              '$zoom%',
+              style: const TextStyle(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ),
+        IconButton(
+          tooltip: 'Увеличить',
+          onPressed: _zoomIn,
+          icon: const Icon(Icons.add),
         ),
       ],
     );
