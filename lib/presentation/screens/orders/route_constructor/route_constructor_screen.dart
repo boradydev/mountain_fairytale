@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/infra/printing/pdf/route_sheet_pdf_builder.dart';
 import 'package:mountain_fairytale/presentation/providers/route_constructor_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/common/clients_selection_panel.dart';
 import 'package:mountain_fairytale/presentation/screens/orders/route_constructor/route_meta_panel.dart';
 import 'package:mountain_fairytale/presentation/screens/orders/route_constructor/route_points_list.dart';
 import 'package:mountain_fairytale/presentation/screens/orders/route_constructor/route_sheet_preview_dialog.dart';
 import 'package:mountain_fairytale/presentation/widgets/app_notify.dart';
+import 'package:mountain_fairytale/presentation/widgets/pdf_route_preview_dialog.dart';
 import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
 import 'package:provider/provider.dart';
 
@@ -107,6 +109,82 @@ class _RouteConstructorScreenState extends State<RouteConstructorScreen> {
                 context: context,
                 builder: (_) => RouteSheetPreviewDialog(sheet: sheet),
               );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.print),
+            tooltip: 'Печать маршрутного листа',
+            onPressed: () async {
+              if (provider.selectedDriver == null) {
+                AppNotify.show(
+                  'Укажите водителя перед печатью маршрутного листа',
+                  isError: true,
+                );
+                return;
+              }
+
+              if (provider.selectedCar == null) {
+                AppNotify.show(
+                  'Укажите автомобиль перед печатью маршрутного листа',
+                  isError: true,
+                );
+                return;
+              }
+
+              if (provider.points.isEmpty) {
+                AppNotify.show(
+                  'Добавьте хотя бы один маршрут перед печатью маршрутного листа',
+                  isError: true,
+                );
+                return;
+              }
+
+              final hasProducts = provider.points.any(
+                    (point) => point.items.isNotEmpty,
+              );
+
+              if (!hasProducts) {
+                AppNotify.show(
+                  'Добавьте продукцию хотя бы в один маршрут перед печатью маршрутного листа',
+                  isError: true,
+                );
+                return;
+              }
+
+              final sheet = provider.currentRouteSheet;
+
+              if (sheet == null) {
+                AppNotify.show(
+                  'Не удалось подготовить маршрутный лист к печати',
+                  isError: true,
+                );
+                return;
+              }
+
+              try {
+                final pdfBytes = await RouteSheetPdfBuilder().build(sheet);
+
+                if (!context.mounted) {
+                  return;
+                }
+
+                await showDialog(
+                  context: context,
+                  builder: (_) => PdfRoutePreviewDialog(
+                    pdfBytes: pdfBytes,
+                    title: 'Предпросмотр маршрутного листа',
+                  ),
+                );
+              } catch (e) {
+                if (!context.mounted) {
+                  return;
+                }
+
+                AppNotify.show(
+                  'Не удалось сформировать маршрутный лист',
+                  isError: true,
+                );
+              }
             },
           ),
           Padding(
