@@ -42,6 +42,7 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
     super.initState();
 
     _controller = PdfViewerController();
+    _controller.addListener(_onViewerChanged);
 
     _fromPageController = TextEditingController(text: '1');
     _toPageController = TextEditingController(text: '1');
@@ -49,9 +50,18 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
 
   @override
   void dispose() {
+    _controller.removeListener(_onViewerChanged);
     _fromPageController.dispose();
     _toPageController.dispose();
     super.dispose();
+  }
+
+  void _onViewerChanged() {
+    if (!mounted || !_controller.isReady) {
+      return;
+    }
+
+    setState(() {});
   }
 
   void _onDocumentChanged(PdfDocument? document) {
@@ -86,7 +96,7 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
   }
 
   Future<void> _goToPreviousPage() async {
-    if (_currentPage <= 1) {
+    if (_currentPage <= 1 || !_controller.isReady) {
       return;
     }
 
@@ -97,7 +107,7 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
   }
 
   Future<void> _goToNextPage() async {
-    if (_currentPage >= _pageCount) {
+    if (_currentPage >= _pageCount || !_controller.isReady) {
       return;
     }
 
@@ -172,16 +182,19 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
     int fromPage,
     int toPage,
   ) async {
-    final sourceDocument = await PdfDocument.openData(
-      widget.pdfBytes,
-      sourceName: 'route_sheet.pdf',
-    );
-
-    final printDocument = await PdfDocument.createNew(
-      sourceName: 'route_sheet_print.pdf',
-    );
+    PdfDocument? sourceDocument;
+    PdfDocument? printDocument;
 
     try {
+      sourceDocument = await PdfDocument.openData(
+        widget.pdfBytes,
+        sourceName: 'route_sheet.pdf',
+      );
+
+      printDocument = await PdfDocument.createNew(
+        sourceName: 'route_sheet_print.pdf',
+      );
+
       printDocument.pages = [
         ...sourceDocument.pages.sublist(
           fromPage - 1,
@@ -191,8 +204,8 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
 
       return await printDocument.encodePdf();
     } finally {
-      await printDocument.dispose();
-      await sourceDocument.dispose();
+      await printDocument?.dispose();
+      await sourceDocument?.dispose();
     }
   }
 
@@ -220,8 +233,15 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
           return;
         }
 
-        from = _parsePage(_fromPageController)!;
-        to = _parsePage(_toPageController)!;
+        final parsedFrom = _parsePage(_fromPageController);
+        final parsedTo = _parsePage(_toPageController);
+
+        if (parsedFrom == null || parsedTo == null) {
+          return;
+        }
+
+        from = parsedFrom;
+        to = parsedTo;
         break;
 
       case _PrintMode.current:
@@ -271,7 +291,6 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
       insetPadding: const EdgeInsets.all(24),
       child: SizedBox(
         width: 1200,
-        height: 850,
         child: Column(
           children: [
             _buildHeader(colorScheme),
@@ -437,6 +456,19 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
         const SizedBox(width: 8),
 
         Radio<_PrintMode>(
+          value: _PrintMode.current,
+          groupValue: _printMode,
+          onChanged: (value) {
+            if (value != null) {
+              _selectPrintMode(value);
+            }
+          },
+        ),
+        const Text('Текущая'),
+
+        const SizedBox(width: 8),
+
+        Radio<_PrintMode>(
           value: _PrintMode.range,
           groupValue: _printMode,
           onChanged: (value) {
@@ -481,24 +513,14 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
             ),
           ),
         ),
-
-        const SizedBox(width: 8),
-
-        Radio<_PrintMode>(
-          value: _PrintMode.current,
-          groupValue: _printMode,
-          onChanged: (value) {
-            if (value != null) {
-              _selectPrintMode(value);
-            }
-          },
-        ),
-        const Text('Текущая'),
       ],
     );
   }
 
   Future<void> _zoomOut() async {
+    if (!_controller.isReady) {
+      return;
+    }
     await _controller.zoomDown();
     if (mounted) {
       setState(() {});
@@ -506,6 +528,9 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
   }
 
   Future<void> _zoomIn() async {
+    if (!_controller.isReady) {
+      return;
+    }
     await _controller.zoomUp();
     if (mounted) {
       setState(() {});
@@ -513,14 +538,15 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
   }
 
   Widget _buildZoomControls() {
-    final zoom = (_controller.currentZoom * 100).round();
+    final isReady = _controller.isReady;
+    final zoom = isReady ? (_controller.currentZoom * 100).round() : 100;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
           tooltip: 'Уменьшить',
-          onPressed: _zoomOut,
+          onPressed: isReady ? _zoomOut : null,
           icon: const Icon(Icons.remove),
         ),
         SizedBox(
@@ -536,7 +562,7 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
         ),
         IconButton(
           tooltip: 'Увеличить',
-          onPressed: _zoomIn,
+          onPressed: isReady ? _zoomIn : null,
           icon: const Icon(Icons.add),
         ),
       ],
