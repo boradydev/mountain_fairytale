@@ -481,38 +481,93 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
 
         const SizedBox(width: 8),
 
-        SizedBox(
-          width: 58,
-          child: TextField(
-            controller: _fromPageController,
-            enabled: _printMode == _PrintMode.range,
-            keyboardType: TextInputType.number,
-            textAlign: TextAlign.center,
-            decoration: const InputDecoration(
-              labelText: 'От',
-              isDense: true,
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 48,
+              child: TextField(
+                controller: _fromPageController,
+                enabled: _printMode == _PrintMode.range,
+                keyboardType: TextInputType.number,
+                textAlign: TextAlign.center,
+                decoration: InputDecoration(
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 8,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 2,
+                    ),
+                  ),
+                  disabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                    ),
+                  ),
+                ),
+              ),
             ),
-          ),
-        ),
 
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 6),
-          child: Text('—'),
-        ),
-
-        SizedBox(
-          width: 58,
-          child: TextField(
-            controller: _toPageController,
-            enabled: _printMode == _PrintMode.range,
-            keyboardType: TextInputType.number,
-            textAlign: TextAlign.center,
-            decoration: const InputDecoration(
-              labelText: 'До',
-              isDense: true,
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 6),
+              child: Text('-'),
             ),
-          ),
-        ),
+
+            SizedBox(
+              width: 48,
+              child: TextField(
+                controller: _toPageController,
+                enabled: _printMode == _PrintMode.range,
+                keyboardType: TextInputType.number,
+                textAlign: TextAlign.center,
+                decoration: InputDecoration(
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 8,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 2,
+                    ),
+                  ),
+                  disabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        )
       ],
     );
   }
