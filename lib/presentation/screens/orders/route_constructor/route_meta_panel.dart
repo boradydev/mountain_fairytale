@@ -99,6 +99,7 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
 
           const SizedBox(height: 12),
           TextFormField(
+            key: ValueKey(provider.selectedCar?.id),
             decoration: const InputDecoration(
               labelText: 'Километраж выезда (км)',
               border: OutlineInputBorder(),

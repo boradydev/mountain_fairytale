@@ -78,6 +78,9 @@ class RouteConstructorProvider extends OrderPointsProvider {
 
   void selectCar(Car? car) {
     selectedCar = car;
+    if (car != null) {
+      startMileage = car.currentMileage;
+    }
     notifyListeners();
   }
 
@@ -176,7 +179,11 @@ class RouteConstructorProvider extends OrderPointsProvider {
     }
   }
 
-  Future<Car?> addCar({required String model, required String number}) async {
+  Future<Car?> addCar({
+    required String model,
+    required String number,
+    double currentMileage = 0.0,
+  }) async {
     final normalizedModel = model.trim();
     final normalizedNumber = number.trim();
     if (normalizedModel.isEmpty || normalizedNumber.isEmpty) return null;
@@ -185,6 +192,7 @@ class RouteConstructorProvider extends OrderPointsProvider {
       final request = CreateCarRequest(
         model: normalizedModel,
         number: normalizedNumber,
+        currentMileage: currentMileage,
       );
       final createdCar = await _carRepo.createCar(request);
 
@@ -200,6 +208,7 @@ class RouteConstructorProvider extends OrderPointsProvider {
     int id, {
     required String model,
     required String number,
+    double? currentMileage,
   }) async {
     final normalizedModel = model.trim();
     final normalizedNumber = number.trim();
@@ -209,6 +218,7 @@ class RouteConstructorProvider extends OrderPointsProvider {
       final request = UpdateCarRequest(
         model: normalizedModel,
         number: normalizedNumber,
+        currentMileage: currentMileage,
       );
       final updatedCar = await _carRepo.updateCar(id, request);
 

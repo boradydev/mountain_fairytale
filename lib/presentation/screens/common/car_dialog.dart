@@ -20,6 +20,7 @@ class _CarDialogState extends State<CarDialog> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _modelController;
   late final TextEditingController _numberController;
+  late final TextEditingController _mileageController;
   final _numberFocusNode = FocusNode();
 
   bool _isCheckingDuplicate = false;
@@ -33,6 +34,9 @@ class _CarDialogState extends State<CarDialog> {
     super.initState();
     _modelController = TextEditingController(text: widget.car?.model ?? '');
     _numberController = TextEditingController(text: widget.car?.number ?? '');
+    _mileageController = TextEditingController(
+      text: widget.car?.currentMileage.toString() ?? '0',
+    );
     _numberFocusNode.addListener(_onFocusChange);
   }
 
@@ -81,6 +85,7 @@ class _CarDialogState extends State<CarDialog> {
     final provider = context.read<RouteConstructorProvider>();
     final model = _modelController.text.trim();
     final number = _numberController.text.trim();
+    final mileage = double.tryParse(_mileageController.text.trim()) ?? 0.0;
     final bool success;
 
     if (_isEditMode) {
@@ -88,9 +93,14 @@ class _CarDialogState extends State<CarDialog> {
         widget.car!.id,
         model: model,
         number: number,
+        currentMileage: mileage,
       );
     } else {
-      final created = await provider.addCar(model: model, number: number);
+      final created = await provider.addCar(
+        model: model,
+        number: number,
+        currentMileage: mileage,
+      );
       success = created != null;
     }
 
@@ -138,6 +148,7 @@ class _CarDialogState extends State<CarDialog> {
   void dispose() {
     _modelController.dispose();
     _numberController.dispose();
+    _mileageController.dispose();
     _numberFocusNode.dispose();
     super.dispose();
   }
@@ -197,6 +208,23 @@ class _CarDialogState extends State<CarDialog> {
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
               return 'Введите госномер';
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 16),
+        TextFormField(
+          controller: _mileageController,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+            labelText: 'Текущий пробег (км)',
+            border: OutlineInputBorder(),
+          ),
+          validator: (value) {
+            if (value != null && value.trim().isNotEmpty) {
+              if (double.tryParse(value) == null) {
+                return 'Введите корректное число';
+              }
             }
             return null;
           },
