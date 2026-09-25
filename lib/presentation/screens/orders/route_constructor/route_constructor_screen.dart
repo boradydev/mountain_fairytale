@@ -4,7 +4,6 @@ import 'package:mountain_fairytale/presentation/providers/route_constructor_prov
 import 'package:mountain_fairytale/presentation/screens/common/clients_selection_panel.dart';
 import 'package:mountain_fairytale/presentation/screens/orders/route_constructor/route_meta_panel.dart';
 import 'package:mountain_fairytale/presentation/screens/orders/route_constructor/route_points_list.dart';
-import 'package:mountain_fairytale/presentation/screens/orders/route_constructor/route_sheet_preview_dialog.dart';
 import 'package:mountain_fairytale/presentation/widgets/app_notify.dart';
 import 'package:mountain_fairytale/presentation/widgets/pdf_route_preview_dialog.dart';
 import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
