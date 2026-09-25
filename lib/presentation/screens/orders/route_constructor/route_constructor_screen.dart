@@ -62,58 +62,6 @@ class _RouteConstructorScreenState extends State<RouteConstructorScreen> {
           IconButton(
             icon: const Icon(Icons.print),
             tooltip: 'Печать маршрутного листа',
-            onPressed: () {
-              if (provider.selectedDriver == null) {
-                AppNotify.show(
-                  'Укажите водителя перед печатью маршрутного листа',
-                  isError: true,
-                );
-                return;
-              }
-              if (provider.selectedCar == null) {
-                AppNotify.show(
-                  'Укажите автомобиль перед печатью маршрутного листа',
-                  isError: true,
-                );
-                return;
-              }
-              if (provider.points.isEmpty) {
-                AppNotify.show(
-                  'Добавьте хотя бы один маршрут перед печатью маршрутного листа',
-                  isError: true,
-                );
-                return;
-              }
-
-              final hasProducts = provider.points.any(
-                (point) => point.items.isNotEmpty,
-              );
-              if (!hasProducts) {
-                AppNotify.show(
-                  'Добавьте продукцию хотя бы в один маршрут перед печатью маршрутного листа',
-                  isError: true,
-                );
-                return;
-              }
-
-              final sheet = provider.currentRouteSheet;
-              if (sheet == null) {
-                AppNotify.show(
-                  'Не удалось подготовить маршрутный лист к печати',
-                  isError: true,
-                );
-                return;
-              }
-
-              showDialog(
-                context: context,
-                builder: (_) => RouteSheetPreviewDialog(sheet: sheet),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.print),
-            tooltip: 'Печать маршрутного листа',
             onPressed: () async {
               if (provider.selectedDriver == null) {
                 AppNotify.show(
@@ -140,7 +88,7 @@ class _RouteConstructorScreenState extends State<RouteConstructorScreen> {
               }
 
               final hasProducts = provider.points.any(
-                    (point) => point.items.isNotEmpty,
+                (point) => point.items.isNotEmpty,
               );
 
               if (!hasProducts) {
