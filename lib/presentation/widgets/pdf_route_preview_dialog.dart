@@ -567,7 +567,7 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
               ),
             ),
           ],
-        )
+        ),
       ],
     );
   }

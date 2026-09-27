@@ -67,9 +67,9 @@ class _RegisterDialogState extends State<RegisterDialog> {
       submitButtonText: 'Зарегистрировать',
       formKey: _formKey,
       onSubmit: _register,
-      // В BaseFormDialog обычно есть кнопка отмены или мы можем добавить её в children, 
+      // В BaseFormDialog обычно есть кнопка отмены или мы можем добавить её в children,
       // но для соответствия ClientDialog используем стандартный submit.
-      // Если нужно добавить кнопку "Отмена" как в оригинальном AlertDialog, 
+      // Если нужно добавить кнопку "Отмена" как в оригинальном AlertDialog,
       // можно добавить её в список children или через кастомный экшен.
       children: [
         TextFormField(

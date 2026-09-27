@@ -312,10 +312,10 @@ class _AuthGateState extends State<_AuthGate> {
         );
 
       case AuthStatus.unauthenticated:
-        // В режиме отладки позволяем зайти на главный экран, 
-        // если пользователь нажал кнопку "Bypass" или если мы хотим 
+        // В режиме отладки позволяем зайти на главный экран,
+        // если пользователь нажал кнопку "Bypass" или если мы хотим
         // видеть интерфейс без логина.
-        // Но так как мы используем AuthProvider.status, 
+        // Но так как мы используем AuthProvider.status,
         // кнопка в LoginScreen просто изменит статус на authenticated.
         return const LoginScreen();
 
