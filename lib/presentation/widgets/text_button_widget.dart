@@ -31,9 +31,11 @@ class AppPrimaryButton extends StatelessWidget {
           FilledButton.styleFrom(
             backgroundColor: backgroundColor,
             foregroundColor: foregroundColor,
-            padding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 16,
+            padding: const EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 14,
+              bottom: 16,
             ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
@@ -84,7 +86,12 @@ class AppSecondaryButton extends StatelessWidget {
         // Сделаем текст чуть спокойнее, чтобы не спорил с основной кнопкой
         // Изменили outlineVariant на outline и увеличили толщину до 1.5 для десктопной четкости
         side: BorderSide(color: colorScheme.outline, width: 1),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        padding: const EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 14,
+          bottom: 16,
+        ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),
         ),
