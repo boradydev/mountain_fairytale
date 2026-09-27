@@ -51,6 +51,9 @@ dependencies:
   # UI Components
   cupertino_icons: ^1.0.8
 
+  http: ^1.5.0
+  flutter_secure_storage: ^9.2.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
