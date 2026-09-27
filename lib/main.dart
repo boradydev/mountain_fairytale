@@ -3,8 +3,15 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/core/utils/scaffold_messenger_key.dart';
+import 'package:mountain_fairytale/infra/auth/auth_service.dart';
+import 'package:mountain_fairytale/infra/auth/auth_service_impl.dart';
+import 'package:mountain_fairytale/infra/auth/secure_token_storage.dart';
+import 'package:mountain_fairytale/infra/http/api_client.dart';
+import 'package:mountain_fairytale/infra/http/http_transport.dart';
 import 'package:mountain_fairytale/infra/printing/pdf/route_sheet_pdf_builder.dart';
 import 'package:mountain_fairytale/infra/printing/windows_route_print_service.dart';
+import 'package:mountain_fairytale/infra/repos/auth/repo_impl.dart';
+import 'package:mountain_fairytale/infra/repos/auth/sources/api_data_source.dart';
 import 'package:mountain_fairytale/infra/repos/cars/repo.dart';
 import 'package:mountain_fairytale/infra/repos/cars/sources/demo_data.dart';
 import 'package:mountain_fairytale/infra/repos/clients/repo.dart';
@@ -29,6 +36,7 @@ import 'package:mountain_fairytale/infra/repos/sales_representatives/repo.dart';
 import 'package:mountain_fairytale/infra/repos/sales_representatives/sources/demo_data.dart';
 import 'package:mountain_fairytale/infra/window_settings_service.dart';
 import 'package:mountain_fairytale/l10n/app_localizations.dart';
+import 'package:mountain_fairytale/presentation/providers/auth_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/delivery_days_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/locale_provider.dart';
@@ -40,6 +48,7 @@ import 'package:mountain_fairytale/presentation/providers/sales_representative_p
 import 'package:mountain_fairytale/presentation/providers/theme_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/delivery_days/dashboard.dart';
 import 'package:mountain_fairytale/presentation/providers/abcs/repos/product_contracts.dart';
+import 'package:mountain_fairytale/presentation/screens/login/login_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
@@ -129,6 +138,30 @@ Future<void> main() async {
   // 3. ИНИЦИАЛИЗАЦИЯ СЕРВИСОВ
   // ===========================================================================
   final routePrintService = WindowsRoutePrintService(RouteSheetPdfBuilder());
+  final httpTransport = HttpTransport(
+    baseUrl: 'http://localhost:8000',
+  );
+
+  final tokenStorage = SecureTokenStorage();
+
+  final authDataSource = AuthApiDataSource(
+    transport: httpTransport,
+  );
+
+  final authRepository = AuthRepositoryImpl(
+    dataSource: authDataSource,
+  );
+
+  final authService = AuthServiceImpl(
+    repository: authRepository,
+    tokenStorage: tokenStorage,
+  );
+
+  final apiClient = ApiClient(
+    transport: httpTransport,
+    authService: authService,
+    userAgent: 'MountainFairytale/1.0 Windows',
+  );
 
   // ===========================================================================
   // 4. ЗАПУСК ПРИЛОЖЕНИЯ И ВНЕДРЕНИЕ ЗАВИСИМОСТЕЙ (DI)
@@ -192,6 +225,24 @@ Future<void> main() async {
             clientRepo: clientRepository,
           ),
         ),
+        Provider<AuthService>.value(
+          value: authService,
+        ),
+        ChangeNotifierProvider(
+          create: (_) => AuthProvider(
+            authService: authService,
+          ),
+        ),
+
+        // Здесь потом:
+        //
+        // Provider<ClientRepository>(
+        //   create: (_) => ClientRepositoryImpl(
+        //     dataSource: ClientApiDataSource(
+        //       apiClient: apiClient,
+        //     ),
+        //   ),
+        // ),
       ],
       child: const MyApp(),
     ),
@@ -212,6 +263,7 @@ class MyApp extends StatelessWidget {
         windowManager.setTitle(title);
         return title;
       },
+
       debugShowCheckedModeBanner: false,
 
       locale: localeProvider.locale,
@@ -221,9 +273,48 @@ class MyApp extends StatelessWidget {
       themeMode: themeProvider.themeMode,
       theme: themeProvider.lightTheme,
       darkTheme: themeProvider.darkTheme,
+
       scaffoldMessengerKey: scaffoldMessengerKey,
 
-      home: const DeliveryDaysScreen(),
+      home: const _AuthGate(),
     );
+  }
+}
+
+class _AuthGate extends StatefulWidget {
+  const _AuthGate();
+
+  @override
+  State<_AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<_AuthGate> {
+  @override
+  void initState() {
+    super.initState();
+
+    Future.microtask(() {
+      context.read<AuthProvider>().restoreSession();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+
+    switch (auth.status) {
+      case AuthStatus.initializing:
+        return const Scaffold(
+          body: Center(
+            child: CircularProgressIndicator(),
+          ),
+        );
+
+      case AuthStatus.unauthenticated:
+        return const LoginScreen();
+
+      case AuthStatus.authenticated:
+        return const DeliveryDaysScreen();
+    }
   }
 }

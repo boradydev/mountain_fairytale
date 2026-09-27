@@ -1,4 +1,5 @@
 import 'package:mountain_fairytale/infra/repos/auth/models/auth_tokens_model.dart';
+import 'package:mountain_fairytale/infra/repos/auth/models/auth_user_model.dart';
 
 abstract interface class AuthRepository {
   Future<AuthTokensModel> login({
@@ -12,5 +13,12 @@ abstract interface class AuthRepository {
 
   Future<void> logout({
     required String refreshToken,
+  });
+
+  Future<List<AuthUserModel>> getUsers();
+
+  Future<void> register({
+    required String username,
+    required String password,
   });
 }

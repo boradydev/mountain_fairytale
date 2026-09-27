@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import 'package:mountain_fairytale/infra/auth/auth_service.dart';
+import 'package:mountain_fairytale/infra/repos/auth/models/auth_user_model.dart';
 
 enum AuthStatus {
   initializing,
@@ -14,8 +15,11 @@ class AuthProvider extends ChangeNotifier {
   AuthStatus _status = AuthStatus.initializing;
 
   bool _isLoading = false;
+  bool _isRegistering = false;
 
   String? _error;
+
+  List<AuthUserModel> _users = const [];
 
   AuthProvider({
     required this._authService,
@@ -25,9 +29,13 @@ class AuthProvider extends ChangeNotifier {
 
   bool get isLoading => _isLoading;
 
+  bool get isRegistering => _isRegistering;
+
   bool get isAuthenticated => _status == AuthStatus.authenticated;
 
   String? get error => _error;
+
+  List<AuthUserModel> get users => _users;
 
   Future<void> restoreSession() async {
     _status = AuthStatus.initializing;
@@ -40,6 +48,16 @@ class AuthProvider extends ChangeNotifier {
     _status = restored ? AuthStatus.authenticated : AuthStatus.unauthenticated;
 
     notifyListeners();
+  }
+
+  Future<void> loadUsers() async {
+    try {
+      _users = await _authService.getUsers();
+      notifyListeners();
+    } catch (_) {
+      // Пока список пользователей не является
+      // критичным для авторизации.
+    }
   }
 
   Future<bool> login({
@@ -67,6 +85,33 @@ class AuthProvider extends ChangeNotifier {
       return false;
     } finally {
       _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> register({
+    required String username,
+    required String password,
+  }) async {
+    _isRegistering = true;
+    _error = null;
+
+    notifyListeners();
+
+    try {
+      await _authService.register(
+        username: username,
+        password: password,
+      );
+
+      await loadUsers();
+
+      return true;
+    } catch (error) {
+      _error = error.toString();
+      return false;
+    } finally {
+      _isRegistering = false;
       notifyListeners();
     }
   }

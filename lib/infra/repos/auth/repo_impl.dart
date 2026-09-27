@@ -1,4 +1,5 @@
 import 'package:mountain_fairytale/infra/repos/auth/models/auth_tokens_model.dart';
+import 'package:mountain_fairytale/infra/repos/auth/models/auth_user_model.dart';
 import 'package:mountain_fairytale/infra/repos/auth/repo.dart';
 import 'package:mountain_fairytale/infra/repos/auth/sources/api_data_source.dart';
 
@@ -35,6 +36,22 @@ class AuthRepositoryImpl implements AuthRepository {
   }) {
     return _dataSource.logout(
       refreshToken: refreshToken,
+    );
+  }
+
+  @override
+  Future<List<AuthUserModel>> getUsers() {
+    return _dataSource.getUsers();
+  }
+
+  @override
+  Future<void> register({
+    required String username,
+    required String password,
+  }) {
+    return _dataSource.register(
+      username: username,
+      password: password,
     );
   }
 }

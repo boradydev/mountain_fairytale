@@ -1,3 +1,4 @@
+import 'package:mountain_fairytale/infra/repos/auth/models/auth_user_model.dart';
 import 'package:mountain_fairytale/infra/repos/auth/repo.dart';
 import 'package:mountain_fairytale/infra/auth/auth_service.dart';
 import 'package:mountain_fairytale/infra/auth/token_storage.dart';
@@ -46,6 +47,22 @@ class AuthServiceImpl implements AuthService {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
     );
+  }
+
+  @override
+  Future<void> register({
+    required String username,
+    required String password,
+  }) {
+    return _repository.register(
+      username: username,
+      password: password,
+    );
+  }
+
+  @override
+  Future<List<AuthUserModel>> getUsers() {
+    return _repository.getUsers();
   }
 
   @override

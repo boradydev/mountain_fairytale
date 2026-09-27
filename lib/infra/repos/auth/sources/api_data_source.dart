@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:mountain_fairytale/infra/http/api_exception.dart';
 import 'package:mountain_fairytale/infra/http/http_transport.dart';
 import 'package:mountain_fairytale/infra/repos/auth/models/auth_tokens_model.dart';
+import 'package:mountain_fairytale/infra/repos/auth/models/auth_user_model.dart';
 
 class AuthApiDataSource {
   final HttpTransport _transport;
@@ -54,6 +55,45 @@ class AuthApiDataSource {
       '/auth/logout',
       body: {
         'refresh_token': refreshToken,
+      },
+    );
+
+    _checkResponse(response);
+  }
+
+  Future<List<AuthUserModel>> getUsers() async {
+    final response = await _transport.get(
+      '/auth/users',
+    );
+
+    _checkResponse(response);
+
+    final json = jsonDecode(response.body);
+
+    if (json is! List) {
+      throw const FormatException(
+        'Expected JSON array.',
+      );
+    }
+
+    return json
+        .map(
+          (item) => AuthUserModel.fromJson(
+            item as Map<String, dynamic>,
+          ),
+        )
+        .toList();
+  }
+
+  Future<void> register({
+    required String username,
+    required String password,
+  }) async {
+    final response = await _transport.post(
+      '/auth/register',
+      body: {
+        'username': username,
+        'password': password,
       },
     );
 
