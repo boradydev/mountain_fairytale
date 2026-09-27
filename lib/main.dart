@@ -294,6 +294,7 @@ class _AuthGateState extends State<_AuthGate> {
     super.initState();
 
     Future.microtask(() {
+      if (!mounted) return;
       context.read<AuthProvider>().restoreSession();
     });
   }
