@@ -24,6 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.initState();
 
     Future.microtask(() {
+      if (!mounted) return;
       context.read<AuthProvider>().loadUsers();
     });
   }
@@ -113,101 +114,96 @@ class _LoginScreenState extends State<LoginScreen> {
             constraints: const BoxConstraints(
               maxWidth: 420,
             ),
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(32),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.water_drop_outlined,
+                  size: 56,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Добро пожаловать',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Войдите в Mountain Fairytale',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 32),
+                DropdownButtonFormField<String>(
+                  initialValue: _selectedUsername,
+                  decoration: const InputDecoration(
+                    labelText: 'Пользователь',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(
+                      Icons.person_outline,
+                    ),
+                  ),
+                  items: users
+                      .map(
+                        (user) => DropdownMenuItem<String>(
+                          value: user.username,
+                          child: Text(user.username),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: auth.isLoading
+                      ? null
+                      : (value) {
+                          setState(() {
+                            _selectedUsername = value;
+                          });
+                        },
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _passwordController,
+                  enabled: !auth.isLoading,
+                  obscureText: true,
+                  onSubmitted: (_) => _login(),
+                  decoration: const InputDecoration(
+                    labelText: 'Пароль',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(
+                      Icons.lock_outline,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 28),
+                Row(
                   children: [
-                    Icon(
-                      Icons.water_drop_outlined,
-                      size: 56,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Добро пожаловать',
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Войдите в Mountain Fairytale',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 32),
-                    DropdownButtonFormField<String>(
-                      initialValue: _selectedUsername,
-                      decoration: const InputDecoration(
-                        labelText: 'Пользователь',
-                        prefixIcon: Icon(
-                          Icons.person_outline,
-                        ),
-                      ),
-                      items: users
-                          .map(
-                            (user) => DropdownMenuItem<String>(
-                              value: user.username,
-                              child: Text(user.username),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: auth.isLoading
-                          ? null
-                          : (value) {
-                              setState(() {
-                                _selectedUsername = value;
-                              });
-                            },
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: _passwordController,
-                      enabled: !auth.isLoading,
-                      obscureText: true,
-                      onSubmitted: (_) => _login(),
-                      decoration: const InputDecoration(
-                        labelText: 'Пароль',
-                        prefixIcon: Icon(
-                          Icons.lock_outline,
-                        ),
+                    Expanded(
+                      child: AppSecondaryButton(
+                        text: 'Зарегистрировать',
+                        onPressed: auth.isLoading ? null : _openRegisterDialog,
                       ),
                     ),
-                    const SizedBox(height: 28),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: AppSecondaryButton(
-                            text: 'Зарегистрировать',
-                            onPressed: auth.isLoading
-                                ? null
-                                : _openRegisterDialog,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: AppPrimaryButton(
-                            text: 'Войти',
-                            onPressed: auth.isLoading ? null : _login,
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (auth.isLoading) ...[
-                      const SizedBox(height: 20),
-                      const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                        ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: AppPrimaryButton(
+                        text: 'Войти',
+                        onPressed: auth.isLoading ? null : _login,
                       ),
-                    ],
+                    ),
                   ],
                 ),
-              ),
+                if (auth.isLoading) ...[
+                  const SizedBox(height: 20),
+                  const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ),

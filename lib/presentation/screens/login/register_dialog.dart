@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/presentation/providers/auth_provider.dart';
-import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
+import 'package:mountain_fairytale/presentation/widgets/base_form_dialog_widget.dart';
 import 'package:provider/provider.dart';
 
 class RegisterDialog extends StatefulWidget {
@@ -13,6 +13,7 @@ class RegisterDialog extends StatefulWidget {
 }
 
 class _RegisterDialogState extends State<RegisterDialog> {
+  final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -25,12 +26,12 @@ class _RegisterDialogState extends State<RegisterDialog> {
   }
 
   Future<void> _register() async {
-    final username = _usernameController.text.trim();
-    final password = _passwordController.text;
-
-    if (username.isEmpty) {
+    if (!_formKey.currentState!.validate()) {
       return;
     }
+
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text;
 
     final success = await context.read<AuthProvider>().register(
       username: username,
@@ -61,47 +62,47 @@ class _RegisterDialogState extends State<RegisterDialog> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
 
-    return AlertDialog(
-      title: const Text('Регистрация'),
-      content: SizedBox(
-        width: 360,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _usernameController,
-              enabled: !auth.isRegistering,
-              autofocus: true,
-              decoration: const InputDecoration(
-                labelText: 'Логин',
-              ),
-              onSubmitted: (_) => _register(),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _passwordController,
-              enabled: !auth.isRegistering,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Пароль',
-                helperText: 'Можно оставить пустым',
-              ),
-              onSubmitted: (_) => _register(),
-            ),
-          ],
+    return BaseFormDialog(
+      title: 'Регистрация',
+      submitButtonText: 'Зарегистрировать',
+      formKey: _formKey,
+      onSubmit: _register,
+      // В BaseFormDialog обычно есть кнопка отмены или мы можем добавить её в children, 
+      // но для соответствия ClientDialog используем стандартный submit.
+      // Если нужно добавить кнопку "Отмена" как в оригинальном AlertDialog, 
+      // можно добавить её в список children или через кастомный экшен.
+      children: [
+        TextFormField(
+          controller: _usernameController,
+          enabled: !auth.isRegistering,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: 'Логин',
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.person_outline),
+          ),
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return 'Введите логин';
+            }
+            return null;
+          },
+          onFieldSubmitted: (_) => _register(),
         ),
-      ),
-      actions: [
-        AppSecondaryButton(
-          text: 'Отмена',
-          onPressed: auth.isRegistering
-              ? null
-              : () => Navigator.of(context).pop(),
+        const SizedBox(height: 16),
+        TextFormField(
+          controller: _passwordController,
+          enabled: !auth.isRegistering,
+          obscureText: true,
+          decoration: const InputDecoration(
+            labelText: 'Пароль',
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.lock_outline),
+            helperText: 'Можно оставить пустым',
+          ),
+          onFieldSubmitted: (_) => _register(),
         ),
-        AppPrimaryButton(
-          text: 'Зарегистрировать',
-          onPressed: auth.isRegistering ? null : _register,
-        ),
+        const SizedBox(height: 16),
       ],
     );
   }
