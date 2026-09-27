@@ -130,4 +130,10 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  /// Метод для дебаг-входа без проверки пароля
+  void bypassAuth() {
+    _status = AuthStatus.authenticated;
+    notifyListeners();
+  }
 }

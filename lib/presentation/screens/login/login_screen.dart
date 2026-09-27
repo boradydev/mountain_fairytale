@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:mountain_fairytale/presentation/providers/auth_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/theme_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/login/register_dialog.dart';
@@ -95,6 +96,14 @@ class _LoginScreenState extends State<LoginScreen> {
       appBar: AppBar(
         title: const Text('Авторизация'),
         actions: [
+          if (kDebugMode)
+            IconButton(
+              tooltip: 'Вход без пароля (Debug)',
+              icon: const Icon(Icons.fast_forward),
+              onPressed: () {
+                context.read<AuthProvider>().bypassAuth();
+              },
+            ),
           IconButton(
             tooltip: themeProvider.isDarkMode ? 'Светлая тема' : 'Тёмная тема',
             icon: Icon(
