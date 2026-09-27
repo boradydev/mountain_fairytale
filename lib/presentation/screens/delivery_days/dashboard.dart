@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/l10n/app_localizations.dart';
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/delivery_days_provider.dart';
-import 'package:mountain_fairytale/presentation/providers/theme_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/delivery_days/client_list.dart';
 import 'package:mountain_fairytale/presentation/screens/delivery_days/delivery_day_list.dart';
 import 'package:mountain_fairytale/presentation/screens/sales_analytics/sales_analytics_screen.dart';
 import 'package:mountain_fairytale/presentation/widgets/locate_toggle_widget.dart';
+import 'package:mountain_fairytale/presentation/widgets/theme_toggle_button.dart';
 import 'package:provider/provider.dart';
 
 class DeliveryDaysScreen extends StatefulWidget {
@@ -52,7 +52,6 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = context.select((ThemeProvider p) => p.isDarkMode);
     final l10n = AppLocalizations.of(context)!;
     final status = context.select((DeliveryDaysProvider p) => p.status);
 
@@ -98,10 +97,7 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen> {
             endIndent: 10, // Отступ снизу
           ),
           const LocaleToggleButton(),
-          IconButton(
-            icon: Icon(isDarkMode ? Icons.wb_sunny : Icons.nightlight_round),
-            onPressed: () => context.read<ThemeProvider>().toggleTheme(),
-          ),
+          const ThemeToggleButton(),
         ],
       ),
       body: switch (status) {
