@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:mountain_fairytale/presentation/providers/auth_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/login/register_dialog.dart';
+import 'package:mountain_fairytale/presentation/widgets/locate_toggle_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/theme_toggle_button.dart';
 import 'package:provider/provider.dart';
@@ -103,8 +104,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 context.read<AuthProvider>().bypassAuth();
               },
             ),
+          VerticalDivider(
+            thickness: 2, // Толщина линии
+            width: 20, // Отступы вокруг линии (общая ширина виджета)
+            indent: 10, // Отступ сверху
+            endIndent: 10, // Отступ снизу
+          ),
+          const LocaleToggleButton(),
           const ThemeToggleButton(),
-          const SizedBox(width: 8),
         ],
       ),
       body: Center(

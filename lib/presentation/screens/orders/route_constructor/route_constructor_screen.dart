@@ -5,8 +5,10 @@ import 'package:mountain_fairytale/presentation/screens/common/clients_selection
 import 'package:mountain_fairytale/presentation/screens/orders/route_constructor/route_meta_panel.dart';
 import 'package:mountain_fairytale/presentation/screens/orders/route_constructor/route_points_list.dart';
 import 'package:mountain_fairytale/presentation/widgets/app_notify.dart';
+import 'package:mountain_fairytale/presentation/widgets/locate_toggle_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/pdf_route_preview_dialog.dart';
 import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
+import 'package:mountain_fairytale/presentation/widgets/theme_toggle_button.dart';
 import 'package:provider/provider.dart';
 
 class RouteConstructorScreen extends StatefulWidget {
@@ -146,6 +148,14 @@ class _RouteConstructorScreenState extends State<RouteConstructorScreen> {
               ),
             ),
           ),
+          VerticalDivider(
+            thickness: 2, // Толщина линии
+            width: 20, // Отступы вокруг линии (общая ширина виджета)
+            indent: 10, // Отступ сверху
+            endIndent: 10, // Отступ снизу
+          ),
+          const LocaleToggleButton(),
+          const ThemeToggleButton(),
         ],
       ),
       body: provider.isLoadingDirectories

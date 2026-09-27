@@ -4,7 +4,9 @@ import 'package:mountain_fairytale/presentation/providers/pickup_constructor_pro
 import 'package:mountain_fairytale/presentation/screens/common/clients_selection_panel.dart';
 import 'package:mountain_fairytale/presentation/screens/orders/pickup_constructor/pickup_meta_panel.dart';
 import 'package:mountain_fairytale/presentation/screens/orders/route_constructor/route_points_list.dart';
+import 'package:mountain_fairytale/presentation/widgets/locate_toggle_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
+import 'package:mountain_fairytale/presentation/widgets/theme_toggle_button.dart';
 import 'package:provider/provider.dart';
 
 class PickupConstructorScreen extends StatefulWidget {
@@ -72,6 +74,14 @@ class _PickupConstructorScreenState extends State<PickupConstructorScreen> {
               ),
             ),
           ),
+          VerticalDivider(
+            thickness: 2, // Толщина линии
+            width: 20, // Отступы вокруг линии (общая ширина виджета)
+            indent: 10, // Отступ сверху
+            endIndent: 10, // Отступ снизу
+          ),
+          const LocaleToggleButton(),
+          const ThemeToggleButton(),
         ],
       ),
       body: provider.isLoadingDirectories

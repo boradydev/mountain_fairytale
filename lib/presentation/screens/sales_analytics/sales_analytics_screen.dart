@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/infra/repos/sales_representative_commissions/models/sales_representative_commission_model.dart';
 import 'package:mountain_fairytale/presentation/providers/sales_representative_commission_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/sales_representative_clients_provider.dart';
+import 'package:mountain_fairytale/presentation/widgets/locate_toggle_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/base_card_widget.dart';
+import 'package:mountain_fairytale/presentation/widgets/theme_toggle_button.dart';
 import 'package:provider/provider.dart';
 import 'package:mountain_fairytale/presentation/screens/sales_analytics/month_picker_dialog.dart';
 import 'package:mountain_fairytale/presentation/screens/sales_analytics/sales_representative_details_dialog.dart';
@@ -43,6 +45,14 @@ class _SalesRepresentativeCommissionScreenState
                 ? null
                 : () => provider.fetchCommissions(),
           ),
+          VerticalDivider(
+            thickness: 2, // Толщина линии
+            width: 20, // Отступы вокруг линии (общая ширина виджета)
+            indent: 10, // Отступ сверху
+            endIndent: 10, // Отступ снизу
+          ),
+          const LocaleToggleButton(),
+          const ThemeToggleButton(),
         ],
       ),
       body: Column(
