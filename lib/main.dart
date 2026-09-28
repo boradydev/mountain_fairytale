@@ -10,6 +10,8 @@ import 'package:mountain_fairytale/infra/http/api_client.dart';
 import 'package:mountain_fairytale/infra/http/http_transport.dart';
 import 'package:mountain_fairytale/infra/printing/pdf/route_sheet_pdf_builder.dart';
 import 'package:mountain_fairytale/infra/printing/windows_route_print_service.dart';
+import 'package:mountain_fairytale/infra/repos/audit_log/repo.dart';
+import 'package:mountain_fairytale/infra/repos/audit_log/sources/demo_data.dart';
 import 'package:mountain_fairytale/infra/repos/auth/repo_impl.dart';
 import 'package:mountain_fairytale/infra/repos/auth/sources/api_data_source.dart';
 import 'package:mountain_fairytale/infra/repos/cars/repo.dart';
@@ -36,6 +38,7 @@ import 'package:mountain_fairytale/infra/repos/sales_representatives/repo.dart';
 import 'package:mountain_fairytale/infra/repos/sales_representatives/sources/demo_data.dart';
 import 'package:mountain_fairytale/infra/window_settings_service.dart';
 import 'package:mountain_fairytale/l10n/app_localizations.dart';
+import 'package:mountain_fairytale/presentation/providers/audit_log_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/auth_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/delivery_days_provider.dart';
@@ -101,6 +104,11 @@ Future<void> main() async {
       DemoSalesRepresentativeCommissionDataSource();
   final pickupDataSource = DemoPickupDataSource();
 
+  final auditLogDataSource = DemoAuditLogDataSource();
+
+  final auditLogRepository = AuditLogRepositoryImpl(
+    auditLogDataSource,
+  );
   // ===========================================================================
   // 2. ИНИЦИАЛИЗАЦИЯ РЕПОЗИТОРИЕВ
   // Принимают сущности от UI, конвертируют в JSON-Map и общаются с Data Sources
@@ -243,6 +251,11 @@ Future<void> main() async {
         //     ),
         //   ),
         // ),
+        ChangeNotifierProvider(
+          create: (_) => AuditLogProvider(
+            auditLogRepository,
+          ),
+        ),
       ],
       child: const MyApp(),
     ),

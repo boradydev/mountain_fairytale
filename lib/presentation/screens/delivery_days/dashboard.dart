@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/l10n/app_localizations.dart';
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/delivery_days_provider.dart';
+import 'package:mountain_fairytale/presentation/screens/audit_log/audit_log_screen.dart';
 import 'package:mountain_fairytale/presentation/screens/delivery_days/client_list.dart';
 import 'package:mountain_fairytale/presentation/screens/delivery_days/delivery_day_list.dart';
 import 'package:mountain_fairytale/presentation/screens/sales_analytics/sales_analytics_screen.dart';
@@ -64,6 +65,17 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen> {
       appBar: AppBar(
         title: Text(l10n.appTitle),
         actions: [
+          IconButton(
+            tooltip: 'Журнал событий',
+            icon: const Icon(Icons.history),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const AuditLogScreen(),
+                ),
+              );
+            },
+          ),
           IconButton(
             tooltip: 'Вознаграждение торговых представителей',
             icon: const Icon(Icons.payments_outlined),
