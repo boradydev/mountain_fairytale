@@ -336,6 +336,7 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                       return Column(
                                         children: [
                                           TaskItemRow(
+                                            index: taskIndex,
                                             item: item,
                                             onDelete: () =>
                                                 provider.removeTaskFromPoint(

@@ -3,12 +3,14 @@ import 'package:mountain_fairytale/infra/repos/delivery_route/models/delivery_ta
 import 'package:mountain_fairytale/presentation/widgets/icon_button_widget.dart';
 
 class TaskItemRow extends StatefulWidget {
+  final int index;
   final DeliveryTaskItem item;
   final VoidCallback onDelete;
   final ValueChanged<int> onQuantityChanged;
 
   const TaskItemRow({
     super.key,
+    required this.index,
     required this.item,
     required this.onDelete,
     required this.onQuantityChanged,
@@ -56,6 +58,13 @@ class _TaskItemRowState extends State<TaskItemRow> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          Text(
+            '${widget.index + 1}. ',
+            style: TextStyle(
+              color: colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(right: 20),
