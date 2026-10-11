@@ -64,7 +64,7 @@
   offer activation.
 - The route driver's dropdown has a persistent “show deactivated drivers”
   setting, saved across app launches and off by default. Use the backend's
-  `includeDeactivated` query parameter to load the matching list.
+  `include_deactivated` query parameter to load the matching list.
 - Clearly mark deactivated drivers in the dropdown. They cannot be assigned to
   a route while inactive. Choosing one offers “Activate and select”; after
   successful activation, refresh the active driver list and select that driver
