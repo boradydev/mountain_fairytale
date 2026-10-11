@@ -101,6 +101,7 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
             key: ValueKey(_driverSelectionVersion),
             label: 'Водитель *',
             showEdit: true,
+            showAdd: true,
             editBeforeAdd: true,
             showInactiveToggle: true,
             includeInactive: provider.showInactiveDrivers,

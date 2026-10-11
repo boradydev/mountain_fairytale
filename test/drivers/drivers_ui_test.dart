@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -61,10 +63,13 @@ class _Drivers implements DriverRepository {
   bool fail = false;
   int patches = 0;
   int creates = 0;
+  Completer<List<Driver>>? loadGate;
   @override
   Future<List<Driver>> getAvailableDrivers({
     bool includeDeactivated = false,
-  }) async => rows.where((d) => includeDeactivated || d.isActive).toList();
+  }) async => loadGate != null
+      ? await loadGate!.future
+      : rows.where((d) => includeDeactivated || d.isActive).toList();
   @override
   Future<Driver> updateDriver(String id, UpdateDriverRequest request) async {
     patches++;
@@ -176,6 +181,34 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets('eye toggle keeps all action buttons in place while loading', (
+    tester,
+  ) async {
+    final repo = _Drivers()..loadGate = Completer<List<Driver>>();
+    final provider = makeProvider(repo)..drivers = [active];
+    provider.selectDriver(active);
+    await panel(tester, provider);
+    final add = find.widgetWithIcon(IconButton, Icons.add).first;
+    final edit = find.widgetWithIcon(IconButton, Icons.edit_outlined).first;
+    final addPosition = tester.getCenter(add);
+    final editPosition = tester.getCenter(edit);
+    await tester.tap(
+      find.widgetWithIcon(IconButton, Icons.visibility_off_outlined),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(provider.isLoadingDrivers, isTrue);
+    expect(tester.widget<IconButton>(add).onPressed, isNull);
+    expect(tester.getCenter(add), addPosition);
+    expect(tester.getCenter(edit), editPosition);
+    repo.loadGate!.complete([active, inactive]);
+    await tester.pumpAndSettle();
+    expect(tester.widget<IconButton>(add).onPressed, isNotNull);
+    expect(tester.getCenter(add), addPosition);
+    expect(tester.getCenter(edit), editPosition);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets(
     'cancel inactive activation keeps selected driver and dropdown in sync',

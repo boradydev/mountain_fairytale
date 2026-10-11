@@ -14,6 +14,9 @@ class AppDropdown<T> extends StatelessWidget {
   final IconData? prefixIcon;
   final bool showEdit;
 
+  /// Оставляет кнопку создания видимой, когда её обработчик недоступен.
+  final bool showAdd;
+
   /// Показывает кнопку фильтра; по умолчанию она скрыта.
   final bool showInactiveToggle;
 
@@ -38,6 +41,7 @@ class AppDropdown<T> extends StatelessWidget {
     this.validator,
     this.prefixIcon,
     this.showEdit = false,
+    this.showAdd = false,
     this.showInactiveToggle = false,
     this.includeInactive = false,
     this.onIncludeInactiveChanged,
@@ -81,7 +85,7 @@ class AppDropdown<T> extends StatelessWidget {
                 tooltip: 'Редактировать выбранный элемент',
                 onPressed: onEdit,
               ),
-            if (onAdd != null)
+            if (showAdd || onAdd != null)
               AppIconButton(
                 icon: Icons.add,
                 tooltip: 'Добавить $label',
