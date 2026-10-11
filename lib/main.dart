@@ -22,8 +22,8 @@ import 'package:mountain_fairytale/features/delivery_days/data/delivery_days_rep
 import 'package:mountain_fairytale/features/delivery_days/data/delivery_days_demo_data.dart';
 import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_repo.dart';
 import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_demo_data.dart';
-import 'package:mountain_fairytale/infra/repos/drivers/repo.dart';
-import 'package:mountain_fairytale/infra/repos/drivers/sources/demo_data.dart';
+import 'package:mountain_fairytale/features/drivers/data/drivers_repo.dart';
+import 'package:mountain_fairytale/features/drivers/data/drivers_demo_data.dart';
 import 'package:mountain_fairytale/infra/repos/payment_methods/repo.dart';
 import 'package:mountain_fairytale/infra/repos/payment_methods/sources/demo_data.dart';
 import 'package:mountain_fairytale/infra/repos/pickup/repo.dart';

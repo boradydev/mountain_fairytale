@@ -1,4 +1,4 @@
-import 'package:mountain_fairytale/infra/repos/drivers/models/driver_model.dart';
+import 'package:mountain_fairytale/features/drivers/data/driver_model.dart';
 
 abstract interface class DriverDataSource {
   Future<List<Map<String, dynamic>>> getAllDrivers();

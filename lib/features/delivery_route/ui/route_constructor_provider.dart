@@ -1,9 +1,9 @@
 import 'package:mountain_fairytale/features/cars/data/cars_model.dart';
 import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_sheet_model.dart';
-import 'package:mountain_fairytale/infra/repos/drivers/models/driver_model.dart';
+import 'package:mountain_fairytale/features/drivers/data/driver_model.dart';
 import 'package:mountain_fairytale/features/cars/cars_abcs.dart';
 import 'package:mountain_fairytale/features/delivery_route/delivery_route_abcs.dart';
-import 'package:mountain_fairytale/features/drivers/driver_abcs.dart';
+import 'package:mountain_fairytale/features/drivers/drivers_abcs.dart';
 import 'package:mountain_fairytale/features/delivery_route/delivery_route_abcs.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/order_points_provider.dart';
 
