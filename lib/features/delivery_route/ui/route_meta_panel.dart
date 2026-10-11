@@ -95,14 +95,13 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
           AppDropdown<Driver>(
             key: ValueKey(_driverSelectionVersion),
             label: 'Водитель *',
+            enabled: !provider.isLoadingDrivers,
             showEdit: true,
             showAdd: true,
             editBeforeAdd: true,
             showInactiveToggle: true,
             includeInactive: provider.showInactiveDrivers,
-            onIncludeInactiveChanged: provider.isLoadingDrivers
-                ? null
-                : provider.toggleInactiveDrivers,
+            onIncludeInactiveChanged: provider.toggleInactiveDrivers,
             items: provider.drivers,
             value: provider.selectedDriver,
             itemLabelBuilder: (driver) => driver.name,
@@ -115,12 +114,10 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
             ),
-            onChanged: provider.isLoadingDrivers ? (_) {} : _selectDriver,
+            onChanged: _selectDriver,
             validator: (value) => value == null ? 'Выберите водителя' : null,
-            onAdd: provider.isLoadingDrivers
-                ? null
-                : () => _showDriverDialog(context),
-            onEdit: provider.selectedDriver == null || provider.isLoadingDrivers
+            onAdd: () => _showDriverDialog(context),
+            onEdit: provider.selectedDriver == null
                 ? null
                 : () => _showDriverDialog(
                     context,

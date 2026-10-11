@@ -205,6 +205,10 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     expect(provider.isLoadingDrivers, isTrue);
+    expect(
+      tester.widget<DropdownButtonFormField<Driver>>(driverField).onChanged,
+      isNull,
+    );
     expect(tester.widget<IconButton>(add).onPressed, isNull);
     expect(tester.getCenter(add), addPosition);
     expect(tester.getCenter(edit), editPosition);
@@ -217,6 +221,10 @@ void main() {
     ]);
     await tester.pumpAndSettle();
     expect(tester.widget<IconButton>(add).onPressed, isNotNull);
+    expect(
+      tester.widget<DropdownButtonFormField<Driver>>(driverField).onChanged,
+      isNotNull,
+    );
     expect(tester.getCenter(add), addPosition);
     expect(tester.getCenter(edit), editPosition);
     expect(tester.getRect(driverField), driverRect);

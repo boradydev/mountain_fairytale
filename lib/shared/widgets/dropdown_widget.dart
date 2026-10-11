@@ -8,6 +8,9 @@ class AppDropdown<T> extends StatelessWidget {
   final String? hint;
   final String Function(T)? itemLabelBuilder;
   final ValueChanged<T?> onChanged;
+
+  /// Отключает поле и кнопки, сохраняя их расположение.
+  final bool enabled;
   final VoidCallback? onAdd;
   final VoidCallback? onEdit;
   final String? Function(T?)? validator;
@@ -34,6 +37,7 @@ class AppDropdown<T> extends StatelessWidget {
     required this.items,
     required this.value,
     required this.onChanged,
+    this.enabled = true,
     this.hint,
     this.itemLabelBuilder,
     this.onAdd,
@@ -51,6 +55,20 @@ class AppDropdown<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final actions = <Widget>[
+      if (showAdd || onAdd != null)
+        AppIconButton(
+          icon: Icons.add,
+          tooltip: 'Добавить $label',
+          onPressed: enabled ? onAdd : null,
+        ),
+      if (showEdit || onEdit != null)
+        AppIconButton(
+          icon: Icons.edit_outlined,
+          tooltip: 'Редактировать выбранный элемент',
+          onPressed: enabled ? onEdit : null,
+        ),
+    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -73,41 +91,24 @@ class AppDropdown<T> extends StatelessWidget {
                 color: includeInactive
                     ? Theme.of(context).colorScheme.primary
                     : null,
-                onPressed: onIncludeInactiveChanged == null
+                onPressed: !enabled || onIncludeInactiveChanged == null
                     ? null
                     : () => onIncludeInactiveChanged!(!includeInactive),
               ),
               const SizedBox(width: 12),
             ],
-            if (editBeforeAdd && (showEdit || onEdit != null))
-              AppIconButton(
-                icon: Icons.edit_outlined,
-                tooltip: 'Редактировать выбранный элемент',
-                onPressed: onEdit,
-              ),
-            if (showAdd || onAdd != null)
-              AppIconButton(
-                icon: Icons.add,
-                tooltip: 'Добавить $label',
-                onPressed: onAdd,
-              ),
-            if (!editBeforeAdd && (showEdit || onEdit != null))
-              AppIconButton(
-                icon: Icons.edit_outlined,
-                tooltip: 'Редактировать выбранный элемент',
-                onPressed: onEdit,
-              ),
+            ...(editBeforeAdd ? actions.reversed : actions),
           ],
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<T>(
           isExpanded: true,
-          key: ValueKey(value),
           initialValue: value,
           decoration: InputDecoration(
             border: const OutlineInputBorder(),
             prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
             isDense: true,
+            enabled: enabled,
           ),
           hint: hint != null ? Text(hint!) : null,
           validator: validator,
@@ -116,14 +117,10 @@ class AppDropdown<T> extends StatelessWidget {
               value: item,
               child:
                   itemBuilder?.call(item) ??
-                  Text(
-                    itemLabelBuilder != null
-                        ? itemLabelBuilder!(item)
-                        : item.toString(),
-                  ),
+                  Text(itemLabelBuilder?.call(item) ?? item.toString()),
             );
           }).toList(),
-          onChanged: onChanged,
+          onChanged: enabled ? onChanged : null,
         ),
       ],
     );
