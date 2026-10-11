@@ -7,25 +7,20 @@ part of 'cars_model.dart';
 // **************************************************************************
 
 Car _$CarFromJson(Map<String, dynamic> json) => Car(
-  id: (json['id'] as num).toInt(),
+  id: json['carId'] as String,
   model: json['model'] as String,
   number: json['number'] as String,
   currentMileage: (json['currentMileage'] as num).toDouble(),
+  isActive: json['isActive'] as bool? ?? true,
 );
 
 Map<String, dynamic> _$CarToJson(Car instance) => <String, dynamic>{
-  'id': instance.id,
+  'carId': instance.id,
   'model': instance.model,
   'number': instance.number,
   'currentMileage': instance.currentMileage,
+  'isActive': instance.isActive,
 };
-
-CreateCarRequest _$CreateCarRequestFromJson(Map<String, dynamic> json) =>
-    CreateCarRequest(
-      model: json['model'] as String,
-      number: json['number'] as String,
-      currentMileage: (json['currentMileage'] as num?)?.toDouble() ?? 0,
-    );
 
 Map<String, dynamic> _$CreateCarRequestToJson(CreateCarRequest instance) =>
     <String, dynamic>{
@@ -34,16 +29,10 @@ Map<String, dynamic> _$CreateCarRequestToJson(CreateCarRequest instance) =>
       'currentMileage': instance.currentMileage,
     };
 
-UpdateCarRequest _$UpdateCarRequestFromJson(Map<String, dynamic> json) =>
-    UpdateCarRequest(
-      model: json['model'] as String?,
-      number: json['number'] as String?,
-      currentMileage: (json['currentMileage'] as num?)?.toDouble(),
-    );
-
 Map<String, dynamic> _$UpdateCarRequestToJson(UpdateCarRequest instance) =>
     <String, dynamic>{
       'model': ?instance.model,
       'number': ?instance.number,
       'currentMileage': ?instance.currentMileage,
+      'isActive': ?instance.isActive,
     };

@@ -156,7 +156,7 @@ void main() {
         date: DateTime(2026),
         driverName: 'Иванов',
         driverId: driver['driverId'] as String,
-        carId: 1,
+        carId: '1',
         carModelAndNumber: 'Авто',
         startMileage: 0,
         points: [],

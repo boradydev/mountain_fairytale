@@ -17,7 +17,7 @@ class DeliveryRouteSheet implements RouteDocument {
   final DateTime date;
   final String driverName;
   final String? driverId;
-  final int carId;
+  final String carId;
   final String carModelAndNumber;
   final double startMileage;
   final double? endMileage;
@@ -47,7 +47,7 @@ class DeliveryRouteSheet implements RouteDocument {
     DateTime? date,
     String? driverName,
     String? driverId,
-    int? carId,
+    String? carId,
     String? carModelAndNumber,
     double? startMileage,
     double? endMileage,

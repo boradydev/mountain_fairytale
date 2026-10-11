@@ -35,7 +35,7 @@ void main() {
       id: null,
       date: DateTime.now(),
       driverName: 'Сидоров Иван',
-      carId: 2,
+      carId: '2',
       carModelAndNumber: 'Лада Ларгус Фургон (В456РР 26)',
       startMileage: 85200.0,
       points: [

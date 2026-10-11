@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/core/utils/datetime_extensions.dart';
 import 'package:mountain_fairytale/features/cars/data/cars_model.dart';
+import 'package:mountain_fairytale/features/cars/data/cars_number.dart';
 import 'package:mountain_fairytale/features/drivers/data/driver_model.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_provider.dart';
 import 'package:mountain_fairytale/features/cars/ui/car_dialog.dart';
+import 'package:mountain_fairytale/features/cars/ui/car_activation_dialog.dart';
 import 'package:mountain_fairytale/features/drivers/ui/driver_dialog.dart';
 import 'package:mountain_fairytale/features/drivers/ui/driver_activation_dialog.dart';
 import 'package:mountain_fairytale/shared/widgets/dropdown_widget.dart';
@@ -20,11 +22,14 @@ class RouteMetaPanel extends StatefulWidget {
 
 class _RouteMetaPanelState extends State<RouteMetaPanel> {
   int _driverSelectionVersion = 0;
+  int _carSelectionVersion = 0;
   final _driverFocusNode = FocusNode();
+  final _carFocusNode = FocusNode();
 
   @override
   void dispose() {
     _driverFocusNode.dispose();
+    _carFocusNode.dispose();
     super.dispose();
   }
 
@@ -32,6 +37,11 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
     // Keep focus on the related field before the eye becomes unavailable.
     _driverFocusNode.requestFocus();
     await context.read<RouteConstructorProvider>().toggleInactiveDrivers(value);
+  }
+
+  Future<void> _toggleInactiveCars(bool value) async {
+    _carFocusNode.requestFocus();
+    await context.read<RouteConstructorProvider>().toggleInactiveCars(value);
   }
 
   Future<void> _selectDriver(Driver? driver) async {
@@ -58,6 +68,30 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
     setState(() => _driverSelectionVersion++);
   }
 
+  Future<void> _selectCar(Car? car) async {
+    final provider = context.read<RouteConstructorProvider>();
+    if (car == null || car.isActive) {
+      provider.selectCar(car);
+      return;
+    }
+    final confirmed = await showCarActivationDialog(context, car);
+    if (!mounted) return;
+    if (confirmed) {
+      final success = await provider.activateAndSelectCar(car);
+      if (!mounted) return;
+      if (!success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Не удалось активировать автомобиль. Повторите попытку.',
+            ),
+          ),
+        );
+      }
+    }
+    setState(() => _carSelectionVersion++);
+  }
+
   // Метод открытия диалога для водителя
   Future<void> _showDriverDialog(BuildContext context, {Driver? driver}) async {
     await showDialog<void>(
@@ -68,10 +102,20 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
 
   // Метод открытия диалога для автомобиля
   Future<void> _showCarDialog(BuildContext context, {Car? car}) async {
+    Car? openAfter;
     await showDialog<void>(
       context: context,
-      builder: (context) => CarDialog(car: car),
+      builder: (dialogContext) => CarDialog(
+        car: car,
+        onOpenCar: (duplicate) {
+          openAfter = duplicate;
+          Navigator.of(dialogContext).pop();
+        },
+      ),
     );
+    if (openAfter != null && context.mounted) {
+      await _showCarDialog(context, car: openAfter);
+    }
   }
 
   @override
@@ -106,7 +150,7 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
 
           // Водитель
           AppDropdown<Driver>(
-            key: ValueKey(_driverSelectionVersion),
+            key: ValueKey('driver-$_driverSelectionVersion'),
             label: 'Водитель *',
             focusNode: _driverFocusNode,
             showEdit: true,
@@ -172,17 +216,63 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
 
           // Автомобиль
           AppDropdown<Car>(
+            key: ValueKey('car-$_carSelectionVersion'),
             label: 'Автомобиль *',
+            focusNode: _carFocusNode,
+            showEdit: true,
+            showAdd: true,
+            editBeforeAdd: true,
+            showInactiveToggle: true,
+            includeInactive: provider.showInactiveCars,
+            onIncludeInactiveChanged: provider.isLoadingCars
+                ? null
+                : _toggleInactiveCars,
             items: provider.cars,
             value: provider.selectedCar,
-            itemLabelBuilder: (car) => '${car.model} (${car.number})',
-            onChanged: provider.selectCar,
+            itemLabelBuilder: (car) =>
+                '${car.model} (${formatCarNumber(car.number)})',
+            itemBuilder: (car) => Text(
+              car.isActive
+                  ? '${car.model} (${formatCarNumber(car.number)})'
+                  : '${car.model} (${formatCarNumber(car.number)}) — Неактивен',
+              overflow: TextOverflow.ellipsis,
+              style: car.isActive
+                  ? null
+                  : TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+            ),
+            onChanged: _selectCar,
             validator: (value) => value == null ? 'Выберите автомобиль' : null,
             onAdd: () => _showCarDialog(context),
             onEdit: provider.selectedCar == null
                 ? null
                 : () => _showCarDialog(context, car: provider.selectedCar),
           ),
+
+          SizedBox(
+            height: 4,
+            child: provider.isLoadingCars
+                ? const LinearProgressIndicator()
+                : null,
+          ),
+          if (provider.carError != null)
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    provider.carError!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: provider.loadCars,
+                  child: const Text('Повторить'),
+                ),
+              ],
+            ),
 
           const SizedBox(height: 12),
           TextFormField(

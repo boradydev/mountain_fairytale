@@ -15,7 +15,7 @@ import 'package:mountain_fairytale/features/audit_event/data/audit_events_demo_d
 import 'package:mountain_fairytale/features/auth/data/auth_repo.dart';
 import 'package:mountain_fairytale/features/auth/data/auth_api_data_source.dart';
 import 'package:mountain_fairytale/features/cars/data/cars_repo.dart';
-import 'package:mountain_fairytale/features/cars/data/cars_demo_data.dart';
+import 'package:mountain_fairytale/features/cars/data/cars_api_data_source.dart';
 import 'package:mountain_fairytale/features/clients/data/clients_repo.dart';
 import 'package:mountain_fairytale/features/clients/data/clients_demo_data.dart';
 import 'package:mountain_fairytale/features/delivery_days/data/delivery_days_repo.dart';
@@ -91,7 +91,6 @@ Future<void> main() async {
   // 1. ИНИЦИАЛИЗАЦИЯ АТОМАРНЫХ ДАННЫХ (DATA SOURCES)
   // Каждый источник независим, хранит свой кэш и имитирует сетевые запросы
   // ===========================================================================
-  final carDataSource = DemoCarDataSource();
   final productDataSource = DemoProductDataSource();
   final deliveryDayDataSource = DemoDeliveryDataSource();
   final routeDataSource = DemoDeliveryRouteDataSource(
@@ -113,7 +112,6 @@ Future<void> main() async {
   // 2. ИНИЦИАЛИЗАЦИЯ РЕПОЗИТОРИЕВ
   // Принимают сущности от UI, конвертируют в JSON-Map и общаются с Data Sources
   // ===========================================================================
-  final carRepository = CarRepositoryImpl(carDataSource);
   final productRepository = ProductRepositoryImpl(productDataSource);
   final routeRepository = DeliveryRouteRepositoryImpl(routeDataSource);
   final clientRepository = ClientRepositoryImpl(clientDataSource);
@@ -174,6 +172,7 @@ Future<void> main() async {
   );
 
   final driverRepository = DriverRepositoryImpl(ApiDriverDataSource(apiClient));
+  final carRepository = CarRepositoryImpl(ApiCarDataSource(apiClient));
 
   // ===========================================================================
   // 4. ЗАПУСК ПРИЛОЖЕНИЯ И ВНЕДРЕНИЕ ЗАВИСИМОСТЕЙ (DI)

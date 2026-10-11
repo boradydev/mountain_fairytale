@@ -12,7 +12,7 @@ DeliveryRouteSheet _$DeliveryRouteSheetFromJson(Map<String, dynamic> json) =>
       date: DateTime.parse(json['date'] as String),
       driverName: json['driverName'] as String,
       driverId: json['driverId'] as String?,
-      carId: (json['carId'] as num).toInt(),
+      carId: json['carId'].toString(),
       carModelAndNumber: json['carModelAndNumber'] as String,
       startMileage: (json['startMileage'] as num).toDouble(),
       endMileage: (json['endMileage'] as num?)?.toDouble(),

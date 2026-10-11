@@ -3,6 +3,7 @@ import 'package:mountain_fairytale/features/cars/data/cars_model.dart';
 import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_sheet_model.dart';
 import 'package:mountain_fairytale/features/drivers/data/driver_model.dart';
 import 'package:mountain_fairytale/features/cars/cars_abcs.dart';
+import 'package:mountain_fairytale/features/cars/data/cars_number.dart';
 import 'package:mountain_fairytale/features/delivery_route/delivery_route_abcs.dart';
 import 'package:mountain_fairytale/features/drivers/drivers_abcs.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/order_points_provider.dart';
@@ -16,23 +17,104 @@ class RouteConstructorProvider extends OrderPointsProvider {
 
   // 2. Инициализируем всё в одно действие
   RouteConstructorProvider({
-    // Свои поля инициализируем через this._
-    required this._carRepo,
-    required this._driverRepo,
-    required this._routeRepo,
-    required this._printService,
+    required CarRepository carRepo,
+    required DriverRepository driverRepo,
+    required DeliveryRouteRepository routeRepo,
+    required RoutePrintService printService,
     // Поля родителя передаем напрямую через super.
     required super.productRepo,
     required super.paymentMethodRepo,
     required super.clientRepo,
-  });
+  }) : _carRepo = carRepo,
+       _driverRepo = driverRepo,
+       _routeRepo = routeRepo,
+       _printService = printService;
 
   List<Car> cars = [];
   List<Driver> drivers = [];
+  bool showInactiveCars = false;
+  bool isLoadingCars = false;
+  String? carError;
+  int _carLoadVersion = 0;
   bool showInactiveDrivers = false;
   bool isLoadingDrivers = false;
   String? driverError;
   int _driverLoadVersion = 0;
+
+  Future<void> loadCars() async {
+    final version = ++_carLoadVersion;
+    isLoadingCars = true;
+    carError = null;
+    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      showInactiveCars = prefs.getBool('show_inactive_cars') ?? false;
+      final loaded = await _carRepo.getAvailableCars(
+        includeDeactivated: showInactiveCars,
+      );
+      if (version != _carLoadVersion) return;
+      final previousSelection = selectedCar;
+      cars = loaded.map((car) {
+        if (previousSelection != null &&
+            car.id == previousSelection.id &&
+            car.model == previousSelection.model &&
+            car.number == previousSelection.number &&
+            car.currentMileage == previousSelection.currentMileage &&
+            car.isActive == previousSelection.isActive) {
+          return previousSelection;
+        }
+        return car;
+      }).toList();
+      final selectedId = selectedCar?.id;
+      if (selectedId != null) {
+        final matches = cars.where(
+          (car) => car.id == selectedId && car.isActive,
+        );
+        selectedCar = matches.isEmpty ? null : matches.first;
+        if (selectedCar == null) startMileage = 0;
+      }
+    } catch (_) {
+      if (version == _carLoadVersion) {
+        carError = 'Не удалось загрузить автомобили. Повторите попытку.';
+      }
+    } finally {
+      if (version == _carLoadVersion) {
+        isLoadingCars = false;
+        notifyListeners();
+      }
+    }
+  }
+
+  Future<void> toggleInactiveCars(bool value) async {
+    if (isLoadingCars) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('show_inactive_cars', value);
+    await loadCars();
+  }
+
+  void _applyCar(Car car) {
+    cars = cars.where((existing) => existing.id != car.id).toList();
+    if (car.isActive || showInactiveCars) cars.insert(0, car);
+    if (selectedCar?.id == car.id) {
+      selectCar(car.isActive ? car : null);
+      if (!car.isActive) startMileage = 0;
+    }
+    notifyListeners();
+  }
+
+  Future<bool> activateAndSelectCar(Car car) async {
+    try {
+      final updated = await _carRepo.updateCar(
+        car.id,
+        const UpdateCarRequest(isActive: true),
+      );
+      _applyCar(updated);
+      selectCar(updated);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
 
   Future<void> loadDrivers() async {
     final version = ++_driverLoadVersion;
@@ -136,7 +218,7 @@ class RouteConstructorProvider extends OrderPointsProvider {
     notifyListeners();
 
     try {
-      cars = await _carRepo.getAvailableCars();
+      await loadCars();
       await loadDrivers();
 
       products = await productRepo.getAvailableProducts();
@@ -155,6 +237,7 @@ class RouteConstructorProvider extends OrderPointsProvider {
   }
 
   void selectCar(Car? car) {
+    if (car != null && !car.isActive) return;
     selectedCar = car;
     if (car != null) {
       startMileage = car.currentMileage;
@@ -274,7 +357,7 @@ class RouteConstructorProvider extends OrderPointsProvider {
   }
 
   Future<bool> updateCar(
-    int id, {
+    String id, {
     required String model,
     required String number,
     double? currentMileage,
@@ -291,7 +374,7 @@ class RouteConstructorProvider extends OrderPointsProvider {
       );
       final updatedCar = await _carRepo.updateCar(id, request);
 
-      cars = cars.map((c) => c.id == id ? updatedCar : c).toList();
+      _applyCar(updatedCar);
       selectCar(updatedCar);
       return true;
     } catch (_) {
@@ -299,16 +382,10 @@ class RouteConstructorProvider extends OrderPointsProvider {
     }
   }
 
-  Future<bool> deleteCar(int id) async {
+  Future<bool> deactivateCar(String id) async {
     try {
-      await _carRepo.deleteCar(id);
-      cars = cars.where((c) => c.id != id).toList();
-
-      if (selectedCar?.id == id) {
-        selectCar(null);
-      } else {
-        notifyListeners();
-      }
+      final updated = await _carRepo.deactivateCar(id);
+      _applyCar(updated);
       return true;
     } catch (_) {
       return false;
@@ -316,18 +393,14 @@ class RouteConstructorProvider extends OrderPointsProvider {
   }
 
   Future<Car?> checkCarDuplicate(String number) async {
-    try {
-      return await _carRepo.checkDuplicate(number);
-    } catch (_) {
-      return null;
-    }
+    return _carRepo.checkDuplicate(number);
   }
 
   Future<void> loadExistingRouteById(int routeId) async {
     isLoadingDirectories = true;
     notifyListeners();
     try {
-      cars = await _carRepo.getAvailableCars();
+      await loadCars();
       await loadDrivers();
       products = await productRepo.getAvailableProducts();
       paymentMethods = await paymentMethodRepo.getAllPaymentMethods();
@@ -359,9 +432,9 @@ class RouteConstructorProvider extends OrderPointsProvider {
       driverName = selectedDriver?.name ?? sheet.driverName;
 
       try {
-        selectedCar = cars.firstWhere((c) => c.id == sheet.carId);
+        selectedCar = cars.firstWhere((c) => c.id == sheet.carId && c.isActive);
       } catch (_) {
-        selectedCar = cars.isNotEmpty ? cars.first : null;
+        selectedCar = null;
       }
     } catch (e) {
       points = [];
@@ -393,6 +466,7 @@ class RouteConstructorProvider extends OrderPointsProvider {
     if (selectedDriver == null ||
         !selectedDriver!.isActive ||
         selectedCar == null ||
+        !selectedCar!.isActive ||
         points.isEmpty) {
       return null;
     }
@@ -404,7 +478,8 @@ class RouteConstructorProvider extends OrderPointsProvider {
       driverName: selectedDriver!.name,
       driverId: selectedDriver!.id,
       carId: selectedCar!.id,
-      carModelAndNumber: '${selectedCar!.model} (${selectedCar!.number})',
+      carModelAndNumber:
+          '${selectedCar!.model} (${formatCarNumber(selectedCar!.number)})',
       startMileage: startMileage,
       endMileage: endMileage,
       points: points,

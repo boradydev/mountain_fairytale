@@ -172,7 +172,10 @@ void main() {
     (tester) async {
       final provider = makeProvider(_Drivers())..drivers = [active, inactive];
       await panel(tester, provider);
-      final edit = find.widgetWithIcon(IconButton, Icons.edit_outlined);
+      final edit = find.descendant(
+        of: find.byType(AppDropdown<Driver>),
+        matching: find.widgetWithIcon(IconButton, Icons.edit_outlined),
+      );
       expect(edit, findsOneWidget);
       expect(tester.widget<IconButton>(edit).onPressed, isNull);
       provider.selectDriver(active);
@@ -208,7 +211,13 @@ void main() {
     await tester.pump();
     expect(focusNode.hasPrimaryFocus, isTrue);
     await tester.tap(
-      find.widgetWithIcon(IconButton, Icons.visibility_off_outlined),
+      find.descendant(
+        of: find.byType(AppDropdown<Driver>),
+        matching: find.widgetWithIcon(
+          IconButton,
+          Icons.visibility_off_outlined,
+        ),
+      ),
     );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
@@ -222,7 +231,13 @@ void main() {
     expect(
       tester
           .widget<IconButton>(
-            find.widgetWithIcon(IconButton, Icons.visibility_outlined),
+            find.descendant(
+              of: find.byType(AppDropdown<Driver>),
+              matching: find.widgetWithIcon(
+                IconButton,
+                Icons.visibility_outlined,
+              ),
+            ),
           )
           .onPressed,
       isNull,
@@ -266,7 +281,13 @@ void main() {
       focusNode.requestFocus();
       await tester.pump();
       await tester.tap(
-        find.widgetWithIcon(IconButton, Icons.visibility_off_outlined),
+        find.descendant(
+          of: find.byType(AppDropdown<Driver>),
+          matching: find.widgetWithIcon(
+            IconButton,
+            Icons.visibility_off_outlined,
+          ),
+        ),
       );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
@@ -288,7 +309,13 @@ void main() {
       expect(
         tester
             .widget<IconButton>(
-              find.widgetWithIcon(IconButton, Icons.visibility_outlined),
+              find.descendant(
+                of: find.byType(AppDropdown<Driver>),
+                matching: find.widgetWithIcon(
+                  IconButton,
+                  Icons.visibility_outlined,
+                ),
+              ),
             )
             .onPressed,
         isNotNull,

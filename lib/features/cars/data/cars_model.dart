@@ -4,9 +4,12 @@ part 'cars_model.g.dart';
 
 @JsonSerializable()
 class Car {
-  final int id;
+  @JsonKey(name: 'carId')
+  final String id;
   final String model;
   final String number; // Госномер автомобиля
+  @JsonKey(defaultValue: true)
+  final bool isActive;
 
   /// Текущий пробег автомобиля.
   ///
@@ -18,6 +21,7 @@ class Car {
     required this.model,
     required this.number,
     required this.currentMileage,
+    this.isActive = true,
   });
 
   factory Car.fromJson(Map<String, dynamic> json) => _$CarFromJson(json);
@@ -25,7 +29,7 @@ class Car {
   Map<String, dynamic> toJson() => _$CarToJson(this);
 }
 
-@JsonSerializable()
+@JsonSerializable(createFactory: false)
 class CreateCarRequest {
   final String model;
   final String number;
@@ -40,16 +44,18 @@ class CreateCarRequest {
   Map<String, dynamic> toJson() => _$CreateCarRequestToJson(this);
 }
 
-@JsonSerializable(includeIfNull: false)
+@JsonSerializable(createFactory: false, includeIfNull: false)
 class UpdateCarRequest {
   final String? model;
   final String? number;
   final double? currentMileage;
+  final bool? isActive;
 
   const UpdateCarRequest({
     this.model,
     this.number,
     this.currentMileage,
+    this.isActive,
   });
 
   Map<String, dynamic> toJson() => _$UpdateCarRequestToJson(this);
