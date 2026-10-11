@@ -101,16 +101,12 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
             key: ValueKey(_driverSelectionVersion),
             label: 'Водитель *',
             showEdit: true,
-            trailingAction: Tooltip(
-              message: 'Показывать неактивных водителей',
-              child: FilterChip(
-                label: const Text('Неактивные'),
-                selected: provider.showInactiveDrivers,
-                onSelected: provider.isLoadingDrivers
-                    ? null
-                    : provider.toggleInactiveDrivers,
-              ),
-            ),
+            editBeforeAdd: true,
+            showInactiveToggle: true,
+            includeInactive: provider.showInactiveDrivers,
+            onIncludeInactiveChanged: provider.isLoadingDrivers
+                ? null
+                : provider.toggleInactiveDrivers,
             items: provider.drivers,
             value: provider.selectedDriver,
             itemLabelBuilder: (driver) => driver.name,

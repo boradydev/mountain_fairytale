@@ -13,7 +13,16 @@ class AppDropdown<T> extends StatelessWidget {
   final String? Function(T?)? validator;
   final IconData? prefixIcon;
   final bool showEdit;
-  final Widget? trailingAction;
+
+  /// Показывает кнопку фильтра; по умолчанию она скрыта.
+  final bool showInactiveToggle;
+
+  /// Текущее состояние фильтра, которым управляет вызывающий экран.
+  final bool includeInactive;
+
+  /// null оставляет кнопку видимой, но недоступной (например, при загрузке).
+  final ValueChanged<bool>? onIncludeInactiveChanged;
+  final bool editBeforeAdd;
   final Widget Function(T)? itemBuilder;
 
   const AppDropdown({
@@ -29,7 +38,10 @@ class AppDropdown<T> extends StatelessWidget {
     this.validator,
     this.prefixIcon,
     this.showEdit = false,
-    this.trailingAction,
+    this.showInactiveToggle = false,
+    this.includeInactive = false,
+    this.onIncludeInactiveChanged,
+    this.editBeforeAdd = false,
     this.itemBuilder,
   });
 
@@ -46,19 +58,41 @@ class AppDropdown<T> extends StatelessWidget {
                 style: const TextStyle(fontWeight: FontWeight.w500),
               ),
             ),
+            if (showInactiveToggle) ...[
+              AppIconButton(
+                icon: includeInactive
+                    ? Icons.visibility_outlined
+                    : Icons.visibility_off_outlined,
+                tooltip: includeInactive
+                    ? 'Скрыть неактивные записи'
+                    : 'Показать неактивные записи',
+                color: includeInactive
+                    ? Theme.of(context).colorScheme.primary
+                    : null,
+                onPressed: onIncludeInactiveChanged == null
+                    ? null
+                    : () => onIncludeInactiveChanged!(!includeInactive),
+              ),
+              const SizedBox(width: 12),
+            ],
+            if (editBeforeAdd && (showEdit || onEdit != null))
+              AppIconButton(
+                icon: Icons.edit_outlined,
+                tooltip: 'Редактировать выбранный элемент',
+                onPressed: onEdit,
+              ),
             if (onAdd != null)
               AppIconButton(
                 icon: Icons.add,
                 tooltip: 'Добавить $label',
                 onPressed: onAdd,
               ),
-            if (showEdit || onEdit != null)
+            if (!editBeforeAdd && (showEdit || onEdit != null))
               AppIconButton(
                 icon: Icons.edit_outlined,
                 tooltip: 'Редактировать выбранный элемент',
                 onPressed: onEdit,
               ),
-            ?trailingAction,
           ],
         ),
         const SizedBox(height: 8),
