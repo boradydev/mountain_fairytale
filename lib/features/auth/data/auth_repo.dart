@@ -1,8 +1,8 @@
-import 'package:mountain_fairytale/infra/repos/auth/models/auth_tokens_model.dart';
-import 'package:mountain_fairytale/infra/repos/auth/models/auth_user_model.dart';
-import 'package:mountain_fairytale/infra/repos/auth/models/current_employee_model.dart';
-import 'package:mountain_fairytale/infra/repos/auth/repo.dart';
-import 'package:mountain_fairytale/infra/repos/auth/sources/api_data_source.dart';
+import 'package:mountain_fairytale/features/auth/data/auth_tokens_model.dart';
+import 'package:mountain_fairytale/features/auth/data/auth_user_model.dart';
+import 'package:mountain_fairytale/features/auth/data/current_employee_model.dart';
+import 'package:mountain_fairytale/features/auth/auth_abcs.dart';
+import 'package:mountain_fairytale/features/auth/data/auth_api_data_source.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthApiDataSource _dataSource;

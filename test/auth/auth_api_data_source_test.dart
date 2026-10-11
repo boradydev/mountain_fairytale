@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mountain_fairytale/core/network/api_exception.dart';
 import 'package:mountain_fairytale/core/network/http_transport.dart';
-import 'package:mountain_fairytale/infra/repos/auth/repo_impl.dart';
-import 'package:mountain_fairytale/infra/repos/auth/sources/api_data_source.dart';
+import 'package:mountain_fairytale/features/auth/data/auth_repo.dart';
+import 'package:mountain_fairytale/features/auth/data/auth_api_data_source.dart';
 
 import 'auth_fakes.dart';
 

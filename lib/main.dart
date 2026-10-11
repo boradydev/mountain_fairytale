@@ -12,8 +12,8 @@ import 'package:mountain_fairytale/features/delivery_route/services/route_sheet_
 import 'package:mountain_fairytale/features/delivery_route/services/windows_route_print_service.dart';
 import 'package:mountain_fairytale/features/audit_event/data/audit_event_repo.dart';
 import 'package:mountain_fairytale/features/audit_event/data/audit_event_demo_data.dart';
-import 'package:mountain_fairytale/infra/repos/auth/repo_impl.dart';
-import 'package:mountain_fairytale/infra/repos/auth/sources/api_data_source.dart';
+import 'package:mountain_fairytale/features/auth/data/auth_repo.dart';
+import 'package:mountain_fairytale/features/auth/data/auth_api_data_source.dart';
 import 'package:mountain_fairytale/infra/repos/cars/repo.dart';
 import 'package:mountain_fairytale/infra/repos/cars/sources/demo_data.dart';
 import 'package:mountain_fairytale/features/clients/data/repo.dart';

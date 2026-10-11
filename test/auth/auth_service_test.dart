@@ -8,7 +8,7 @@ import 'package:mountain_fairytale/core/network/api_exception.dart';
 import 'package:mountain_fairytale/core/network/http_transport.dart';
 import 'package:mountain_fairytale/features/auth/ui/auth_provider.dart';
 
-import 'package:mountain_fairytale/infra/repos/auth/models/auth_tokens_model.dart';
+import 'package:mountain_fairytale/features/auth/data/auth_tokens_model.dart';
 
 import 'auth_fakes.dart';
 
