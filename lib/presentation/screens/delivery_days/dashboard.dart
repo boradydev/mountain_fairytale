@@ -4,7 +4,7 @@ import 'package:mountain_fairytale/features/clients/ui/clients_provider.dart';
 import 'package:mountain_fairytale/features/auth/ui/auth_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/login/change_password_dialog.dart';
 import 'package:mountain_fairytale/features/delivery_days/ui/delivery_days_provider.dart';
-import 'package:mountain_fairytale/features/audit_log/ui/audit_log_screen.dart';
+import 'package:mountain_fairytale/features/audit_event/ui/audit_event_screen.dart';
 import 'package:mountain_fairytale/presentation/screens/delivery_days/client_list.dart';
 import 'package:mountain_fairytale/presentation/screens/delivery_days/delivery_day_list.dart';
 import 'package:mountain_fairytale/presentation/screens/sales_analytics/sales_analytics_screen.dart';

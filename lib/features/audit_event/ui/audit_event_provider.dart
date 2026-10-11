@@ -1,6 +1,6 @@
 import 'package:mountain_fairytale/presentation/providers/session_change_notifier.dart';
-import 'package:mountain_fairytale/features/audit_log/data/audit_event_model.dart';
-import 'package:mountain_fairytale/features/audit_log/audit_event_abcs.dart';
+import 'package:mountain_fairytale/features/audit_event/data/audit_event_model.dart';
+import 'package:mountain_fairytale/features/audit_event/audit_event_abcs.dart';
 
 enum AuditLogStatus {
   initial,
