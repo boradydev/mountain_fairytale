@@ -5,9 +5,9 @@ import 'package:mountain_fairytale/features/drivers/data/driver_model.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_provider.dart';
 import 'package:mountain_fairytale/features/cars/ui/car_dialog.dart';
 import 'package:mountain_fairytale/features/drivers/ui/driver_dialog.dart';
+import 'package:mountain_fairytale/features/drivers/ui/driver_activation_dialog.dart';
 import 'package:mountain_fairytale/shared/widgets/dropdown_widget.dart';
 import 'package:provider/provider.dart';
-import 'package:mountain_fairytale/shared/widgets/confirm_dialog.dart';
 
 class RouteMetaPanel extends StatefulWidget {
   final GlobalKey<FormState> formKey;
@@ -27,12 +27,7 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
       provider.selectDriver(driver);
       return;
     }
-    final confirmed = await ConfirmDialog.show(
-      context,
-      title: 'Водитель неактивен',
-      content: 'Активировать «${driver.name}» и выбрать для маршрута?',
-      confirmText: 'Активировать и выбрать',
-    );
+    final confirmed = await showDriverActivationDialog(context, driver);
     if (!mounted) return;
     if (confirmed) {
       final success = await provider.activateAndSelectDriver(driver);

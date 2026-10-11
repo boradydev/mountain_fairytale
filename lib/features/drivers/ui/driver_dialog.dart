@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/features/drivers/data/driver_model.dart';
+import 'package:mountain_fairytale/features/drivers/ui/driver_activation_dialog.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_provider.dart';
 import 'package:mountain_fairytale/shared/widgets/confirm_dialog.dart';
+import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 import 'package:provider/provider.dart';
 
 class DriverDialog extends StatefulWidget {
@@ -89,34 +91,25 @@ class _DriverDialogState extends State<DriverDialog> {
               '${_duplicate!.name}\n${_duplicate!.isActive ? 'Активен' : 'Неактивен'}\nЭто может быть другой человек. Можно создать нового водителя.',
             ),
             actions: [
-              TextButton(
+              AppSecondaryButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Отмена'),
+                text: 'Отмена',
               ),
               if (!_duplicate!.isActive)
-                TextButton(
+                AppSecondaryButton(
                   onPressed: () => Navigator.pop(context, 'activate'),
-                  child: const Text('Активировать и выбрать'),
+                  text: 'Активировать',
                 ),
-              FilledButton(
+              AppPrimaryButton(
                 onPressed: () => Navigator.pop(context, 'create'),
-                child: const Text('Создать нового'),
+                text: 'Создать нового',
               ),
             ],
           ),
         );
         if (!mounted || action == null) return;
         if (action == 'activate') {
-          final success = await provider.activateAndSelectDriver(_duplicate!);
-          if (!mounted) return;
-          if (success) {
-            Navigator.pop(context);
-          } else {
-            setState(
-              () => _error =
-                  'Не удалось активировать водителя. Повторите попытку.',
-            );
-          }
+          await _confirmAndActivate(_duplicate!);
           return;
         }
       }
@@ -132,6 +125,35 @@ class _DriverDialogState extends State<DriverDialog> {
           () => _error = 'Не удалось сохранить водителя. Проверьте соединение и повторите попытку.',
         );
       }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _confirmAndActivate(Driver driver) async {
+    final provider = context.read<RouteConstructorProvider>();
+    final confirmed = await showDriverActivationDialog(context, driver);
+    if (!confirmed || !mounted) return;
+    final success = await provider.activateAndSelectDriver(driver);
+    if (!mounted) return;
+    if (success) {
+      Navigator.pop(context);
+    } else {
+      setState(
+        () => _error = 'Не удалось активировать водителя. Повторите попытку.',
+      );
+    }
+  }
+
+  Future<void> _activateDuplicate() async {
+    final driver = _duplicate;
+    if (_busy || _checking || driver == null || driver.isActive) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await _confirmAndActivate(driver);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -190,8 +212,13 @@ class _DriverDialogState extends State<DriverDialog> {
                 if (_duplicate != null)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: Text(
-                      'Найден водитель с похожим именем: ${_duplicate!.name}${_duplicate!.isActive ? '' : ' — Неактивен'}',
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Найден водитель с похожим именем: ${_duplicate!.name}${_duplicate!.isActive ? '' : ' — Неактивен'}',
+                        ),
+                      ],
                     ),
                   ),
                 TextFormField(
@@ -225,20 +252,18 @@ class _DriverDialogState extends State<DriverDialog> {
       ),
       actions: [
         if (widget.isEditMode)
-          TextButton(
+          AppPrimaryButton(
             onPressed: _busy ? null : _deactivate,
-            style: TextButton.styleFrom(
-              foregroundColor: Theme.of(context).colorScheme.error,
-            ),
-            child: const Text('Деактивировать'),
+            destructive: true,
+            text: 'Деактивировать',
           ),
-        TextButton(
+        AppSecondaryButton(
           onPressed: _busy ? null : () => Navigator.pop(context),
-          child: const Text('Отмена'),
+          text: 'Отмена',
         ),
-        FilledButton(
+        AppPrimaryButton(
           onPressed: _busy ? null : _save,
-          child: Text(widget.isEditMode ? 'Сохранить' : 'Добавить'),
+          text: widget.isEditMode ? 'Сохранить' : 'Добавить',
         ),
       ],
     ),

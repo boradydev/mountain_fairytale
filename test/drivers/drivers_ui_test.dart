@@ -264,12 +264,55 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
       expect(find.text('Найден водитель с похожим именем'), findsOneWidget);
+      await tester.tap(find.text('Активировать').last);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.text('Водитель неактивен'), findsOneWidget);
       await tester.tap(find.text('Активировать и выбрать'));
       await tester.pumpAndSettle();
       expect(provider.selectedDriver!.id, inactive.id);
       expect(provider.selectedDriver!.isActive, isTrue);
       expect(repo.creates, 0);
       expect(repo.patches, 1);
+      expect(find.byType(DriverDialog), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
+  testWidgets(
+    'inactive duplicate offers activation before saving and cancel preserves form',
+    (tester) async {
+      final repo = _Drivers();
+      final provider = makeProvider(repo)..drivers = [active, inactive];
+      provider.selectDriver(active);
+      await panel(tester, provider);
+      await tester.tap(find.widgetWithIcon(IconButton, Icons.add).first);
+      await tester.pumpAndSettle();
+      final field = find.descendant(
+        of: find.byType(DriverDialog),
+        matching: find.byType(TextFormField),
+      );
+      await tester.enterText(field, 'Иванов');
+      FocusManager.instance.primaryFocus!.unfocus();
+      await tester.pumpAndSettle();
+      expect(find.text('Активировать'), findsOneWidget);
+      await tester.tap(find.text('Активировать'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.text('Водитель неактивен'), findsOneWidget);
+      await tester.tap(find.text('Отмена').last);
+      await tester.pumpAndSettle();
+      expect(provider.selectedDriver, active);
+      expect(repo.patches, 0);
+      expect(find.byType(DriverDialog), findsOneWidget);
+      expect(tester.widget<TextFormField>(field).controller!.text, 'Иванов');
+      await tester.tap(find.text('Активировать'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.tap(find.text('Активировать и выбрать'));
+      await tester.pumpAndSettle();
+      expect(provider.selectedDriver!.id, inactive.id);
+      expect(repo.patches, 1);
+      expect(repo.creates, 0);
       expect(find.byType(DriverDialog), findsNothing);
       expect(tester.takeException(), isNull);
     },
