@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mountain_fairytale/infra/repos/products/models/product_model.dart';
+import 'package:mountain_fairytale/features/products/data/product_model.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/order_points_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/common/product_dialog.dart';
 import 'package:mountain_fairytale/presentation/widgets/dropdown_widget.dart';

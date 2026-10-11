@@ -1,4 +1,4 @@
-import 'package:mountain_fairytale/infra/repos/payment_methods/models/payment_method_model.dart';
+import 'package:mountain_fairytale/features/payment_methods/data/payment_method_model.dart';
 
 abstract interface class PaymentMethodDataSource {
   Future<List<Map<String, dynamic>>> getAllPaymentMethods();

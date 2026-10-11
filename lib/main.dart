@@ -24,12 +24,12 @@ import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_r
 import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_demo_data.dart';
 import 'package:mountain_fairytale/features/drivers/data/drivers_repo.dart';
 import 'package:mountain_fairytale/features/drivers/data/drivers_demo_data.dart';
-import 'package:mountain_fairytale/infra/repos/payment_methods/repo.dart';
-import 'package:mountain_fairytale/infra/repos/payment_methods/sources/demo_data.dart';
-import 'package:mountain_fairytale/infra/repos/pickup/repo.dart';
-import 'package:mountain_fairytale/infra/repos/pickup/sources/demo_data.dart';
-import 'package:mountain_fairytale/infra/repos/products/repo.dart';
-import 'package:mountain_fairytale/infra/repos/products/sources/demo_data.dart';
+import 'package:mountain_fairytale/features/payment_methods/data/payment_method_repo.dart';
+import 'package:mountain_fairytale/features/payment_methods/data/payment_method_demo_data.dart';
+import 'package:mountain_fairytale/features/pickup/data/pickup_repo.dart';
+import 'package:mountain_fairytale/features/pickup/data/pickup_demo_data.dart';
+import 'package:mountain_fairytale/features/products/data/products_repo.dart';
+import 'package:mountain_fairytale/features/products/data/products_demo_data.dart';
 import 'package:mountain_fairytale/infra/repos/sales_representative_clients/repo.dart';
 import 'package:mountain_fairytale/infra/repos/sales_representative_clients/sources/demo_data.dart';
 import 'package:mountain_fairytale/infra/repos/sales_representative_commissions/repo.dart';
@@ -50,7 +50,7 @@ import 'package:mountain_fairytale/features/sales_representative_commissions/ui/
 import 'package:mountain_fairytale/features/sales_representatives/ui/sales_representative_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/theme_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/delivery_days/dashboard.dart';
-import 'package:mountain_fairytale/features/products/product_abcs.dart';
+import 'package:mountain_fairytale/features/products/products_abcs.dart';
 import 'package:mountain_fairytale/presentation/screens/login/login_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';

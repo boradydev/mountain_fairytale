@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mountain_fairytale/infra/repos/payment_methods/models/payment_method_model.dart';
-import 'package:mountain_fairytale/infra/repos/payment_methods/repo.dart';
-import 'package:mountain_fairytale/infra/repos/payment_methods/sources/demo_data.dart';
+import 'package:mountain_fairytale/features/payment_methods/data/payment_method_model.dart';
+import 'package:mountain_fairytale/features/payment_methods/data/payment_method_repo.dart';
+import 'package:mountain_fairytale/features/payment_methods/data/payment_method_demo_data.dart';
 
 import '../../../assets/demo/demo_asset_bundle.dart';
 import 'print_model.dart';

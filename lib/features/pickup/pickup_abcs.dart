@@ -1,4 +1,4 @@
-import 'package:mountain_fairytale/infra/repos/pickup/models/pickup_sheet_model.dart';
+import 'package:mountain_fairytale/features/pickup/data/pickup_model.dart';
 
 abstract class PickupDataSource {
   Future<List<Map<String, dynamic>>> getAllPickupSheets();

@@ -1,4 +1,4 @@
-import 'package:mountain_fairytale/infra/repos/products/models/product_model.dart';
+import 'package:mountain_fairytale/features/products/data/product_model.dart';
 
 abstract interface class ProductDataSource {
   Future<List<Map<String, dynamic>>> getAllProducts();

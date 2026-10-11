@@ -1,7 +1,7 @@
 import 'package:mountain_fairytale/features/delivery_route/data/route_point_model.dart';
-import 'package:mountain_fairytale/infra/repos/payment_methods/models/payment_method_model.dart';
-import 'package:mountain_fairytale/infra/repos/pickup/models/pickup_sheet_model.dart';
-import 'package:mountain_fairytale/infra/repos/products/models/product_model.dart';
+import 'package:mountain_fairytale/features/payment_methods/data/payment_method_model.dart';
+import 'package:mountain_fairytale/features/pickup/data/pickup_model.dart';
+import 'package:mountain_fairytale/features/products/data/product_model.dart';
 import 'package:mountain_fairytale/features/pickup/pickup_abcs.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/order_points_provider.dart';
 

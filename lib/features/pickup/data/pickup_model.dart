@@ -2,7 +2,7 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_sheet_model.dart';
 import 'package:mountain_fairytale/features/delivery_route/data/route_point_model.dart';
 
-part 'pickup_sheet_model.g.dart';
+part 'pickup_model.g.dart';
 
 @JsonSerializable(explicitToJson: true)
 class PickupSheet implements RouteDocument {

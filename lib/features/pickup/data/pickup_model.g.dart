@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'pickup_sheet_model.dart';
+part of 'pickup_model.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
