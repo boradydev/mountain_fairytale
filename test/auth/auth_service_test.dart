@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mountain_fairytale/infra/auth/auth_errors.dart';
-import 'package:mountain_fairytale/infra/auth/auth_service_impl.dart';
+import 'package:mountain_fairytale/features/auth/ui/auth_errors.dart';
+import 'package:mountain_fairytale/features/auth/services/auth_service_impl.dart';
 import 'package:mountain_fairytale/infra/http/api_client.dart';
 import 'package:mountain_fairytale/infra/http/api_exception.dart';
 import 'package:mountain_fairytale/infra/http/http_transport.dart';

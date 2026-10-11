@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
-import 'package:mountain_fairytale/infra/auth/auth_errors.dart';
-import 'package:mountain_fairytale/infra/auth/auth_service.dart';
+import 'package:mountain_fairytale/features/auth/ui/auth_errors.dart';
+import 'package:mountain_fairytale/features/auth/auth_abcs.dart';
 import 'package:mountain_fairytale/infra/repos/auth/models/auth_user_model.dart';
 import 'package:mountain_fairytale/infra/repos/auth/models/current_employee_model.dart';
 

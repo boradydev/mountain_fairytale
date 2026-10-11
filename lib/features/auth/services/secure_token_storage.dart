@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-import 'package:mountain_fairytale/infra/auth/token_storage.dart';
+import 'package:mountain_fairytale/features/auth/auth_abcs.dart';
 
 class SecureTokenStorage implements TokenStorage {
   static const _tokensKey = 'auth_tokens';

@@ -1,6 +1,6 @@
 import 'package:mountain_fairytale/presentation/providers/session_change_notifier.dart';
 import 'package:mountain_fairytale/infra/repos/sales_representative_clients/models/sales_representative_client_model.dart';
-import 'package:mountain_fairytale/features/sales_representative_clients/ui/sales_representative_client_abcs.dart';
+import 'package:mountain_fairytale/features/sales_representative_clients/sales_representative_client_abcs.dart';
 
 enum SalesRepClientsStatus { initial, loading, success, failure }
 

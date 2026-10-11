@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:mountain_fairytale/infra/auth/auth_service.dart';
+import 'package:mountain_fairytale/features/auth/auth_abcs.dart';
 import 'package:mountain_fairytale/infra/http/api_exception.dart';
 import 'package:mountain_fairytale/infra/http/http_transport.dart';
 

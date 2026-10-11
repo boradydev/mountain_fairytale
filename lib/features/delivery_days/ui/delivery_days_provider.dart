@@ -1,5 +1,5 @@
 import 'package:mountain_fairytale/presentation/providers/session_change_notifier.dart';
-import 'package:mountain_fairytale/features/delivery_days/ui/delivery_day_abcs.dart';
+import 'package:mountain_fairytale/features/delivery_days/delivery_day_abcs.dart';
 import 'package:mountain_fairytale/infra/repos/delivery_day/models/delivery_day_model.dart';
 
 enum DeliveryStatus { initial, loading, success, failure }

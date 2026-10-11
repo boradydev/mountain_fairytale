@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mountain_fairytale/infra/auth/secure_token_storage.dart';
+import 'package:mountain_fairytale/features/auth/services/secure_token_storage.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

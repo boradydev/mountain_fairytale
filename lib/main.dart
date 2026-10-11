@@ -3,9 +3,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/core/utils/scaffold_messenger_key.dart';
-import 'package:mountain_fairytale/infra/auth/auth_service.dart';
-import 'package:mountain_fairytale/infra/auth/auth_service_impl.dart';
-import 'package:mountain_fairytale/infra/auth/secure_token_storage.dart';
+import 'package:mountain_fairytale/features/auth/auth_abcs.dart';
+import 'package:mountain_fairytale/features/auth/services/auth_service_impl.dart';
+import 'package:mountain_fairytale/features/auth/services/secure_token_storage.dart';
 import 'package:mountain_fairytale/infra/http/api_client.dart';
 import 'package:mountain_fairytale/infra/http/http_transport.dart';
 import 'package:mountain_fairytale/infra/printing/pdf/route_sheet_pdf_builder.dart';
@@ -50,7 +50,7 @@ import 'package:mountain_fairytale/features/sales_representative_commissions/ui/
 import 'package:mountain_fairytale/features/sales_representatives/ui/sales_representative_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/theme_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/delivery_days/dashboard.dart';
-import 'package:mountain_fairytale/features/products/ui/product_abcs.dart';
+import 'package:mountain_fairytale/features/products/product_abcs.dart';
 import 'package:mountain_fairytale/presentation/screens/login/login_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
