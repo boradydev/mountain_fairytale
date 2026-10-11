@@ -1,5 +1,5 @@
 import 'package:mountain_fairytale/infra/repos/sales_representatives/models/sales_representative_model.dart';
-import 'package:mountain_fairytale/presentation/providers/abcs/repos/sales_representative.dart';
+import 'package:mountain_fairytale/features/sales_representatives/ui/sales_representative_abcs.dart';
 
 class SalesRepresentativeRepositoryImpl
     implements SalesRepresentativeRepository {

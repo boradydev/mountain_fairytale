@@ -6,7 +6,7 @@ import 'package:mountain_fairytale/infra/repos/delivery_route/models/delivery_ro
 import 'package:mountain_fairytale/infra/repos/pickup/models/pickup_sheet_model.dart';
 import 'package:mountain_fairytale/infra/repos/products/models/product_model.dart';
 import 'package:mountain_fairytale/l10n/app_localizations.dart';
-import 'package:mountain_fairytale/presentation/providers/abcs/repos/product_contracts.dart';
+import 'package:mountain_fairytale/features/products/ui/product_abcs.dart';
 import 'package:mountain_fairytale/presentation/providers/delivery_days_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/pickup_constructor_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/route_constructor_provider.dart';

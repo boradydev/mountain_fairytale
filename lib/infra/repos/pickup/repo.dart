@@ -1,5 +1,5 @@
 import 'package:mountain_fairytale/infra/repos/pickup/models/pickup_sheet_model.dart';
-import 'package:mountain_fairytale/presentation/providers/abcs/repos/pickup.dart';
+import 'package:mountain_fairytale/features/pickup/ui/pickup_abcs.dart';
 
 class PickupRepositoryImpl implements PickupRepository {
   final PickupDataSource dataSource;

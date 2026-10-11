@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
-import 'package:mountain_fairytale/presentation/providers/abcs/repos/pickup.dart';
+import 'package:mountain_fairytale/features/pickup/ui/pickup_abcs.dart';
 
 class DemoPickupDataSource implements PickupDataSource {
   final AssetBundle _assetBundle;

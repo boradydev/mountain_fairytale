@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
-import 'package:mountain_fairytale/presentation/providers/abcs/repos/sales_representative.dart';
+import 'package:mountain_fairytale/features/sales_representatives/ui/sales_representative_abcs.dart';
 
 class DemoSalesRepresentativeDataSource
     implements SalesRepresentativeDataSource {

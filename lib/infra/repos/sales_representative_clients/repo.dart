@@ -1,5 +1,5 @@
 import 'package:mountain_fairytale/infra/repos/sales_representative_clients/models/sales_representative_client_model.dart';
-import 'package:mountain_fairytale/presentation/providers/abcs/repos/sales_representative_client.dart';
+import 'package:mountain_fairytale/features/sales_representative_clients/ui/sales_representative_client_abcs.dart';
 
 /// Реализация репозитория.
 class SalesRepresentativeClientRepositoryImpl

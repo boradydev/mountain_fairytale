@@ -50,7 +50,7 @@ import 'package:mountain_fairytale/presentation/providers/sales_representative_c
 import 'package:mountain_fairytale/presentation/providers/sales_representative_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/theme_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/delivery_days/dashboard.dart';
-import 'package:mountain_fairytale/presentation/providers/abcs/repos/product_contracts.dart';
+import 'package:mountain_fairytale/features/products/ui/product_abcs.dart';
 import 'package:mountain_fairytale/presentation/screens/login/login_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';

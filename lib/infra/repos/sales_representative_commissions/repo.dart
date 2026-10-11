@@ -1,5 +1,5 @@
 import 'package:mountain_fairytale/infra/repos/sales_representative_commissions/models/sales_representative_commission_model.dart';
-import 'package:mountain_fairytale/presentation/providers/abcs/repos/sales_representative_commission.dart';
+import 'package:mountain_fairytale/features/sales_representative_commissions/ui/sales_representative_commission_abcs.dart';
 
 class SalesRepresentativeCommissionRepositoryImpl
     implements SalesRepresentativeCommissionRepository {

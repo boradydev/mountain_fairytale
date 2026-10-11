@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
-import 'package:mountain_fairytale/presentation/providers/abcs/repos/driver_contracts.dart';
+import 'package:mountain_fairytale/features/drivers/ui/driver_abcs.dart';
 
 class DemoDriverDataSource implements DriverDataSource {
   final AssetBundle _assetBundle;
