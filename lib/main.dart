@@ -42,13 +42,13 @@ import 'package:mountain_fairytale/features/audit_event/ui/audit_event_provider.
 import 'package:mountain_fairytale/features/auth/ui/auth_provider.dart';
 import 'package:mountain_fairytale/features/clients/ui/clients_provider.dart';
 import 'package:mountain_fairytale/features/delivery_days/ui/delivery_days_provider.dart';
-import 'package:mountain_fairytale/presentation/providers/locale_provider.dart';
+import 'package:mountain_fairytale/shared/providers/locale_provider.dart';
 import 'package:mountain_fairytale/features/pickup/ui/pickup_constructor_provider.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_provider.dart';
 import 'package:mountain_fairytale/features/sales_representative_clients/ui/sales_representative_clients_provider.dart';
 import 'package:mountain_fairytale/features/sales_representative_commissions/ui/sales_representative_commission_provider.dart';
 import 'package:mountain_fairytale/features/sales_representatives/ui/sales_representative_provider.dart';
-import 'package:mountain_fairytale/presentation/providers/theme_provider.dart';
+import 'package:mountain_fairytale/shared/providers/theme_provider.dart';
 import 'package:mountain_fairytale/features/dashboard/ui/dashboard_screen.dart';
 import 'package:mountain_fairytale/features/products/products_abcs.dart';
 import 'package:mountain_fairytale/features/auth/ui/login_screen.dart';

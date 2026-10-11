@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_sheet_model.dart';
 import 'package:mountain_fairytale/features/pickup/data/pickup_model.dart';
-import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 
 class SelectRouteDialog extends StatelessWidget {
   final List<RouteDocument> documents;

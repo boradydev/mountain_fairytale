@@ -1,10 +1,10 @@
-import 'package:mountain_fairytale/presentation/providers/session_change_notifier.dart';
+import 'package:mountain_fairytale/core/state/safe_change_notifier.dart';
 import 'package:mountain_fairytale/features/sales_representative_commissions/data/sales_representative_commission_model.dart';
 import 'package:mountain_fairytale/features/sales_representative_commissions/sales_representative_commission_abcs.dart';
 
 enum SalesRepresentativeCommissionStatus { initial, loading, success, failure }
 
-class SalesRepresentativeCommissionProvider extends SessionChangeNotifier {
+class SalesRepresentativeCommissionProvider extends SafeChangeNotifier {
   final SalesRepresentativeCommissionRepository _repository;
 
   SalesRepresentativeCommissionProvider(this._repository);

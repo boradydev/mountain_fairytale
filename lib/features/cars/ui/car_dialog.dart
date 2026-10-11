@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/features/cars/data/cars_model.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_provider.dart';
-import 'package:mountain_fairytale/presentation/widgets/base_form_dialog_widget.dart';
-import 'package:mountain_fairytale/presentation/widgets/confirm_dialog.dart';
-import 'package:mountain_fairytale/presentation/widgets/duplicate_check_status_widget.dart';
-import 'package:mountain_fairytale/presentation/widgets/icon_button_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/base_form_dialog_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/confirm_dialog.dart';
+import 'package:mountain_fairytale/shared/widgets/duplicate_check_status_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/icon_button_widget.dart';
 import 'package:provider/provider.dart';
 
 class CarDialog extends StatefulWidget {

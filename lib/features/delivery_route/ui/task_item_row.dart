@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/features/delivery_route/data/delivery_task_item_model.dart';
-import 'package:mountain_fairytale/presentation/widgets/icon_button_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/icon_button_widget.dart';
 
 class TaskItemRow extends StatefulWidget {
   final int index;

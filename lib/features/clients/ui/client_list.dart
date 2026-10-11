@@ -3,9 +3,9 @@ import 'package:mountain_fairytale/core/utils/datetime_extensions.dart';
 import 'package:mountain_fairytale/features/clients/data/clients_model.dart';
 import 'package:mountain_fairytale/features/clients/ui/clients_provider.dart';
 import 'package:mountain_fairytale/features/clients/ui/client_dialog.dart';
-import 'package:mountain_fairytale/presentation/widgets/add_action_card.dart';
-import 'package:mountain_fairytale/presentation/widgets/base_card_widget.dart';
-import 'package:mountain_fairytale/presentation/widgets/metric_row_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/add_action_card.dart';
+import 'package:mountain_fairytale/shared/widgets/base_card_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/metric_row_widget.dart';
 import 'package:provider/provider.dart';
 
 class ClientsAttentionListView extends StatelessWidget {

@@ -4,11 +4,11 @@ import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_
 import 'package:mountain_fairytale/features/clients/ui/clients_selection_panel.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/route_meta_panel.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/route_points_list.dart';
-import 'package:mountain_fairytale/presentation/widgets/app_notify.dart';
-import 'package:mountain_fairytale/presentation/widgets/locate_toggle_widget.dart';
-import 'package:mountain_fairytale/presentation/widgets/pdf_route_preview_dialog.dart';
-import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
-import 'package:mountain_fairytale/presentation/widgets/theme_toggle_button.dart';
+import 'package:mountain_fairytale/shared/widgets/app_notify.dart';
+import 'package:mountain_fairytale/shared/widgets/locate_toggle_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/pdf_route_preview_dialog.dart';
+import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/theme_toggle_button.dart';
 import 'package:provider/provider.dart';
 
 class RouteConstructorScreen extends StatefulWidget {

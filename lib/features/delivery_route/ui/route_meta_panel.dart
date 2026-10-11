@@ -5,7 +5,7 @@ import 'package:mountain_fairytale/features/drivers/data/driver_model.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_provider.dart';
 import 'package:mountain_fairytale/features/cars/ui/car_dialog.dart';
 import 'package:mountain_fairytale/features/drivers/ui/driver_dialog.dart';
-import 'package:mountain_fairytale/presentation/widgets/dropdown_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/dropdown_widget.dart';
 import 'package:provider/provider.dart';
 
 class RouteMetaPanel extends StatefulWidget {

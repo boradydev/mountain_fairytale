@@ -1,5 +1,5 @@
 import 'package:mountain_fairytale/core/utils/scaffold_messenger_key.dart'; // Импортируйте созданный ключ
-import 'package:mountain_fairytale/presentation/widgets/snack_bar_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/snack_bar_widget.dart';
 
 /// Глобальный менеджер для отображения всплывающих уведомлений (SnackBars).
 /// Больше не требует BuildContext при вызове.

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:mountain_fairytale/presentation/providers/theme_provider.dart';
+import 'package:mountain_fairytale/shared/providers/theme_provider.dart';
 
 class ThemeToggleButton extends StatelessWidget {
   const ThemeToggleButton({super.key});

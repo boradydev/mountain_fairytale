@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 
 class MonthPickerDialog extends StatefulWidget {
   final DateTime initialMonth;

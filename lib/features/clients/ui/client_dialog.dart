@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:mountain_fairytale/presentation/widgets/app_notify.dart';
+import 'package:mountain_fairytale/shared/widgets/app_notify.dart';
 import 'package:mountain_fairytale/features/clients/data/clients_model.dart';
 import 'package:mountain_fairytale/features/sales_representatives/data/sales_representative_model.dart';
 import 'package:mountain_fairytale/features/clients/ui/clients_provider.dart';
 import 'package:mountain_fairytale/features/sales_representatives/ui/sales_representative_provider.dart';
 import 'package:mountain_fairytale/features/sales_representatives/ui/sales_rep_dialog.dart';
-import 'package:mountain_fairytale/presentation/widgets/base_form_dialog_widget.dart';
-import 'package:mountain_fairytale/presentation/widgets/confirm_dialog.dart';
-import 'package:mountain_fairytale/presentation/widgets/duplicate_check_status_widget.dart';
-import 'package:mountain_fairytale/presentation/widgets/icon_button_widget.dart';
-import 'package:mountain_fairytale/presentation/widgets/dropdown_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/base_form_dialog_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/confirm_dialog.dart';
+import 'package:mountain_fairytale/shared/widgets/duplicate_check_status_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/icon_button_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/dropdown_widget.dart';
 import 'package:provider/provider.dart';
 
 class ClientDialog extends StatefulWidget {

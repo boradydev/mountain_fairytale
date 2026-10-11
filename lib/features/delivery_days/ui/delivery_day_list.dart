@@ -14,9 +14,9 @@ import 'package:mountain_fairytale/features/delivery_days/ui/select_delivery_typ
 import 'package:mountain_fairytale/features/delivery_days/ui/select_route_dialog.dart';
 import 'package:mountain_fairytale/features/pickup/ui/pickup_constructor_screen.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_screen.dart';
-import 'package:mountain_fairytale/presentation/widgets/add_action_card.dart';
-import 'package:mountain_fairytale/presentation/widgets/card_widget.dart';
-import 'package:mountain_fairytale/presentation/widgets/metric_row_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/add_action_card.dart';
+import 'package:mountain_fairytale/shared/widgets/card_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/metric_row_widget.dart';
 import 'package:provider/provider.dart';
 
 /// Изолированный список — не перерисовывает весь Scaffold при изменении элементов

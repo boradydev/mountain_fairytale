@@ -1,4 +1,4 @@
-import 'package:mountain_fairytale/presentation/providers/session_change_notifier.dart';
+import 'package:mountain_fairytale/core/state/safe_change_notifier.dart';
 import 'package:mountain_fairytale/features/audit_event/data/audit_events_model.dart';
 import 'package:mountain_fairytale/features/audit_event/audit_events_abcs.dart';
 
@@ -9,7 +9,7 @@ enum AuditLogStatus {
   failure,
 }
 
-class AuditLogProvider extends SessionChangeNotifier {
+class AuditLogProvider extends SafeChangeNotifier {
   final AuditLogRepository _repository;
 
   AuditLogProvider(this._repository);

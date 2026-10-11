@@ -1,10 +1,10 @@
-import 'package:mountain_fairytale/presentation/providers/session_change_notifier.dart';
+import 'package:mountain_fairytale/core/state/safe_change_notifier.dart';
 import 'package:mountain_fairytale/features/clients/data/clients_model.dart';
 import 'package:mountain_fairytale/features/clients/clients_abcs.dart';
 
 enum ClientStatus { initial, loading, success, failure }
 
-class ClientsProvider extends SessionChangeNotifier {
+class ClientsProvider extends SafeChangeNotifier {
   final ClientRepository _repository;
 
   ClientsProvider(this._repository);

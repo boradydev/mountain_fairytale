@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart';
-import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 import 'package:printing/printing.dart';
 
 enum _PrintMode {

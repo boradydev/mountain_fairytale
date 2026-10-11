@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/features/sales_representative_commissions/data/sales_representative_commission_model.dart';
 import 'package:mountain_fairytale/features/sales_representative_commissions/ui/sales_representative_commission_provider.dart';
 import 'package:mountain_fairytale/features/sales_representative_clients/ui/sales_representative_clients_provider.dart';
-import 'package:mountain_fairytale/presentation/widgets/locate_toggle_widget.dart';
-import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
-import 'package:mountain_fairytale/presentation/widgets/base_card_widget.dart';
-import 'package:mountain_fairytale/presentation/widgets/theme_toggle_button.dart';
+import 'package:mountain_fairytale/shared/widgets/locate_toggle_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/base_card_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/theme_toggle_button.dart';
 import 'package:provider/provider.dart';
-import 'package:mountain_fairytale/presentation/screens/sales_analytics/month_picker_dialog.dart';
-import 'package:mountain_fairytale/presentation/screens/sales_analytics/sales_representative_details_dialog.dart';
+import 'package:mountain_fairytale/features/sales_representative_commissions/ui/month_picker_dialog.dart';
+import 'package:mountain_fairytale/features/sales_representative_commissions/ui/sales_representative_details_dialog.dart';
 
 class SalesRepresentativeCommissionScreen extends StatefulWidget {
   const SalesRepresentativeCommissionScreen({super.key});

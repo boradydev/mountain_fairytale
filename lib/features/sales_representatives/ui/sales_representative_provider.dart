@@ -1,8 +1,8 @@
-import 'package:mountain_fairytale/presentation/providers/session_change_notifier.dart';
+import 'package:mountain_fairytale/core/state/safe_change_notifier.dart';
 import 'package:mountain_fairytale/features/sales_representatives/data/sales_representative_model.dart';
 import 'package:mountain_fairytale/features/sales_representatives/sales_representative_abcs.dart';
 
-class SalesRepresentativeProvider extends SessionChangeNotifier {
+class SalesRepresentativeProvider extends SafeChangeNotifier {
   final SalesRepresentativeRepository _repository;
 
   SalesRepresentativeProvider(this._repository);

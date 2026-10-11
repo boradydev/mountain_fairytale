@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mountain_fairytale/presentation/widgets/icon_button_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/icon_button_widget.dart';
 
 class AppDropdown<T> extends StatelessWidget {
   final String label;

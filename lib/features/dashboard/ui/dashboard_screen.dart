@@ -7,9 +7,9 @@ import 'package:mountain_fairytale/features/delivery_days/ui/delivery_days_provi
 import 'package:mountain_fairytale/features/audit_event/ui/audit_event_screen.dart';
 import 'package:mountain_fairytale/features/clients/ui/client_list.dart';
 import 'package:mountain_fairytale/features/delivery_days/ui/delivery_day_list.dart';
-import 'package:mountain_fairytale/presentation/screens/sales_analytics/sales_analytics_screen.dart';
-import 'package:mountain_fairytale/presentation/widgets/locate_toggle_widget.dart';
-import 'package:mountain_fairytale/presentation/widgets/theme_toggle_button.dart';
+import 'package:mountain_fairytale/features/sales_representative_commissions/ui/sales_analytics_screen.dart';
+import 'package:mountain_fairytale/shared/widgets/locate_toggle_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/theme_toggle_button.dart';
 import 'package:provider/provider.dart';
 
 class DeliveryDaysScreen extends StatefulWidget {

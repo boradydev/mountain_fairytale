@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mountain_fairytale/presentation/widgets/base_card_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/base_card_widget.dart';
 
 class AddActionButton extends StatelessWidget {
   final String label;

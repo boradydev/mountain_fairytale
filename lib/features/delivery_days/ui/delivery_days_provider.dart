@@ -1,10 +1,10 @@
-import 'package:mountain_fairytale/presentation/providers/session_change_notifier.dart';
+import 'package:mountain_fairytale/core/state/safe_change_notifier.dart';
 import 'package:mountain_fairytale/features/delivery_days/delivery_days_abcs.dart';
 import 'package:mountain_fairytale/features/delivery_days/data/delivery_days_model.dart';
 
 enum DeliveryStatus { initial, loading, success, failure }
 
-class DeliveryDaysProvider extends SessionChangeNotifier {
+class DeliveryDaysProvider extends SafeChangeNotifier {
   final DeliveryDayRepository _repository;
 
   DeliveryDaysProvider(this._repository);

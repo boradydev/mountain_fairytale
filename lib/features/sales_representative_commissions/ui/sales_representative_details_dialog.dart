@@ -4,11 +4,11 @@ import 'package:mountain_fairytale/features/sales_representative_commissions/ui/
 import 'package:mountain_fairytale/features/sales_representative_clients/ui/sales_representative_clients_provider.dart';
 import 'package:mountain_fairytale/features/sales_representatives/ui/sales_representative_provider.dart';
 import 'package:mountain_fairytale/features/sales_representatives/data/sales_representative_model.dart';
-import 'package:mountain_fairytale/presentation/widgets/metric_row_widget.dart';
-import 'package:mountain_fairytale/presentation/widgets/base_card_widget.dart';
-import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
-import 'package:mountain_fairytale/presentation/widgets/confirm_dialog.dart';
-import 'package:mountain_fairytale/presentation/widgets/app_notify.dart';
+import 'package:mountain_fairytale/shared/widgets/metric_row_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/base_card_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/confirm_dialog.dart';
+import 'package:mountain_fairytale/shared/widgets/app_notify.dart';
 import 'package:mountain_fairytale/features/sales_representatives/ui/sales_rep_select_dialog.dart';
 
 class SalesRepresentativeDetailsDialog extends StatelessWidget {

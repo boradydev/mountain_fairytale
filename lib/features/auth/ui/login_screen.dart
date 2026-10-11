@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/features/auth/ui/auth_provider.dart';
-import 'package:mountain_fairytale/presentation/widgets/locate_toggle_widget.dart';
-import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
-import 'package:mountain_fairytale/presentation/widgets/theme_toggle_button.dart';
+import 'package:mountain_fairytale/shared/widgets/locate_toggle_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/theme_toggle_button.dart';
 import 'package:provider/provider.dart';
 
 class LoginScreen extends StatefulWidget {
