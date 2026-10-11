@@ -1,4 +1,4 @@
-import 'package:mountain_fairytale/infra/repos/cars/models/car_model.dart';
+import 'package:mountain_fairytale/features/cars/data/car_model.dart';
 import 'package:mountain_fairytale/features/cars/car_abcs.dart';
 
 class CarRepositoryImpl implements CarRepository {

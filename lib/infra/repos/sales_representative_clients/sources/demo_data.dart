@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
-import 'package:mountain_fairytale/features/clients/data/demo_data.dart';
+import 'package:mountain_fairytale/features/clients/data/client_demo_data.dart';
 import 'package:mountain_fairytale/features/sales_representatives/sales_representative_abcs.dart';
 import 'package:mountain_fairytale/features/sales_representative_clients/sales_representative_client_abcs.dart';
 

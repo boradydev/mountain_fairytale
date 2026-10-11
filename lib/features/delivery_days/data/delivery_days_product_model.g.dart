@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'delivery_day_product_model.dart';
+part of 'delivery_days_product_model.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator

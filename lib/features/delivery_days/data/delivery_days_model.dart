@@ -1,7 +1,7 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:mountain_fairytale/infra/repos/delivery_day/models/delivery_day_product_model.dart';
+import 'package:mountain_fairytale/features/delivery_days/data/delivery_days_product_model.dart';
 
-part 'delivery_day_model.g.dart';
+part 'delivery_days_model.g.dart';
 
 @JsonSerializable()
 class DeliveryDay {

@@ -1,4 +1,4 @@
-import 'package:mountain_fairytale/infra/repos/cars/models/car_model.dart';
+import 'package:mountain_fairytale/features/cars/data/car_model.dart';
 
 abstract interface class CarDataSource {
   Future<List<Map<String, dynamic>>> getAllCars();

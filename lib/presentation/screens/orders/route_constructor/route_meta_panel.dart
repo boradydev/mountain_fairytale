@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/core/utils/datetime_extensions.dart';
-import 'package:mountain_fairytale/infra/repos/cars/models/car_model.dart';
+import 'package:mountain_fairytale/features/cars/data/car_model.dart';
 import 'package:mountain_fairytale/infra/repos/drivers/models/driver_model.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/common/car_dialog.dart';

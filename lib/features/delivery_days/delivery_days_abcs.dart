@@ -1,4 +1,4 @@
-import 'package:mountain_fairytale/infra/repos/delivery_day/models/delivery_day_model.dart';
+import 'package:mountain_fairytale/features/delivery_days/data/delivery_days_model.dart';
 
 abstract interface class DeliveryDataSource {
   Future<List<Map<String, dynamic>>> getDeliveryDays({
