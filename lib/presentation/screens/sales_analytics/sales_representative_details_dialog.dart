@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:mountain_fairytale/features/sales_representative_commissions/ui/sales_representative_commission_provider.dart';
 import 'package:mountain_fairytale/features/sales_representative_clients/ui/sales_representative_clients_provider.dart';
 import 'package:mountain_fairytale/features/sales_representatives/ui/sales_representative_provider.dart';
-import 'package:mountain_fairytale/infra/repos/sales_representatives/models/sales_representative_model.dart';
+import 'package:mountain_fairytale/features/sales_representatives/data/sales_representative_model.dart';
 import 'package:mountain_fairytale/presentation/widgets/metric_row_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/base_card_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';

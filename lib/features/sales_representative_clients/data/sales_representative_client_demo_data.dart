@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:mountain_fairytale/features/clients/data/clients_demo_data.dart';
 import 'package:mountain_fairytale/features/sales_representatives/sales_representative_abcs.dart';
-import 'package:mountain_fairytale/features/sales_representative_clients/sales_representative_client_abcs.dart';
+import 'package:mountain_fairytale/features/sales_representative_clients/sales_representative_clients_abcs.dart';
 
 class DemoSalesRepresentativeClientDataSource
     implements SalesRepresentativeClientDataSource {

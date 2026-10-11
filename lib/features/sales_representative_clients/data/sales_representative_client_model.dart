@@ -1,6 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 
-part 'sales_representative_client_model.g.dart';
+part 'sales_representative_clients_model.g.dart';
 
 @JsonSerializable()
 class SalesRepresentativeClient {

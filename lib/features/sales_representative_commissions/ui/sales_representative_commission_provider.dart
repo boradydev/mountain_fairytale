@@ -1,5 +1,5 @@
 import 'package:mountain_fairytale/presentation/providers/session_change_notifier.dart';
-import 'package:mountain_fairytale/infra/repos/sales_representative_commissions/models/sales_representative_commission_model.dart';
+import 'package:mountain_fairytale/features/sales_representative_commissions/data/sales_representative_commission_model.dart';
 import 'package:mountain_fairytale/features/sales_representative_commissions/sales_representative_commission_abcs.dart';
 
 enum SalesRepresentativeCommissionStatus { initial, loading, success, failure }

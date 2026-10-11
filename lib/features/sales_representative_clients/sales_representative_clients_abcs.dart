@@ -1,4 +1,4 @@
-import 'package:mountain_fairytale/infra/repos/sales_representative_clients/models/sales_representative_client_model.dart';
+import 'package:mountain_fairytale/features/sales_representative_clients/data/sales_representative_client_model.dart';
 
 /// Контракт источника данных для клиентов торгового представителя.
 /// Работает с сырыми данными (Map), имитируя API или JSON-файлы.
