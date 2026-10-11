@@ -1,6 +1,6 @@
 import 'package:mountain_fairytale/presentation/providers/session_change_notifier.dart';
-import 'package:mountain_fairytale/infra/repos/clients/models/client_model.dart';
-import 'package:mountain_fairytale/presentation/providers/abcs/repos/client_contracts.dart';
+import 'package:mountain_fairytale/features/clients/data/client_model.dart';
+import 'package:mountain_fairytale/features/clients/ui/client_abcs.dart';
 
 enum ClientStatus { initial, loading, success, failure }
 

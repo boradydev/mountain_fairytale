@@ -1,5 +1,5 @@
 import 'package:mountain_fairytale/infra/repos/audit_log/models/audit_event_model.dart';
-import 'package:mountain_fairytale/presentation/providers/abcs/repos/audit_log_contracts.dart';
+import 'package:mountain_fairytale/features/audit_log/ui/audit_log_abcs.dart';
 
 class AuditLogRepositoryImpl implements AuditLogRepository {
   final AuditLogDataSource _dataSource;

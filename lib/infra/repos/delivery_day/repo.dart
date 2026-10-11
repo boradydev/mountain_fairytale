@@ -1,4 +1,4 @@
-import 'package:mountain_fairytale/presentation/providers/abcs/repos/delivery_day.dart';
+import 'package:mountain_fairytale/features/delivery_days/ui/delivery_day_abcs.dart';
 import 'package:mountain_fairytale/infra/repos/delivery_day/models/delivery_day_model.dart';
 
 class ApiDeliveryRepository implements DeliveryDayRepository {

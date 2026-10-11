@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/l10n/app_localizations.dart';
-import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
+import 'package:mountain_fairytale/features/clients/ui/clients_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/auth_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/login/change_password_dialog.dart';
 import 'package:mountain_fairytale/presentation/providers/delivery_days_provider.dart';
