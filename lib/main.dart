@@ -246,7 +246,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => LocaleProvider(prefs)),
 
         Provider<ApiClient>.value(value: apiClient),
-        Provider<AuthService>.value(
+        ListenableProvider<AuthService>.value(
           value: authService,
         ),
         ChangeNotifierProvider(
