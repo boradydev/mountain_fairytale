@@ -11,6 +11,7 @@ import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_
 import 'package:mountain_fairytale/features/delivery_route/ui/route_meta_panel.dart';
 import 'package:mountain_fairytale/features/delivery_route/delivery_route_abcs.dart';
 import 'package:mountain_fairytale/features/cars/cars_abcs.dart';
+import 'package:mountain_fairytale/features/cars/data/cars_model.dart';
 import 'package:mountain_fairytale/features/clients/clients_abcs.dart';
 import 'package:mountain_fairytale/features/products/products_abcs.dart';
 import 'package:mountain_fairytale/features/payment_methods/payment_method_abcs.dart';
@@ -193,6 +194,11 @@ void main() {
     final edit = find.widgetWithIcon(IconButton, Icons.edit_outlined).first;
     final addPosition = tester.getCenter(add);
     final editPosition = tester.getCenter(edit);
+    final driverField = find.byType(DropdownButtonFormField<Driver>);
+    final carField = find.byType(DropdownButtonFormField<Car>);
+    final driverState = tester.state(driverField);
+    final driverRect = tester.getRect(driverField);
+    final carRect = tester.getRect(carField);
     await tester.tap(
       find.widgetWithIcon(IconButton, Icons.visibility_off_outlined),
     );
@@ -202,11 +208,20 @@ void main() {
     expect(tester.widget<IconButton>(add).onPressed, isNull);
     expect(tester.getCenter(add), addPosition);
     expect(tester.getCenter(edit), editPosition);
-    repo.loadGate!.complete([active, inactive]);
+    expect(tester.getRect(driverField), driverRect);
+    expect(tester.getRect(carField), carRect);
+    expect(tester.state(driverField), same(driverState));
+    repo.loadGate!.complete([
+      Driver.fromJson(active.toJson()),
+      Driver.fromJson(inactive.toJson()),
+    ]);
     await tester.pumpAndSettle();
     expect(tester.widget<IconButton>(add).onPressed, isNotNull);
     expect(tester.getCenter(add), addPosition);
     expect(tester.getCenter(edit), editPosition);
+    expect(tester.getRect(driverField), driverRect);
+    expect(tester.getRect(carField), carRect);
+    expect(tester.state(driverField), same(driverState));
     expect(tester.takeException(), isNull);
   });
 

@@ -137,7 +137,12 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
             Text(
               'В маршрутном листе: ${provider.driverName}. Выберите активного водителя для продолжения.',
             ),
-          if (provider.isLoadingDrivers) const LinearProgressIndicator(),
+          SizedBox(
+            height: 4,
+            child: provider.isLoadingDrivers
+                ? const LinearProgressIndicator()
+                : null,
+          ),
           if (provider.driverError != null)
             Row(
               children: [

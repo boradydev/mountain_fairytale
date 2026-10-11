@@ -46,7 +46,19 @@ class RouteConstructorProvider extends OrderPointsProvider {
         includeDeactivated: showInactiveDrivers,
       );
       if (version != _driverLoadVersion) return;
-      drivers = loaded;
+      final previousSelection = selectedDriver;
+      // Reuse an unchanged selection so the dropdown keeps its form state and
+      // focus when a refreshed API response creates new model instances.
+      drivers = loaded.map((driver) {
+        if (previousSelection != null &&
+            driver.id == previousSelection.id &&
+            driver.name == previousSelection.name &&
+            driver.isActive == previousSelection.isActive &&
+            driver.createdAt == previousSelection.createdAt) {
+          return previousSelection;
+        }
+        return driver;
+      }).toList();
       final selectedId = selectedDriver?.id;
       if (selectedId != null) {
         final matches = drivers.where((d) => d.id == selectedId && d.isActive);
