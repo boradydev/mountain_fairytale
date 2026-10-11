@@ -245,6 +245,12 @@ class RouteConstructorProvider extends OrderPointsProvider {
     notifyListeners();
   }
 
+  void selectExistingCar(Car car) {
+    if (!car.isActive) return;
+    _applyCar(car);
+    selectCar(car);
+  }
+
   void setDate(DateTime date) {
     selectedDate = date;
     notifyListeners();

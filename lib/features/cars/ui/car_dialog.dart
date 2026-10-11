@@ -250,17 +250,32 @@ class _CarDialogState extends State<CarDialog> {
           warningText: _duplicateCar != null
               ? 'Найден автомобиль: ${_duplicateCar!.model} (${formatCarNumber(_duplicateCar!.number)}) — ${_duplicateCar!.isActive ? 'Активен' : 'Неактивен'}'
               : '',
+          expandedChild: _duplicateCar != null && _duplicateCar!.isActive
+              ? Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    AppPrimaryButton(
+                      text: 'Выбрать для маршрута',
+                      onPressed: _busy
+                          ? null
+                          : () {
+                              context
+                                  .read<RouteConstructorProvider>()
+                                  .selectExistingCar(_duplicateCar!);
+                              Navigator.of(context).pop();
+                            },
+                    ),
+                    AppSecondaryButton(
+                      text: 'Открыть существующий автомобиль',
+                      onPressed: _busy
+                          ? null
+                          : () => widget.onOpenCar?.call(_duplicateCar!),
+                    ),
+                  ],
+                )
+              : null,
         ),
-        if (_duplicateCar != null && _duplicateCar!.isActive)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: AppSecondaryButton(
-              text: 'Открыть существующий автомобиль',
-              onPressed: _busy
-                  ? null
-                  : () => widget.onOpenCar?.call(_duplicateCar!),
-            ),
-          ),
         if (_duplicateCar != null && !_duplicateCar!.isActive)
           Padding(
             padding: const EdgeInsets.only(bottom: 12),

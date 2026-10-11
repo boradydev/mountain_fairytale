@@ -6,6 +6,7 @@ class DuplicateCheckStatusWidget extends StatefulWidget {
   final bool isChecked;
   final bool hasDuplicate;
   final String warningText;
+  final Widget? expandedChild;
 
   const DuplicateCheckStatusWidget({
     super.key,
@@ -13,6 +14,7 @@ class DuplicateCheckStatusWidget extends StatefulWidget {
     required this.isChecked,
     required this.hasDuplicate,
     this.warningText = 'Найдены возможные дубликаты',
+    this.expandedChild,
   });
 
   @override
@@ -31,7 +33,8 @@ class _DuplicateCheckStatusWidgetState
     // Если статус дубликатов изменился или пришел новый запрос,
     // сбрасываем состояние раскрытия в начальное (свернуто)
     if (oldWidget.hasDuplicate != widget.hasDuplicate ||
-        oldWidget.isChecking != widget.isChecking) {
+        oldWidget.isChecking != widget.isChecking ||
+        oldWidget.warningText != widget.warningText) {
       _isExpanded = false;
     }
   }
@@ -91,14 +94,25 @@ class _DuplicateCheckStatusWidgetState
                   duration: const Duration(milliseconds: 200),
                   curve: Curves.easeInOut,
                   alignment: Alignment.topCenter,
-                  child: Text(
-                    text,
-                    style: TextStyle(color: contentColor, height: 1.3),
-                    // Если раскрыто — лимита на строки нет, если свернуто — показываем в 1 строку с троеточием
-                    maxLines: _isExpanded ? null : 1,
-                    overflow: _isExpanded
-                        ? TextOverflow.visible
-                        : TextOverflow.ellipsis,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        text,
+                        style: TextStyle(color: contentColor, height: 1.3),
+                        maxLines: _isExpanded ? null : 1,
+                        overflow: _isExpanded
+                            ? TextOverflow.visible
+                            : TextOverflow.ellipsis,
+                      ),
+                      if (_isExpanded &&
+                          widget.hasDuplicate &&
+                          widget.expandedChild != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: widget.expandedChild!,
+                        ),
+                    ],
                   ),
                 ),
               ),
