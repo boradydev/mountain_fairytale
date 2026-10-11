@@ -15,6 +15,7 @@ class AppDropdown<T> extends StatelessWidget {
   final VoidCallback? onEdit;
   final String? Function(T?)? validator;
   final IconData? prefixIcon;
+  final FocusNode? focusNode;
   final bool showEdit;
 
   /// Оставляет кнопку создания видимой, когда её обработчик недоступен.
@@ -44,6 +45,7 @@ class AppDropdown<T> extends StatelessWidget {
     this.onEdit,
     this.validator,
     this.prefixIcon,
+    this.focusNode,
     this.showEdit = false,
     this.showAdd = false,
     this.showInactiveToggle = false,
@@ -102,6 +104,7 @@ class AppDropdown<T> extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<T>(
+          focusNode: focusNode,
           isExpanded: true,
           initialValue: value,
           decoration: InputDecoration(

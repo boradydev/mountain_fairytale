@@ -1,3 +1,5 @@
+import 'package:mountain_fairytale/shared/widgets/dropdown_widget.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -199,6 +201,12 @@ void main() {
     final driverState = tester.state(driverField);
     final driverRect = tester.getRect(driverField);
     final carRect = tester.getRect(carField);
+    final focusNode = tester
+        .widget<AppDropdown<Driver>>(find.byType(AppDropdown<Driver>))
+        .focusNode!;
+    focusNode.requestFocus();
+    await tester.pump();
+    expect(focusNode.hasPrimaryFocus, isTrue);
     await tester.tap(
       find.widgetWithIcon(IconButton, Icons.visibility_off_outlined),
     );
@@ -207,9 +215,19 @@ void main() {
     expect(provider.isLoadingDrivers, isTrue);
     expect(
       tester.widget<DropdownButtonFormField<Driver>>(driverField).onChanged,
+      isNotNull,
+    );
+    expect(tester.widget<IconButton>(add).onPressed, isNotNull);
+    expect(tester.widget<IconButton>(edit).onPressed, isNotNull);
+    expect(
+      tester
+          .widget<IconButton>(
+            find.widgetWithIcon(IconButton, Icons.visibility_outlined),
+          )
+          .onPressed,
       isNull,
     );
-    expect(tester.widget<IconButton>(add).onPressed, isNull);
+    expect(focusNode.hasPrimaryFocus, isTrue);
     expect(tester.getCenter(add), addPosition);
     expect(tester.getCenter(edit), editPosition);
     expect(tester.getRect(driverField), driverRect);
@@ -231,7 +249,53 @@ void main() {
     expect(tester.getRect(carField), carRect);
     expect(tester.state(driverField), same(driverState));
     expect(tester.takeException(), isNull);
+    expect(focusNode.hasPrimaryFocus, isTrue);
   });
+
+  testWidgets(
+    'failed background refresh preserves list, selection and driver focus',
+    (tester) async {
+      final repo = _Drivers()..loadGate = Completer<List<Driver>>();
+      final provider = makeProvider(repo)..drivers = [active];
+      provider.selectDriver(active);
+      await panel(tester, provider);
+      final field = find.byType(DropdownButtonFormField<Driver>);
+      final focusNode = tester
+          .widget<AppDropdown<Driver>>(find.byType(AppDropdown<Driver>))
+          .focusNode!;
+      focusNode.requestFocus();
+      await tester.pump();
+      await tester.tap(
+        find.widgetWithIcon(IconButton, Icons.visibility_off_outlined),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(provider.drivers, [active]);
+      expect(provider.selectedDriver, active);
+      repo.loadGate!.completeError(Exception('offline'));
+      await tester.pumpAndSettle();
+      expect(provider.drivers, [active]);
+      expect(provider.selectedDriver, active);
+      expect(focusNode.hasPrimaryFocus, isTrue);
+      expect(
+        find.text('Не удалось загрузить водителей. Повторите попытку.'),
+        findsOneWidget,
+      );
+      expect(
+        tester.widget<DropdownButtonFormField<Driver>>(field).onChanged,
+        isNotNull,
+      );
+      expect(
+        tester
+            .widget<IconButton>(
+              find.widgetWithIcon(IconButton, Icons.visibility_outlined),
+            )
+            .onPressed,
+        isNotNull,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets(
     'cancel inactive activation keeps selected driver and dropdown in sync',

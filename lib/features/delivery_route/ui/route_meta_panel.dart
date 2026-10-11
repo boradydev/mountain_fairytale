@@ -20,6 +20,19 @@ class RouteMetaPanel extends StatefulWidget {
 
 class _RouteMetaPanelState extends State<RouteMetaPanel> {
   int _driverSelectionVersion = 0;
+  final _driverFocusNode = FocusNode();
+
+  @override
+  void dispose() {
+    _driverFocusNode.dispose();
+    super.dispose();
+  }
+
+  Future<void> _toggleInactiveDrivers(bool value) async {
+    // Keep focus on the related field before the eye becomes unavailable.
+    _driverFocusNode.requestFocus();
+    await context.read<RouteConstructorProvider>().toggleInactiveDrivers(value);
+  }
 
   Future<void> _selectDriver(Driver? driver) async {
     final provider = context.read<RouteConstructorProvider>();
@@ -95,13 +108,15 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
           AppDropdown<Driver>(
             key: ValueKey(_driverSelectionVersion),
             label: 'Водитель *',
-            enabled: !provider.isLoadingDrivers,
+            focusNode: _driverFocusNode,
             showEdit: true,
             showAdd: true,
             editBeforeAdd: true,
             showInactiveToggle: true,
             includeInactive: provider.showInactiveDrivers,
-            onIncludeInactiveChanged: provider.toggleInactiveDrivers,
+            onIncludeInactiveChanged: provider.isLoadingDrivers
+                ? null
+                : _toggleInactiveDrivers,
             items: provider.drivers,
             value: provider.selectedDriver,
             itemLabelBuilder: (driver) => driver.name,
