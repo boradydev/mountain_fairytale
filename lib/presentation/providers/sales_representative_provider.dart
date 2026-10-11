@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/presentation/providers/session_change_notifier.dart';
 import 'package:mountain_fairytale/infra/repos/sales_representatives/models/sales_representative_model.dart';
 import 'package:mountain_fairytale/presentation/providers/abcs/repos/sales_representative.dart';
 
-class SalesRepresentativeProvider extends ChangeNotifier {
+class SalesRepresentativeProvider extends SessionChangeNotifier {
   final SalesRepresentativeRepository _repository;
 
   SalesRepresentativeProvider(this._repository);

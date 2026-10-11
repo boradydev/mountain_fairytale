@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/presentation/providers/session_change_notifier.dart';
 import 'package:mountain_fairytale/infra/repos/sales_representative_clients/models/sales_representative_client_model.dart';
 import 'package:mountain_fairytale/presentation/providers/abcs/repos/sales_representative_client.dart';
 
 enum SalesRepClientsStatus { initial, loading, success, failure }
 
-class SalesRepresentativeClientsProvider extends ChangeNotifier {
+class SalesRepresentativeClientsProvider extends SessionChangeNotifier {
   final SalesRepresentativeClientRepository _repository;
 
   SalesRepresentativeClientsProvider(this._repository);

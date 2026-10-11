@@ -53,6 +53,7 @@ import 'package:mountain_fairytale/presentation/screens/delivery_days/dashboard.
 import 'package:mountain_fairytale/presentation/providers/abcs/repos/product_contracts.dart';
 import 'package:mountain_fairytale/presentation/screens/login/login_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:provider/single_child_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -147,7 +148,10 @@ Future<void> main() async {
   // ===========================================================================
   final routePrintService = WindowsRoutePrintService(RouteSheetPdfBuilder());
   final httpTransport = HttpTransport(
-    baseUrl: 'http://localhost:8000',
+    baseUrl: const String.fromEnvironment(
+      'API_BASE_URL',
+      defaultValue: 'http://localhost:8000',
+    ),
   );
 
   final tokenStorage = SecureTokenStorage();
@@ -175,6 +179,65 @@ Future<void> main() async {
   // 4. ЗАПУСК ПРИЛОЖЕНИЯ И ВНЕДРЕНИЕ ЗАВИСИМОСТЕЙ (DI)
   // Передаем созданные синглтоны репозиториев в UI-провайдеры управления стейтом
   // ===========================================================================
+  final sessionProviders = <SingleChildWidget>[
+    // Репозитории (доступны через context.read<T>())
+    Provider<ProductRepository>(
+      create: (_) => productRepository,
+    ),
+
+    // Провайдер дашборда дней доставки
+    ChangeNotifierProvider(
+      create: (context) => DeliveryDaysProvider(deliveryDayRepository),
+    ),
+
+    // Провайдер списка клиентов (контроль засыпания, дубликаты)
+    ChangeNotifierProvider(
+      create: (context) => ClientsProvider(clientRepository),
+    ),
+
+    // Провайдер торговых представителей
+    ChangeNotifierProvider(
+      create: (_) => SalesRepresentativeProvider(salesRepRepository),
+    ),
+
+    // Провайдер деталей клиентов торгового представителя
+    ChangeNotifierProvider(
+      create: (context) =>
+          SalesRepresentativeClientsProvider(salesRepClientRepository),
+    ),
+
+    // Обновленный провайдер конструктора маршрутов со строго изолированными репозиториями
+    ChangeNotifierProvider(
+      create: (context) => RouteConstructorProvider(
+        carRepo: carRepository,
+        driverRepo: driverRepository,
+        productRepo: productRepository,
+        routeRepo: routeRepository,
+        paymentMethodRepo: paymentMethodRepository,
+        clientRepo: clientRepository,
+        printService: routePrintService,
+      ),
+    ),
+    ChangeNotifierProvider(
+      create: (_) => SalesRepresentativeCommissionProvider(
+        salesRepCommissionRepository,
+      ),
+    ),
+    ChangeNotifierProvider(
+      create: (context) => PickupConstructorProvider(
+        pickupRepo: pickupRepository,
+        productRepo: productRepository,
+        paymentMethodRepo: paymentMethodRepository,
+        clientRepo: clientRepository,
+      ),
+    ),
+    ChangeNotifierProvider(
+      create: (_) => AuditLogProvider(
+        auditLogRepository,
+      ),
+    ),
+  ];
+
   runApp(
     MultiProvider(
       providers: [
@@ -182,57 +245,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => ThemeProvider(prefs)),
         ChangeNotifierProvider(create: (_) => LocaleProvider(prefs)),
 
-        // Репозитории (доступны через context.read<T>())
-        Provider<ProductRepository>(
-          create: (_) => productRepository,
-        ),
-
-        // Провайдер дашборда дней доставки
-        ChangeNotifierProvider(
-          create: (context) => DeliveryDaysProvider(deliveryDayRepository),
-        ),
-
-        // Провайдер списка клиентов (контроль засыпания, дубликаты)
-        ChangeNotifierProvider(
-          create: (context) => ClientsProvider(clientRepository),
-        ),
-
-        // Провайдер торговых представителей
-        ChangeNotifierProvider(
-          create: (_) => SalesRepresentativeProvider(salesRepRepository),
-        ),
-
-        // Провайдер деталей клиентов торгового представителя
-        ChangeNotifierProvider(
-          create: (context) =>
-              SalesRepresentativeClientsProvider(salesRepClientRepository),
-        ),
-
-        // Обновленный провайдер конструктора маршрутов со строго изолированными репозиториями
-        ChangeNotifierProvider(
-          create: (context) => RouteConstructorProvider(
-            carRepo: carRepository,
-            driverRepo: driverRepository,
-            productRepo: productRepository,
-            routeRepo: routeRepository,
-            paymentMethodRepo: paymentMethodRepository,
-            clientRepo: clientRepository,
-            printService: routePrintService,
-          ),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => SalesRepresentativeCommissionProvider(
-            salesRepCommissionRepository,
-          ),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => PickupConstructorProvider(
-            pickupRepo: pickupRepository,
-            productRepo: productRepository,
-            paymentMethodRepo: paymentMethodRepository,
-            clientRepo: clientRepository,
-          ),
-        ),
+        Provider<ApiClient>.value(value: apiClient),
         Provider<AuthService>.value(
           value: authService,
         ),
@@ -241,36 +254,24 @@ Future<void> main() async {
             authService: authService,
           ),
         ),
-
-        // Здесь потом:
-        //
-        // Provider<ClientRepository>(
-        //   create: (_) => ClientRepositoryImpl(
-        //     dataSource: ClientApiDataSource(
-        //       apiClient: apiClient,
-        //     ),
-        //   ),
-        // ),
-        ChangeNotifierProvider(
-          create: (_) => AuditLogProvider(
-            auditLogRepository,
-          ),
-        ),
       ],
-      child: const MyApp(),
+      child: MyApp(sessionProviders: sessionProviders),
     ),
   );
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final List<SingleChildWidget> sessionProviders;
+
+  const MyApp({super.key, required this.sessionProviders});
 
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
     final localeProvider = context.watch<LocaleProvider>();
 
-    return MaterialApp(
+    final auth = context.watch<AuthProvider>();
+    final app = MaterialApp(
       onGenerateTitle: (context) {
         final title = AppLocalizations.of(context)!.appTitle;
         windowManager.setTitle(title);
@@ -291,6 +292,12 @@ class MyApp extends StatelessWidget {
 
       home: const _AuthGate(),
     );
+    if (!auth.isAuthenticated) return app;
+    return MultiProvider(
+      key: ValueKey(auth.sessionVersion),
+      providers: sessionProviders,
+      child: app,
+    );
   }
 }
 
@@ -308,7 +315,8 @@ class _AuthGateState extends State<_AuthGate> {
 
     Future.microtask(() {
       if (!mounted) return;
-      context.read<AuthProvider>().restoreSession();
+      final auth = context.read<AuthProvider>();
+      if (auth.status == AuthStatus.initializing) auth.restoreSession();
     });
   }
 
@@ -325,12 +333,36 @@ class _AuthGateState extends State<_AuthGate> {
         );
 
       case AuthStatus.unauthenticated:
-        // В режиме отладки позволяем зайти на главный экран,
-        // если пользователь нажал кнопку "Bypass" или если мы хотим
-        // видеть интерфейс без логина.
-        // Но так как мы используем AuthProvider.status,
-        // кнопка в LoginScreen просто изменит статус на authenticated.
         return const LoginScreen();
+
+      case AuthStatus.serverUnavailable:
+        return Scaffold(
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.cloud_off, size: 48),
+                  const SizedBox(height: 16),
+                  Text(
+                    auth.error ?? 'Не удалось восстановить вход.',
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  FilledButton(
+                    onPressed: auth.restoreSession,
+                    child: const Text('Повторить'),
+                  ),
+                  TextButton(
+                    onPressed: auth.logout,
+                    child: const Text('Выйти'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
 
       case AuthStatus.authenticated:
         return const DeliveryDaysScreen();

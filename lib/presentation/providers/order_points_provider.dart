@@ -1,3 +1,4 @@
+import 'package:mountain_fairytale/presentation/providers/session_change_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/infra/repos/clients/models/client_model.dart';
 import 'package:mountain_fairytale/infra/repos/delivery_route/models/delivery_task_item_model.dart';
@@ -9,7 +10,7 @@ import 'package:mountain_fairytale/presentation/providers/abcs/repos/payment_met
 import 'package:mountain_fairytale/presentation/providers/abcs/repos/product_contracts.dart';
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
 
-abstract class OrderPointsProvider extends ChangeNotifier {
+abstract class OrderPointsProvider extends SessionChangeNotifier {
   // 1. Поля БЕЗ подчеркивания и с аннотацией
   @protected
   final ProductRepository productRepo;

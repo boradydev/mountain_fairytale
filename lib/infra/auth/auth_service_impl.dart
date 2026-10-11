@@ -1,15 +1,26 @@
-import 'package:mountain_fairytale/infra/repos/auth/models/auth_user_model.dart';
-import 'package:mountain_fairytale/infra/repos/auth/repo.dart';
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+
+import 'package:mountain_fairytale/infra/auth/auth_errors.dart';
 import 'package:mountain_fairytale/infra/auth/auth_service.dart';
 import 'package:mountain_fairytale/infra/auth/token_storage.dart';
+import 'package:mountain_fairytale/infra/http/api_exception.dart';
+import 'package:mountain_fairytale/infra/repos/auth/models/auth_tokens_model.dart';
+import 'package:mountain_fairytale/infra/repos/auth/models/auth_user_model.dart';
+import 'package:mountain_fairytale/infra/repos/auth/models/current_employee_model.dart';
+import 'package:mountain_fairytale/infra/repos/auth/repo.dart';
 
-class AuthServiceImpl implements AuthService {
+class AuthServiceImpl extends ChangeNotifier implements AuthService {
   final AuthRepository _repository;
   final TokenStorage _tokenStorage;
 
   String? _accessToken;
-
+  CurrentEmployeeModel? _currentUser;
+  int _sessionVersion = 0;
+  int _tokenRevision = 0;
   Future<bool>? _refreshFuture;
+  Future<void> _storageQueue = Future<void>.value();
 
   AuthServiceImpl({
     required this._repository,
@@ -17,19 +28,20 @@ class AuthServiceImpl implements AuthService {
   });
 
   @override
-  bool get isAuthenticated => _accessToken != null;
+  bool get isAuthenticated => _accessToken != null && _currentUser != null;
 
   @override
   String? get accessToken => _accessToken;
 
   @override
-  Future<bool> restoreSession() async {
-    final refreshToken = await _tokenStorage.getRefreshToken();
+  CurrentEmployeeModel? get currentUser => _currentUser;
 
-    if (refreshToken == null || refreshToken.isEmpty) {
-      return false;
-    }
+  @override
+  int get sessionVersion => _sessionVersion;
 
+  @override
+  Future<bool> restoreSession() {
+    if (isAuthenticated) return Future.value(true);
     return refresh();
   }
 
@@ -38,108 +50,178 @@ class AuthServiceImpl implements AuthService {
     required String username,
     required String password,
   }) async {
+    final version = _invalidateSession();
+    await _storageTask(_tokenStorage.clear);
+    _checkVersion(version);
     final tokens = await _repository.login(
       username: username,
       password: password,
     );
-
-    await _saveTokens(
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-    );
+    _checkVersion(version);
+    final user = await _repository.getMe(accessToken: tokens.accessToken);
+    await _commitTokens(tokens, user, version);
   }
 
   @override
-  Future<void> register({
-    required String username,
-    required String password,
-  }) {
-    return _repository.register(
-      username: username,
-      password: password,
-    );
-  }
-
-  @override
-  Future<List<AuthUserModel>> getUsers() {
-    return _repository.getUsers();
-  }
+  Future<List<AuthUserModel>> getUsers() => _repository.getUsers();
 
   @override
   Future<bool> refresh() {
-    final existingRefresh = _refreshFuture;
+    final existing = _refreshFuture;
+    if (existing != null) return existing;
 
-    if (existingRefresh != null) {
-      return existingRefresh;
-    }
-
-    final future = _refreshInternal();
-
-    _refreshFuture = future;
-
-    future.whenComplete(() {
-      if (identical(_refreshFuture, future)) {
-        _refreshFuture = null;
-      }
+    final version = _sessionVersion;
+    late final Future<bool> future;
+    future = _refreshInternal(version).whenComplete(() {
+      if (identical(_refreshFuture, future)) _refreshFuture = null;
     });
-
+    _refreshFuture = future;
     return future;
   }
 
-  Future<bool> _refreshInternal() async {
-    final refreshToken = await _tokenStorage.getRefreshToken();
-
-    if (refreshToken == null || refreshToken.isEmpty) {
-      await _clearSession();
-      return false;
-    }
-
+  Future<bool> _refreshInternal(int version) async {
+    var readingProfile = false;
     try {
-      final tokens = await _repository.refresh(
-        refreshToken: refreshToken,
-      );
+      final refreshToken = await _storageTask(_tokenStorage.getRefreshToken);
+      if (version != _sessionVersion) return false;
+      if (refreshToken == null || refreshToken.isEmpty) {
+        await _endSession(version);
+        return false;
+      }
 
-      await _saveTokens(
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
-      );
-
+      final tokens = await _repository.refresh(refreshToken: refreshToken);
+      if (version != _sessionVersion) return false;
+      readingProfile = true;
+      final user = await _repository.getMe(accessToken: tokens.accessToken);
+      await _commitTokens(tokens, user, version);
       return true;
-    } catch (_) {
-      await _clearSession();
+    } on SessionChangedException {
       return false;
+    } on ApiException catch (error) {
+      if (version != _sessionVersion) return false;
+      if (error.statusCode == 401 ||
+          error.statusCode == 403 ||
+          (readingProfile && error.statusCode == 404)) {
+        await _endSession(version);
+        return false;
+      }
+      // Network failures, 5xx and invalid responses preserve the saved pair.
+      rethrow;
     }
   }
 
   @override
-  Future<void> logout() async {
-    final refreshToken = await _tokenStorage.getRefreshToken();
+  Future<T> authenticatedRequest<T>(
+    Future<T> Function(String accessToken) request,
+  ) async {
+    final version = _sessionVersion;
+    final originalToken = _accessToken;
+    final originalRevision = _tokenRevision;
+    if (!isAuthenticated || originalToken == null) {
+      throw const ApiException(
+        statusCode: 401,
+        message: 'Сессия не восстановлена.',
+      );
+    }
 
     try {
-      if (refreshToken != null && refreshToken.isNotEmpty) {
-        await _repository.logout(
-          refreshToken: refreshToken,
-        );
-      }
-    } finally {
-      await _clearSession();
+      final result = await request(originalToken);
+      _checkVersion(version);
+      return result;
+    } on ApiException catch (error) {
+      _checkVersion(version);
+      if (error.statusCode != 401) rethrow;
+    }
+
+    // Another request may already have completed refresh for this token.
+    if (_tokenRevision == originalRevision && !await refresh()) {
+      throw const ApiException(statusCode: 401, message: 'Сессия завершена.');
+    }
+    _checkVersion(version);
+    final newToken = _accessToken;
+    if (newToken == null) throw const SessionChangedException();
+
+    try {
+      final result = await request(newToken);
+      _checkVersion(version);
+      return result;
+    } on ApiException catch (error) {
+      _checkVersion(version);
+      if (error.statusCode == 401) await _endSession(version);
+      rethrow;
     }
   }
 
-  Future<void> _saveTokens({
-    required String accessToken,
-    required String refreshToken,
-  }) async {
-    _accessToken = accessToken;
+  @override
+  Future<void> changePassword({required String password}) =>
+      authenticatedRequest(
+        (token) =>
+            _repository.changePassword(accessToken: token, password: password),
+      );
 
-    await _tokenStorage.saveTokens(
-      accessToken: accessToken,
-      refreshToken: refreshToken,
-    );
+  @override
+  Future<void> logout() async {
+    final token = _accessToken;
+    _invalidateSession();
+    // Clear local credentials before waiting for any server response.
+    final clear = _storageTask(_tokenStorage.clear);
+    if (token != null) {
+      unawaited(
+        _repository.logout(accessToken: token).catchError((Object _) {
+          // Local logout succeeds even when the server is unreachable.
+        }),
+      );
+    }
+    await clear;
   }
 
-  Future<void> _clearSession() async {
+  int _invalidateSession() {
+    final version = ++_sessionVersion;
     _accessToken = null;
-    await _tokenStorage.clear();
+    _currentUser = null;
+    _refreshFuture = null;
+    notifyListeners();
+    return version;
+  }
+
+  Future<void> _endSession(int version) async {
+    if (version != _sessionVersion) return;
+    _invalidateSession();
+    await _storageTask(_tokenStorage.clear);
+  }
+
+  Future<void> _commitTokens(
+    AuthTokensModel tokens,
+    CurrentEmployeeModel user,
+    int version,
+  ) async {
+    await _storageTask(() async {
+      _checkVersion(version);
+      await _tokenStorage.saveTokens(
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+      );
+      _checkVersion(version);
+      _accessToken = tokens.accessToken;
+      _currentUser = user;
+      _tokenRevision++;
+    });
+    _checkVersion(version);
+    notifyListeners();
+  }
+
+  // Serialize persistence so a refresh finishing after logout cannot leave
+  // credentials on disk or overwrite a newer user's tokens.
+  Future<T> _storageTask<T>(Future<T> Function() task) {
+    final operation = _storageQueue.then((_) => task());
+    _storageQueue = operation.then<void>(
+      (_) {},
+      onError: (Object _, StackTrace _) {},
+    );
+    return operation;
+  }
+
+  void _checkVersion(int version) {
+    if (version != _sessionVersion) throw const SessionChangedException();
   }
 }

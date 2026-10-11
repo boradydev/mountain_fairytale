@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/l10n/app_localizations.dart';
 import 'package:mountain_fairytale/presentation/providers/clients_provider.dart';
+import 'package:mountain_fairytale/presentation/providers/auth_provider.dart';
+import 'package:mountain_fairytale/presentation/screens/login/change_password_dialog.dart';
 import 'package:mountain_fairytale/presentation/providers/delivery_days_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/audit_log/audit_log_screen.dart';
 import 'package:mountain_fairytale/presentation/screens/delivery_days/client_list.dart';
@@ -26,6 +28,7 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen> {
 
     // Первоначальная загрузка данных
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       context.read<DeliveryDaysProvider>().fetchDeliveryDays();
       context.read<ClientsProvider>().fetchClients();
     });
@@ -55,6 +58,7 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final status = context.select((DeliveryDaysProvider p) => p.status);
+    final auth = context.watch<AuthProvider>();
 
     // Слушаем состояние фильтра, чтобы менять цвет иконки кнопки
     final showOnlySleeping = context.select(
@@ -65,6 +69,39 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen> {
       appBar: AppBar(
         title: Text(l10n.appTitle),
         actions: [
+          PopupMenuButton<String>(
+            tooltip: auth.currentUser?.username ?? 'Учётная запись',
+            enabled: !auth.isLoading,
+            onSelected: (value) async {
+              if (value == 'logout') {
+                await auth.logout();
+              } else if (value == 'password') {
+                final changed = await showDialog<bool>(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (_) => const ChangePasswordDialog(),
+                );
+                if (!context.mounted || changed != true) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Пароль изменён.')),
+                );
+              }
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(value: 'password', child: Text('Изменить пароль')),
+              PopupMenuItem(value: 'logout', child: Text('Выйти')),
+            ],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Row(
+                children: [
+                  const Icon(Icons.account_circle_outlined),
+                  const SizedBox(width: 8),
+                  Text(auth.currentUser?.username ?? ''),
+                ],
+              ),
+            ),
+          ),
           IconButton(
             tooltip: 'Журнал событий',
             icon: const Icon(Icons.history),

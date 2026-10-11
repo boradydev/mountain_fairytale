@@ -15,166 +15,61 @@ class ApiClient {
     required this.userAgent,
   });
 
-  Future<Map<String, dynamic>> get(
-    String path,
-  ) async {
-    final response = await _send(
-      method: 'GET',
-      path: path,
-    );
+  Future<Map<String, dynamic>> get(String path) async =>
+      _decodeJson(await _send(method: 'GET', path: path));
 
-    return _decodeJson(response);
-  }
+  Future<Map<String, dynamic>> post(String path, {Object? body}) async =>
+      _decodeJson(await _send(method: 'POST', path: path, body: body));
 
-  Future<Map<String, dynamic>> post(
-    String path, {
-    Object? body,
-  }) async {
-    final response = await _send(
-      method: 'POST',
-      path: path,
-      body: body,
-    );
+  Future<Map<String, dynamic>> put(String path, {Object? body}) async =>
+      _decodeJson(await _send(method: 'PUT', path: path, body: body));
 
-    return _decodeJson(response);
-  }
+  Future<List<dynamic>> getList(String path) async =>
+      _decodeJsonList(await _send(method: 'GET', path: path));
 
-  Future<List<dynamic>> getList(
-    String path,
-  ) async {
-    final response = await _send(
-      method: 'GET',
-      path: path,
-    );
-
-    return _decodeJsonList(response);
-  }
-
-  Future<List<dynamic>> postList(
-    String path, {
-    Object? body,
-  }) async {
-    final response = await _send(
-      method: 'POST',
-      path: path,
-      body: body,
-    );
-
-    return _decodeJsonList(response);
-  }
+  Future<List<dynamic>> postList(String path, {Object? body}) async =>
+      _decodeJsonList(await _send(method: 'POST', path: path, body: body));
 
   Future<HttpTransportResponse> _send({
     required String method,
     required String path,
     Object? body,
-    bool retryAfterRefresh = true,
-  }) async {
-    final headers = <String, String>{
-      'User-Agent': userAgent,
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    };
-
-    final accessToken = _authService.accessToken;
-
-    if (accessToken != null && accessToken.isNotEmpty) {
-      headers['Authorization'] = 'Bearer $accessToken';
-    }
-
-    final response = await _transportRequest(
-      method: method,
-      path: path,
-      headers: headers,
-      body: body,
-    );
-
-    if (response.statusCode != 401 || !retryAfterRefresh) {
-      _checkResponse(response);
-      return response;
-    }
-
-    final refreshed = await _authService.refresh();
-
-    if (!refreshed) {
-      throw ApiException(
-        statusCode: 401,
-        message: 'Authentication expired.',
-      );
-    }
-
-    return _send(
-      method: method,
-      path: path,
-      body: body,
-      retryAfterRefresh: false,
-    );
-  }
-
-  Future<HttpTransportResponse> _transportRequest({
-    required String method,
-    required String path,
-    required Map<String, String> headers,
-    Object? body,
   }) {
-    switch (method) {
-      case 'GET':
-        return _transport.get(
-          path,
-          headers: headers,
+    return _authService.authenticatedRequest((accessToken) async {
+      final headers = <String, String>{
+        'User-Agent': userAgent,
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $accessToken',
+      };
+      final response = await switch (method) {
+        'GET' => _transport.get(path, headers: headers),
+        'POST' => _transport.post(path, headers: headers, body: body),
+        'PUT' => _transport.put(path, headers: headers, body: body),
+        _ => throw UnsupportedError('HTTP method $method is not supported.'),
+      };
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw ApiException.fromResponse(
+          statusCode: response.statusCode,
+          body: response.body,
         );
-
-      case 'POST':
-        return _transport.post(
-          path,
-          headers: headers,
-          body: body,
-        );
-
-      default:
-        throw UnsupportedError('HTTP method $method is not supported.');
-    }
+      }
+      return response;
+    });
   }
 
-  Map<String, dynamic> _decodeJson(
-    HttpTransportResponse response,
-  ) {
-    _checkResponse(response);
-
+  Map<String, dynamic> _decodeJson(HttpTransportResponse response) {
     final decoded = jsonDecode(response.body);
-
     if (decoded is! Map<String, dynamic>) {
-      throw const FormatException(
-        'Expected JSON object.',
-      );
+      throw const FormatException('Expected StdResponse JSON object.');
     }
-
     return decoded;
   }
 
-  List<dynamic> _decodeJsonList(
-    HttpTransportResponse response,
-  ) {
-    _checkResponse(response);
-
-    final decoded = jsonDecode(response.body);
-
-    if (decoded is! List<dynamic>) {
-      throw const FormatException(
-        'Expected JSON array.',
-      );
+  List<dynamic> _decodeJsonList(HttpTransportResponse response) {
+    final data = _decodeJson(response)['data'];
+    if (data is! List<dynamic>) {
+      throw const FormatException('Expected StdResponse.data array.');
     }
-
-    return decoded;
-  }
-
-  void _checkResponse(HttpTransportResponse response) {
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return;
-    }
-
-    throw ApiException(
-      statusCode: response.statusCode,
-      message: response.body,
-    );
+    return data;
   }
 }

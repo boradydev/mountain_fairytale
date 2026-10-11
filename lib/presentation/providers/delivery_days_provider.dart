@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/presentation/providers/session_change_notifier.dart';
 import 'package:mountain_fairytale/presentation/providers/abcs/repos/delivery_day.dart';
 import 'package:mountain_fairytale/infra/repos/delivery_day/models/delivery_day_model.dart';
 
 enum DeliveryStatus { initial, loading, success, failure }
 
-class DeliveryDaysProvider extends ChangeNotifier {
+class DeliveryDaysProvider extends SessionChangeNotifier {
   final DeliveryDayRepository _repository;
 
   DeliveryDaysProvider(this._repository);

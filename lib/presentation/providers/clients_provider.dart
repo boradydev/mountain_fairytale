@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/presentation/providers/session_change_notifier.dart';
 import 'package:mountain_fairytale/infra/repos/clients/models/client_model.dart';
 import 'package:mountain_fairytale/presentation/providers/abcs/repos/client_contracts.dart';
 
 enum ClientStatus { initial, loading, success, failure }
 
-class ClientsProvider extends ChangeNotifier {
+class ClientsProvider extends SessionChangeNotifier {
   final ClientRepository _repository;
 
   ClientsProvider(this._repository);

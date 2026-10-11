@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:mountain_fairytale/presentation/providers/session_change_notifier.dart';
 import 'package:mountain_fairytale/infra/repos/audit_log/models/audit_event_model.dart';
 import 'package:mountain_fairytale/presentation/providers/abcs/repos/audit_log_contracts.dart';
 
@@ -9,7 +9,7 @@ enum AuditLogStatus {
   failure,
 }
 
-class AuditLogProvider extends ChangeNotifier {
+class AuditLogProvider extends SessionChangeNotifier {
   final AuditLogRepository _repository;
 
   AuditLogProvider(this._repository);
