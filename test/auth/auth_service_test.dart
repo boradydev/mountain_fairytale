@@ -6,7 +6,7 @@ import 'package:mountain_fairytale/infra/auth/auth_service_impl.dart';
 import 'package:mountain_fairytale/infra/http/api_client.dart';
 import 'package:mountain_fairytale/infra/http/api_exception.dart';
 import 'package:mountain_fairytale/infra/http/http_transport.dart';
-import 'package:mountain_fairytale/presentation/providers/auth_provider.dart';
+import 'package:mountain_fairytale/features/auth/ui/auth_provider.dart';
 
 import 'package:mountain_fairytale/infra/repos/auth/models/auth_tokens_model.dart';
 

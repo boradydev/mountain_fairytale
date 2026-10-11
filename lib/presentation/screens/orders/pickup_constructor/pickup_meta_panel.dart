@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/core/utils/datetime_extensions.dart';
-import 'package:mountain_fairytale/presentation/providers/pickup_constructor_provider.dart';
+import 'package:mountain_fairytale/features/pickup/ui/pickup_constructor_provider.dart';
 import 'package:provider/provider.dart';
 
 class PickupMetaPanel extends StatefulWidget {

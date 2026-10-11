@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mountain_fairytale/presentation/providers/auth_provider.dart';
+import 'package:mountain_fairytale/features/auth/ui/auth_provider.dart';
 import 'package:provider/provider.dart';
 
 class ChangePasswordDialog extends StatefulWidget {

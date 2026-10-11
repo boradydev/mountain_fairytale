@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/infra/repos/payment_methods/models/payment_method_model.dart';
 import 'package:mountain_fairytale/features/clients/ui/clients_provider.dart';
-import 'package:mountain_fairytale/presentation/providers/order_points_provider.dart';
+import 'package:mountain_fairytale/features/delivery_route/ui/order_points_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/common/payment_method_dialog.dart';
 import 'package:mountain_fairytale/presentation/screens/orders/common/task_dialogs.dart';
 import 'package:mountain_fairytale/presentation/screens/orders/route_constructor/task_item_row.dart';

@@ -3,7 +3,7 @@ import 'package:mountain_fairytale/infra/repos/payment_methods/models/payment_me
 import 'package:mountain_fairytale/infra/repos/pickup/models/pickup_sheet_model.dart';
 import 'package:mountain_fairytale/infra/repos/products/models/product_model.dart';
 import 'package:mountain_fairytale/features/pickup/ui/pickup_abcs.dart';
-import 'package:mountain_fairytale/presentation/providers/order_points_provider.dart';
+import 'package:mountain_fairytale/features/delivery_route/ui/order_points_provider.dart';
 
 class PickupConstructorProvider extends OrderPointsProvider {
   final PickupRepository _pickupRepo;

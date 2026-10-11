@@ -4,8 +4,8 @@ import 'package:mountain_fairytale/infra/repos/drivers/models/driver_model.dart'
 import 'package:mountain_fairytale/features/cars/ui/car_abcs.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/delivery_route_abcs.dart';
 import 'package:mountain_fairytale/features/drivers/ui/driver_abcs.dart';
-import 'package:mountain_fairytale/features/delivery_route/ui/services.dart';
-import 'package:mountain_fairytale/presentation/providers/order_points_provider.dart';
+import 'package:mountain_fairytale/features/delivery_route/ui/delivery_route_abcs.dart';
+import 'package:mountain_fairytale/features/delivery_route/ui/order_points_provider.dart';
 
 class RouteConstructorProvider extends OrderPointsProvider {
   // 1. Объявляем ТОЛЬКО свои собственные репозитории, которых нет в родителе

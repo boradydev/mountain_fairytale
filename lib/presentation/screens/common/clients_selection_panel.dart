@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/features/clients/ui/clients_provider.dart';
-import 'package:mountain_fairytale/presentation/providers/order_points_provider.dart';
+import 'package:mountain_fairytale/features/delivery_route/ui/order_points_provider.dart';
 import 'package:mountain_fairytale/features/clients/ui/client_dialog.dart';
 import 'package:provider/provider.dart';
 

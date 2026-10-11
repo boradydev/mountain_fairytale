@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/l10n/app_localizations.dart';
 import 'package:mountain_fairytale/features/clients/ui/clients_provider.dart';
-import 'package:mountain_fairytale/presentation/providers/auth_provider.dart';
+import 'package:mountain_fairytale/features/auth/ui/auth_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/login/change_password_dialog.dart';
-import 'package:mountain_fairytale/presentation/providers/delivery_days_provider.dart';
+import 'package:mountain_fairytale/features/delivery_days/ui/delivery_days_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/audit_log/audit_log_screen.dart';
 import 'package:mountain_fairytale/presentation/screens/delivery_days/client_list.dart';
 import 'package:mountain_fairytale/presentation/screens/delivery_days/delivery_day_list.dart';

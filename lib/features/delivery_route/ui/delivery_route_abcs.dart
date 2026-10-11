@@ -22,3 +22,7 @@ abstract interface class DeliveryRouteRepository {
 
   Future<void> deleteRouteSheet(int id);
 }
+
+abstract class RoutePrintService {
+  Future<void> printRouteSheet(DeliveryRouteSheet sheet);
+}

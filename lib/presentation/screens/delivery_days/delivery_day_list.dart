@@ -7,9 +7,9 @@ import 'package:mountain_fairytale/infra/repos/pickup/models/pickup_sheet_model.
 import 'package:mountain_fairytale/infra/repos/products/models/product_model.dart';
 import 'package:mountain_fairytale/l10n/app_localizations.dart';
 import 'package:mountain_fairytale/features/products/ui/product_abcs.dart';
-import 'package:mountain_fairytale/presentation/providers/delivery_days_provider.dart';
-import 'package:mountain_fairytale/presentation/providers/pickup_constructor_provider.dart';
-import 'package:mountain_fairytale/presentation/providers/route_constructor_provider.dart';
+import 'package:mountain_fairytale/features/delivery_days/ui/delivery_days_provider.dart';
+import 'package:mountain_fairytale/features/pickup/ui/pickup_constructor_provider.dart';
+import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_provider.dart';
 import 'package:mountain_fairytale/presentation/screens/delivery_days/select_delivery_type_dialog.dart';
 import 'package:mountain_fairytale/presentation/screens/delivery_days/select_route_dialog.dart';
 import 'package:mountain_fairytale/presentation/screens/orders/pickup_constructor/pickup_constructor_screen.dart';

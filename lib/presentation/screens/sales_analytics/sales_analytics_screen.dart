@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/infra/repos/sales_representative_commissions/models/sales_representative_commission_model.dart';
-import 'package:mountain_fairytale/presentation/providers/sales_representative_commission_provider.dart';
-import 'package:mountain_fairytale/presentation/providers/sales_representative_clients_provider.dart';
+import 'package:mountain_fairytale/features/sales_representative_commissions/ui/sales_representative_commission_provider.dart';
+import 'package:mountain_fairytale/features/sales_representative_clients/ui/sales_representative_clients_provider.dart';
 import 'package:mountain_fairytale/presentation/widgets/locate_toggle_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/base_card_widget.dart';
