@@ -1,4 +1,4 @@
-import 'package:mountain_fairytale/infra/repos/audit_log/models/audit_event_model.dart';
+import 'package:mountain_fairytale/features/audit_log/data/audit_event_model.dart';
 
 abstract interface class AuditLogDataSource {
   Future<List<Map<String, dynamic>>> getAuditEvents({

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/features/audit_log/ui/audit_log_provider.dart';
-import 'package:mountain_fairytale/presentation/screens/audit_log/audit_event_row.dart';
+import 'package:mountain_fairytale/features/audit_log/ui/audit_event_row.dart';
 import 'package:provider/provider.dart';
 
 class AuditLogScreen extends StatefulWidget {

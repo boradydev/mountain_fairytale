@@ -1,4 +1,4 @@
-import 'package:mountain_fairytale/features/audit_log/audit_log_abcs.dart';
+import 'package:mountain_fairytale/features/audit_log/audit_event_abcs.dart';
 
 class DemoAuditLogDataSource implements AuditLogDataSource {
   late final List<Map<String, dynamic>> _events = _generateEvents();

@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:mountain_fairytale/features/auth/auth_abcs.dart';
-import 'package:mountain_fairytale/infra/http/api_exception.dart';
-import 'package:mountain_fairytale/infra/http/http_transport.dart';
+import 'package:mountain_fairytale/core/network/api_exception.dart';
+import 'package:mountain_fairytale/core/network/http_transport.dart';
 
 class ApiClient {
   final HttpTransport _transport;

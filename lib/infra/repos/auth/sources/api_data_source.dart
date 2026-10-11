@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:mountain_fairytale/infra/http/api_exception.dart';
-import 'package:mountain_fairytale/infra/http/http_transport.dart';
+import 'package:mountain_fairytale/core/network/api_exception.dart';
+import 'package:mountain_fairytale/core/network/http_transport.dart';
 import 'package:mountain_fairytale/infra/repos/auth/models/auth_tokens_model.dart';
 import 'package:mountain_fairytale/infra/repos/auth/models/auth_user_model.dart';
 import 'package:mountain_fairytale/infra/repos/auth/models/current_employee_model.dart';

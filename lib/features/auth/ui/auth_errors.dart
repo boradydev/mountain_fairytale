@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:mountain_fairytale/infra/http/api_exception.dart';
+import 'package:mountain_fairytale/core/network/api_exception.dart';
 
 class SessionChangedException implements Exception {
   const SessionChangedException();
