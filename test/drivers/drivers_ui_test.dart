@@ -351,7 +351,7 @@ void main() {
     },
   );
   testWidgets(
-    'inactive duplicate offers activation before saving and cancel preserves form',
+    'duplicate warning offers activation after submit and cancel preserves form',
     (tester) async {
       final repo = _Drivers();
       final provider = makeProvider(repo)..drivers = [active, inactive];
@@ -366,6 +366,11 @@ void main() {
       await tester.enterText(field, 'Иванов');
       FocusManager.instance.primaryFocus!.unfocus();
       await tester.pumpAndSettle();
+      expect(find.text('Активировать'), findsNothing);
+      await tester.tap(find.widgetWithText(FilledButton, 'Добавить'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.text('Найден водитель с похожим именем'), findsOneWidget);
       expect(find.text('Активировать'), findsOneWidget);
       await tester.tap(find.text('Активировать'));
       await tester.pump();
@@ -377,6 +382,10 @@ void main() {
       expect(repo.patches, 0);
       expect(find.byType(DriverDialog), findsOneWidget);
       expect(tester.widget<TextFormField>(field).controller!.text, 'Иванов');
+      expect(find.text('Активировать'), findsNothing);
+      await tester.tap(find.widgetWithText(FilledButton, 'Добавить'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
       await tester.tap(find.text('Активировать'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
