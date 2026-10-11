@@ -7,6 +7,7 @@ import 'package:mountain_fairytale/features/cars/ui/car_dialog.dart';
 import 'package:mountain_fairytale/features/drivers/ui/driver_dialog.dart';
 import 'package:mountain_fairytale/shared/widgets/dropdown_widget.dart';
 import 'package:provider/provider.dart';
+import 'package:mountain_fairytale/shared/widgets/confirm_dialog.dart';
 
 class RouteMetaPanel extends StatefulWidget {
   final GlobalKey<FormState> formKey;
@@ -18,6 +19,37 @@ class RouteMetaPanel extends StatefulWidget {
 }
 
 class _RouteMetaPanelState extends State<RouteMetaPanel> {
+  int _driverSelectionVersion = 0;
+
+  Future<void> _selectDriver(Driver? driver) async {
+    final provider = context.read<RouteConstructorProvider>();
+    if (driver == null || driver.isActive) {
+      provider.selectDriver(driver);
+      return;
+    }
+    final confirmed = await ConfirmDialog.show(
+      context,
+      title: 'Водитель неактивен',
+      content: 'Активировать «${driver.name}» и выбрать для маршрута?',
+      confirmText: 'Активировать и выбрать',
+    );
+    if (!mounted) return;
+    if (confirmed) {
+      final success = await provider.activateAndSelectDriver(driver);
+      if (!mounted) return;
+      if (!success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Не удалось активировать водителя. Повторите попытку.',
+            ),
+          ),
+        );
+      }
+    }
+    setState(() => _driverSelectionVersion++);
+  }
+
   // Метод открытия диалога для водителя
   Future<void> _showDriverDialog(BuildContext context, {Driver? driver}) async {
     await showDialog<void>(
@@ -66,20 +98,66 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
 
           // Водитель
           AppDropdown<Driver>(
+            key: ValueKey(_driverSelectionVersion),
             label: 'Водитель *',
+            showEdit: true,
+            trailingAction: Tooltip(
+              message: 'Показывать неактивных водителей',
+              child: FilterChip(
+                label: const Text('Неактивные'),
+                selected: provider.showInactiveDrivers,
+                onSelected: provider.isLoadingDrivers
+                    ? null
+                    : provider.toggleInactiveDrivers,
+              ),
+            ),
             items: provider.drivers,
             value: provider.selectedDriver,
             itemLabelBuilder: (driver) => driver.name,
-            onChanged: provider.selectDriver,
+            itemBuilder: (driver) => Text(
+              driver.isActive ? driver.name : '${driver.name} — Неактивен',
+              overflow: TextOverflow.ellipsis,
+              style: driver.isActive
+                  ? null
+                  : TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+            ),
+            onChanged: provider.isLoadingDrivers ? (_) {} : _selectDriver,
             validator: (value) => value == null ? 'Выберите водителя' : null,
-            onAdd: () => _showDriverDialog(context),
-            onEdit: provider.selectedDriver == null
+            onAdd: provider.isLoadingDrivers
+                ? null
+                : () => _showDriverDialog(context),
+            onEdit: provider.selectedDriver == null || provider.isLoadingDrivers
                 ? null
                 : () => _showDriverDialog(
                     context,
                     driver: provider.selectedDriver,
                   ),
           ),
+
+          if (provider.selectedDriver == null && provider.driverName.isNotEmpty)
+            Text(
+              'В маршрутном листе: ${provider.driverName}. Выберите активного водителя для продолжения.',
+            ),
+          if (provider.isLoadingDrivers) const LinearProgressIndicator(),
+          if (provider.driverError != null)
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    provider.driverError!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: provider.loadDrivers,
+                  child: const Text('Повторить'),
+                ),
+              ],
+            ),
 
           const SizedBox(height: 12),
 

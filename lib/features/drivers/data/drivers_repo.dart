@@ -7,13 +7,17 @@ class DriverRepositoryImpl implements DriverRepository {
   DriverRepositoryImpl(this.dataSource);
 
   @override
-  Future<List<Driver>> getAvailableDrivers() async {
-    final list = await dataSource.getAllDrivers();
+  Future<List<Driver>> getAvailableDrivers({
+    bool includeDeactivated = false,
+  }) async {
+    final list = await dataSource.getAllDrivers(
+      includeDeactivated: includeDeactivated,
+    );
     return list.map(Driver.fromJson).toList();
   }
 
   @override
-  Future<Driver> getDriverById(int id) async {
+  Future<Driver> getDriverById(String id) async {
     final json = await dataSource.getDriverById(id);
     return Driver.fromJson(json);
   }
@@ -25,14 +29,14 @@ class DriverRepositoryImpl implements DriverRepository {
   }
 
   @override
-  Future<Driver> updateDriver(int id, UpdateDriverRequest request) async {
+  Future<Driver> updateDriver(String id, UpdateDriverRequest request) async {
     final json = await dataSource.patchDriver(id, request.toJson());
     return Driver.fromJson(json);
   }
 
   @override
-  Future<void> deleteDriver(int id) async {
-    await dataSource.deleteDriver(id);
+  Future<void> deactivateDriver(String id) async {
+    await dataSource.deactivateDriver(id);
   }
 
   @override

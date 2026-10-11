@@ -11,22 +11,30 @@ class DemoDriverDataSource implements DriverDataSource {
     : _assetBundle = assetBundle ?? rootBundle;
 
   @override
-  Future<List<Map<String, dynamic>>> getAllDrivers() async {
+  Future<List<Map<String, dynamic>>> getAllDrivers({
+    bool includeDeactivated = false,
+  }) async {
     await Future.delayed(const Duration(milliseconds: 40));
-    if (_driversCache != null) return _driversCache!;
+    if (_driversCache != null) {
+      return _driversCache!
+          .where((d) => includeDeactivated || d['isActive'] == true)
+          .toList();
+    }
     final jsonString = await _assetBundle.loadString(
       'assets/demo/driver/drivers_data.json',
     );
     _driversCache = List<Map<String, dynamic>>.from(jsonDecode(jsonString));
-    return _driversCache!;
+    return _driversCache!
+        .where((d) => includeDeactivated || d['isActive'] == true)
+        .toList();
   }
 
   @override
-  Future<Map<String, dynamic>> getDriverById(int id) async {
+  Future<Map<String, dynamic>> getDriverById(String id) async {
     await Future.delayed(const Duration(milliseconds: 30));
     if (_driversCache == null) await getAllDrivers();
     return _driversCache!.firstWhere(
-      (e) => e['id'] == id,
+      (e) => e['driverId'] == id,
       orElse: () => throw Exception('Driver not found'),
     );
   }
@@ -37,25 +45,25 @@ class DemoDriverDataSource implements DriverDataSource {
   ) async {
     await Future.delayed(const Duration(milliseconds: 60));
     if (_driversCache == null) await getAllDrivers();
-    final newId = _driversCache!.isEmpty
-        ? 1
-        : _driversCache!
-                  .map((item) => int.parse(item['id'].toString()))
-                  .reduce((a, b) => a > b ? a : b) +
-              1;
-    final newDriver = {...driverJson, 'id': newId};
+    final newDriver = {
+      ...driverJson,
+      'driverId':
+          '00000000-0000-4000-8000-${DateTime.now().microsecondsSinceEpoch.toRadixString(16).padLeft(12, '0').substring(0, 12)}',
+      'createdAt': DateTime.now().toIso8601String(),
+      'isActive': true,
+    };
     _driversCache!.insert(0, newDriver);
     return newDriver;
   }
 
   @override
   Future<Map<String, dynamic>> patchDriver(
-    int id,
+    String id,
     Map<String, dynamic> json,
   ) async {
     await Future.delayed(const Duration(milliseconds: 60));
     if (_driversCache == null) await getAllDrivers();
-    final index = _driversCache!.indexWhere((e) => e['id'] == id);
+    final index = _driversCache!.indexWhere((e) => e['driverId'] == id);
     if (index == -1) throw Exception('Driver not found');
     final updated = Map<String, dynamic>.from(_driversCache![index]);
     json.forEach((key, value) {
@@ -66,10 +74,10 @@ class DemoDriverDataSource implements DriverDataSource {
   }
 
   @override
-  Future<void> deleteDriver(int id) async {
+  Future<void> deactivateDriver(String id) async {
     await Future.delayed(const Duration(milliseconds: 40));
     if (_driversCache == null) await getAllDrivers();
-    _driversCache!.removeWhere((e) => e['id'] == id);
+    await patchDriver(id, {'isActive': false});
   }
 
   @override

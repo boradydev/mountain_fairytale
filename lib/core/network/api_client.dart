@@ -21,6 +21,9 @@ class ApiClient {
   Future<Map<String, dynamic>> post(String path, {Object? body}) async =>
       _decodeJson(await _send(method: 'POST', path: path, body: body));
 
+  Future<Map<String, dynamic>> patch(String path, {Object? body}) async =>
+      _decodeJson(await _send(method: 'PATCH', path: path, body: body));
+
   Future<Map<String, dynamic>> put(String path, {Object? body}) async =>
       _decodeJson(await _send(method: 'PUT', path: path, body: body));
 
@@ -45,6 +48,7 @@ class ApiClient {
         'GET' => _transport.get(path, headers: headers),
         'POST' => _transport.post(path, headers: headers, body: body),
         'PUT' => _transport.put(path, headers: headers, body: body),
+        'PATCH' => _transport.patch(path, headers: headers, body: body),
         _ => throw UnsupportedError('HTTP method $method is not supported.'),
       };
       if (response.statusCode < 200 || response.statusCode >= 300) {

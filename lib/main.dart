@@ -23,7 +23,7 @@ import 'package:mountain_fairytale/features/delivery_days/data/delivery_days_dem
 import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_repo.dart';
 import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_demo_data.dart';
 import 'package:mountain_fairytale/features/drivers/data/drivers_repo.dart';
-import 'package:mountain_fairytale/features/drivers/data/drivers_demo_data.dart';
+import 'package:mountain_fairytale/features/drivers/data/drivers_api_data_source.dart';
 import 'package:mountain_fairytale/features/payment_methods/data/payment_method_repo.dart';
 import 'package:mountain_fairytale/features/payment_methods/data/payment_method_demo_data.dart';
 import 'package:mountain_fairytale/features/pickup/data/pickup_repo.dart';
@@ -91,7 +91,6 @@ Future<void> main() async {
   // 1. ИНИЦИАЛИЗАЦИЯ АТОМАРНЫХ ДАННЫХ (DATA SOURCES)
   // Каждый источник независим, хранит свой кэш и имитирует сетевые запросы
   // ===========================================================================
-  final driverDataSource = DemoDriverDataSource();
   final carDataSource = DemoCarDataSource();
   final productDataSource = DemoProductDataSource();
   final deliveryDayDataSource = DemoDeliveryDataSource();
@@ -114,7 +113,6 @@ Future<void> main() async {
   // 2. ИНИЦИАЛИЗАЦИЯ РЕПОЗИТОРИЕВ
   // Принимают сущности от UI, конвертируют в JSON-Map и общаются с Data Sources
   // ===========================================================================
-  final driverRepository = DriverRepositoryImpl(driverDataSource);
   final carRepository = CarRepositoryImpl(carDataSource);
   final productRepository = ProductRepositoryImpl(productDataSource);
   final routeRepository = DeliveryRouteRepositoryImpl(routeDataSource);
@@ -174,6 +172,8 @@ Future<void> main() async {
     authService: authService,
     userAgent: 'MountainFairytale/1.0 Windows',
   );
+
+  final driverRepository = DriverRepositoryImpl(ApiDriverDataSource(apiClient));
 
   // ===========================================================================
   // 4. ЗАПУСК ПРИЛОЖЕНИЯ И ВНЕДРЕНИЕ ЗАВИСИМОСТЕЙ (DI)

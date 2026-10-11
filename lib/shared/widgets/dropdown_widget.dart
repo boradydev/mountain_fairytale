@@ -12,6 +12,9 @@ class AppDropdown<T> extends StatelessWidget {
   final VoidCallback? onEdit;
   final String? Function(T?)? validator;
   final IconData? prefixIcon;
+  final bool showEdit;
+  final Widget? trailingAction;
+  final Widget Function(T)? itemBuilder;
 
   const AppDropdown({
     super.key,
@@ -25,6 +28,9 @@ class AppDropdown<T> extends StatelessWidget {
     this.onEdit,
     this.validator,
     this.prefixIcon,
+    this.showEdit = false,
+    this.trailingAction,
+    this.itemBuilder,
   });
 
   @override
@@ -46,16 +52,19 @@ class AppDropdown<T> extends StatelessWidget {
                 tooltip: 'Добавить $label',
                 onPressed: onAdd,
               ),
-            if (onEdit != null)
+            if (showEdit || onEdit != null)
               AppIconButton(
                 icon: Icons.edit_outlined,
                 tooltip: 'Редактировать выбранный элемент',
                 onPressed: onEdit,
               ),
+            ?trailingAction,
           ],
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<T>(
+          isExpanded: true,
+          key: ValueKey(value),
           initialValue: value,
           decoration: InputDecoration(
             border: const OutlineInputBorder(),
@@ -67,11 +76,13 @@ class AppDropdown<T> extends StatelessWidget {
           items: items.map((item) {
             return DropdownMenuItem<T>(
               value: item,
-              child: Text(
-                itemLabelBuilder != null
-                    ? itemLabelBuilder!(item)
-                    : item.toString(),
-              ),
+              child:
+                  itemBuilder?.call(item) ??
+                  Text(
+                    itemLabelBuilder != null
+                        ? itemLabelBuilder!(item)
+                        : item.toString(),
+                  ),
             );
           }).toList(),
           onChanged: onChanged,

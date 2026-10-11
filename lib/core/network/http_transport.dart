@@ -26,6 +26,12 @@ class HttpTransport {
     Object? body,
   }) => _send(method: 'POST', path: path, headers: headers, body: body);
 
+  Future<HttpTransportResponse> patch(
+    String path, {
+    Map<String, String>? headers,
+    Object? body,
+  }) => _send(method: 'PATCH', path: path, headers: headers, body: body);
+
   Future<HttpTransportResponse> put(
     String path, {
     Map<String, String>? headers,

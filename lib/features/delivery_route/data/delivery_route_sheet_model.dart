@@ -16,6 +16,7 @@ class DeliveryRouteSheet implements RouteDocument {
   @override
   final DateTime date;
   final String driverName;
+  final String? driverId;
   final int carId;
   final String carModelAndNumber;
   final double startMileage;
@@ -33,6 +34,7 @@ class DeliveryRouteSheet implements RouteDocument {
     this.id,
     required this.date,
     required this.driverName,
+    this.driverId,
     required this.carId,
     required this.carModelAndNumber,
     required this.startMileage,
@@ -44,6 +46,7 @@ class DeliveryRouteSheet implements RouteDocument {
     int? id,
     DateTime? date,
     String? driverName,
+    String? driverId,
     int? carId,
     String? carModelAndNumber,
     double? startMileage,
@@ -54,6 +57,7 @@ class DeliveryRouteSheet implements RouteDocument {
       id: id ?? this.id,
       date: date ?? this.date,
       driverName: driverName ?? this.driverName,
+      driverId: driverId ?? this.driverId,
       carId: carId ?? this.carId,
       carModelAndNumber: carModelAndNumber ?? this.carModelAndNumber,
       startMileage: startMileage ?? this.startMileage,

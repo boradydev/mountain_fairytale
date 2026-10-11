@@ -1,19 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/features/drivers/data/driver_model.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_provider.dart';
-import 'package:mountain_fairytale/shared/widgets/base_form_dialog_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/confirm_dialog.dart';
-import 'package:mountain_fairytale/shared/widgets/duplicate_check_status_widget.dart';
-import 'package:mountain_fairytale/shared/widgets/icon_button_widget.dart';
 import 'package:provider/provider.dart';
 
 class DriverDialog extends StatefulWidget {
   final Driver? driver;
-
   const DriverDialog({super.key, this.driver});
-
   bool get isEditMode => driver != null;
-
   @override
   State<DriverDialog> createState() => _DriverDialogState();
 }
@@ -22,162 +16,231 @@ class _DriverDialogState extends State<DriverDialog> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
   final _nameFocusNode = FocusNode();
-
-  bool _isCheckingDuplicate = false;
-  bool _duplicateChecked = false;
-  Driver? _duplicateDriver;
-
-  bool get _isEditMode => widget.driver != null;
+  bool _busy = false;
+  bool _checking = false;
+  String? _error;
+  String? _checkedName;
+  Driver? _duplicate;
+  int _checkVersion = 0;
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.driver?.name ?? '');
-    _nameFocusNode.addListener(_onFocusChange);
-  }
-
-  void _onFocusChange() {
-    if (!_nameFocusNode.hasFocus) {
-      _checkDuplicate();
-    }
-  }
-
-  Future<void> _checkDuplicate() async {
-    final name = _nameController.text.trim();
-    if (name.isEmpty) return;
-
-    if (_isEditMode &&
-        widget.driver!.name.trim().toLowerCase() == name.toLowerCase()) {
+    _nameFocusNode.addListener(() {
+      if (!_nameFocusNode.hasFocus && !_busy) _checkDuplicate();
+    });
+    _nameController.addListener(() {
+      _checkVersion++;
       setState(() {
-        _isCheckingDuplicate = false;
-        _duplicateChecked = true;
-        _duplicateDriver = null;
+        _duplicate = null;
+        _checkedName = null;
+        _checking = false;
+        _error = null;
       });
-      return;
-    }
-
-    setState(() {
-      _isCheckingDuplicate = true;
-      _duplicateChecked = false;
-      _duplicateDriver = null;
-    });
-
-    final duplicate = await context
-        .read<RouteConstructorProvider>()
-        .checkDriverDuplicate(name);
-
-    if (!mounted) return;
-
-    setState(() {
-      _isCheckingDuplicate = false;
-      _duplicateChecked = true;
-      _duplicateDriver = duplicate;
     });
   }
 
-  Future<void> _submitForm() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    final provider = context.read<RouteConstructorProvider>();
+  Future<bool> _checkDuplicate() async {
     final name = _nameController.text.trim();
-    final bool success;
-
-    if (_isEditMode) {
-      success = await provider.updateDriver(widget.driver!.id, name);
-    } else {
-      final created = await provider.addDriver(name);
-      success = created != null;
-    }
-
-    if (!mounted) return;
-
-    if (success) {
-      Navigator.of(context).pop();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Не удалось сохранить изменения')),
-      );
+    if (name.isEmpty || name.length > 120) return false;
+    final version = ++_checkVersion;
+    setState(() {
+      _checking = true;
+      _error = null;
+    });
+    try {
+      final duplicate = await context
+          .read<RouteConstructorProvider>()
+          .checkDriverDuplicate(name);
+      if (!mounted || version != _checkVersion) return false;
+      setState(() {
+        _checking = false;
+        _checkedName = name;
+        _duplicate = duplicate?.id == widget.driver?.id ? null : duplicate;
+      });
+      return true;
+    } catch (_) {
+      if (mounted && version == _checkVersion) {
+        setState(() {
+          _checking = false;
+          _error = 'Не удалось проверить похожие имена. Повторите попытку.';
+        });
+      }
+      return false;
     }
   }
 
-  Future<void> _deleteDriver() async {
-    if (widget.driver == null) return;
+  Future<void> _save() async {
+    if (_busy || !_formKey.currentState!.validate()) return;
+    final provider = context.read<RouteConstructorProvider>();
+    setState(() => _busy = true);
+    try {
+      if (!widget.isEditMode && _checkedName != _nameController.text.trim()) {
+        if (!await _checkDuplicate()) return;
+      }
+      if (!mounted) return;
+      if (!widget.isEditMode && _duplicate != null) {
+        final action = await showDialog<String>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Найден водитель с похожим именем'),
+            content: Text(
+              '${_duplicate!.name}\n${_duplicate!.isActive ? 'Активен' : 'Неактивен'}\nЭто может быть другой человек. Можно создать нового водителя.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Отмена'),
+              ),
+              if (!_duplicate!.isActive)
+                TextButton(
+                  onPressed: () => Navigator.pop(context, 'activate'),
+                  child: const Text('Активировать и выбрать'),
+                ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, 'create'),
+                child: const Text('Создать нового'),
+              ),
+            ],
+          ),
+        );
+        if (!mounted || action == null) return;
+        if (action == 'activate') {
+          final success = await provider.activateAndSelectDriver(_duplicate!);
+          if (!mounted) return;
+          if (success) {
+            Navigator.pop(context);
+          } else {
+            setState(
+              () => _error =
+                  'Не удалось активировать водителя. Повторите попытку.',
+            );
+          }
+          return;
+        }
+      }
+      final name = _nameController.text.trim();
+      final success = widget.isEditMode
+          ? await provider.updateDriver(widget.driver!.id, name)
+          : await provider.addDriver(name) != null;
+      if (!mounted) return;
+      if (success) {
+        Navigator.pop(context);
+      } else {
+        setState(
+          () => _error = 'Не удалось сохранить водителя. Проверьте соединение и повторите попытку.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
 
+  Future<void> _deactivate() async {
+    if (_busy) return;
+    final provider = context.read<RouteConstructorProvider>();
     final confirmed = await ConfirmDialog.show(
       context,
-      title: 'Удалить водителя?',
+      title: 'Деактивировать водителя?',
       content:
-          'Вы действительно хотите удалить водителя «${widget.driver!.name}»?',
-      confirmText: 'Удалить',
+          '«${widget.driver!.name}» станет недоступен для новых маршрутов. Запись и история сохранятся. Водителя можно активировать снова.',
+      confirmText: 'Деактивировать',
       destructive: true,
     );
-
     if (!confirmed || !mounted) return;
-
-    final success = await context.read<RouteConstructorProvider>().deleteDriver(
-      widget.driver!.id,
-    );
-
+    setState(() => _busy = true);
+    final success = await provider.deactivateDriver(widget.driver!.id);
     if (!mounted) return;
-
     if (success) {
-      Navigator.of(context).pop();
+      Navigator.pop(context);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Не удалось удалить водителя')),
-      );
+      setState(() {
+        _busy = false;
+        _error = 'Не удалось деактивировать водителя. Повторите попытку.';
+      });
     }
   }
 
   @override
   void dispose() {
+    _checkVersion++;
     _nameController.dispose();
     _nameFocusNode.dispose();
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) {
-    return BaseFormDialog(
-      title: _isEditMode ? 'Редактирование водителя' : 'Добавление водителя',
-      submitButtonText: _isEditMode ? 'Сохранить' : 'Добавить',
-      formKey: _formKey,
-      onSubmit: _submitForm,
-      leadingAction: _isEditMode
-          ? AppIconButton(
-              icon: Icons.delete_outline,
-              tooltip: 'Удалить водителя',
-              destructive: true,
-              onPressed: _deleteDriver,
-            )
-          : null,
-      children: [
-        DuplicateCheckStatusWidget(
-          isChecking: _isCheckingDuplicate,
-          isChecked: _duplicateChecked,
-          hasDuplicate: _duplicateDriver != null,
-          warningText: _duplicateDriver != null
-              ? 'Водитель уже существует: ${_duplicateDriver!.name}'
-              : '',
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: _nameController,
-          focusNode: _nameFocusNode,
-          decoration: const InputDecoration(
-            labelText: 'ФИО водителя *',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.person_outline),
-            hintText: 'Иванов Иван Иванович',
+  Widget build(BuildContext context) => PopScope(
+    canPop: !_busy,
+    child: AlertDialog(
+      title: Text(
+        widget.isEditMode ? 'Редактирование водителя' : 'Добавление водителя',
+      ),
+      content: SizedBox(
+        width: 450,
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (_checking || _busy) const LinearProgressIndicator(),
+                if (_duplicate != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Text(
+                      'Найден водитель с похожим именем: ${_duplicate!.name}${_duplicate!.isActive ? '' : ' — Неактивен'}',
+                    ),
+                  ),
+                TextFormField(
+                  controller: _nameController,
+                  focusNode: _nameFocusNode,
+                  enabled: !_busy,
+                  maxLength: 120,
+                  decoration: const InputDecoration(
+                    labelText: 'ФИО водителя *',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.person_outline),
+                    hintText: 'Иванов Иван Иванович',
+                  ),
+                  validator: (value) => value == null || value.trim().isEmpty
+                      ? 'Введите ФИО'
+                      : value.trim().length > 120
+                      ? 'Не более 120 символов'
+                      : null,
+                ),
+                if (_error != null)
+                  Text(
+                    _error!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+              ],
+            ),
           ),
-          validator: (value) {
-            if (value == null || value.trim().isEmpty) {
-              return 'Введите ФИО';
-            }
-            return null;
-          },
+        ),
+      ),
+      actions: [
+        if (widget.isEditMode)
+          TextButton(
+            onPressed: _busy ? null : _deactivate,
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: const Text('Деактивировать'),
+          ),
+        TextButton(
+          onPressed: _busy ? null : () => Navigator.pop(context),
+          child: const Text('Отмена'),
+        ),
+        FilledButton(
+          onPressed: _busy ? null : _save,
+          child: Text(widget.isEditMode ? 'Сохранить' : 'Добавить'),
         ),
       ],
-    );
-  }
+    ),
+  );
 }

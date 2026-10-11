@@ -1,10 +1,10 @@
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mountain_fairytale/features/cars/data/cars_model.dart';
 import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_sheet_model.dart';
 import 'package:mountain_fairytale/features/drivers/data/driver_model.dart';
 import 'package:mountain_fairytale/features/cars/cars_abcs.dart';
 import 'package:mountain_fairytale/features/delivery_route/delivery_route_abcs.dart';
 import 'package:mountain_fairytale/features/drivers/drivers_abcs.dart';
-import 'package:mountain_fairytale/features/delivery_route/delivery_route_abcs.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/order_points_provider.dart';
 
 class RouteConstructorProvider extends OrderPointsProvider {
@@ -29,6 +29,71 @@ class RouteConstructorProvider extends OrderPointsProvider {
 
   List<Car> cars = [];
   List<Driver> drivers = [];
+  bool showInactiveDrivers = false;
+  bool isLoadingDrivers = false;
+  String? driverError;
+  int _driverLoadVersion = 0;
+
+  Future<void> loadDrivers() async {
+    final version = ++_driverLoadVersion;
+    isLoadingDrivers = true;
+    driverError = null;
+    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      showInactiveDrivers = prefs.getBool('show_inactive_drivers') ?? false;
+      final loaded = await _driverRepo.getAvailableDrivers(
+        includeDeactivated: showInactiveDrivers,
+      );
+      if (version != _driverLoadVersion) return;
+      drivers = loaded;
+      final selectedId = selectedDriver?.id;
+      if (selectedId != null) {
+        final matches = drivers.where((d) => d.id == selectedId && d.isActive);
+        selectedDriver = matches.isEmpty ? null : matches.first;
+        driverName = selectedDriver?.name ?? '';
+      }
+    } catch (_) {
+      if (version == _driverLoadVersion) {
+        driverError = 'Не удалось загрузить водителей. Повторите попытку.';
+      }
+    } finally {
+      if (version == _driverLoadVersion) {
+        isLoadingDrivers = false;
+        notifyListeners();
+      }
+    }
+  }
+
+  Future<void> toggleInactiveDrivers(bool value) async {
+    if (isLoadingDrivers) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('show_inactive_drivers', value);
+    await loadDrivers();
+  }
+
+  void _applyDriver(Driver driver) {
+    drivers = drivers.where((d) => d.id != driver.id).toList();
+    if (driver.isActive || showInactiveDrivers) drivers.insert(0, driver);
+    if (selectedDriver?.id == driver.id) {
+      selectDriver(driver.isActive ? driver : null);
+    }
+    notifyListeners();
+  }
+
+  Future<bool> activateAndSelectDriver(Driver driver) async {
+    try {
+      final updated = await _driverRepo.updateDriver(
+        driver.id,
+        const UpdateDriverRequest(isActive: true),
+      );
+      _applyDriver(updated);
+      selectDriver(updated);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
 
   bool isOldDocument = false;
 
@@ -60,7 +125,7 @@ class RouteConstructorProvider extends OrderPointsProvider {
 
     try {
       cars = await _carRepo.getAvailableCars();
-      drivers = await _driverRepo.getAvailableDrivers();
+      await loadDrivers();
 
       products = await productRepo.getAvailableProducts();
       paymentMethods = await paymentMethodRepo.getAllPaymentMethods();
@@ -71,6 +136,7 @@ class RouteConstructorProvider extends OrderPointsProvider {
   }
 
   void selectDriver(Driver? driver) {
+    if (driver != null && !driver.isActive) return;
     selectedDriver = driver;
     driverName = driver?.name ?? '';
     notifyListeners();
@@ -138,7 +204,7 @@ class RouteConstructorProvider extends OrderPointsProvider {
     }
   }
 
-  Future<bool> updateDriver(int id, String name) async {
+  Future<bool> updateDriver(String id, String name) async {
     final normalizedName = name.trim();
     if (normalizedName.isEmpty) return false;
 
@@ -146,25 +212,20 @@ class RouteConstructorProvider extends OrderPointsProvider {
       final request = UpdateDriverRequest(name: normalizedName);
       final updatedDriver = await _driverRepo.updateDriver(id, request);
 
-      drivers = drivers.map((d) => d.id == id ? updatedDriver : d).toList();
-      selectDriver(updatedDriver);
+      _applyDriver(updatedDriver);
       return true;
     } catch (_) {
       return false;
     }
   }
 
-  Future<bool> deleteDriver(int id) async {
+  Future<bool> deactivateDriver(String id) async {
     try {
-      await _driverRepo.deleteDriver(id);
-      drivers = drivers.where((d) => d.id != id).toList();
-
-      // Если удалили текущего выбранного водителя — зануляем поле дропдауна
-      if (selectedDriver?.id == id) {
-        selectDriver(null);
-      } else {
-        notifyListeners();
-      }
+      final updated = await _driverRepo.updateDriver(
+        id,
+        const UpdateDriverRequest(isActive: false),
+      );
+      _applyDriver(updated);
       return true;
     } catch (_) {
       return false;
@@ -172,11 +233,7 @@ class RouteConstructorProvider extends OrderPointsProvider {
   }
 
   Future<Driver?> checkDriverDuplicate(String name) async {
-    try {
-      return await _driverRepo.checkDuplicate(name);
-    } catch (_) {
-      return null;
-    }
+    return _driverRepo.checkDuplicate(name);
   }
 
   Future<Car?> addCar({
@@ -259,7 +316,7 @@ class RouteConstructorProvider extends OrderPointsProvider {
     notifyListeners();
     try {
       cars = await _carRepo.getAvailableCars();
-      drivers = await _driverRepo.getAvailableDrivers();
+      await loadDrivers();
       products = await productRepo.getAvailableProducts();
       paymentMethods = await paymentMethodRepo.getAllPaymentMethods();
 
@@ -275,11 +332,19 @@ class RouteConstructorProvider extends OrderPointsProvider {
       final difference = now.difference(sheet.date).inDays;
       isOldDocument = difference >= 7;
 
-      selectedDriver = drivers.firstWhere(
-        (d) => d.name == sheet.driverName,
-        orElse: () => Driver(id: 0, name: sheet.driverName),
-      );
-      driverName = selectedDriver?.name ?? '';
+      final matches = drivers
+          .where(
+            (d) =>
+                d.isActive &&
+                (sheet.driverId != null
+                    ? d.id == sheet.driverId
+                    : d.name == sheet.driverName),
+          )
+          .toList();
+      // Legacy demo routes only store names. Do not invent an API identity or
+      // guess between different people with the same name.
+      selectedDriver = matches.length == 1 ? matches.single : null;
+      driverName = selectedDriver?.name ?? sheet.driverName;
 
       try {
         selectedCar = cars.firstWhere((c) => c.id == sheet.carId);
@@ -313,7 +378,10 @@ class RouteConstructorProvider extends OrderPointsProvider {
   }
 
   DeliveryRouteSheet? get currentRouteSheet {
-    if (selectedDriver == null || selectedCar == null || points.isEmpty) {
+    if (selectedDriver == null ||
+        !selectedDriver!.isActive ||
+        selectedCar == null ||
+        points.isEmpty) {
       return null;
     }
 
@@ -322,6 +390,7 @@ class RouteConstructorProvider extends OrderPointsProvider {
       // Применится существующий ID или null при создании нового
       date: selectedDate,
       driverName: selectedDriver!.name,
+      driverId: selectedDriver!.id,
       carId: selectedCar!.id,
       carModelAndNumber: '${selectedCar!.model} (${selectedCar!.number})',
       startMileage: startMileage,
