@@ -3,8 +3,8 @@ import 'package:mountain_fairytale/core/utils/datetime_extensions.dart';
 import 'package:mountain_fairytale/features/cars/data/cars_model.dart';
 import 'package:mountain_fairytale/features/drivers/data/driver_model.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_provider.dart';
-import 'package:mountain_fairytale/presentation/screens/common/car_dialog.dart';
-import 'package:mountain_fairytale/presentation/screens/common/driver_dialog.dart';
+import 'package:mountain_fairytale/features/cars/ui/car_dialog.dart';
+import 'package:mountain_fairytale/features/drivers/ui/driver_dialog.dart';
 import 'package:mountain_fairytale/presentation/widgets/dropdown_widget.dart';
 import 'package:provider/provider.dart';
 

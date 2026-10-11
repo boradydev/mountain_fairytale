@@ -4,7 +4,7 @@ import 'package:mountain_fairytale/features/clients/data/clients_model.dart';
 import 'package:mountain_fairytale/features/sales_representatives/data/sales_representative_model.dart';
 import 'package:mountain_fairytale/features/clients/ui/clients_provider.dart';
 import 'package:mountain_fairytale/features/sales_representatives/ui/sales_representative_provider.dart';
-import 'package:mountain_fairytale/presentation/screens/common/sales_rep_dialog.dart';
+import 'package:mountain_fairytale/features/sales_representatives/ui/sales_rep_dialog.dart';
 import 'package:mountain_fairytale/presentation/widgets/base_form_dialog_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/confirm_dialog.dart';
 import 'package:mountain_fairytale/presentation/widgets/duplicate_check_status_widget.dart';

@@ -49,9 +49,9 @@ import 'package:mountain_fairytale/features/sales_representative_clients/ui/sale
 import 'package:mountain_fairytale/features/sales_representative_commissions/ui/sales_representative_commission_provider.dart';
 import 'package:mountain_fairytale/features/sales_representatives/ui/sales_representative_provider.dart';
 import 'package:mountain_fairytale/presentation/providers/theme_provider.dart';
-import 'package:mountain_fairytale/presentation/screens/delivery_days/dashboard.dart';
+import 'package:mountain_fairytale/features/dashboard/ui/dashboard_screen.dart';
 import 'package:mountain_fairytale/features/products/products_abcs.dart';
-import 'package:mountain_fairytale/presentation/screens/login/login_screen.dart';
+import 'package:mountain_fairytale/features/auth/ui/login_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';

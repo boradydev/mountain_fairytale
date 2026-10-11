@@ -9,7 +9,7 @@ import 'package:mountain_fairytale/presentation/widgets/base_card_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/confirm_dialog.dart';
 import 'package:mountain_fairytale/presentation/widgets/app_notify.dart';
-import 'package:mountain_fairytale/presentation/screens/common/sales_rep_select_dialog.dart';
+import 'package:mountain_fairytale/features/sales_representatives/ui/sales_rep_select_dialog.dart';
 
 class SalesRepresentativeDetailsDialog extends StatelessWidget {
   const SalesRepresentativeDetailsDialog({super.key});

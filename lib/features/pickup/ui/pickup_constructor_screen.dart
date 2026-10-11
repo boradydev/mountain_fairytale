@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/presentation/widgets/app_notify.dart';
 import 'package:mountain_fairytale/features/pickup/ui/pickup_constructor_provider.dart';
-import 'package:mountain_fairytale/presentation/screens/common/clients_selection_panel.dart';
-import 'package:mountain_fairytale/presentation/screens/orders/pickup_constructor/pickup_meta_panel.dart';
-import 'package:mountain_fairytale/presentation/screens/orders/route_constructor/route_points_list.dart';
+import 'package:mountain_fairytale/features/clients/ui/clients_selection_panel.dart';
+import 'package:mountain_fairytale/features/pickup/ui/pickup_meta_panel.dart';
+import 'package:mountain_fairytale/features/delivery_route/ui/route_points_list.dart';
 import 'package:mountain_fairytale/presentation/widgets/locate_toggle_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
 import 'package:mountain_fairytale/presentation/widgets/theme_toggle_button.dart';
