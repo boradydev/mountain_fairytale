@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/core/utils/datetime_extensions.dart';
-import 'package:mountain_fairytale/features/clients/data/client_model.dart';
+import 'package:mountain_fairytale/features/clients/data/clients_model.dart';
 import 'package:mountain_fairytale/features/clients/ui/clients_provider.dart';
 import 'package:mountain_fairytale/features/clients/ui/client_dialog.dart';
 import 'package:mountain_fairytale/presentation/widgets/add_action_card.dart';

@@ -1,5 +1,5 @@
-import 'package:mountain_fairytale/features/cars/data/car_model.dart';
-import 'package:mountain_fairytale/features/cars/car_abcs.dart';
+import 'package:mountain_fairytale/features/cars/data/cars_model.dart';
+import 'package:mountain_fairytale/features/cars/cars_abcs.dart';
 
 class CarRepositoryImpl implements CarRepository {
   final CarDataSource dataSource;

@@ -1,11 +1,11 @@
 import 'package:mountain_fairytale/presentation/providers/session_change_notifier.dart';
 import 'package:flutter/material.dart';
-import 'package:mountain_fairytale/features/clients/data/client_model.dart';
+import 'package:mountain_fairytale/features/clients/data/clients_model.dart';
 import 'package:mountain_fairytale/infra/repos/delivery_route/models/delivery_task_item_model.dart';
 import 'package:mountain_fairytale/infra/repos/delivery_route/models/route_point_model.dart';
 import 'package:mountain_fairytale/infra/repos/payment_methods/models/payment_method_model.dart';
 import 'package:mountain_fairytale/infra/repos/products/models/product_model.dart';
-import 'package:mountain_fairytale/features/clients/ui/client_abcs.dart';
+import 'package:mountain_fairytale/features/clients/clients_abcs.dart';
 import 'package:mountain_fairytale/features/payment_methods/payment_method_abcs.dart';
 import 'package:mountain_fairytale/features/products/product_abcs.dart';
 import 'package:mountain_fairytale/features/clients/ui/clients_provider.dart';

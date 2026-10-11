@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'audit_event_model.dart';
+part of 'audit_events_model.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator

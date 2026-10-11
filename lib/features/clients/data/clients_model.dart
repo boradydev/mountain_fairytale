@@ -1,6 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 
-part 'client_model.g.dart';
+part 'clients_model.g.dart';
 
 /// Модель данных клиента для системы учета доставок.
 /// Содержит профиль клиента, информацию о последней активности

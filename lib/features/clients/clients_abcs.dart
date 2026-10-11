@@ -1,4 +1,4 @@
-import 'package:mountain_fairytale/features/clients/data/client_model.dart';
+import 'package:mountain_fairytale/features/clients/data/clients_model.dart';
 
 abstract interface class ClientDataSource {
   Future<List<Map<String, dynamic>>> getAllClients();

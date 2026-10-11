@@ -1,5 +1,5 @@
-import 'package:mountain_fairytale/features/clients/ui/client_abcs.dart';
-import 'package:mountain_fairytale/features/clients/data/client_model.dart';
+import 'package:mountain_fairytale/features/clients/clients_abcs.dart';
+import 'package:mountain_fairytale/features/clients/data/clients_model.dart';
 
 class ClientRepositoryImpl implements ClientRepository {
   final ClientDataSource dataSource;

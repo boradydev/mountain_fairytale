@@ -1,6 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 
-part 'audit_event_model.g.dart';
+part 'audit_events_model.g.dart';
 
 enum AuditAction {
   created,

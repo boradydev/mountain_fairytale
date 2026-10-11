@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
-import 'package:mountain_fairytale/features/clients/ui/client_abcs.dart';
+import 'package:mountain_fairytale/features/clients/clients_abcs.dart';
 
 class DemoClientDataSource implements ClientDataSource {
   final AssetBundle _assetBundle;

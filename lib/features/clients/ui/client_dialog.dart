@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/presentation/widgets/app_notify.dart';
-import 'package:mountain_fairytale/features/clients/data/client_model.dart';
+import 'package:mountain_fairytale/features/clients/data/clients_model.dart';
 import 'package:mountain_fairytale/infra/repos/sales_representatives/models/sales_representative_model.dart';
 import 'package:mountain_fairytale/features/clients/ui/clients_provider.dart';
 import 'package:mountain_fairytale/features/sales_representatives/ui/sales_representative_provider.dart';
