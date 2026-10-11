@@ -94,10 +94,20 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
 
   // Метод открытия диалога для водителя
   Future<void> _showDriverDialog(BuildContext context, {Driver? driver}) async {
+    Driver? openAfter;
     await showDialog<void>(
       context: context,
-      builder: (context) => DriverDialog(driver: driver),
+      builder: (dialogContext) => DriverDialog(
+        driver: driver,
+        onOpenDriver: (duplicate) {
+          openAfter = duplicate;
+          Navigator.of(dialogContext).pop();
+        },
+      ),
     );
+    if (openAfter != null && context.mounted) {
+      await _showDriverDialog(context, driver: openAfter);
+    }
   }
 
   // Метод открытия диалога для автомобиля

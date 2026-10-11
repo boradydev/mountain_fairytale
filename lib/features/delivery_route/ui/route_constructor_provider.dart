@@ -236,6 +236,12 @@ class RouteConstructorProvider extends OrderPointsProvider {
     notifyListeners();
   }
 
+  void selectExistingDriver(Driver driver) {
+    if (!driver.isActive) return;
+    _applyDriver(driver);
+    selectDriver(driver);
+  }
+
   void selectCar(Car? car) {
     if (car != null && !car.isActive) return;
     selectedCar = car;

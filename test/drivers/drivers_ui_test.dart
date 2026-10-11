@@ -2,6 +2,8 @@ import 'package:mountain_fairytale/shared/widgets/dropdown_widget.dart';
 
 import 'dart:async';
 
+import 'package:mountain_fairytale/core/theme.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -67,6 +69,7 @@ class _Drivers implements DriverRepository {
   int patches = 0;
   int creates = 0;
   Completer<List<Driver>>? loadGate;
+  Driver duplicate = inactive;
   @override
   Future<List<Driver>> getAvailableDrivers({
     bool includeDeactivated = false,
@@ -89,7 +92,7 @@ class _Drivers implements DriverRepository {
   }
 
   @override
-  Future<Driver?> checkDuplicate(String name) async => inactive;
+  Future<Driver?> checkDuplicate(String name) async => duplicate;
   @override
   Future<Driver> createDriver(CreateDriverRequest request) async {
     creates++;
@@ -152,6 +155,7 @@ void main() {
       ChangeNotifierProvider.value(
         value: provider,
         child: MaterialApp(
+          theme: AppTheme.createTheme(Brightness.light),
           home: Scaffold(
             body: SizedBox(
               width: 360,
@@ -422,6 +426,73 @@ void main() {
       expect(repo.patches, 1);
       expect(repo.creates, 0);
       expect(find.byType(DriverDialog), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
+  Future<void> revealActiveDuplicate(WidgetTester tester) async {
+    await tester.tap(find.widgetWithIcon(IconButton, Icons.add).first);
+    await tester.pumpAndSettle();
+    final field = find.descendant(
+      of: find.byType(DriverDialog),
+      matching: find.byType(TextFormField),
+    );
+    await tester.enterText(field, 'Активный');
+    await tester.pump();
+    tester
+        .widget<TextField>(
+          find.descendant(of: field, matching: find.byType(TextField)),
+        )
+        .focusNode!
+        .unfocus();
+    await tester.pumpAndSettle();
+    expect(find.text('Выбрать для маршрута'), findsNothing);
+    await tester.tap(find.textContaining('Найден водитель с похожим именем:'));
+    await tester.pumpAndSettle();
+    expect(find.text('Выбрать для маршрута'), findsOneWidget);
+    expect(find.text('Открыть существующего водителя'), findsOneWidget);
+    expect(find.byIcon(Icons.expand_less), findsOneWidget);
+  }
+
+  testWidgets(
+    'expanded active duplicate selects server record without creating or updating',
+    (tester) async {
+      final repo = _Drivers()..duplicate = Driver.fromJson(active.toJson());
+      final provider = makeProvider(repo)..drivers = [active];
+      await panel(tester, provider);
+      await revealActiveDuplicate(tester);
+      await tester.tap(find.text('Выбрать для маршрута'));
+      await tester.pumpAndSettle();
+      expect(provider.selectedDriver, same(repo.duplicate));
+      expect(provider.drivers.single, same(repo.duplicate));
+      expect(repo.creates, 0);
+      expect(repo.patches, 0);
+      expect(find.byType(DriverDialog), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'expanded duplicate opens existing driver for editing without changing route selection',
+    (tester) async {
+      final repo = _Drivers()..duplicate = active;
+      final provider = makeProvider(repo)..drivers = [active];
+      await panel(tester, provider);
+      await revealActiveDuplicate(tester);
+      await tester.tap(find.text('Открыть существующего водителя'));
+      await tester.pumpAndSettle();
+      expect(find.text('Редактирование водителя'), findsOneWidget);
+      expect(
+        tester.widget<DriverDialog>(find.byType(DriverDialog)).driver!.id,
+        active.id,
+      );
+      final field = find.descendant(
+        of: find.byType(DriverDialog),
+        matching: find.byType(TextFormField),
+      );
+      expect(tester.widget<TextFormField>(field).controller!.text, active.name);
+      expect(provider.selectedDriver, isNull);
+      expect(repo.creates, 0);
+      expect(repo.patches, 0);
       expect(tester.takeException(), isNull);
     },
   );

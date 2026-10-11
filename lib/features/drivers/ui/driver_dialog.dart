@@ -4,13 +4,15 @@ import 'package:mountain_fairytale/features/drivers/ui/driver_activation_dialog.
 import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_provider.dart';
 import 'package:mountain_fairytale/shared/widgets/confirm_dialog.dart';
 import 'package:mountain_fairytale/shared/widgets/base_form_dialog_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/duplicate_check_status_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/icon_button_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 import 'package:provider/provider.dart';
 
 class DriverDialog extends StatefulWidget {
   final Driver? driver;
-  const DriverDialog({super.key, this.driver});
+  final ValueChanged<Driver>? onOpenDriver;
+  const DriverDialog({super.key, this.driver, this.onOpenDriver});
   bool get isEditMode => driver != null;
   @override
   State<DriverDialog> createState() => _DriverDialogState();
@@ -51,6 +53,8 @@ class _DriverDialogState extends State<DriverDialog> {
     final version = ++_checkVersion;
     setState(() {
       _checking = true;
+      _checkedName = null;
+      _duplicate = null;
       _error = null;
     });
     try {
@@ -147,20 +151,6 @@ class _DriverDialogState extends State<DriverDialog> {
     }
   }
 
-  Future<void> _activateDuplicate() async {
-    final driver = _duplicate;
-    if (_busy || _checking || driver == null || driver.isActive) return;
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
-    try {
-      await _confirmAndActivate(driver);
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
   Future<void> _deactivate() async {
     if (_busy) return;
     final provider = context.read<RouteConstructorProvider>();
@@ -214,14 +204,41 @@ class _DriverDialogState extends State<DriverDialog> {
             )
           : null,
       children: [
-        if (_checking || _busy) const LinearProgressIndicator(),
-        if (_duplicate != null)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Text(
-              'Найден водитель с похожим именем: ${_duplicate!.name}${_duplicate!.isActive ? '' : ' — Неактивен'}',
-            ),
-          ),
+        if (_busy) const LinearProgressIndicator(),
+        DuplicateCheckStatusWidget(
+          isChecking: _checking,
+          isChecked: _checkedName != null,
+          hasDuplicate: _duplicate != null,
+          warningText: _duplicate != null
+              ? 'Найден водитель с похожим именем: ${_duplicate!.name} — ${_duplicate!.isActive ? 'Активен' : 'Неактивен'}'
+              : '',
+          expandedChild: _duplicate != null && _duplicate!.isActive
+              ? Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    AppPrimaryButton(
+                      text: 'Выбрать для маршрута',
+                      onPressed: _busy
+                          ? null
+                          : () {
+                              context
+                                  .read<RouteConstructorProvider>()
+                                  .selectExistingDriver(_duplicate!);
+                              Navigator.of(context).pop();
+                            },
+                    ),
+                    AppSecondaryButton(
+                      text: 'Открыть существующего водителя',
+                      onPressed: _busy || widget.onOpenDriver == null
+                          ? null
+                          : () => widget.onOpenDriver!(_duplicate!),
+                    ),
+                  ],
+                )
+              : null,
+        ),
+        const SizedBox(height: 8),
         TextFormField(
           controller: _nameController,
           focusNode: _nameFocusNode,
