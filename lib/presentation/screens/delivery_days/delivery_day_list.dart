@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/core/utils/datetime_extensions.dart';
 import 'package:mountain_fairytale/features/delivery_days/data/delivery_days_model.dart';
 import 'package:mountain_fairytale/features/delivery_days/data/delivery_days_product_model.dart';
-import 'package:mountain_fairytale/infra/repos/delivery_route/models/delivery_route_sheet_model.dart';
+import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_sheet_model.dart';
 import 'package:mountain_fairytale/infra/repos/pickup/models/pickup_sheet_model.dart';
 import 'package:mountain_fairytale/infra/repos/products/models/product_model.dart';
 import 'package:mountain_fairytale/l10n/app_localizations.dart';

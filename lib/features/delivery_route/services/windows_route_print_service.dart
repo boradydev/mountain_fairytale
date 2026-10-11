@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import 'package:mountain_fairytale/features/delivery_route/services/route_sheet_pdf_builder.dart';
 import 'package:mountain_fairytale/features/delivery_route/delivery_route_abcs.dart';
-import 'package:mountain_fairytale/infra/repos/delivery_route/models/delivery_route_sheet_model.dart';
+import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_sheet_model.dart';
 import 'package:printing/printing.dart';
 
 class WindowsRoutePrintService implements RoutePrintService {

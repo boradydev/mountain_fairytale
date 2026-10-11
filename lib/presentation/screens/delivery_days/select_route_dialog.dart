@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mountain_fairytale/infra/repos/delivery_route/models/delivery_route_sheet_model.dart';
+import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_sheet_model.dart';
 import 'package:mountain_fairytale/infra/repos/pickup/models/pickup_sheet_model.dart';
 import 'package:mountain_fairytale/presentation/widgets/text_button_widget.dart';
 

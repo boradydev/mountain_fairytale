@@ -1,5 +1,5 @@
 import 'package:flutter/services.dart';
-import 'package:mountain_fairytale/infra/repos/delivery_route/models/delivery_route_sheet_model.dart';
+import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_sheet_model.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 

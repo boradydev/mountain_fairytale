@@ -1,5 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:mountain_fairytale/infra/repos/delivery_route/models/route_point_model.dart';
+import 'package:mountain_fairytale/features/delivery_route/data/route_point_model.dart';
 
 part 'delivery_route_sheet_model.g.dart';
 
