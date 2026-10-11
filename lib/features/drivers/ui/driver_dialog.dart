@@ -3,6 +3,8 @@ import 'package:mountain_fairytale/features/drivers/data/driver_model.dart';
 import 'package:mountain_fairytale/features/drivers/ui/driver_activation_dialog.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_provider.dart';
 import 'package:mountain_fairytale/shared/widgets/confirm_dialog.dart';
+import 'package:mountain_fairytale/shared/widgets/base_form_dialog_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/icon_button_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 import 'package:provider/provider.dart';
 
@@ -195,76 +197,53 @@ class _DriverDialogState extends State<DriverDialog> {
   @override
   Widget build(BuildContext context) => PopScope(
     canPop: !_busy,
-    child: AlertDialog(
-      title: Text(
-        widget.isEditMode ? 'Редактирование водителя' : 'Добавление водителя',
-      ),
-      content: SizedBox(
-        width: 450,
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (_checking || _busy) const LinearProgressIndicator(),
-                if (_duplicate != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Найден водитель с похожим именем: ${_duplicate!.name}${_duplicate!.isActive ? '' : ' — Неактивен'}',
-                        ),
-                      ],
-                    ),
-                  ),
-                TextFormField(
-                  controller: _nameController,
-                  focusNode: _nameFocusNode,
-                  enabled: !_busy,
-                  maxLength: 120,
-                  decoration: const InputDecoration(
-                    labelText: 'ФИО водителя *',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.person_outline),
-                    hintText: 'Иванов Иван Иванович',
-                  ),
-                  validator: (value) => value == null || value.trim().isEmpty
-                      ? 'Введите ФИО'
-                      : value.trim().length > 120
-                      ? 'Не более 120 символов'
-                      : null,
-                ),
-                if (_error != null)
-                  Text(
-                    _error!,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-              ],
+    child: BaseFormDialog(
+      title: widget.isEditMode
+          ? 'Редактирование водителя'
+          : 'Добавление водителя',
+      submitButtonText: widget.isEditMode ? 'Сохранить' : 'Добавить',
+      formKey: _formKey,
+      onSubmit: _save,
+      isBusy: _busy,
+      leadingAction: widget.isEditMode && widget.driver!.isActive
+          ? AppIconButton(
+              icon: Icons.archive_outlined,
+              tooltip: 'Деактивировать водителя',
+              destructive: true,
+              onPressed: _busy ? null : _deactivate,
+            )
+          : null,
+      children: [
+        if (_checking || _busy) const LinearProgressIndicator(),
+        if (_duplicate != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(
+              'Найден водитель с похожим именем: ${_duplicate!.name}${_duplicate!.isActive ? '' : ' — Неактивен'}',
             ),
           ),
-        ),
-      ),
-      actions: [
-        if (widget.isEditMode)
-          AppPrimaryButton(
-            onPressed: _busy ? null : _deactivate,
-            destructive: true,
-            text: 'Деактивировать',
+        TextFormField(
+          controller: _nameController,
+          focusNode: _nameFocusNode,
+          enabled: !_busy,
+          maxLength: 120,
+          decoration: const InputDecoration(
+            labelText: 'ФИО водителя *',
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.person_outline),
+            hintText: 'Иванов Иван Иванович',
           ),
-        AppSecondaryButton(
-          onPressed: _busy ? null : () => Navigator.pop(context),
-          text: 'Отмена',
+          validator: (value) => value == null || value.trim().isEmpty
+              ? 'Введите ФИО'
+              : value.trim().length > 120
+              ? 'Не более 120 символов'
+              : null,
         ),
-        AppPrimaryButton(
-          onPressed: _busy ? null : _save,
-          text: widget.isEditMode ? 'Сохранить' : 'Добавить',
-        ),
+        if (_error != null)
+          Text(
+            _error!,
+            style: TextStyle(color: Theme.of(context).colorScheme.error),
+          ),
       ],
     ),
   );

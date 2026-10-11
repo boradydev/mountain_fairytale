@@ -7,6 +7,7 @@ class BaseFormDialog extends StatelessWidget {
   final VoidCallback onSubmit;
   final GlobalKey<FormState> formKey;
   final List<Widget> children;
+  final bool isBusy;
 
   /// Дополнительное действие слева от кнопок.
   ///
@@ -21,6 +22,7 @@ class BaseFormDialog extends StatelessWidget {
     required this.formKey,
     required this.children,
     this.leadingAction,
+    this.isBusy = false,
   });
 
   @override
@@ -62,12 +64,14 @@ class BaseFormDialog extends StatelessWidget {
                     const Spacer(),
 
                     AppSecondaryButton(
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: isBusy
+                          ? null
+                          : () => Navigator.of(context).pop(),
                       text: 'Отмена',
                     ),
                     const SizedBox(width: 8),
                     AppPrimaryButton(
-                      onPressed: onSubmit,
+                      onPressed: isBusy ? null : onSubmit,
                       text: submitButtonText,
                     ),
                   ],
