@@ -131,9 +131,9 @@ class _DeliveryDayItem extends StatelessWidget {
         // Генерируем метрики для каждого продукта из общего списка
         final productMetrics = allProducts.map((product) {
           final dayProduct = day.products.firstWhere(
-            (p) => p.productId == product.id,
+            (p) => p.productId.toString() == product.id,
             orElse: () =>
-                DeliveryDayProduct(productId: product.id, quantity: 0),
+                const DeliveryDayProduct(productId: -1, quantity: 0),
           );
 
           return MetricRow(

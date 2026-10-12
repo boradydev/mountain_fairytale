@@ -221,7 +221,7 @@ class RouteConstructorProvider extends OrderPointsProvider {
       await loadCars();
       await loadDrivers();
 
-      products = await productRepo.getAvailableProducts();
+      await loadProducts();
       paymentMethods = await paymentMethodRepo.getAllPaymentMethods();
     } finally {
       isLoadingDirectories = false;
@@ -414,7 +414,7 @@ class RouteConstructorProvider extends OrderPointsProvider {
     try {
       await loadCars();
       await loadDrivers();
-      products = await productRepo.getAvailableProducts();
+      await loadProducts();
       paymentMethods = await paymentMethodRepo.getAllPaymentMethods();
 
       // Запрашиваем конкретный маршрутный лист по ID

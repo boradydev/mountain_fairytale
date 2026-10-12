@@ -10,63 +10,79 @@ class DemoProductDataSource implements ProductDataSource {
   DemoProductDataSource({AssetBundle? assetBundle})
     : _assetBundle = assetBundle ?? rootBundle;
 
-  @override
-  Future<List<Map<String, dynamic>>> getAllProducts() async {
+  Future<void> _load() async {
+    if (_productsCache != null) return;
     await Future.delayed(const Duration(milliseconds: 40));
-    if (_productsCache != null) return _productsCache!;
     final jsonString = await _assetBundle.loadString(
       'assets/demo/products/products_data.json',
     );
-    _productsCache = List<Map<String, dynamic>>.from(jsonDecode(jsonString));
-    return _productsCache!;
+    final legacyProducts = List<Map<String, dynamic>>.from(
+      jsonDecode(jsonString),
+    );
+    _productsCache = legacyProducts.map((product) {
+      return {
+        'productId': product['productId']?.toString() ?? product['id'].toString(),
+        'name': product['name'],
+        'basePrice': product['basePrice'],
+        'createdAt': DateTime.utc(2026).toIso8601String(),
+        'isActive': true,
+      };
+    }).toList();
   }
 
   @override
-  Future<Map<String, dynamic>> getProductById(int id) async {
-    await Future.delayed(const Duration(milliseconds: 30));
-    if (_productsCache == null) await getAllProducts();
-    return _productsCache!.firstWhere(
-      (e) => e['id'] == id,
-      orElse: () => throw Exception('Product not found'),
+  Future<List<Map<String, dynamic>>> getAllProducts({
+    bool includeDeactivated = false,
+  }) async {
+    await _load();
+    return _productsCache!
+        .where((product) => includeDeactivated || product['isActive'] == true)
+        .toList();
+  }
+
+  @override
+  Future<Map<String, dynamic>> getProductById(String id) async {
+    await _load();
+    return Map<String, dynamic>.from(
+      _productsCache!.firstWhere((product) => product['productId'] == id),
     );
   }
 
   @override
   Future<Map<String, dynamic>> createProduct(Map<String, dynamic> json) async {
-    await Future.delayed(const Duration(milliseconds: 60));
-    if (_productsCache == null) await getAllProducts();
-    final newId = _productsCache!.isEmpty
-        ? 1
-        : _productsCache!
-                  .map((e) => int.parse(e['id'].toString()))
-                  .reduce((a, b) => a > b ? a : b) +
-              1;
-    final newItem = {...json, 'id': newId};
-    _productsCache!.insert(0, newItem);
-    return newItem;
+    await _load();
+    final product = {
+      ...json,
+      'productId': 'demo-${DateTime.now().microsecondsSinceEpoch}',
+      'createdAt': DateTime.now().toUtc().toIso8601String(),
+      'isActive': true,
+    };
+    _productsCache!.insert(0, product);
+    return Map<String, dynamic>.from(product);
   }
 
   @override
   Future<Map<String, dynamic>> patchProduct(
-    int id,
+    String id,
     Map<String, dynamic> json,
   ) async {
-    await Future.delayed(const Duration(milliseconds: 60));
-    if (_productsCache == null) await getAllProducts();
-    final index = _productsCache!.indexWhere((e) => e['id'] == id);
+    await _load();
+    final index = _productsCache!.indexWhere(
+      (product) => product['productId'] == id,
+    );
     if (index == -1) throw Exception('Product not found');
-    final updated = Map<String, dynamic>.from(_productsCache![index]);
-    json.forEach((key, value) {
-      if (value != null) updated[key] = value;
-    });
-    _productsCache![index] = updated;
-    return updated;
+    _productsCache![index] = {..._productsCache![index], ...json};
+    return Map<String, dynamic>.from(_productsCache![index]);
   }
 
   @override
-  Future<void> deleteProduct(int id) async {
-    await Future.delayed(const Duration(milliseconds: 40));
-    if (_productsCache == null) await getAllProducts();
-    _productsCache!.removeWhere((e) => e['id'] == id);
+  Future<Map<String, dynamic>?> checkDuplicate(String name) async {
+    await _load();
+    for (final product in _productsCache!) {
+      if ((product['name'] as String).toLowerCase() == name.toLowerCase()) {
+        return Map<String, dynamic>.from(product);
+      }
+    }
+    return null;
   }
 }

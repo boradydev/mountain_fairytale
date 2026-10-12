@@ -29,7 +29,7 @@ import 'package:mountain_fairytale/features/payment_methods/data/payment_method_
 import 'package:mountain_fairytale/features/pickup/data/pickup_repo.dart';
 import 'package:mountain_fairytale/features/pickup/data/pickup_demo_data.dart';
 import 'package:mountain_fairytale/features/products/data/products_repo.dart';
-import 'package:mountain_fairytale/features/products/data/products_demo_data.dart';
+import 'package:mountain_fairytale/features/products/data/products_api_data_source.dart';
 import 'package:mountain_fairytale/features/sales_representative_clients/data/sales_representative_clients_repo.dart';
 import 'package:mountain_fairytale/features/sales_representative_clients/data/sales_representative_client_demo_data.dart';
 import 'package:mountain_fairytale/features/sales_representative_commissions/data/sales_representative_commission_repo.dart';
@@ -91,7 +91,6 @@ Future<void> main() async {
   // 1. ИНИЦИАЛИЗАЦИЯ АТОМАРНЫХ ДАННЫХ (DATA SOURCES)
   // Каждый источник независим, хранит свой кэш и имитирует сетевые запросы
   // ===========================================================================
-  final productDataSource = DemoProductDataSource();
   final deliveryDayDataSource = DemoDeliveryDataSource();
   final routeDataSource = DemoDeliveryRouteDataSource(
     deliveryDayDataSource: deliveryDayDataSource,
@@ -112,7 +111,6 @@ Future<void> main() async {
   // 2. ИНИЦИАЛИЗАЦИЯ РЕПОЗИТОРИЕВ
   // Принимают сущности от UI, конвертируют в JSON-Map и общаются с Data Sources
   // ===========================================================================
-  final productRepository = ProductRepositoryImpl(productDataSource);
   final routeRepository = DeliveryRouteRepositoryImpl(routeDataSource);
   final clientRepository = ClientRepositoryImpl(clientDataSource);
   final deliveryDayRepository = ApiDeliveryRepository(deliveryDayDataSource);
@@ -173,6 +171,8 @@ Future<void> main() async {
 
   final driverRepository = DriverRepositoryImpl(ApiDriverDataSource(apiClient));
   final carRepository = CarRepositoryImpl(ApiCarDataSource(apiClient));
+  final productDataSource = ApiProductDataSource(apiClient);
+  final productRepository = ProductRepositoryImpl(productDataSource);
 
   // ===========================================================================
   // 4. ЗАПУСК ПРИЛОЖЕНИЯ И ВНЕДРЕНИЕ ЗАВИСИМОСТЕЙ (DI)

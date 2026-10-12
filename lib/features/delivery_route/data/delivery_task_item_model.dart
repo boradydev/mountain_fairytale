@@ -4,7 +4,7 @@ part 'delivery_task_item_model.g.dart';
 
 @JsonSerializable(explicitToJson: true)
 class DeliveryTaskItem {
-  final int productId;
+  final String productId;
   final String productName;
   final int quantity;
   final double price;

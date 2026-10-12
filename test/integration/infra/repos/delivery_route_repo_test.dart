@@ -49,13 +49,13 @@ void main() {
           salesRepresentative: 'Мария Иванова',
           items: [
             DeliveryTaskItem(
-              productId: 1,
+              productId: '00000000-0000-4000-8000-000000000001',
               productName: 'Вода Горная 19л',
               quantity: 2,
               price: 350.0,
             ),
             DeliveryTaskItem(
-              productId: 5,
+              productId: '00000000-0000-4000-8000-000000000005',
               productName: 'Ремонт/Санитария кулера',
               quantity: 1,
               price: 1500.0,

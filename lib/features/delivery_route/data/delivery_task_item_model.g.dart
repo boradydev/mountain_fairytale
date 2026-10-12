@@ -8,7 +8,7 @@ part of 'delivery_task_item_model.dart';
 
 DeliveryTaskItem _$DeliveryTaskItemFromJson(Map<String, dynamic> json) =>
     DeliveryTaskItem(
-      productId: (json['productId'] as num).toInt(),
+    productId: json['productId'] as String,
       productName: json['productName'] as String,
       quantity: (json['quantity'] as num).toInt(),
       price: (json['price'] as num).toDouble(),

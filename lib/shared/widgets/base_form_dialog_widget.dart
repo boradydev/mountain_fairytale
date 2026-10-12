@@ -8,6 +8,7 @@ class BaseFormDialog extends StatelessWidget {
   final GlobalKey<FormState> formKey;
   final List<Widget> children;
   final bool isBusy;
+  final bool canSubmit;
 
   /// Дополнительное действие слева от кнопок.
   ///
@@ -23,6 +24,7 @@ class BaseFormDialog extends StatelessWidget {
     required this.children,
     this.leadingAction,
     this.isBusy = false,
+    this.canSubmit = true,
   });
 
   @override
@@ -71,7 +73,7 @@ class BaseFormDialog extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     AppPrimaryButton(
-                      onPressed: isBusy ? null : onSubmit,
+                      onPressed: isBusy || !canSubmit ? null : onSubmit,
                       text: submitButtonText,
                     ),
                   ],

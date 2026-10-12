@@ -1,4 +1,5 @@
 import 'package:mountain_fairytale/core/state/safe_change_notifier.dart';
+import 'package:mountain_fairytale/core/network/api_exception.dart';
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/features/clients/data/clients_model.dart';
 import 'package:mountain_fairytale/features/delivery_route/data/delivery_task_item_model.dart';
@@ -9,6 +10,7 @@ import 'package:mountain_fairytale/features/clients/clients_abcs.dart';
 import 'package:mountain_fairytale/features/payment_methods/payment_method_abcs.dart';
 import 'package:mountain_fairytale/features/products/products_abcs.dart';
 import 'package:mountain_fairytale/features/clients/ui/clients_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 abstract class OrderPointsProvider extends SafeChangeNotifier {
   // 1. Поля БЕЗ подчеркивания и с аннотацией
@@ -27,6 +29,11 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
   });
 
   List<Product> products = [];
+  bool showInactiveProducts = false;
+  bool isLoadingProducts = false;
+  String? productLoadError;
+  int _productLoadVersion = 0;
+  String? productErrorMessage;
   List<PaymentMethod> paymentMethods = [];
 
   bool isLoadingDirectories = false;
@@ -43,12 +50,59 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     notifyListeners();
 
     try {
-      products = await productRepo.getAvailableProducts();
+      await loadProducts();
       paymentMethods = await paymentMethodRepo.getAllPaymentMethods();
     } finally {
       isLoadingDirectories = false;
       notifyListeners();
     }
+  }
+
+  Future<void> loadProducts({bool? includeDeactivated}) async {
+    final version = ++_productLoadVersion;
+    isLoadingProducts = true;
+    productLoadError = null;
+    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final shouldIncludeDeactivated =
+          includeDeactivated ??
+          prefs.getBool('show_inactive_products') ??
+          false;
+      final loadedProducts = await productRepo.getAvailableProducts(
+        includeDeactivated: shouldIncludeDeactivated,
+      );
+      if (version != _productLoadVersion) return;
+      if (includeDeactivated != null) {
+        await prefs.setBool('show_inactive_products', includeDeactivated);
+      }
+      showInactiveProducts = shouldIncludeDeactivated;
+      products = loadedProducts;
+    } catch (_) {
+      if (version == _productLoadVersion) {
+        productLoadError = 'Не удалось загрузить товары. Повторите попытку.';
+      }
+    } finally {
+      if (version == _productLoadVersion) {
+        isLoadingProducts = false;
+        notifyListeners();
+      }
+    }
+  }
+
+  Future<void> toggleInactiveProducts(bool value) async {
+    if (isLoadingProducts) return;
+    await loadProducts(includeDeactivated: value);
+  }
+
+  void _applyProduct(Product product) {
+    products = products.where((item) => item.id != product.id).toList();
+    if (product.isActive || showInactiveProducts) products.insert(0, product);
+    notifyListeners();
+  }
+
+  void includeActiveProduct(Product product) {
+    if (product.isActive) _applyProduct(product);
   }
 
   void addClientPoint(Client client) {
@@ -90,6 +144,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
   }
 
   void addTaskToPoint(int pointIndex, Product product, int quantity) {
+    if (!product.isActive || quantity <= 0) return;
     final currentPoint = points[pointIndex];
 
     final updatedItems = List<DeliveryTaskItem>.from(currentPoint.items);
@@ -292,6 +347,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       return null;
     }
 
+    productErrorMessage = null;
     try {
       final request = CreateProductRequest(
         name: normalizedName,
@@ -305,13 +361,14 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       notifyListeners();
 
       return created;
-    } catch (_) {
+    } catch (error) {
+      productErrorMessage = _productSaveError(error);
       return null;
     }
   }
 
   Future<bool> updateProduct(
-    int id, {
+    String id, {
     required String name,
     required double basePrice,
   }) async {
@@ -321,6 +378,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       return false;
     }
 
+    productErrorMessage = null;
     try {
       final request = UpdateProductRequest(
         name: normalizedName,
@@ -329,47 +387,55 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
 
       final updated = await productRepo.updateProduct(id, request);
 
-      products = products
-          .map((product) => product.id == id ? updated : product)
-          .toList();
-
-      notifyListeners();
+      _applyProduct(updated);
 
       return true;
-    } catch (_) {
+    } catch (error) {
+      productErrorMessage = _productSaveError(error);
       return false;
     }
   }
 
-  Future<bool> deleteProduct(int id) async {
+  Future<bool> setProductActive(String id, bool isActive) async {
+    productErrorMessage = null;
     try {
-      await productRepo.deleteProduct(id);
-
-      products = products.where((product) => product.id != id).toList();
-
-      notifyListeners();
-
+      final updated = await productRepo.updateProduct(
+        id,
+        UpdateProductRequest(isActive: isActive),
+      );
+      _applyProduct(updated);
       return true;
-    } catch (_) {
+    } catch (error) {
+      productErrorMessage = _productSaveError(error);
       return false;
     }
   }
 
   Future<Product?> checkProductDuplicate(String name) async {
+    final cleanName = name.trim();
+    if (cleanName.isEmpty) return null;
+    return await productRepo.checkDuplicate(cleanName);
+  }
+
+  Future<Product?> activateProduct(Product product) async {
+    productErrorMessage = null;
     try {
-      final cleanName = name.trim().toLowerCase();
-
-      if (cleanName.isEmpty) {
-        return null;
-      }
-
-      final list = await productRepo.getAvailableProducts();
-
-      return list.firstWhere(
-        (product) => product.name.trim().toLowerCase() == cleanName,
+      final updated = await productRepo.updateProduct(
+        product.id,
+        const UpdateProductRequest(isActive: true),
       );
-    } catch (_) {
+      _applyProduct(updated);
+      return updated;
+    } catch (error) {
+      productErrorMessage = _productSaveError(error);
       return null;
     }
+  }
+
+  String _productSaveError(Object error) {
+    if (error is ApiException && error.statusCode == 409) {
+      return 'Товар с таким названием уже существует.';
+    }
+    return 'Не удалось сохранить товар. Повторите попытку.';
   }
 }
