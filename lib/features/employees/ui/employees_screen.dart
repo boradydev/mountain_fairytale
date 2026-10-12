@@ -38,12 +38,26 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
 
   Future<void> _openEditor({Employee? employee}) async {
     final provider = context.read<EmployeesProvider>();
+    provider.clearError();
+    Employee? employeeToOpen;
     final saved = await showDialog<Employee>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => EmployeeDialog(provider: provider, employee: employee),
+      builder: (dialogContext) => EmployeeDialog(
+        provider: provider,
+        employee: employee,
+        onOpenEmployee: (existing) {
+          employeeToOpen = existing;
+          Navigator.of(dialogContext).pop();
+        },
+      ),
     );
-    if (!mounted || saved == null) return;
+    if (!mounted) return;
+    if (employeeToOpen != null) {
+      await _openEditor(employee: employeeToOpen);
+      return;
+    }
+    if (saved == null) return;
     setState(() => _selectedEmployeeId = saved.id);
   }
 
@@ -114,6 +128,7 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                         ),
                         enabled: !provider.isLoading,
                         showAdd: true,
+                        editBeforeAdd: true,
                         onAdd: () => _openEditor(),
                         showEdit: true,
                         onEdit: selected == null

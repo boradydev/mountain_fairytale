@@ -8,6 +8,14 @@ class ApiEmployeeDataSource implements EmployeeDataSource {
 
   static const _path = '/admin/employees';
 
+  @override
+  Future<Map<String, dynamic>?> checkDuplicate(String username) async {
+    final response = await client.get(
+      '$_path/check-duplicate?username=${Uri.encodeQueryComponent(username)}',
+    );
+    return response['data'] == null ? null : _employee(response);
+  }
+
   Map<String, dynamic> _employee(Map<String, dynamic> response) =>
       Map<String, dynamic>.from(response['data'] as Map);
 

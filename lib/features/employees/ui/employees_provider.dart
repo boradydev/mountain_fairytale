@@ -19,13 +19,19 @@ class EmployeesProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   String? get usernameError => _usernameError;
 
+  Future<Employee?> checkDuplicate(String username) async {
+    final employee = await _repository.checkDuplicate(username);
+    if (employee != null) _upsert(employee);
+    return employee;
+  }
+
   Future<void> loadEmployees() async {
     if (_isLoading) return;
     _isLoading = true;
     _errorMessage = null;
     _notify();
     try {
-      // Load deactivated usernames too: they remain unique and unavailable.
+      // Keep deactivated accounts available for the dropdown visibility filter.
       _employees = await _repository.getEmployees(includeDeactivated: true);
     } catch (error) {
       _errorMessage = _friendlyMessage(

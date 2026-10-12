@@ -7,6 +7,12 @@ class EmployeeRepositoryImpl implements EmployeeRepository {
   EmployeeRepositoryImpl(this.dataSource);
 
   @override
+  Future<Employee?> checkDuplicate(String username) async {
+    final json = await dataSource.checkDuplicate(username);
+    return json == null ? null : Employee.fromJson(json);
+  }
+
+  @override
   Future<List<Employee>> getEmployees({bool includeDeactivated = false}) async {
     final json = await dataSource.getEmployees(
       includeDeactivated: includeDeactivated,
