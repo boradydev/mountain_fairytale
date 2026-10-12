@@ -17,18 +17,15 @@ class RouteConstructorProvider extends OrderPointsProvider {
 
   // 2. Инициализируем всё в одно действие
   RouteConstructorProvider({
-    required CarRepository carRepo,
-    required DriverRepository driverRepo,
-    required DeliveryRouteRepository routeRepo,
-    required RoutePrintService printService,
+    required this._carRepo,
+    required this._driverRepo,
+    required this._routeRepo,
+    required this._printService,
     // Поля родителя передаем напрямую через super.
     required super.productRepo,
     required super.paymentMethodRepo,
     required super.clientRepo,
-  }) : _carRepo = carRepo,
-       _driverRepo = driverRepo,
-       _routeRepo = routeRepo,
-       _printService = printService;
+  });
 
   List<Car> cars = [];
   List<Driver> drivers = [];

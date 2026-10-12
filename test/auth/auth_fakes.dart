@@ -6,7 +6,6 @@ import 'package:mountain_fairytale/core/network/http_transport.dart';
 import 'package:mountain_fairytale/features/auth/data/auth_tokens_model.dart';
 import 'package:mountain_fairytale/features/auth/data/auth_user_model.dart';
 import 'package:mountain_fairytale/features/auth/data/current_employee_model.dart';
-import 'package:mountain_fairytale/features/auth/auth_abcs.dart';
 
 const originalTokens = AuthTokensModel(
   accessToken: 'original-access',
