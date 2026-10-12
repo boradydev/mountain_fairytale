@@ -100,7 +100,10 @@ class _ClientDialogState extends State<ClientDialog> {
     _threshold = TextEditingController(
       text: client?.sleepingThresholdDays.toString() ?? '7',
     );
-    _cooldownDate = client?.cooldownUntil;
+    final cooldown = client?.cooldownUntil;
+    _cooldownDate = cooldown == null
+        ? null
+        : DateTime(cooldown.year, cooldown.month, cooldown.day);
     _cooldown = TextEditingController(text: _cooldownLabel(_cooldownDate));
     _salesRepId = client?.salesRepresentativeId;
     _paymentMethodId = client?.defaultPaymentMethodId;
@@ -235,7 +238,7 @@ class _ClientDialogState extends State<ClientDialog> {
   String _cooldownLabel(DateTime? value) {
     if (value == null) return '';
     String two(int number) => number.toString().padLeft(2, '0');
-    return '${two(value.day)}.${two(value.month)}.${value.year} ${two(value.hour)}:${two(value.minute)}';
+    return '${two(value.day)}.${two(value.month)}.${value.year}';
   }
 
   Future<void> _pickCooldown() async {
@@ -247,19 +250,8 @@ class _ClientDialogState extends State<ClientDialog> {
       lastDate: DateTime(initial.year > 2100 ? initial.year : 2100, 12, 31),
     );
     if (date == null || !mounted) return;
-    final time = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(initial),
-    );
-    if (time == null || !mounted) return;
     setState(() {
-      _cooldownDate = DateTime(
-        date.year,
-        date.month,
-        date.day,
-        time.hour,
-        time.minute,
-      );
+      _cooldownDate = DateTime(date.year, date.month, date.day);
       _cooldown.text = _cooldownLabel(_cooldownDate);
     });
   }
@@ -679,20 +671,21 @@ class _ClientDialogState extends State<ClientDialog> {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    AppPrimaryButton(
-                      text: _duplicate!.isActive
-                          ? 'Добавить клиента'
-                          : 'Активировать и добавить',
-                      onPressed: _busy
-                          ? null
-                          : () {
-                              if (_duplicate!.isActive) {
-                                Navigator.pop(context, _duplicate);
-                              } else {
-                                _setActive(_duplicate!, true);
-                              }
-                            },
-                    ),
+                    if (widget.orderProvider != null)
+                      AppPrimaryButton(
+                        text: _duplicate!.isActive
+                            ? 'Добавить клиента'
+                            : 'Активировать и добавить',
+                        onPressed: _busy
+                            ? null
+                            : () {
+                                if (_duplicate!.isActive) {
+                                  Navigator.pop(context, _duplicate);
+                                } else {
+                                  _setActive(_duplicate!, true);
+                                }
+                              },
+                      ),
                     AppSecondaryButton(
                       text: 'Открыть клиента',
                       onPressed: _busy || widget.onOpenClient == null
@@ -753,7 +746,7 @@ class _ClientDialogState extends State<ClientDialog> {
             onTap: _pickCooldown,
             decoration: InputDecoration(
               labelText: 'Отсрочка до',
-              hintText: 'Выберите дату и время',
+              hintText: 'Выберите дату',
               border: const OutlineInputBorder(),
               prefixIcon: const Icon(Icons.event_outlined),
               suffixIcon: _cooldownDate == null

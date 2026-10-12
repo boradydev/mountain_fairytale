@@ -134,7 +134,8 @@ class ClientsProvider extends SafeChangeNotifier {
   Future<bool> updateClientCooldown(String clientId, int weeks) async {
     try {
       // Высчитываем дату окончания кулдауна относительно текущего момента
-      final cooldownDate = DateTime.now().add(Duration(days: weeks * 7));
+      final now = DateTime.now();
+      final cooldownDate = DateTime(now.year, now.month, now.day + weeks * 7);
 
       // Обновляем на "сервере" (в репозитории)
       final updatedClient = await _repository.updateCooldown(

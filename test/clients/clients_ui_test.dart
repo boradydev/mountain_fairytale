@@ -25,8 +25,13 @@ import 'package:mountain_fairytale/shared/widgets/base_form_dialog_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/dropdown_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 
-Client row({String id = 'client-uuid', bool active = true}) => Client(
+Client row({
+  String id = 'client-uuid',
+  bool active = true,
+  DateTime? cooldownUntil,
+}) => Client(
   id: id,
+  cooldownUntil: cooldownUntil,
   name: 'Клиент',
   phone: '+79123456789',
   address: 'Адрес',
@@ -497,7 +502,9 @@ void main() {
     'expanded active duplicate selects existing client or opens its editor',
     (tester) async {
       final repo = ClientsFake()..duplicate = row(id: 'existing');
-      await openDialog(tester, repo);
+      final orders = SearchOrders(repo);
+      addTearDown(orders.dispose);
+      await openDialog(tester, repo, orders: orders);
       await fill(tester);
       await tester.pumpAndSettle();
       await tester.tap(find.textContaining('Найден похожий клиент:'));
@@ -594,6 +601,62 @@ void main() {
       expect(repo.created!.salesRepresentativeId, 'new-rep');
       expect(repo.created!.defaultPaymentMethodId, 'new-pay');
       expect(repo.created!.phone, '+79123456789');
+    },
+  );
+
+  for (final active in [true, false]) {
+    testWidgets('dashboard duplicate has only open action, active=$active', (
+      tester,
+    ) async {
+      final repo = ClientsFake()
+        ..duplicate = row(id: 'existing', active: active);
+      await openDialog(tester, repo);
+      await fill(tester);
+      await tester.pumpAndSettle();
+      await tester.tap(find.textContaining('Найден похожий клиент:'));
+      await tester.pumpAndSettle();
+      expect(find.text('Добавить клиента'), findsNothing);
+      expect(find.text('Активировать и добавить'), findsNothing);
+      expect(find.text('Открыть клиента'), findsOneWidget);
+      await tester.tap(find.text('Открыть клиента'));
+      await tester.pumpAndSettle();
+      expect(find.text('Редактирование клиента'), findsOneWidget);
+      expect(repo.creates, 0);
+    });
+  }
+
+  testWidgets(
+    'cooldown date picker closes without time picker and saves midnight',
+    (tester) async {
+      final repo = ClientsFake();
+      await openDialog(
+        tester,
+        repo,
+        client: row(cooldownUntil: DateTime(2026, 10, 19, 15, 30)),
+      );
+      final textField = find.descendant(
+        of: field('Отсрочка до'),
+        matching: find.byType(TextField),
+      );
+      expect(
+        tester.widget<TextField>(textField).controller!.text,
+        '19.10.2026',
+      );
+      await tester.ensureVisible(field('Отсрочка до'));
+      await tester.tap(field('Отсрочка до'));
+      await tester.pumpAndSettle();
+      expect(find.byType(DatePickerDialog), findsOneWidget);
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      expect(find.byType(DatePickerDialog), findsNothing);
+      expect(find.byType(TimePickerDialog), findsNothing);
+      await tester.ensureVisible(find.text('Сохранить'));
+      await tester.tap(find.text('Сохранить'));
+      await tester.pumpAndSettle();
+      expect(
+        repo.updated!.toJson()['cooldownUntil'],
+        '2026-10-19T00:00:00.000',
+      );
     },
   );
 }
