@@ -13,6 +13,7 @@ RoutePoint _$RoutePointFromJson(Map<String, dynamic> json) => RoutePoint(
   address: json['address'] as String,
   phone: json['phone'] as String,
   paymentMethod: json['paymentMethod'] as String?,
+  paymentMethodId: json['paymentMethodId'] as String?,
   salesRepresentative: json['salesRepresentative'] as String,
   items: (json['items'] as List<dynamic>)
       .map((e) => DeliveryTaskItem.fromJson(e as Map<String, dynamic>))
@@ -26,6 +27,7 @@ Map<String, dynamic> _$RoutePointToJson(RoutePoint instance) =>
       'city': instance.city,
       'address': instance.address,
       'phone': instance.phone,
+      'paymentMethodId': instance.paymentMethodId,
       'paymentMethod': instance.paymentMethod,
       'salesRepresentative': instance.salesRepresentative,
       'items': instance.items.map((e) => e.toJson()).toList(),

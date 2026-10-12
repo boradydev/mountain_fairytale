@@ -40,7 +40,127 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
 
   List<RoutePoint> points = [];
 
-  String? newlyCreatedPaymentMethodName;
+  bool showInactivePaymentMethods = false;
+  bool isLoadingPaymentMethods = false;
+  String? paymentMethodLoadError;
+  String? paymentMethodErrorMessage;
+  int _paymentLoadVersion = 0;
+  final Map<String, PaymentMethod> paymentMethodsById = {};
+
+  Future<void> loadPaymentMethods({bool? includeDeactivated}) async {
+    final version = ++_paymentLoadVersion;
+    isLoadingPaymentMethods = true;
+    paymentMethodLoadError = null;
+    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final include =
+          includeDeactivated ??
+          prefs.getBool('show_inactive_payment_methods') ??
+          false;
+      final loaded = await paymentMethodRepo.getAllPaymentMethods(
+        includeDeactivated: include,
+      );
+      if (version != _paymentLoadVersion) return;
+      if (includeDeactivated != null) {
+        await prefs.setBool('show_inactive_payment_methods', include);
+      }
+      if (version != _paymentLoadVersion) return;
+      showInactivePaymentMethods = include;
+      paymentMethods = loaded;
+      for (final method in loaded) {
+        paymentMethodsById[method.id] = method;
+      }
+    } catch (_) {
+      if (version == _paymentLoadVersion) {
+        paymentMethodLoadError =
+            'Не удалось загрузить способы оплаты. Повторите попытку.';
+      }
+    } finally {
+      if (version == _paymentLoadVersion) {
+        isLoadingPaymentMethods = false;
+        notifyListeners();
+      }
+    }
+  }
+
+  Future<void> toggleInactivePaymentMethods(bool value) async {
+    if (!isLoadingPaymentMethods) {
+      await loadPaymentMethods(includeDeactivated: value);
+    }
+  }
+
+  Future<void> loadSelectedPaymentMethod(String id) async {
+    final method = await paymentMethodRepo.getPaymentMethodById(id);
+    paymentMethodsById[method.id] = method;
+    for (var i = 0; i < points.length; i++) {
+      if (points[i].paymentMethodId == method.id) {
+        points[i] = _withPaymentMethod(points[i], method);
+      }
+    }
+    notifyListeners();
+  }
+
+  void _applyPaymentMethod(PaymentMethod method) {
+    // Invalidate an older list request so it cannot undo a successful mutation.
+    _paymentLoadVersion++;
+    isLoadingPaymentMethods = false;
+    paymentMethodsById[method.id] = method;
+    paymentMethods = paymentMethods
+        .where((row) => row.id != method.id)
+        .toList();
+    if (method.isActive || showInactivePaymentMethods) {
+      paymentMethods.add(method);
+    }
+    paymentMethods.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    for (var i = 0; i < points.length; i++) {
+      final point = points[i];
+      if (point.paymentMethodId == method.id) {
+        points[i] = _withPaymentMethod(point, method);
+      }
+    }
+    notifyListeners();
+  }
+
+  RoutePoint _withPaymentMethod(RoutePoint point, PaymentMethod method) =>
+      RoutePoint(
+        clientId: point.clientId,
+        clientName: point.clientName,
+        city: point.city,
+        address: point.address,
+        phone: point.phone,
+        paymentMethodId: method.id,
+        paymentMethod: method.name,
+        salesRepresentative: point.salesRepresentative,
+        items: point.items,
+      );
+
+  Future<bool> selectPointPaymentMethod(
+    int clientId,
+    PaymentMethod method,
+    ClientsProvider clientsProvider,
+  ) async {
+    if (!method.isActive) return false;
+    paymentMethodErrorMessage = null;
+    try {
+      final client = await clientRepo.updateClient(
+        clientId,
+        UpdateClientRequest(defaultPaymentMethodId: method.id),
+      );
+      clientsProvider.syncUpdatedClient(client);
+      paymentMethodsById[method.id] = method;
+      final index = points.indexWhere((point) => point.clientId == clientId);
+      if (index != -1) {
+        points[index] = _withPaymentMethod(points[index], method);
+      }
+      notifyListeners();
+      return true;
+    } catch (_) {
+      paymentMethodErrorMessage =
+          'Не удалось сохранить способ оплаты клиента. Повторите попытку.';
+      return false;
+    }
+  }
 
   double get grandTotal =>
       points.fold(0.0, (sum, point) => sum + point.totalAmount);
@@ -51,7 +171,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
 
     try {
       await loadProducts();
-      paymentMethods = await paymentMethodRepo.getAllPaymentMethods();
+      await loadPaymentMethods();
     } finally {
       isLoadingDirectories = false;
       notifyListeners();
@@ -117,7 +237,10 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
         city: 'г. Ставрополь',
         address: client.address,
         phone: client.phone,
-        paymentMethod: client.defaultPaymentMethod,
+        paymentMethodId: client.defaultPaymentMethodId,
+        paymentMethod:
+            paymentMethodsById[client.defaultPaymentMethodId]?.name ??
+            client.defaultPaymentMethod,
         salesRepresentative:
             client.salesRepresentativeName ?? 'Нет представителя',
         items: [],
@@ -179,6 +302,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       city: currentPoint.city,
       address: currentPoint.address,
       phone: currentPoint.phone,
+      paymentMethodId: currentPoint.paymentMethodId,
       paymentMethod: currentPoint.paymentMethod,
       salesRepresentative: currentPoint.salesRepresentative,
       items: updatedItems,
@@ -218,6 +342,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       city: currentPoint.city,
       address: currentPoint.address,
       phone: currentPoint.phone,
+      paymentMethodId: currentPoint.paymentMethodId,
       paymentMethod: currentPoint.paymentMethod,
       salesRepresentative: currentPoint.salesRepresentative,
       items: items,
@@ -226,115 +351,68 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updatePointMeta(
-    int pointIndex,
-    BuildContext context,
-    ClientsProvider clientsProvider, {
-    String? paymentMethod,
-    String? salesRep,
-  }) async {
-    final point = points[pointIndex];
-
-    final updatedPoint = RoutePoint(
-      clientId: point.clientId,
-      clientName: point.clientName,
-      city: point.city,
-      address: point.address,
-      phone: point.phone,
-      paymentMethod: paymentMethod ?? point.paymentMethod,
-      salesRepresentative: salesRep ?? point.salesRepresentative,
-      items: point.items,
-    );
-
-    points[pointIndex] = updatedPoint;
-    notifyListeners();
-
-    if (paymentMethod == null) {
-      return;
-    }
-
-    try {
-      final updatedClient = await clientRepo.updateClient(
-        point.clientId,
-        UpdateClientRequest(defaultPaymentMethod: paymentMethod),
-      );
-
-      clientsProvider.syncUpdatedClient(updatedClient);
-    } catch (_) {}
-  }
-
-  // =========================================================================
-  // МЕТОДЫ УПРАВЛЕНИЯ СПРАВОЧНИКОМ ФОРМ ОПЛАТЫ
-  // =========================================================================
-
   Future<PaymentMethod?> addPaymentMethod(String name) async {
-    final normalizedName = name.trim();
-    if (normalizedName.isEmpty) return null;
-
+    paymentMethodErrorMessage = null;
     try {
-      final request = CreatePaymentMethodRequest(name: normalizedName);
-      final created = await paymentMethodRepo.createPaymentMethod(request);
-
-      paymentMethods.insert(0, created);
-      newlyCreatedPaymentMethodName = created.name;
-      notifyListeners();
-      return created;
-    } catch (_) {
-      return null;
-    }
-  }
-
-  Future<bool> updatePaymentMethod(int id, String name) async {
-    final normalizedName = name.trim();
-    if (normalizedName.isEmpty) return false;
-
-    try {
-      final request = UpdatePaymentMethodRequest(name: normalizedName);
-      final updated = await paymentMethodRepo.updatePaymentMethod(id, request);
-
-      paymentMethods = paymentMethods
-          .map((p) => p.id == id ? updated : p)
-          .toList();
-
-      // Обновляем форму оплаты во всех точках текущего маршрута, если она там использовалась
-      for (int i = 0; i < points.length; i++) {
-        if (points[i].paymentMethod == points[i].paymentMethod) {
-          // Сверяем по строке (или логике UI)
-          // Дополнительное обновление метаданных при необходимости
-        }
-      }
-
-      notifyListeners();
-      return true;
-    } catch (_) {
-      return false;
-    }
-  }
-
-  Future<bool> deletePaymentMethod(int id, String fallbackName) async {
-    try {
-      await paymentMethodRepo.deletePaymentMethod(id);
-      paymentMethods = paymentMethods.where((p) => p.id != id).toList();
-      notifyListeners();
-      return true;
-    } catch (_) {
-      return false;
-    }
-  }
-
-  Future<PaymentMethod?> checkPaymentMethodDuplicate(String name) async {
-    try {
-      final cleanName = name.trim().toLowerCase();
-      if (cleanName.isEmpty) return null;
-
-      final list = await paymentMethodRepo.getAllPaymentMethods();
-      final duplicate = list.firstWhere(
-        (p) => p.name.trim().toLowerCase() == cleanName,
+      final created = await paymentMethodRepo.createPaymentMethod(
+        CreatePaymentMethodRequest(name: name),
       );
-      return duplicate;
-    } catch (_) {
+      _applyPaymentMethod(created);
+      return created;
+    } catch (error) {
+      paymentMethodErrorMessage = _paymentSaveError(error);
       return null;
     }
+  }
+
+  Future<bool> updatePaymentMethod(String id, String name) async {
+    paymentMethodErrorMessage = null;
+    try {
+      final updated = await paymentMethodRepo.updatePaymentMethod(
+        id,
+        UpdatePaymentMethodRequest(name: name),
+      );
+      _applyPaymentMethod(updated);
+      return true;
+    } catch (error) {
+      paymentMethodErrorMessage = _paymentSaveError(error);
+      return false;
+    }
+  }
+
+  Future<bool> setPaymentMethodActive(String id, bool isActive) async {
+    paymentMethodErrorMessage = null;
+    try {
+      final updated = await paymentMethodRepo.updatePaymentMethod(
+        id,
+        UpdatePaymentMethodRequest(isActive: isActive),
+      );
+      _applyPaymentMethod(updated);
+      return true;
+    } catch (error) {
+      paymentMethodErrorMessage = _paymentSaveError(error);
+      return false;
+    }
+  }
+
+  Future<PaymentMethod?> activatePaymentMethod(PaymentMethod method) async {
+    if (await setPaymentMethodActive(method.id, true)) {
+      return paymentMethodsById[method.id];
+    }
+    return null;
+  }
+
+  Future<PaymentMethod?> checkPaymentMethodDuplicate(String name) =>
+      paymentMethodRepo.checkDuplicate(name);
+
+  String _paymentSaveError(Object error) {
+    if (error is ApiException && error.statusCode == 409) {
+      return 'Способ оплаты с таким названием уже существует.';
+    }
+    if (error is ApiException && error.statusCode == 404) {
+      return 'Способ оплаты не найден. Обновите список.';
+    }
+    return 'Не удалось сохранить способ оплаты. Повторите попытку.';
   }
 
   Future<Product?> addProduct({

@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:mountain_fairytale/features/payment_methods/data/payment_method_model.dart';
 import 'package:mountain_fairytale/features/clients/ui/clients_provider.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/order_points_provider.dart';
-import 'package:mountain_fairytale/features/payment_methods/ui/payment_method_dialog.dart';
+import 'package:mountain_fairytale/features/payment_methods/ui/payment_method_selector.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/points_dialogs.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/task_item_row.dart';
-import 'package:mountain_fairytale/shared/widgets/dropdown_widget.dart';
 import 'package:provider/provider.dart';
 
 class RoutePointsList extends StatefulWidget {
@@ -171,79 +169,12 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      // Интерактивный Дропдаун для формы оплаты
-                                      Builder(
-                                        builder: (context) {
-                                          // Логика определения текущего значения
-                                          String? currentMethod;
-                                          if (provider.newlyCreatedPaymentMethodName !=
-                                                  null &&
-                                              provider.paymentMethods.any(
-                                                (p) =>
-                                                    p.name ==
-                                                    provider
-                                                        .newlyCreatedPaymentMethodName,
-                                              )) {
-                                            currentMethod = provider
-                                                .newlyCreatedPaymentMethodName!;
-                                            WidgetsBinding.instance
-                                                .addPostFrameCallback((_) {
-                                                  provider.newlyCreatedPaymentMethodName =
-                                                      null;
-                                                });
-                                            provider.updatePointMeta(
-                                              index,
-                                              context,
-                                              clientsProvider,
-                                              paymentMethod: currentMethod,
-                                            );
-                                          } else if (point.paymentMethod !=
-                                                  null &&
-                                              provider.paymentMethods.any(
-                                                (p) =>
-                                                    p.name ==
-                                                    point.paymentMethod,
-                                              )) {
-                                            currentMethod = point.paymentMethod;
-                                          }
-
-                                          final selectedModel = provider
-                                              .paymentMethods
-                                              .firstWhereOrNull(
-                                                (p) => p.name == currentMethod,
-                                              );
-
-                                          return AppDropdown<PaymentMethod>(
-                                            label: 'Форма оплаты *',
-                                            items: provider.paymentMethods,
-                                            value: selectedModel,
-                                            hint: 'Выберите форму оплаты',
-                                            itemLabelBuilder: (p) => p.name,
-                                            onChanged: (value) {
-                                              provider.updatePointMeta(
-                                                index,
-                                                context,
-                                                clientsProvider,
-                                                paymentMethod: value?.name,
-                                              );
-                                            },
-                                            onAdd: () => showDialog(
-                                              context: context,
-                                              builder: (_) =>
-                                                  const PaymentMethodDialog(),
-                                            ),
-                                            onEdit: selectedModel == null
-                                                ? null
-                                                : () => showDialog(
-                                                    context: context,
-                                                    builder: (_) =>
-                                                        PaymentMethodDialog(
-                                                          paymentMethod:
-                                                              selectedModel,
-                                                        ),
-                                                  ),
-                                          );
-                                        },
+                                      PaymentMethodSelector(
+                                        provider: provider,
+                                        clientsProvider: clientsProvider,
+                                        clientId: point.clientId,
+                                        selectedId: point.paymentMethodId,
+                                        selectedName: point.paymentMethod,
                                       ),
                                     ],
                                   ),

@@ -1,31 +1,35 @@
 import 'package:mountain_fairytale/features/payment_methods/data/payment_method_model.dart';
 
 abstract interface class PaymentMethodDataSource {
-  Future<List<Map<String, dynamic>>> getAllPaymentMethods();
+  Future<List<Map<String, dynamic>>> getAllPaymentMethods({
+    bool includeDeactivated = false,
+  });
 
-  Future<Map<String, dynamic>> getPaymentMethodById(int id);
+  Future<Map<String, dynamic>> getPaymentMethodById(String id);
 
   Future<Map<String, dynamic>> createPaymentMethod(Map<String, dynamic> json);
 
   Future<Map<String, dynamic>> patchPaymentMethod(
-    int id,
+    String id,
     Map<String, dynamic> json,
   );
 
-  Future<void> deletePaymentMethod(int id);
+  Future<Map<String, dynamic>?> checkDuplicate(String name);
 }
 
 abstract interface class PaymentMethodRepository {
-  Future<List<PaymentMethod>> getAllPaymentMethods();
+  Future<List<PaymentMethod>> getAllPaymentMethods({
+    bool includeDeactivated = false,
+  });
 
-  Future<PaymentMethod> getPaymentMethodById(int id);
+  Future<PaymentMethod> getPaymentMethodById(String id);
 
   Future<PaymentMethod> createPaymentMethod(CreatePaymentMethodRequest request);
 
   Future<PaymentMethod> updatePaymentMethod(
-    int id,
+    String id,
     UpdatePaymentMethodRequest request,
   );
 
-  Future<void> deletePaymentMethod(int id);
+  Future<PaymentMethod?> checkDuplicate(String name);
 }

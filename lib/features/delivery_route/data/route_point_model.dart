@@ -10,6 +10,7 @@ class RoutePoint {
   final String city;
   final String address;
   final String phone;
+  final String? paymentMethodId;
   final String? paymentMethod; // Форма оплаты (Нал, Безнал, Карта)
   final String salesRepresentative; // Торговый представитель
 
@@ -26,6 +27,7 @@ class RoutePoint {
     required this.address,
     required this.phone,
     this.paymentMethod,
+    this.paymentMethodId,
     required this.salesRepresentative,
     required this.items,
   });

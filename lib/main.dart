@@ -25,7 +25,7 @@ import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_d
 import 'package:mountain_fairytale/features/drivers/data/drivers_repo.dart';
 import 'package:mountain_fairytale/features/drivers/data/drivers_api_data_source.dart';
 import 'package:mountain_fairytale/features/payment_methods/data/payment_method_repo.dart';
-import 'package:mountain_fairytale/features/payment_methods/data/payment_method_demo_data.dart';
+import 'package:mountain_fairytale/features/payment_methods/data/payment_method_api_data_source.dart';
 import 'package:mountain_fairytale/features/pickup/data/pickup_repo.dart';
 import 'package:mountain_fairytale/features/pickup/data/pickup_demo_data.dart';
 import 'package:mountain_fairytale/features/products/data/products_repo.dart';
@@ -96,7 +96,6 @@ Future<void> main() async {
     deliveryDayDataSource: deliveryDayDataSource,
   );
   final clientDataSource = DemoClientDataSource();
-  final paymentMethodDataSource = DemoPaymentMethodDataSource();
   final salesRepDataSource = DemoSalesRepresentativeDataSource();
   final salesRepCommissionDataSource =
       DemoSalesRepresentativeCommissionDataSource();
@@ -116,9 +115,6 @@ Future<void> main() async {
   final deliveryDayRepository = ApiDeliveryRepository(deliveryDayDataSource);
   final salesRepRepository = SalesRepresentativeRepositoryImpl(
     salesRepDataSource,
-  );
-  final paymentMethodRepository = PaymentMethodRepositoryImpl(
-    paymentMethodDataSource,
   );
   final salesRepCommissionRepository =
       SalesRepresentativeCommissionRepositoryImpl(
@@ -171,6 +167,9 @@ Future<void> main() async {
 
   final driverRepository = DriverRepositoryImpl(ApiDriverDataSource(apiClient));
   final carRepository = CarRepositoryImpl(ApiCarDataSource(apiClient));
+  final paymentMethodRepository = PaymentMethodRepositoryImpl(
+    ApiPaymentMethodDataSource(apiClient),
+  );
   final productDataSource = ApiProductDataSource(apiClient);
   final productRepository = ProductRepositoryImpl(productDataSource);
 

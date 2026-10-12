@@ -46,6 +46,8 @@ class Client {
 
   /// Форма оплаты по умолчанию
   final String? defaultPaymentMethod;
+  @JsonKey(includeIfNull: false)
+  final String? defaultPaymentMethodId;
 
   const Client({
     required this.id,
@@ -59,6 +61,7 @@ class Client {
     this.salesRepresentativeId,
     this.salesRepresentativeName,
     this.defaultPaymentMethod,
+    this.defaultPaymentMethodId,
   });
 
   factory Client.fromJson(Map<String, dynamic> json) => _$ClientFromJson(json);
@@ -75,6 +78,8 @@ class CreateClientRequest {
   final int? salesRepresentativeId;
   final String? salesRepresentativeName;
   final String? defaultPaymentMethod;
+  @JsonKey(includeIfNull: false)
+  final String? defaultPaymentMethodId;
 
   const CreateClientRequest({
     required this.name,
@@ -84,6 +89,7 @@ class CreateClientRequest {
     this.salesRepresentativeId,
     this.salesRepresentativeName,
     this.defaultPaymentMethod,
+    this.defaultPaymentMethodId,
   });
 
   Map<String, dynamic> toJson() => _$CreateClientRequestToJson(this);
@@ -100,6 +106,8 @@ class UpdateClientRequest {
   final int? salesRepresentativeId;
   final String? salesRepresentativeName;
   final String? defaultPaymentMethod;
+  @JsonKey(includeIfNull: false)
+  final String? defaultPaymentMethodId;
 
   const UpdateClientRequest({
     this.name,
@@ -109,6 +117,7 @@ class UpdateClientRequest {
     this.salesRepresentativeId,
     this.salesRepresentativeName,
     this.defaultPaymentMethod,
+    this.defaultPaymentMethodId,
   });
 
   Map<String, dynamic> toJson() => _$UpdateClientRequestToJson(this);

@@ -1,5 +1,5 @@
-import 'package:mountain_fairytale/features/payment_methods/payment_method_abcs.dart';
 import 'package:mountain_fairytale/features/payment_methods/data/payment_method_model.dart';
+import 'package:mountain_fairytale/features/payment_methods/payment_method_abcs.dart';
 
 class PaymentMethodRepositoryImpl implements PaymentMethodRepository {
   final PaymentMethodDataSource dataSource;
@@ -7,36 +7,37 @@ class PaymentMethodRepositoryImpl implements PaymentMethodRepository {
   PaymentMethodRepositoryImpl(this.dataSource);
 
   @override
-  Future<List<PaymentMethod>> getAllPaymentMethods() async {
-    final list = await dataSource.getAllPaymentMethods();
+  Future<List<PaymentMethod>> getAllPaymentMethods({
+    bool includeDeactivated = false,
+  }) async {
+    final list = await dataSource.getAllPaymentMethods(
+      includeDeactivated: includeDeactivated,
+    );
     return list.map(PaymentMethod.fromJson).toList();
   }
 
   @override
-  Future<PaymentMethod> getPaymentMethodById(int id) async {
-    final json = await dataSource.getPaymentMethodById(id);
-    return PaymentMethod.fromJson(json);
-  }
+  Future<PaymentMethod> getPaymentMethodById(String id) async =>
+      PaymentMethod.fromJson(await dataSource.getPaymentMethodById(id));
 
   @override
   Future<PaymentMethod> createPaymentMethod(
     CreatePaymentMethodRequest request,
-  ) async {
-    final json = await dataSource.createPaymentMethod(request.toJson());
-    return PaymentMethod.fromJson(json);
-  }
+  ) async => PaymentMethod.fromJson(
+    await dataSource.createPaymentMethod(request.toJson()),
+  );
 
   @override
   Future<PaymentMethod> updatePaymentMethod(
-    int id,
+    String id,
     UpdatePaymentMethodRequest request,
-  ) async {
-    final json = await dataSource.patchPaymentMethod(id, request.toJson());
-    return PaymentMethod.fromJson(json);
-  }
+  ) async => PaymentMethod.fromJson(
+    await dataSource.patchPaymentMethod(id, request.toJson()),
+  );
 
   @override
-  Future<void> deletePaymentMethod(int id) async {
-    await dataSource.deletePaymentMethod(id);
+  Future<PaymentMethod?> checkDuplicate(String name) async {
+    final json = await dataSource.checkDuplicate(name);
+    return json == null ? null : PaymentMethod.fromJson(json);
   }
 }

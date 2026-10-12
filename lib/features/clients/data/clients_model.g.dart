@@ -22,6 +22,7 @@ Client _$ClientFromJson(Map<String, dynamic> json) => Client(
   salesRepresentativeId: (json['salesRepresentativeId'] as num?)?.toInt(),
   salesRepresentativeName: json['salesRepresentativeName'] as String?,
   defaultPaymentMethod: json['defaultPaymentMethod'] as String?,
+  defaultPaymentMethodId: json['defaultPaymentMethodId'] as String?,
 );
 
 Map<String, dynamic> _$ClientToJson(Client instance) => <String, dynamic>{
@@ -36,6 +37,7 @@ Map<String, dynamic> _$ClientToJson(Client instance) => <String, dynamic>{
   'salesRepresentativeId': instance.salesRepresentativeId,
   'salesRepresentativeName': instance.salesRepresentativeName,
   'defaultPaymentMethod': instance.defaultPaymentMethod,
+  'defaultPaymentMethodId': ?instance.defaultPaymentMethodId,
 };
 
 CreateClientRequest _$CreateClientRequestFromJson(Map<String, dynamic> json) =>
@@ -47,6 +49,7 @@ CreateClientRequest _$CreateClientRequestFromJson(Map<String, dynamic> json) =>
       salesRepresentativeId: (json['salesRepresentativeId'] as num?)?.toInt(),
       salesRepresentativeName: json['salesRepresentativeName'] as String?,
       defaultPaymentMethod: json['defaultPaymentMethod'] as String?,
+      defaultPaymentMethodId: json['defaultPaymentMethodId'] as String?,
     );
 
 Map<String, dynamic> _$CreateClientRequestToJson(
@@ -59,6 +62,7 @@ Map<String, dynamic> _$CreateClientRequestToJson(
   'salesRepresentativeId': instance.salesRepresentativeId,
   'salesRepresentativeName': instance.salesRepresentativeName,
   'defaultPaymentMethod': instance.defaultPaymentMethod,
+  'defaultPaymentMethodId': ?instance.defaultPaymentMethodId,
 };
 
 UpdateClientRequest _$UpdateClientRequestFromJson(Map<String, dynamic> json) =>
@@ -70,6 +74,7 @@ UpdateClientRequest _$UpdateClientRequestFromJson(Map<String, dynamic> json) =>
       salesRepresentativeId: (json['salesRepresentativeId'] as num?)?.toInt(),
       salesRepresentativeName: json['salesRepresentativeName'] as String?,
       defaultPaymentMethod: json['defaultPaymentMethod'] as String?,
+      defaultPaymentMethodId: json['defaultPaymentMethodId'] as String?,
     );
 
 Map<String, dynamic> _$UpdateClientRequestToJson(
@@ -82,4 +87,5 @@ Map<String, dynamic> _$UpdateClientRequestToJson(
   'salesRepresentativeId': instance.salesRepresentativeId,
   'salesRepresentativeName': instance.salesRepresentativeName,
   'defaultPaymentMethod': instance.defaultPaymentMethod,
+  'defaultPaymentMethodId': ?instance.defaultPaymentMethodId,
 };

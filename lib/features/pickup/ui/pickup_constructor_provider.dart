@@ -1,7 +1,5 @@
 import 'package:mountain_fairytale/features/delivery_route/data/route_point_model.dart';
-import 'package:mountain_fairytale/features/payment_methods/data/payment_method_model.dart';
 import 'package:mountain_fairytale/features/pickup/data/pickup_model.dart';
-import 'package:mountain_fairytale/features/products/data/product_model.dart';
 import 'package:mountain_fairytale/features/pickup/pickup_abcs.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/order_points_provider.dart';
 
@@ -44,16 +42,8 @@ class PickupConstructorProvider extends OrderPointsProvider {
     notifyListeners();
 
     try {
-      final results = await Future.wait([
-        productRepo.getAvailableProducts(),
-        paymentMethodRepo.getAllPaymentMethods(),
-        _pickupRepo.getPickupSheetById(id),
-      ]);
-
-      products = results[0] as List<Product>;
-      paymentMethods = results[1] as List<PaymentMethod>;
-
-      final sheet = results[2] as PickupSheet;
+      await loadOrderDirectories();
+      final sheet = await _pickupRepo.getPickupSheetById(id);
 
       currentPickupId = sheet.id;
       selectedDate = sheet.date;

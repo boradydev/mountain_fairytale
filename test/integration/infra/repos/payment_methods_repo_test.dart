@@ -37,7 +37,7 @@ void main() {
     );
     final createdMethod = await repository.createPaymentMethod(createRequest);
 
-    expect(createdMethod.id, isNot(0));
+    expect(createdMethod.id, isNotEmpty);
     expect(createdMethod.name, createRequest.name);
 
     print('\n--- СОЗДАННЫЙ СПОСОБ ОПЛАТЫ ---');
@@ -62,8 +62,11 @@ void main() {
     print('\n--- ОБНОВЛЕННЫЙ СПОСОБ ОПЛАТЫ ---');
     printModel(updatedMethod.toJson(), title: 'ИЗМЕНЕННЫЙ СПОСОБ ОПЛАТЫ');
 
-    // 4. DELETE - Удаление созданной сущности
-    await repository.deletePaymentMethod(updatedMethod.id);
+    // 4. Деактивация сохраняет запись, но скрывает её из активного списка
+    await repository.updatePaymentMethod(
+      updatedMethod.id,
+      const UpdatePaymentMethodRequest(isActive: false),
+    );
 
     // Проверяем, что размер списка вернулся к исходному количеству
     final finalList = await repository.getAllPaymentMethods();
@@ -74,6 +77,14 @@ void main() {
       (element) => element.id == updatedMethod.id,
     );
     expect(hasDeletedId, isFalse);
+    expect(
+      (await repository.getPaymentMethodById(updatedMethod.id)).isActive,
+      isFalse,
+    );
+    expect(
+      await repository.getAllPaymentMethods(includeDeactivated: true),
+      hasLength(initialLength + 1),
+    );
 
     print('\n--- УСПЕШНОЕ УДАЛЕНИЕ СПОСОБА ОПЛАТЫ ID: ${updatedMethod.id} ---');
   });
