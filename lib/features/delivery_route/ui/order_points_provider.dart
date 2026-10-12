@@ -44,6 +44,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
   bool isLoadingPaymentMethods = false;
   String? paymentMethodLoadError;
   String? paymentMethodErrorMessage;
+  String? paymentMethodNameError;
   int _paymentLoadVersion = 0;
   final Map<String, PaymentMethod> paymentMethodsById = {};
 
@@ -142,6 +143,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
   ) async {
     if (!method.isActive) return false;
     paymentMethodErrorMessage = null;
+    paymentMethodNameError = null;
     try {
       final client = await clientRepo.updateClient(
         clientId,
@@ -353,6 +355,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
 
   Future<PaymentMethod?> addPaymentMethod(String name) async {
     paymentMethodErrorMessage = null;
+    paymentMethodNameError = null;
     try {
       final created = await paymentMethodRepo.createPaymentMethod(
         CreatePaymentMethodRequest(name: name),
@@ -367,6 +370,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
 
   Future<bool> updatePaymentMethod(String id, String name) async {
     paymentMethodErrorMessage = null;
+    paymentMethodNameError = null;
     try {
       final updated = await paymentMethodRepo.updatePaymentMethod(
         id,
@@ -382,6 +386,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
 
   Future<bool> setPaymentMethodActive(String id, bool isActive) async {
     paymentMethodErrorMessage = null;
+    paymentMethodNameError = null;
     try {
       final updated = await paymentMethodRepo.updatePaymentMethod(
         id,
@@ -407,7 +412,9 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
 
   String _paymentSaveError(Object error) {
     if (error is ApiException && error.statusCode == 409) {
-      return 'Способ оплаты с таким названием уже существует.';
+      paymentMethodNameError =
+          'Способ оплаты с таким названием уже существует.';
+      return paymentMethodNameError!;
     }
     if (error is ApiException && error.statusCode == 404) {
       return 'Способ оплаты не найден. Обновите список.';

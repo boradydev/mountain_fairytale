@@ -141,27 +141,30 @@ class _PaymentMethodSelectorState extends State<PaymentMethodSelector> {
     builder: (context, _) {
       final provider = widget.provider;
       final items = List<PaymentMethod>.of(provider.paymentMethods);
-      PaymentMethod? selected;
+      PaymentMethod? selectable;
       for (final method in items) {
-        if (method.id == widget.selectedId) selected = method;
+        if (method.id == widget.selectedId) selectable = method;
       }
-      selected ??= provider.paymentMethodsById[widget.selectedId];
-      if (selected != null && !items.any((row) => row.id == selected!.id)) {
-        items.add(selected);
-      }
+      // Preserve the client's current value without adding filtered records
+      // back to the menu. Hidden records remain available in the editor.
+      final selected =
+          selectable ?? provider.paymentMethodsById[widget.selectedId];
+      final currentLabel = selected == null
+          ? widget.selectedName
+          : '${selected.name}${selected.isActive ? '' : ' — Неактивен'}';
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           AppDropdown<PaymentMethod>(
             key: ValueKey(
-              'payment-$_selectionVersion-${selected?.id}-${selected?.name}-${selected?.isActive}',
+              'payment-$_selectionVersion-${provider.showInactivePaymentMethods}-${selectable?.id}-${selected?.name}-${selected?.isActive}',
             ),
             label: 'Форма оплаты *',
             focusNode: _focusNode,
             enabled: !_busy,
             items: items,
-            value: selected,
-            hint: widget.selectedName ?? 'Выберите форму оплаты',
+            value: selectable,
+            hint: currentLabel ?? 'Выберите форму оплаты',
             showEdit: true,
             showAdd: true,
             editBeforeAdd: true,

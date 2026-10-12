@@ -210,6 +210,32 @@ void main() {
       find.text('Способ оплаты с таким названием уже существует.'),
       findsOneWidget,
     );
+    final field = tester.widget<TextFormField>(find.byType(TextFormField));
+    expect(
+      field.forceErrorText,
+      'Способ оплаты с таким названием уже существует.',
+    );
+    expect(
+      tester.state<FormFieldState<String>>(find.byType(TextFormField)).hasError,
+      isTrue,
+    );
+    expect(
+      find.ancestor(
+        of: find.text('Способ оплаты с таким названием уже существует.'),
+        matching: find.byType(TextFormField),
+      ),
+      findsOneWidget,
+    );
+    await tester.enterText(find.byType(TextFormField), 'Другое название');
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<TextFormField>(find.byType(TextFormField)).forceErrorText,
+      isNull,
+    );
+    expect(
+      tester.state<FormFieldState<String>>(find.byType(TextFormField)).hasError,
+      isFalse,
+    );
   });
 
   testWidgets(
@@ -269,6 +295,62 @@ void main() {
       expect(orders.points.single.paymentMethodId, 'active');
       expect(orders.paymentMethods, isEmpty);
       expect(find.text('Наличные — Неактивен'), findsOneWidget);
+      expect(clients.request, isNull);
+    },
+  );
+
+  testWidgets(
+    'filter hides current inactive method from options without clearing client',
+    (tester) async {
+      final repo = _Payments();
+      final clients = _Clients();
+      final orders = _Orders(repo, clients);
+      // Keep another active option so the closed field and menu can both be checked.
+      repo.rows.add(_method('second', 'СБП'));
+      await orders.loadPaymentMethods();
+      await orders.setPaymentMethodActive('active', false);
+      await _open(tester, orders, clients);
+      DropdownButtonFormField<PaymentMethod> dropdown() =>
+          tester.widget<DropdownButtonFormField<PaymentMethod>>(
+            find.byType(DropdownButtonFormField<PaymentMethod>),
+          );
+      expect(
+        tester
+            .widget<DropdownButton<PaymentMethod>>(
+              find.byType(DropdownButton<PaymentMethod>),
+            )
+            .items!
+            .map((item) => item.value!.id),
+        ['second'],
+      );
+      expect(dropdown().initialValue, isNull);
+      expect(find.text('Наличные — Неактивен'), findsOneWidget);
+      await tester.tap(find.byTooltip('Показать неактивные записи'));
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<DropdownButton<PaymentMethod>>(
+              find.byType(DropdownButton<PaymentMethod>),
+            )
+            .items!
+            .map((item) => item.value!.id),
+        containsAll(['active', 'inactive', 'second']),
+      );
+      expect(dropdown().initialValue?.id, 'active');
+      await tester.tap(find.byTooltip('Скрыть неактивные записи'));
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<DropdownButton<PaymentMethod>>(
+              find.byType(DropdownButton<PaymentMethod>),
+            )
+            .items!
+            .map((item) => item.value!.id),
+        ['second'],
+      );
+      expect(dropdown().initialValue, isNull);
+      expect(find.text('Наличные — Неактивен'), findsOneWidget);
+      expect(orders.points.single.paymentMethodId, 'active');
       expect(clients.request, isNull);
     },
   );

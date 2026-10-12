@@ -32,6 +32,7 @@ class _PaymentMethodDialogState extends State<PaymentMethodDialog> {
   bool _checking = false;
   String? _checkedName;
   String? _error;
+  String? _nameError;
   PaymentMethod? _duplicate;
   int _checkVersion = 0;
 
@@ -54,6 +55,7 @@ class _PaymentMethodDialogState extends State<PaymentMethodDialog> {
       _checkedName = null;
       _checking = false;
       _error = null;
+      _nameError = null;
     });
   }
 
@@ -130,9 +132,11 @@ class _PaymentMethodDialogState extends State<PaymentMethodDialog> {
         Navigator.of(context).pop(created);
       } else {
         setState(() {
-          _error =
-              widget.provider.paymentMethodErrorMessage ??
-              'Не удалось сохранить способ оплаты.';
+          _nameError = widget.provider.paymentMethodNameError;
+          _error = _nameError == null
+              ? widget.provider.paymentMethodErrorMessage ??
+                    'Не удалось сохранить способ оплаты.'
+              : null;
         });
       }
     } finally {
@@ -279,6 +283,7 @@ class _PaymentMethodDialogState extends State<PaymentMethodDialog> {
         const SizedBox(height: 8),
         TextFormField(
           controller: _nameController,
+          forceErrorText: _nameError,
           focusNode: _nameFocusNode,
           enabled: !_busy,
           maxLength: 120,
@@ -287,6 +292,7 @@ class _PaymentMethodDialogState extends State<PaymentMethodDialog> {
             border: OutlineInputBorder(),
             prefixIcon: Icon(Icons.payments_outlined),
             hintText: 'Например: наличные, СБП',
+            errorMaxLines: 2,
           ),
           validator: (value) => value == null || value.trim().isEmpty
               ? 'Введите название'
