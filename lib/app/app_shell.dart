@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/features/audit_event/ui/audit_event_screen.dart';
+import 'package:mountain_fairytale/features/auth/ui/auth_provider.dart';
 import 'package:mountain_fairytale/features/dashboard/ui/dashboard_screen.dart';
+import 'package:mountain_fairytale/features/employees/ui/employees_screen.dart';
 import 'package:mountain_fairytale/features/sales_representative_commissions/ui/sales_analytics_screen.dart';
 import 'package:mountain_fairytale/shared/widgets/account_menu_button.dart';
 import 'package:mountain_fairytale/shared/widgets/theme_toggle_button.dart';
+import 'package:provider/provider.dart';
 
 /// Общая навигация основных разделов. Вкладки создаются при первом открытии
 /// и сохраняют своё состояние до завершения пользовательской сессии.
@@ -22,14 +25,25 @@ class _AppShellState extends State<AppShell> {
     DeliveryDaysScreen(),
     SalesRepresentativeCommissionScreen(),
     AuditLogScreen(),
+    EmployeesScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final isAdmin = context.select(
+      (AuthProvider provider) => provider.currentUser?.isAdmin == true,
+    );
+    final sectionCount = isAdmin ? _screens.length : _screens.length - 1;
+    if (!isAdmin) {
+      _visitedSections.remove(3);
+      if (_selectedIndex >= sectionCount) _selectedIndex = 0;
+    }
 
     return DefaultTabController(
-      length: _screens.length,
+      key: ValueKey(isAdmin),
+      initialIndex: _selectedIndex,
+      length: sectionCount,
       child: Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,
@@ -54,10 +68,11 @@ class _AppShellState extends State<AppShell> {
                 _visitedSections.add(index);
               });
             },
-            tabs: const [
-              Tab(text: 'Дашборд'),
-              Tab(text: 'Вознаграждения'),
-              Tab(text: 'Журнал событий'),
+            tabs: [
+              const Tab(text: 'Дашборд'),
+              const Tab(text: 'Вознаграждения'),
+              const Tab(text: 'Журнал событий'),
+              if (isAdmin) const Tab(text: 'Сотрудники'),
             ],
           ),
           actions: const [
@@ -69,7 +84,7 @@ class _AppShellState extends State<AppShell> {
         body: IndexedStack(
           index: _selectedIndex,
           children: [
-            for (var index = 0; index < _screens.length; index++)
+            for (var index = 0; index < sectionCount; index++)
               TickerMode(
                 enabled: index == _selectedIndex,
                 child: ExcludeFocus(

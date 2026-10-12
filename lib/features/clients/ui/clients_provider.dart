@@ -5,6 +5,8 @@ import 'package:mountain_fairytale/features/clients/clients_abcs.dart';
 
 enum ClientStatus { initial, loading, success, failure }
 
+enum ClientListMode { database, followUp }
+
 class ClientsProvider extends SafeChangeNotifier {
   final ClientRepository _repository;
 
@@ -31,8 +33,7 @@ class ClientsProvider extends SafeChangeNotifier {
     }
   }
 
-  // Новый стейт: показывать только просроченных?
-  bool _showOnlySleeping = false;
+  ClientListMode _listMode = ClientListMode.database;
 
   List<Client> get clients => _clients;
   ClientStatus get status => _status;
@@ -41,13 +42,12 @@ class ClientsProvider extends SafeChangeNotifier {
   bool get hasError => _status == ClientStatus.failure;
   bool get isEmpty => _status == ClientStatus.success && _clients.isEmpty;
 
-  // Геттер для чтения состояния фильтра в UI
-  bool get showOnlySleeping => _showOnlySleeping;
+  ClientListMode get listMode => _listMode;
 
-  /// Переключатель фильтра
-  void toggleSleepingFilter() {
-    _showOnlySleeping = !_showOnlySleeping;
-    notifyListeners(); // Мгновенно перерисовываем UI с новой логикой
+  void setListMode(ClientListMode mode) {
+    if (_listMode == mode) return;
+    _listMode = mode;
+    notifyListeners();
   }
 
   /// Универсальный геттер, который теперь учитывает активный режим
@@ -76,7 +76,7 @@ class ClientsProvider extends SafeChangeNotifier {
     // ----------------------------------------------------
     // РЕЖИМ 1: Показываем ТОЛЬКО просроченных клиентов
     // ----------------------------------------------------
-    if (_showOnlySleeping) {
+    if (_listMode == ClientListMode.followUp) {
       // Сначала фильтруем: оставляем только тех, кто реально спит
       final filtered = _clients.where(isSleeping).toList();
 

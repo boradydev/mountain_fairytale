@@ -86,125 +86,120 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
         : allEmployees.where((employee) => employee.isActive).toList();
     final selected = _selected(employees);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Сотрудники')),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 700),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: provider.isLoading && allEmployees.isEmpty
-                ? const Center(child: CircularProgressIndicator())
-                : provider.errorMessage != null && allEmployees.isEmpty
-                ? _LoadError(
-                    message: provider.errorMessage!,
-                    onRetry: provider.loadEmployees,
-                  )
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      AppDropdown<Employee>(
-                        key: ValueKey(selected?.id),
-                        label: 'Сотрудник',
-                        items: employees,
-                        value: selected,
-                        hint: employees.isEmpty
-                            ? 'Нет сотрудников'
-                            : 'Выберите сотрудника',
-                        prefixIcon: Icons.people_outline,
-                        itemLabelBuilder: (employee) => employee.username,
-                        itemBuilder: (employee) => Row(
-                          children: [
-                            Expanded(child: Text(employee.username)),
-                            if (!employee.isActive)
-                              const Text(
-                                'Неактивен',
-                                style: TextStyle(fontSize: 12),
-                              ),
-                          ],
-                        ),
-                        onChanged: (employee) => setState(
-                          () => _selectedEmployeeId = employee?.id,
-                        ),
-                        enabled: !provider.isLoading,
-                        showAdd: true,
-                        editBeforeAdd: true,
-                        onAdd: () => _openEditor(),
-                        showEdit: true,
-                        onEdit: selected == null
-                            ? null
-                            : () => _openEditor(employee: selected),
-                        showInactiveToggle: true,
-                        includeInactive: _includeDeactivated,
-                        onIncludeInactiveChanged: (value) => setState(() {
-                          _includeDeactivated = value;
-                          if (!value &&
-                              selected != null &&
-                              !selected.isActive) {
-                            _selectedEmployeeId = null;
-                          }
-                        }),
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 700),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: provider.isLoading && allEmployees.isEmpty
+              ? const Center(child: CircularProgressIndicator())
+              : provider.errorMessage != null && allEmployees.isEmpty
+              ? _LoadError(
+                  message: provider.errorMessage!,
+                  onRetry: provider.loadEmployees,
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    AppDropdown<Employee>(
+                      key: ValueKey(selected?.id),
+                      label: 'Сотрудник',
+                      items: employees,
+                      value: selected,
+                      hint: employees.isEmpty
+                          ? 'Нет сотрудников'
+                          : 'Выберите сотрудника',
+                      prefixIcon: Icons.people_outline,
+                      itemLabelBuilder: (employee) => employee.username,
+                      itemBuilder: (employee) => Row(
+                        children: [
+                          Expanded(child: Text(employee.username)),
+                          if (!employee.isActive)
+                            const Text(
+                              'Неактивен',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                        ],
                       ),
-                      if (provider.isLoading && allEmployees.isNotEmpty)
-                        const LinearProgressIndicator(),
-                      if (provider.errorMessage != null &&
-                          allEmployees.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 12),
-                          child: Text(
-                            provider.errorMessage!,
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
-                            ),
+                      onChanged: (employee) => setState(
+                        () => _selectedEmployeeId = employee?.id,
+                      ),
+                      enabled: !provider.isLoading,
+                      showAdd: true,
+                      editBeforeAdd: true,
+                      onAdd: () => _openEditor(),
+                      showEdit: true,
+                      onEdit: selected == null
+                          ? null
+                          : () => _openEditor(employee: selected),
+                      showInactiveToggle: true,
+                      includeInactive: _includeDeactivated,
+                      onIncludeInactiveChanged: (value) => setState(() {
+                        _includeDeactivated = value;
+                        if (!value && selected != null && !selected.isActive) {
+                          _selectedEmployeeId = null;
+                        }
+                      }),
+                    ),
+                    if (provider.isLoading && allEmployees.isNotEmpty)
+                      const LinearProgressIndicator(),
+                    if (provider.errorMessage != null &&
+                        allEmployees.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: Text(
+                          provider.errorMessage!,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
                           ),
                         ),
-                      const SizedBox(height: 24),
-                      if (selected == null)
-                        const Card(
-                          child: Padding(
-                            padding: EdgeInsets.all(24),
-                            child: Text('Сотрудники ещё не добавлены.'),
-                          ),
-                        )
-                      else ...[
-                        Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(20),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  selected.username,
-                                  style: Theme.of(context).textTheme.titleLarge,
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  'Комиссия: ${_formatPercent(selected.commissionPercent)}%',
-                                ),
+                      ),
+                    const SizedBox(height: 24),
+                    if (selected == null)
+                      const Card(
+                        child: Padding(
+                          padding: EdgeInsets.all(24),
+                          child: Text('Сотрудники ещё не добавлены.'),
+                        ),
+                      )
+                    else ...[
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                selected.username,
+                                style: Theme.of(context).textTheme.titleLarge,
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'Комиссия: ${_formatPercent(selected.commissionPercent)}%',
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Статус: ${selected.isActive ? 'Активен' : 'Неактивен'}',
+                              ),
+                              if (selected.isAdmin) ...[
                                 const SizedBox(height: 4),
-                                Text(
-                                  'Статус: ${selected.isActive ? 'Активен' : 'Неактивен'}',
-                                ),
-                                if (selected.isAdmin) ...[
-                                  const SizedBox(height: 4),
-                                  const Text('Роль: администратор'),
-                                ],
+                                const Text('Роль: администратор'),
                               ],
-                            ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 16),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: AppSecondaryButton(
-                            text: 'Изменить пароль',
-                            onPressed: () => _changePassword(selected),
-                          ),
+                      ),
+                      const SizedBox(height: 16),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: AppSecondaryButton(
+                          text: 'Изменить пароль',
+                          onPressed: () => _changePassword(selected),
                         ),
-                      ],
+                      ),
                     ],
-                  ),
-          ),
+                  ],
+                ),
         ),
       ),
     );

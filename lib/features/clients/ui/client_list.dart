@@ -14,28 +14,59 @@ class ClientsAttentionListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final showOnlySleeping = context.select(
-      (ClientsProvider p) => p.showOnlySleeping,
+    final listMode = context.select(
+      (ClientsProvider p) => p.listMode,
     );
+    final colors = Theme.of(context).colorScheme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-          child: Wrap(
-            spacing: 16,
-            runSpacing: 8,
-            crossAxisAlignment: WrapCrossAlignment.center,
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Клиенты', style: Theme.of(context).textTheme.titleMedium),
-              Tooltip(
-                message: 'Показывать только просроченных клиентов',
-                child: FilterChip(
-                  label: const Text('Просроченные'),
-                  selected: showOnlySleeping,
-                  onSelected: (_) =>
-                      context.read<ClientsProvider>().toggleSleepingFilter(),
+              Wrap(
+                spacing: 16,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(
+                    'Клиенты',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  SegmentedButton<ClientListMode>(
+                    segments: const [
+                      ButtonSegment(
+                        value: ClientListMode.database,
+                        label: Text('База клиентов'),
+                        icon: Icon(Icons.people_outline),
+                      ),
+                      ButtonSegment(
+                        value: ClientListMode.followUp,
+                        label: Text('Обзвон клиентов'),
+                        icon: Icon(Icons.phone_outlined),
+                      ),
+                    ],
+                    selected: {listMode},
+                    onSelectionChanged: (selection) => context
+                        .read<ClientsProvider>()
+                        .setListMode(selection.single),
+                    style: SegmentedButton.styleFrom(
+                      selectedBackgroundColor: colors.primary,
+                      selectedForegroundColor: colors.onPrimary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                listMode == ClientListMode.database
+                    ? 'Все клиенты: добавление и редактирование данных.'
+                    : 'Засыпающие клиенты: обзвон и перенос следующего контакта.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: colors.onSurfaceVariant,
                 ),
               ),
             ],
@@ -61,20 +92,20 @@ class ClientsAttentionListView extends StatelessWidget {
 
     final clients = context.select((ClientsProvider p) => p.sortedClients);
 
-    // Читаем из провайдера, включен ли сейчас фильтр просрочки
-    final showOnlySleeping = context.select(
-      (ClientsProvider p) => p.showOnlySleeping,
+    final listMode = context.select(
+      (ClientsProvider p) => p.listMode,
     );
+    final isFollowUp = listMode == ClientListMode.followUp;
 
-    // Если фильтр включен — карточку добавления НЕ показываем (count = 0), иначе показываем (count = 1)
-    final addCardCount = showOnlySleeping ? 0 : 1;
+    // Добавление клиентов доступно в режиме ведения базы.
+    final addCardCount = isFollowUp ? 0 : 1;
 
-    if (clients.isEmpty && showOnlySleeping) {
+    if (clients.isEmpty && isFollowUp) {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(16.0),
           child: Text(
-            'Все клиенты в порядке!\nПросроченных нет.',
+            'Нет клиентов для обзвона.\nСейчас нет засыпающих клиентов без отложенного контакта.',
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.grey, fontSize: 16),
           ),
@@ -83,6 +114,7 @@ class ClientsAttentionListView extends StatelessWidget {
     }
 
     return ListView.builder(
+      key: PageStorageKey(listMode),
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: clients.length + addCardCount,
       itemBuilder: (context, index) {
@@ -170,7 +202,7 @@ class _ClientAttentionCard extends StatelessWidget {
                           Icons.access_time_rounded,
                           color: statusConfig.badgeTextColor,
                         ),
-                        tooltip: 'Отложить обработку',
+                        tooltip: 'Отложить следующий контакт',
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                         onSelected: (weeks) async {

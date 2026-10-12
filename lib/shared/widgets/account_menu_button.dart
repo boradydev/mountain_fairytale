@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/features/auth/ui/auth_provider.dart';
 import 'package:mountain_fairytale/features/auth/ui/change_password_dialog.dart';
-import 'package:mountain_fairytale/features/employees/ui/employees_screen.dart';
 import 'package:provider/provider.dart';
 
 /// Действия учётной записи в общей верхней панели приложения.
@@ -31,17 +30,11 @@ class AccountMenuButton extends StatelessWidget {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Пароль изменён.')),
             );
-          case 'employees':
-            await Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const EmployeesScreen()),
-            );
         }
       },
       itemBuilder: (_) => [
         PopupMenuItem<String>(enabled: false, child: Text(username)),
         const PopupMenuDivider(),
-        if (auth.currentUser?.isAdmin == true)
-          const PopupMenuItem(value: 'employees', child: Text('Сотрудники')),
         const PopupMenuItem(value: 'password', child: Text('Изменить пароль')),
         const PopupMenuItem(value: 'logout', child: Text('Выйти')),
       ],
