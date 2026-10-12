@@ -1,16 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:mountain_fairytale/l10n/app_localizations.dart';
 import 'package:mountain_fairytale/features/clients/ui/clients_provider.dart';
-import 'package:mountain_fairytale/features/auth/ui/auth_provider.dart';
-import 'package:mountain_fairytale/features/auth/ui/change_password_dialog.dart';
 import 'package:mountain_fairytale/features/delivery_days/ui/delivery_days_provider.dart';
-import 'package:mountain_fairytale/features/audit_event/ui/audit_event_screen.dart';
 import 'package:mountain_fairytale/features/clients/ui/client_list.dart';
 import 'package:mountain_fairytale/features/delivery_days/ui/delivery_day_list.dart';
-import 'package:mountain_fairytale/features/employees/ui/employees_screen.dart';
-import 'package:mountain_fairytale/features/sales_representative_commissions/ui/sales_analytics_screen.dart';
-import 'package:mountain_fairytale/shared/widgets/locate_toggle_widget.dart';
-import 'package:mountain_fairytale/shared/widgets/theme_toggle_button.dart';
 import 'package:provider/provider.dart';
 
 class DeliveryDaysScreen extends StatefulWidget {
@@ -57,123 +49,16 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final status = context.select((DeliveryDaysProvider p) => p.status);
-    final auth = context.watch<AuthProvider>();
-
-    // Слушаем состояние фильтра, чтобы менять цвет иконки кнопки
-    final showOnlySleeping = context.select(
-      (ClientsProvider p) => p.showOnlySleeping,
-    );
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.appTitle),
-        actions: [
-          PopupMenuButton<String>(
-            tooltip: auth.currentUser?.username ?? 'Учётная запись',
-            enabled: !auth.isLoading,
-            onSelected: (value) async {
-              if (value == 'logout') {
-                await auth.logout();
-              } else if (value == 'password') {
-                final changed = await showDialog<bool>(
-                  context: context,
-                  barrierDismissible: false,
-                  builder: (_) => const ChangePasswordDialog(),
-                );
-                if (!context.mounted || changed != true) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Пароль изменён.')),
-                );
-              } else if (value == 'employees') {
-                await Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const EmployeesScreen(),
-                  ),
-                );
-              }
-            },
-            itemBuilder: (_) => [
-              if (auth.currentUser?.isAdmin == true)
-                const PopupMenuItem(
-                  value: 'employees',
-                  child: Text('Сотрудники'),
-                ),
-              const PopupMenuItem(
-                value: 'password',
-                child: Text('Изменить пароль'),
-              ),
-              const PopupMenuItem(value: 'logout', child: Text('Выйти')),
-            ],
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Row(
-                children: [
-                  const Icon(Icons.account_circle_outlined),
-                  const SizedBox(width: 8),
-                  Text(auth.currentUser?.username ?? ''),
-                ],
-              ),
-            ),
-          ),
-          IconButton(
-            tooltip: 'Журнал событий',
-            icon: const Icon(Icons.history),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const AuditLogScreen(),
-                ),
-              );
-            },
-          ),
-          IconButton(
-            tooltip: 'Вознаграждение торговых представителей',
-            icon: const Icon(Icons.payments_outlined),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const SalesRepresentativeCommissionScreen(),
-                ),
-              );
-            },
-          ),
-          // Новая кнопка фильтрации клиентов по просрочке
-          IconButton(
-            icon: Icon(
-              showOnlySleeping
-                  ? Icons.warning_rounded
-                  : Icons.warning_amber_rounded,
-              // Если фильтр включен — красим его в акцентный цвет (например, оранжевый или primary)
-              color: showOnlySleeping ? Colors.orange.shade700 : null,
-            ),
-            tooltip: showOnlySleeping
-                ? 'Показать всех'
-                : 'Только просроченные клиенты',
-            onPressed: () =>
-                context.read<ClientsProvider>().toggleSleepingFilter(),
-          ),
-          VerticalDivider(
-            thickness: 2, // Толщина линии
-            width: 20, // Отступы вокруг линии (общая ширина виджета)
-            indent: 10, // Отступ сверху
-            endIndent: 10, // Отступ снизу
-          ),
-          const LocaleToggleButton(),
-          const ThemeToggleButton(),
-        ],
+    return switch (status) {
+      DeliveryStatus.initial || DeliveryStatus.loading => const Center(
+        child: CircularProgressIndicator(),
       ),
-      body: switch (status) {
-        DeliveryStatus.initial || DeliveryStatus.loading => const Center(
-          child: CircularProgressIndicator(),
-        ),
-        DeliveryStatus.failure => _ErrorView(),
-        DeliveryStatus.success => _Dashboard(
-          scrollController: _scrollController,
-        ),
-      },
-    );
+      DeliveryStatus.failure => _ErrorView(),
+      DeliveryStatus.success => _Dashboard(
+        scrollController: _scrollController,
+      ),
+    };
   }
 }
 

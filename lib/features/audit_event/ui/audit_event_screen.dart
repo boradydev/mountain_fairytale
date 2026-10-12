@@ -19,6 +19,7 @@ class _AuditLogScreenState extends State<AuditLogScreen> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       context.read<AuditLogProvider>().fetchEvents();
     });
 
@@ -50,34 +51,29 @@ class _AuditLogScreenState extends State<AuditLogScreen> {
       (AuditLogProvider p) => p.status,
     );
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Журнал событий'),
-      ),
-      body: Column(
-        children: [
-          _SearchField(
-            controller: _searchController,
-            onChanged: (value) {
-              context.read<AuditLogProvider>().searchEvents(value);
-            },
-          ),
-          const Divider(height: 1),
-          Expanded(
-            child: switch (status) {
-              AuditLogStatus.initial || AuditLogStatus.loading => const Center(
-                child: CircularProgressIndicator(),
-              ),
+    return Column(
+      children: [
+        _SearchField(
+          controller: _searchController,
+          onChanged: (value) {
+            context.read<AuditLogProvider>().searchEvents(value);
+          },
+        ),
+        const Divider(height: 1),
+        Expanded(
+          child: switch (status) {
+            AuditLogStatus.initial || AuditLogStatus.loading => const Center(
+              child: CircularProgressIndicator(),
+            ),
 
-              AuditLogStatus.failure => _ErrorView(),
+            AuditLogStatus.failure => _ErrorView(),
 
-              AuditLogStatus.success => _AuditEventList(
-                scrollController: _scrollController,
-              ),
-            },
-          ),
-        ],
-      ),
+            AuditLogStatus.success => _AuditEventList(
+              scrollController: _scrollController,
+            ),
+          },
+        ),
+      ],
     );
   }
 }

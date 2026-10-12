@@ -5,7 +5,6 @@ import 'package:mountain_fairytale/features/clients/ui/clients_selection_panel.d
 import 'package:mountain_fairytale/features/delivery_route/ui/route_meta_panel.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/route_points_list.dart';
 import 'package:mountain_fairytale/shared/widgets/app_notify.dart';
-import 'package:mountain_fairytale/shared/widgets/locate_toggle_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/pdf_route_preview_dialog.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/theme_toggle_button.dart';
@@ -154,7 +153,6 @@ class _RouteConstructorScreenState extends State<RouteConstructorScreen> {
             indent: 10, // Отступ сверху
             endIndent: 10, // Отступ снизу
           ),
-          const LocaleToggleButton(),
           const ThemeToggleButton(),
         ],
       ),

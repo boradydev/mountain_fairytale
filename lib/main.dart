@@ -56,7 +56,7 @@ import 'package:mountain_fairytale/features/sales_representative_clients/ui/sale
 import 'package:mountain_fairytale/features/sales_representative_commissions/ui/sales_representative_commission_provider.dart';
 import 'package:mountain_fairytale/features/sales_representatives/ui/sales_representative_provider.dart';
 import 'package:mountain_fairytale/shared/providers/theme_provider.dart';
-import 'package:mountain_fairytale/features/dashboard/ui/dashboard_screen.dart';
+import 'package:mountain_fairytale/app/app_shell.dart';
 import 'package:mountain_fairytale/features/products/products_abcs.dart';
 import 'package:mountain_fairytale/features/auth/ui/login_screen.dart';
 import 'package:provider/provider.dart';
@@ -382,7 +382,7 @@ class _AuthGateState extends State<_AuthGate> {
         );
 
       case AuthStatus.authenticated:
-        return const DeliveryDaysScreen();
+        return const AppShell();
     }
   }
 }

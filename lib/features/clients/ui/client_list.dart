@@ -14,6 +14,40 @@ class ClientsAttentionListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final showOnlySleeping = context.select(
+      (ClientsProvider p) => p.showOnlySleeping,
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          child: Wrap(
+            spacing: 16,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text('Клиенты', style: Theme.of(context).textTheme.titleMedium),
+              Tooltip(
+                message: 'Показывать только просроченных клиентов',
+                child: FilterChip(
+                  label: const Text('Просроченные'),
+                  selected: showOnlySleeping,
+                  onSelected: (_) =>
+                      context.read<ClientsProvider>().toggleSleepingFilter(),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const Divider(height: 1),
+        Expanded(child: _buildList(context)),
+      ],
+    );
+  }
+
+  Widget _buildList(BuildContext context) {
     final status = context.select((ClientsProvider p) => p.status);
 
     if (status == ClientStatus.loading) {
