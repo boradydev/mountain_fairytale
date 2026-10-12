@@ -16,8 +16,12 @@ abstract interface class ClientDataSource {
     String id,
     Map<String, dynamic> json,
   );
-  Future<List<ClientDirectoryEntry>> getSalesRepresentatives();
-  Future<List<ClientDirectoryEntry>> getPaymentMethods();
+  Future<List<ClientDirectoryEntry>> getSalesRepresentatives({
+    bool includeDeactivated = false,
+  });
+  Future<List<ClientDirectoryEntry>> getPaymentMethods({
+    bool includeDeactivated = false,
+  });
 }
 
 abstract interface class ClientRepository {
@@ -31,6 +35,10 @@ abstract interface class ClientRepository {
   Future<Client> createClient(CreateClientRequest request);
   Future<Client> updateClient(String id, UpdateClientRequest request);
   Future<void> deleteClient(String id);
-  Future<List<ClientDirectoryEntry>> getSalesRepresentatives();
-  Future<List<ClientDirectoryEntry>> getPaymentMethods();
+  Future<List<ClientDirectoryEntry>> getSalesRepresentatives({
+    bool includeDeactivated = false,
+  });
+  Future<List<ClientDirectoryEntry>> getPaymentMethods({
+    bool includeDeactivated = false,
+  });
 }

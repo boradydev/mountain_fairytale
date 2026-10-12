@@ -75,11 +75,7 @@ class _AddClientCard extends StatelessWidget {
       label: 'Добавить клиента',
       icon: Icons.person_add_alt_1_outlined,
       onTap: () {
-        showDialog(
-          context: context,
-          barrierDismissible: true, // Клик вне окна закроет его
-          builder: (context) => const ClientDialog(),
-        );
+        showClientDialog(context);
       },
     );
   }
@@ -100,12 +96,7 @@ class _ClientAttentionCard extends StatelessWidget {
 
     return AppBaseCard(
       onTap: () {
-        showDialog(
-          context: context,
-          builder: (context) => ClientDialog(
-            client: client,
-          ),
-        );
+        showClientDialog(context, client: client);
       },
       child: IntrinsicHeight(
         child: Row(

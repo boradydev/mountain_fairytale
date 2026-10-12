@@ -1,3 +1,5 @@
+import 'package:mountain_fairytale/features/sales_representatives/data/sales_representative_api_repo.dart';
+
 import 'dart:async';
 import 'dart:io';
 
@@ -187,6 +189,9 @@ Future<void> main() async {
   // Передаем созданные синглтоны репозиториев в UI-провайдеры управления стейтом
   // ===========================================================================
   final sessionProviders = <SingleChildWidget>[
+    Provider<SalesRepresentativeApiRepository>(
+      create: (_) => SalesRepresentativeApiRepository(apiClient),
+    ),
     Provider<EmployeeRepository>.value(value: employeeRepository),
     ChangeNotifierProvider(
       create: (_) => EmployeesProvider(employeeRepository),

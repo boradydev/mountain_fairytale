@@ -15,6 +15,7 @@ class ClientsProvider extends SafeChangeNotifier {
   ClientStatus _status = ClientStatus.initial;
   String _errorMessage = '';
   String? phoneError;
+  Client? lastSavedClient;
   int _fetchVersion = 0;
 
   void clearPhoneError() {
@@ -143,6 +144,7 @@ class ClientsProvider extends SafeChangeNotifier {
 
       // Обновляем локальный список в стейте провайдера
       _fetchVersion++;
+      lastSavedClient = updatedClient;
       _clients = _clients.map((client) {
         return client.id == clientId ? updatedClient : client;
       }).toList();
@@ -165,10 +167,14 @@ class ClientsProvider extends SafeChangeNotifier {
     String address,
   ) => _repository.checkDuplicate(name, phone, address);
 
-  Future<List<ClientDirectoryEntry>> getSalesRepresentatives() =>
-      _repository.getSalesRepresentatives();
-  Future<List<ClientDirectoryEntry>> getPaymentMethods() =>
-      _repository.getPaymentMethods();
+  Future<List<ClientDirectoryEntry>> getSalesRepresentatives({
+    bool includeDeactivated = false,
+  }) => _repository.getSalesRepresentatives(
+    includeDeactivated: includeDeactivated,
+  );
+  Future<List<ClientDirectoryEntry>> getPaymentMethods({
+    bool includeDeactivated = false,
+  }) => _repository.getPaymentMethods(includeDeactivated: includeDeactivated);
   Future<List<Client>> searchClients(
     String search, {
     bool includeDeactivated = false,
@@ -204,6 +210,7 @@ class ClientsProvider extends SafeChangeNotifier {
       final newClient = await _repository.createClient(request);
 
       _fetchVersion++;
+      lastSavedClient = newClient;
       _clients = [newClient, ..._clients];
       _status = ClientStatus.success;
 
@@ -248,6 +255,7 @@ class ClientsProvider extends SafeChangeNotifier {
       );
 
       _fetchVersion++;
+      lastSavedClient = updatedClient;
       _clients = _clients.map((client) {
         return client.id == clientId ? updatedClient : client;
       }).toList();
@@ -294,6 +302,7 @@ class ClientsProvider extends SafeChangeNotifier {
       );
       _fetchVersion++;
       _clients = _clients.where((row) => row.id != id).toList();
+      lastSavedClient = client;
       if (active) _clients = [client, ..._clients];
       _status = ClientStatus.success;
       notifyListeners();

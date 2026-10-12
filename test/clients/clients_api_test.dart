@@ -230,6 +230,15 @@ void main() {
     );
   });
 
+  test('directory eye toggles request inactive records and preserve status', () async {
+    transport.respond = (request) async => request.path.contains('sales-representatives')
+        ? envelope({'salesRepresentatives': [{'salesRepresentativeId': 'rep-uuid', 'name': 'Представитель', 'isActive': false}]})
+        : envelope({'paymentMethods': [{'paymentMethodId': 'method-uuid', 'name': 'Карта', 'isActive': false}]});
+    expect((await repo.getSalesRepresentatives(includeDeactivated: true)).single.isActive, isFalse);
+    expect((await repo.getPaymentMethods(includeDeactivated: true)).single.isActive, isFalse);
+    expect(transport.requests.every((request) => Uri.parse(request.path).queryParameters['include_deactivated'] == 'true'), isTrue);
+  });
+
   test('HTTP conflict propagates by status code', () async {
     transport.respond = (_) async => const HttpTransportResponse(
       statusCode: 409,

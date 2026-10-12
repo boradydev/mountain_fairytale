@@ -65,25 +65,38 @@ class ApiClientDataSource implements ClientDataSource {
     String path,
     String key,
     String idKey,
+    bool includeDeactivated,
   ) async {
     final response = await client.get(
-      '/protected/$path?include_deactivated=false',
+      '/protected/$path?include_deactivated=$includeDeactivated',
     );
     return (_data(response)[key] as List)
         .map(
-          (row) =>
-              ClientDirectoryEntry(row[idKey] as String, row['name'] as String),
+          (row) => ClientDirectoryEntry(
+            row[idKey] as String,
+            row['name'] as String,
+            isActive: row['isActive'] as bool? ?? true,
+          ),
         )
         .toList();
   }
 
   @override
-  Future<List<ClientDirectoryEntry>> getSalesRepresentatives() => _directory(
+  Future<List<ClientDirectoryEntry>> getSalesRepresentatives({
+    bool includeDeactivated = false,
+  }) => _directory(
     'sales-representatives',
     'salesRepresentatives',
     'salesRepresentativeId',
+    includeDeactivated,
   );
   @override
-  Future<List<ClientDirectoryEntry>> getPaymentMethods() =>
-      _directory('payment-methods', 'paymentMethods', 'paymentMethodId');
+  Future<List<ClientDirectoryEntry>> getPaymentMethods({
+    bool includeDeactivated = false,
+  }) => _directory(
+    'payment-methods',
+    'paymentMethods',
+    'paymentMethodId',
+    includeDeactivated,
+  );
 }

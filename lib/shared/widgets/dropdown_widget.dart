@@ -32,6 +32,9 @@ class AppDropdown<T> extends StatelessWidget {
   final bool editBeforeAdd;
   final Widget Function(T)? itemBuilder;
 
+  /// Use the same label and actions with a server-backed search field.
+  final Widget? field;
+
   const AppDropdown({
     super.key,
     required this.label,
@@ -53,6 +56,7 @@ class AppDropdown<T> extends StatelessWidget {
     this.onIncludeInactiveChanged,
     this.editBeforeAdd = false,
     this.itemBuilder,
+    this.field,
   });
 
   @override
@@ -103,28 +107,29 @@ class AppDropdown<T> extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 8),
-        DropdownButtonFormField<T>(
-          focusNode: focusNode,
-          isExpanded: true,
-          initialValue: value,
-          decoration: InputDecoration(
-            border: const OutlineInputBorder(),
-            prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
-            isDense: true,
-            enabled: enabled,
-          ),
-          hint: hint != null ? Text(hint!) : null,
-          validator: validator,
-          items: items.map((item) {
-            return DropdownMenuItem<T>(
-              value: item,
-              child:
-                  itemBuilder?.call(item) ??
-                  Text(itemLabelBuilder?.call(item) ?? item.toString()),
-            );
-          }).toList(),
-          onChanged: enabled ? onChanged : null,
-        ),
+        field ??
+            DropdownButtonFormField<T>(
+              focusNode: focusNode,
+              isExpanded: true,
+              initialValue: value,
+              decoration: InputDecoration(
+                border: const OutlineInputBorder(),
+                prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
+                isDense: true,
+                enabled: enabled,
+              ),
+              hint: hint != null ? Text(hint!) : null,
+              validator: validator,
+              items: items.map((item) {
+                return DropdownMenuItem<T>(
+                  value: item,
+                  child:
+                      itemBuilder?.call(item) ??
+                      Text(itemLabelBuilder?.call(item) ?? item.toString()),
+                );
+              }).toList(),
+              onChanged: enabled ? onChanged : null,
+            ),
       ],
     );
   }

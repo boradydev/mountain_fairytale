@@ -227,6 +227,28 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     if (product.isActive) _applyProduct(product);
   }
 
+  void syncClientPoint(Client client) {
+    points = points
+        .map(
+          (point) => point.clientId != client.id
+              ? point
+              : RoutePoint(
+                  clientId: point.clientId,
+                  clientName: client.name,
+                  city: point.city,
+                  address: client.address,
+                  phone: client.phone,
+                  paymentMethodId: client.defaultPaymentMethodId,
+                  paymentMethod: client.defaultPaymentMethodName,
+                  salesRepresentative:
+                      client.salesRepresentativeName ?? 'Нет представителя',
+                  items: point.items,
+                ),
+        )
+        .toList();
+    notifyListeners();
+  }
+
   void addClientPoint(Client client) {
     if (!client.isActive || points.any((p) => p.clientId == client.id)) {
       return;

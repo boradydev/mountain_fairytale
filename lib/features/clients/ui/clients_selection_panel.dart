@@ -1,3 +1,6 @@
+import 'package:mountain_fairytale/shared/widgets/dropdown_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/confirm_dialog.dart';
+
 import 'dart:async';
 
 import 'package:mountain_fairytale/features/clients/data/clients_model.dart';
@@ -26,6 +29,8 @@ class _ClientSelectionPanelState extends State<ClientSelectionPanel> {
   bool _includeInactive = false;
   String? _searchError;
   List<Client>? _searchResults;
+  Client? _selectedClient;
+  bool _busy = false;
 
   void _scheduleSearch() {
     _debounce?.cancel();
@@ -76,12 +81,50 @@ class _ClientSelectionPanelState extends State<ClientSelectionPanel> {
     super.dispose();
   }
 
-  Future<void> _showAddClientDialog(BuildContext context) async {
-    await showDialog<void>(
-      context: context,
-      builder: (_) => const ClientDialog(),
+  Future<void> _showClientEditor({Client? client}) async {
+    final saved = await showClientDialog(
+      context,
+      client: client,
+      orderProvider: widget.provider,
     );
-    if (mounted) await _search();
+    if (!mounted) return;
+    if (saved != null) {
+      setState(() => _selectedClient = saved);
+      widget.provider.syncClientPoint(saved);
+      if (saved.isActive) widget.provider.addClientPoint(saved);
+    }
+    await _search();
+  }
+
+  Future<void> _selectClient(Client client) async {
+    if (_busy) return;
+    setState(() {
+      _selectedClient = client;
+      _busy = true;
+    });
+    try {
+      var selected = client;
+      if (!client.isActive) {
+        final confirmed = await ConfirmDialog.show(
+          context,
+          title: 'Активировать и добавить клиента?',
+          content:
+              '«${client.name}» снова станет доступен для новых маршрутов.',
+          confirmText: 'Активировать и добавить',
+        );
+        if (!confirmed || !mounted) return;
+        final provider = context.read<ClientsProvider>();
+        if (!await provider.setClientActive(client.id, true) || !mounted)
+          return;
+        selected = provider.lastSavedClient!;
+        await _search();
+      }
+      if (!mounted) return;
+      setState(() => _selectedClient = selected);
+      widget.provider.addClientPoint(selected);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   @override
@@ -97,53 +140,50 @@ class _ClientSelectionPanelState extends State<ClientSelectionPanel> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              const Expanded(
-                child: Text(
-                  '2. Быстрое добавление клиента',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
+          AppDropdown<Client>(
+            label: 'Клиент *',
+            items: filteredClients,
+            value: _selectedClient,
+            enabled: !_busy,
+            showInactiveToggle: true,
+            includeInactive: _includeInactive,
+            onIncludeInactiveChanged: (value) {
+              setState(() => _includeInactive = value);
+              _scheduleSearch();
+            },
+            showEdit: true,
+            showAdd: true,
+            editBeforeAdd: true,
+            onEdit: _selectedClient == null
+                ? null
+                : () => _showClientEditor(client: _selectedClient),
+            onAdd: () => _showClientEditor(),
+            onChanged: (value) {
+              if (value != null) _selectClient(value);
+            },
+            field: TextField(
+              controller: _clientSearchController,
+              enabled: !_busy,
+              onChanged: (_) => _scheduleSearch(),
+              decoration: InputDecoration(
+                hintText: 'Имя, адрес или телефон',
+                prefixIcon: const Icon(Icons.search),
+                border: const OutlineInputBorder(),
+                isDense: true,
+                suffixIcon: _clientSearchController.text.isEmpty
+                    ? null
+                    : AppIconButton(
+                        icon: Icons.clear,
+                        tooltip: 'Очистить поиск',
+                        onPressed: () {
+                          _clientSearchController.clear();
+                          _scheduleSearch();
+                        },
+                      ),
               ),
-              // Сдвигаем иконку чуть правее, чтобы компенсировать внутренний отступ кнопки
-              AppIconButton(
-                onPressed: () => _showAddClientDialog(context),
-                icon: Icons.add,
-                tooltip: 'Добавить клиента',
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _clientSearchController,
-            onChanged: (_) => _scheduleSearch(),
-            decoration: InputDecoration(
-              hintText: 'Имя, адрес или телефон',
-              prefixIcon: const Icon(Icons.search),
-              suffixIcon: _clientSearchController.text.isEmpty
-                  ? null
-                  : AppIconButton(
-                      icon: Icons.clear,
-                      tooltip: 'Очистить поиск',
-                      onPressed: () {
-                        _clientSearchController.clear();
-                        _scheduleSearch();
-                      },
-                    ),
-              border: const OutlineInputBorder(),
-              isDense: true,
             ),
           ),
           const SizedBox(height: 8),
-          CheckboxListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Показать деактивированных'),
-            value: _includeInactive,
-            onChanged: (value) {
-              setState(() => _includeInactive = value ?? false);
-              _scheduleSearch();
-            },
-          ),
           if (_searching) const LinearProgressIndicator(),
           if (_searchError != null)
             Text(_searchError!, style: TextStyle(color: colorScheme.error)),
@@ -164,22 +204,7 @@ class _ClientSelectionPanelState extends State<ClientSelectionPanel> {
                 return ListTile(
                   // ИСПРАВЛЕНО: Убираем боковые отступы ListTile, чтобы выровнять по границам TextField
                   contentPadding: EdgeInsets.zero,
-                  leading: IconButton(
-                    icon: const Icon(Icons.edit_outlined),
-                    tooltip: isAlreadyAdded
-                        ? 'Клиент уже добавлен в маршрут'
-                        : 'Редактировать клиента',
-                    visualDensity: VisualDensity.compact,
-                    onPressed: isAlreadyAdded
-                        ? null
-                        : () async {
-                            await showDialog<void>(
-                              context: context,
-                              builder: (_) => ClientDialog(client: client),
-                            );
-                            if (mounted) await _search();
-                          },
-                  ),
+                  selected: _selectedClient?.id == client.id,
                   title: Text(
                     client.name,
                     maxLines: 1,
@@ -206,9 +231,7 @@ class _ClientSelectionPanelState extends State<ClientSelectionPanel> {
                       ? const Icon(Icons.check_circle, color: Colors.grey)
                       : const Icon(Icons.add_circle, color: Colors.green),
                   dense: true,
-                  onTap: isAlreadyAdded || !client.isActive
-                      ? null
-                      : () => provider.addClientPoint(client),
+                  onTap: _busy ? null : () => _selectClient(client),
                 );
               },
             ),

@@ -40,9 +40,13 @@ class ClientRepositoryImpl implements ClientRepository {
   }
 
   @override
-  Future<List<ClientDirectoryEntry>> getSalesRepresentatives() =>
-      dataSource.getSalesRepresentatives();
+  Future<List<ClientDirectoryEntry>> getSalesRepresentatives({
+    bool includeDeactivated = false,
+  }) => dataSource.getSalesRepresentatives(
+    includeDeactivated: includeDeactivated,
+  );
   @override
-  Future<List<ClientDirectoryEntry>> getPaymentMethods() =>
-      dataSource.getPaymentMethods();
+  Future<List<ClientDirectoryEntry>> getPaymentMethods({
+    bool includeDeactivated = false,
+  }) => dataSource.getPaymentMethods(includeDeactivated: includeDeactivated);
 }
