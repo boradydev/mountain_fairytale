@@ -114,8 +114,12 @@ class _ClientSelectionPanelState extends State<ClientSelectionPanel> {
         );
         if (!confirmed || !mounted) return;
         final provider = context.read<ClientsProvider>();
-        if (!await provider.setClientActive(client.id, true) || !mounted)
+        final activated = await provider.setClientActive(client.id, true);
+        if (!mounted) return;
+        if (!activated) {
+          setState(() => _searchError = provider.errorMessage);
           return;
+        }
         selected = provider.lastSavedClient!;
         await _search();
       }

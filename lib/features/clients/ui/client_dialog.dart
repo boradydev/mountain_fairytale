@@ -34,12 +34,13 @@ Future<Client?> showClientDialog(
       },
     ),
   );
-  if (openAfter != null && context.mounted)
+  if (openAfter != null && context.mounted) {
     return showClientDialog(
       context,
       client: openAfter,
       orderProvider: orderProvider,
     );
+  }
   return result;
 }
 
@@ -184,8 +185,9 @@ class _ClientDialogState extends State<ClientDialog> {
         );
       }
     } finally {
-      if (mounted && version == _directoryVersion)
+      if (mounted && version == _directoryVersion) {
         setState(() => _loadingDirectories = false);
+      }
     }
   }
 
@@ -263,7 +265,9 @@ class _ClientDialogState extends State<ClientDialog> {
   }
 
   Future<void> _save() async {
-    if (_busy || _editingDirectory || !_formKey.currentState!.validate()) return;
+    if (_busy || _editingDirectory || !_formKey.currentState!.validate()) {
+      return;
+    }
     final provider = context.read<ClientsProvider>();
     setState(() {
       _busy = true;
@@ -436,8 +440,14 @@ class _ClientDialogState extends State<ClientDialog> {
       if (edited != null) {
         setState(() {
           if (saved != null) _paymentMethodId = saved.id;
-          _paymentMethods = [..._paymentMethods.where((row) => row.id != edited.id),
-            ClientDirectoryEntry(edited.id, edited.name, isActive: edited.isActive)];
+          _paymentMethods = [
+            ..._paymentMethods.where((row) => row.id != edited.id),
+            ClientDirectoryEntry(
+              edited.id,
+              edited.name,
+              isActive: edited.isActive,
+            ),
+          ];
         });
       }
       await _loadDirectories();
@@ -445,10 +455,11 @@ class _ClientDialogState extends State<ClientDialog> {
       setState(() => _editingDirectory = false);
       if (openAfter != null) await _showPaymentEditor(id: openAfter!.id);
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         setState(
           () => _error = 'Не удалось открыть способ оплаты. Повторите попытку.',
         );
+      }
     } finally {
       if (mounted) setState(() => _editingDirectory = false);
     }
@@ -474,7 +485,7 @@ class _ClientDialogState extends State<ClientDialog> {
         ),
       );
       if (!mounted) return;
-      if (saved != null)
+      if (saved != null) {
         setState(() {
           _salesRepId = saved.isActive ? saved.id : null;
           _salesReps = [
@@ -486,40 +497,82 @@ class _ClientDialogState extends State<ClientDialog> {
             ),
           ];
         });
+      }
       await _loadDirectories();
       if (!mounted) return;
       setState(() => _editingDirectory = false);
       if (openAfter != null) await _showSalesRepEditor(id: openAfter!.id);
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         setState(
           () => _error = 'Не удалось открыть представителя. Повторите попытку.',
         );
+      }
     } finally {
       if (mounted) setState(() => _editingDirectory = false);
     }
   }
 
-  Future<void> _activateDirectory(ClientDirectoryEntry entry, bool salesRep) async {
+  Future<void> _activateDirectory(
+    ClientDirectoryEntry entry,
+    bool salesRep,
+  ) async {
     if (_busy || _editingDirectory) return;
     setState(() => _editingDirectory = true);
     try {
-      final confirmed = await ConfirmDialog.show(context,
-        title: 'Активировать и выбрать?', content: '«${entry.name}» снова станет доступен.', confirmText: 'Активировать и выбрать');
+      final confirmed = await ConfirmDialog.show(
+        context,
+        title: 'Активировать и выбрать?',
+        content: '«${entry.name}» снова станет доступен.',
+        confirmText: 'Активировать и выбрать',
+      );
       if (!confirmed || !mounted) return;
       if (salesRep) {
-        final active = await context.read<SalesRepresentativeApiRepository>().update(entry.id, {'isActive': true});
-        if (mounted) setState(() { _salesRepId = active.id; _salesReps = [..._salesReps.where((row) => row.id != active.id), ClientDirectoryEntry(active.id, active.name)]; });
+        final active = await context
+            .read<SalesRepresentativeApiRepository>()
+            .update(entry.id, {'isActive': true});
+        if (mounted) {
+          setState(() {
+            _salesRepId = active.id;
+            _salesReps = [
+              ..._salesReps.where((row) => row.id != active.id),
+              ClientDirectoryEntry(active.id, active.name),
+            ];
+          });
+        }
       } else {
-        final provider = widget.orderProvider ?? context.read<RouteConstructorProvider>();
+        final provider =
+            widget.orderProvider ?? context.read<RouteConstructorProvider>();
         await provider.loadSelectedPaymentMethod(entry.id);
-        final active = await provider.activatePaymentMethod(provider.paymentMethodsById[entry.id]!);
+        final active = await provider.activatePaymentMethod(
+          provider.paymentMethodsById[entry.id]!,
+        );
         if (active == null) throw StateError('Activation failed');
-        if (mounted) setState(() { _paymentMethodId = active.id; _paymentMethods = [..._paymentMethods.where((row) => row.id != active.id), ClientDirectoryEntry(active.id, active.name)]; });
+        if (mounted) {
+          setState(() {
+            _paymentMethodId = active.id;
+            _paymentMethods = [
+              ..._paymentMethods.where((row) => row.id != active.id),
+              ClientDirectoryEntry(active.id, active.name),
+            ];
+          });
+        }
       }
       if (mounted) await _loadDirectories();
-    } catch (_) { if (mounted) setState(() => _error = 'Не удалось активировать запись. Повторите попытку.'); }
-    finally { if (mounted) setState(() { _editingDirectory = false; _directoryVersion++; }); }
+    } catch (_) {
+      if (mounted) {
+        setState(
+          () => _error = 'Не удалось активировать запись. Повторите попытку.',
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _editingDirectory = false;
+          _directoryVersion++;
+        });
+      }
+    }
   }
 
   Widget _directory(

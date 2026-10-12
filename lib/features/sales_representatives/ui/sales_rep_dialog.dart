@@ -218,8 +218,9 @@ class _SalesRepDialogState extends State<SalesRepDialog> {
     final name = _nameController.text.trim();
     if (name.isEmpty ||
         name.length > 120 ||
-        !RussianPhoneInputFormatter.isComplete(_phoneController.text))
+        !RussianPhoneInputFormatter.isComplete(_phoneController.text)) {
       return false;
+    }
     if (_checkedApiInput == _apiInput) return true;
     final version = ++_checkVersion;
     final input = _apiInput;
@@ -242,11 +243,12 @@ class _SalesRepDialogState extends State<SalesRepDialog> {
       });
       return true;
     } catch (_) {
-      if (mounted && version == _checkVersion)
+      if (mounted && version == _checkVersion) {
         setState(() {
           _isCheckingDuplicate = false;
           _error = 'Не удалось проверить представителей. Повторите попытку.';
         });
+      }
       return false;
     }
   }
@@ -279,7 +281,7 @@ class _SalesRepDialogState extends State<SalesRepDialog> {
             });
       if (mounted) Navigator.pop(context, saved);
     } catch (error) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           if (error is ApiException && error.statusCode == 409) {
             _phoneError = 'Телефон уже используется другим представителем';
@@ -287,6 +289,7 @@ class _SalesRepDialogState extends State<SalesRepDialog> {
             _error = 'Не удалось сохранить представителя. Повторите попытку.';
           }
         });
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -315,10 +318,11 @@ class _SalesRepDialogState extends State<SalesRepDialog> {
       });
       if (mounted) Navigator.pop(context, saved);
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         setState(
           () => _error = 'Не удалось изменить активность представителя.',
         );
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -338,149 +342,152 @@ class _SalesRepDialogState extends State<SalesRepDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return BaseFormDialog(
-      title: _isEditMode
-          ? 'Редактирование представителя'
-          : 'Добавление представителя',
-      submitButtonText: _isEditMode ? 'Сохранить' : 'Добавить',
-      formKey: _formKey,
-      onSubmit: _submitForm,
-      isBusy: _busy,
-      leadingAction: _isEditMode
-          ? AppIconButton(
-              icon: _apiMode
-                  ? (widget.apiSalesRep!.isActive
-                        ? Icons.archive_outlined
-                        : Icons.restore)
-                  : Icons.delete_outline,
-              tooltip: _apiMode
-                  ? (widget.apiSalesRep!.isActive
-                        ? 'Деактивировать представителя'
-                        : 'Активировать представителя')
-                  : 'Удалить представителя',
-              destructive: !_apiMode || widget.apiSalesRep!.isActive,
-              onPressed: _busy ? null : _deleteSalesRep,
-            )
-          : null,
-      children: [
-        if (_busy) const LinearProgressIndicator(),
-        DuplicateCheckStatusWidget(
-          isChecking: _isCheckingDuplicate,
-          isChecked: _duplicateChecked,
-          hasDuplicate: _apiMode
-              ? _apiDuplicate != null
-              : _duplicateRep != null,
-          expandedChild: _apiDuplicate == null
-              ? null
-              : Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    AppPrimaryButton(
-                      text: _apiDuplicate!.isActive
-                          ? 'Выбрать представителя'
-                          : 'Активировать и выбрать',
-                      onPressed: _busy
-                          ? null
-                          : () {
-                              if (_apiDuplicate!.isActive) {
-                                Navigator.pop(context, _apiDuplicate);
-                              } else {
-                                _setApiActive(_apiDuplicate!);
-                              }
-                            },
-                    ),
-                    AppSecondaryButton(
-                      text: 'Открыть представителя',
-                      onPressed: _busy || widget.onOpenSalesRep == null
-                          ? null
-                          : () => widget.onOpenSalesRep!(_apiDuplicate!),
-                    ),
-                  ],
-                ),
-          warningText: _apiMode
-              ? (_apiDuplicate == null
-                    ? ''
-                    : 'Найден похожий представитель: ${_apiDuplicate!.name} — ${_apiDuplicate!.isActive ? 'Активен' : 'Неактивен'}')
-              : _duplicateRep != null
-              ? 'Такой торговый представитель уже существует'
-              : '',
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: _nameController,
-          enabled: !_busy,
-          maxLength: _apiMode ? 120 : null,
-          focusNode: _nameFocusNode,
-          decoration: const InputDecoration(
-            labelText: 'ФИО представителя *',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.person_outline),
+    return PopScope(
+      canPop: !_busy,
+      child: BaseFormDialog(
+        title: _isEditMode
+            ? 'Редактирование представителя'
+            : 'Добавление представителя',
+        submitButtonText: _isEditMode ? 'Сохранить' : 'Добавить',
+        formKey: _formKey,
+        onSubmit: _submitForm,
+        isBusy: _busy,
+        leadingAction: _isEditMode
+            ? AppIconButton(
+                icon: _apiMode
+                    ? (widget.apiSalesRep!.isActive
+                          ? Icons.archive_outlined
+                          : Icons.restore)
+                    : Icons.delete_outline,
+                tooltip: _apiMode
+                    ? (widget.apiSalesRep!.isActive
+                          ? 'Деактивировать представителя'
+                          : 'Активировать представителя')
+                    : 'Удалить представителя',
+                destructive: !_apiMode || widget.apiSalesRep!.isActive,
+                onPressed: _busy ? null : _deleteSalesRep,
+              )
+            : null,
+        children: [
+          if (_busy) const LinearProgressIndicator(),
+          DuplicateCheckStatusWidget(
+            isChecking: _isCheckingDuplicate,
+            isChecked: _duplicateChecked,
+            hasDuplicate: _apiMode
+                ? _apiDuplicate != null
+                : _duplicateRep != null,
+            expandedChild: _apiDuplicate == null
+                ? null
+                : Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      AppPrimaryButton(
+                        text: _apiDuplicate!.isActive
+                            ? 'Выбрать представителя'
+                            : 'Активировать и выбрать',
+                        onPressed: _busy
+                            ? null
+                            : () {
+                                if (_apiDuplicate!.isActive) {
+                                  Navigator.pop(context, _apiDuplicate);
+                                } else {
+                                  _setApiActive(_apiDuplicate!);
+                                }
+                              },
+                      ),
+                      AppSecondaryButton(
+                        text: 'Открыть представителя',
+                        onPressed: _busy || widget.onOpenSalesRep == null
+                            ? null
+                            : () => widget.onOpenSalesRep!(_apiDuplicate!),
+                      ),
+                    ],
+                  ),
+            warningText: _apiMode
+                ? (_apiDuplicate == null
+                      ? ''
+                      : 'Найден похожий представитель: ${_apiDuplicate!.name} — ${_apiDuplicate!.isActive ? 'Активен' : 'Неактивен'}')
+                : _duplicateRep != null
+                ? 'Такой торговый представитель уже существует'
+                : '',
           ),
-          validator: (value) {
-            if (value == null || value.trim().isEmpty) return 'Введите ФИО';
-            return null;
-          },
-        ),
-        const SizedBox(height: 16),
-        TextFormField(
-          controller: _phoneController,
-          enabled: !_busy,
-          keyboardType: TextInputType.phone,
-          inputFormatters: _apiMode
-              ? const [RussianPhoneInputFormatter()]
-              : null,
-          forceErrorText: _phoneError,
-          onFieldSubmitted: _apiMode ? (_) => _checkApiDuplicate() : null,
-          validator: _apiMode
-              ? (value) => RussianPhoneInputFormatter.isComplete(value ?? '')
-                    ? null
-                    : 'Введите 10 цифр номера после +7'
-              : null,
-          decoration: const InputDecoration(
-            labelText: 'Телефон представителя',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.phone_outlined),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _nameController,
+            enabled: !_busy,
+            maxLength: _apiMode ? 120 : null,
+            focusNode: _nameFocusNode,
+            decoration: const InputDecoration(
+              labelText: 'ФИО представителя *',
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.person_outline),
+            ),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) return 'Введите ФИО';
+              return null;
+            },
           ),
-        ),
-        const SizedBox(height: 16),
-        TextFormField(
-          controller: _commissionPercentController,
-          enabled: !_busy,
-          keyboardType: const TextInputType.numberWithOptions(
-            decimal: true,
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _phoneController,
+            enabled: !_busy,
+            keyboardType: TextInputType.phone,
+            inputFormatters: _apiMode
+                ? const [RussianPhoneInputFormatter()]
+                : null,
+            forceErrorText: _phoneError,
+            onFieldSubmitted: _apiMode ? (_) => _checkApiDuplicate() : null,
+            validator: _apiMode
+                ? (value) => RussianPhoneInputFormatter.isComplete(value ?? '')
+                      ? null
+                      : 'Введите 10 цифр номера после +7'
+                : null,
+            decoration: const InputDecoration(
+              labelText: 'Телефон представителя',
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.phone_outlined),
+            ),
           ),
-          decoration: const InputDecoration(
-            labelText: 'Вознаграждение',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.payments_outlined),
-            suffixText: '%',
-          ),
-          validator: (value) {
-            if (value == null || value.trim().isEmpty) {
-              return 'Укажите процент';
-            }
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _commissionPercentController,
+            enabled: !_busy,
+            keyboardType: const TextInputType.numberWithOptions(
+              decimal: true,
+            ),
+            decoration: const InputDecoration(
+              labelText: 'Вознаграждение',
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.payments_outlined),
+              suffixText: '%',
+            ),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Укажите процент';
+              }
 
-            final normalized = value.trim().replaceAll(',', '.');
-            final percent = double.tryParse(normalized);
+              final normalized = value.trim().replaceAll(',', '.');
+              final percent = double.tryParse(normalized);
 
-            if (percent == null) {
-              return 'Введите число';
-            }
+              if (percent == null) {
+                return 'Введите число';
+              }
 
-            if (!percent.isFinite || percent < 0 || percent > 100) {
-              return 'Процент должен быть от 0 до 100';
-            }
+              if (!percent.isFinite || percent < 0 || percent > 100) {
+                return 'Процент должен быть от 0 до 100';
+              }
 
-            return null;
-          },
-        ),
-        if (_error != null)
-          Text(
-            _error!,
-            style: TextStyle(color: Theme.of(context).colorScheme.error),
+              return null;
+            },
           ),
-      ],
+          if (_error != null)
+            Text(
+              _error!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+        ],
+      ),
     );
   }
 }
