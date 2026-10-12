@@ -7,6 +7,7 @@ import 'package:mountain_fairytale/features/delivery_days/ui/delivery_days_provi
 import 'package:mountain_fairytale/features/audit_event/ui/audit_event_screen.dart';
 import 'package:mountain_fairytale/features/clients/ui/client_list.dart';
 import 'package:mountain_fairytale/features/delivery_days/ui/delivery_day_list.dart';
+import 'package:mountain_fairytale/features/employees/ui/employees_screen.dart';
 import 'package:mountain_fairytale/features/sales_representative_commissions/ui/sales_analytics_screen.dart';
 import 'package:mountain_fairytale/shared/widgets/locate_toggle_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/theme_toggle_button.dart';
@@ -85,11 +86,25 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Пароль изменён.')),
                 );
+              } else if (value == 'employees') {
+                await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const EmployeesScreen(),
+                  ),
+                );
               }
             },
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: 'password', child: Text('Изменить пароль')),
-              PopupMenuItem(value: 'logout', child: Text('Выйти')),
+            itemBuilder: (_) => [
+              if (auth.currentUser?.isAdmin == true)
+                const PopupMenuItem(
+                  value: 'employees',
+                  child: Text('Сотрудники'),
+                ),
+              const PopupMenuItem(
+                value: 'password',
+                child: Text('Изменить пароль'),
+              ),
+              const PopupMenuItem(value: 'logout', child: Text('Выйти')),
             ],
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),

@@ -24,6 +24,10 @@ import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_r
 import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_demo_data.dart';
 import 'package:mountain_fairytale/features/drivers/data/drivers_repo.dart';
 import 'package:mountain_fairytale/features/drivers/data/drivers_api_data_source.dart';
+import 'package:mountain_fairytale/features/employees/data/employees_api_data_source.dart';
+import 'package:mountain_fairytale/features/employees/data/employees_repo.dart';
+import 'package:mountain_fairytale/features/employees/employees_abcs.dart';
+import 'package:mountain_fairytale/features/employees/ui/employees_provider.dart';
 import 'package:mountain_fairytale/features/payment_methods/data/payment_method_repo.dart';
 import 'package:mountain_fairytale/features/payment_methods/data/payment_method_api_data_source.dart';
 import 'package:mountain_fairytale/features/pickup/data/pickup_repo.dart';
@@ -166,6 +170,9 @@ Future<void> main() async {
   );
 
   final driverRepository = DriverRepositoryImpl(ApiDriverDataSource(apiClient));
+  final employeeRepository = EmployeeRepositoryImpl(
+    ApiEmployeeDataSource(apiClient),
+  );
   final carRepository = CarRepositoryImpl(ApiCarDataSource(apiClient));
   final paymentMethodRepository = PaymentMethodRepositoryImpl(
     ApiPaymentMethodDataSource(apiClient),
@@ -178,6 +185,11 @@ Future<void> main() async {
   // Передаем созданные синглтоны репозиториев в UI-провайдеры управления стейтом
   // ===========================================================================
   final sessionProviders = <SingleChildWidget>[
+    Provider<EmployeeRepository>.value(value: employeeRepository),
+    ChangeNotifierProvider(
+      create: (_) => EmployeesProvider(employeeRepository),
+    ),
+
     // Репозитории (доступны через context.read<T>())
     Provider<ProductRepository>(
       create: (_) => productRepository,

@@ -31,6 +31,24 @@
 - In the final response, name the reused widgets. If a new reusable widget was
   necessary, briefly explain why.
 
+## Text field style
+
+- Use one consistent Material text-field style throughout the app for new
+  features and when refactoring existing fields. Keep the normal field
+  appearance consistent with the project's outlined fields, including its
+  label, hint, spacing, and any prefix icon.
+- Show field-specific validation errors inside the field using Flutter's
+  `TextFormField` / `InputDecoration` error state. Use `validator` for local
+  validation and `forceErrorText` (or the matching `FormField` error API) for
+  server validation such as a duplicate name. Let Material render the error
+  text and red error border together.
+- Do not put a field-specific validation message in a separate red `Text`,
+  `SnackBar`, or dialog-level error below the form. Reserve separate messages
+  for request or form errors that are not tied to one field.
+- Clear a server-side field error as soon as the user changes that field's
+  value. The field must return to the same normal style used by fields without
+  an error.
+
 ## State and data flow
 
 - Preserve the project's understandable flow:
