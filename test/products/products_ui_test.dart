@@ -90,7 +90,7 @@ class _Orders extends OrderPointsProvider {
     this.products = products.rows.where((row) => row.isActive).toList();
     points = [
       const RoutePoint(
-        clientId: 1,
+        clientId: '1',
         clientName: 'Клиент',
         city: 'Город',
         address: 'Адрес',

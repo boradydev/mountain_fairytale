@@ -5,7 +5,7 @@ part 'route_point_model.g.dart';
 
 @JsonSerializable(explicitToJson: true)
 class RoutePoint {
-  final int clientId;
+  final String clientId;
   final String clientName;
   final String city;
   final String address;
@@ -33,7 +33,7 @@ class RoutePoint {
   });
 
   factory RoutePoint.fromJson(Map<String, dynamic> json) =>
-      _$RoutePointFromJson(json);
+      _$RoutePointFromJson({...json, 'clientId': json['clientId'].toString()});
 
   Map<String, dynamic> toJson() => _$RoutePointToJson(this);
 }

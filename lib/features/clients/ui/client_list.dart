@@ -1,3 +1,4 @@
+import 'package:mountain_fairytale/shared/widgets/app_notify.dart';
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/core/utils/datetime_extensions.dart';
 import 'package:mountain_fairytale/features/clients/data/clients_model.dart';
@@ -147,11 +148,18 @@ class _ClientAttentionCard extends StatelessWidget {
                         tooltip: 'Отложить обработку',
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
-                        onSelected: (weeks) {
-                          context.read<ClientsProvider>().updateClientCooldown(
+                        onSelected: (weeks) async {
+                          final provider = context.read<ClientsProvider>();
+                          final success = await provider.updateClientCooldown(
                             client.id,
                             weeks,
                           );
+                          if (!success && context.mounted) {
+                            AppNotify.show(
+                              provider.errorMessage,
+                              isError: true,
+                            );
+                          }
                         },
                         itemBuilder: (BuildContext context) =>
                             <PopupMenuEntry<int>>[
@@ -249,7 +257,9 @@ class _ClientStatusConfig {
 
     // Вычисляем просрочку в днях и коэффициент K
     final differenceDays = now.difference(client.lastDeliveryDate!).inDays;
-    final k = differenceDays / client.sleepingThresholdDays;
+    final k = client.sleepingThresholdDays == 0
+        ? double.infinity
+        : differenceDays / client.sleepingThresholdDays;
 
     // 3. Состояние: Критическое (Красный)
     if (k >= 3.0) {

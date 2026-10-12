@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:mountain_fairytale/features/clients/data/clients_model.dart';
+import 'package:mountain_fairytale/shared/widgets/icon_button_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/features/clients/ui/clients_provider.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/order_points_provider.dart';
@@ -16,8 +20,58 @@ class ClientSelectionPanel extends StatefulWidget {
 class _ClientSelectionPanelState extends State<ClientSelectionPanel> {
   final TextEditingController _clientSearchController = TextEditingController();
 
+  Timer? _debounce;
+  int _searchVersion = 0;
+  bool _searching = false;
+  bool _includeInactive = false;
+  String? _searchError;
+  List<Client>? _searchResults;
+
+  void _scheduleSearch() {
+    _debounce?.cancel();
+    _searchVersion++;
+    setState(() {
+      _searching = true;
+      _searchError = null;
+      _searchResults = [];
+    });
+    _debounce = Timer(const Duration(milliseconds: 300), _search);
+  }
+
+  Future<void> _search() async {
+    _debounce?.cancel();
+    final version = ++_searchVersion;
+    setState(() {
+      _searching = true;
+      _searchError = null;
+      _searchResults = [];
+    });
+    try {
+      final rows = await context.read<ClientsProvider>().searchClients(
+        _clientSearchController.text.trim(),
+        includeDeactivated: _includeInactive,
+      );
+      if (mounted && version == _searchVersion) {
+        setState(() => _searchResults = rows);
+      }
+    } catch (_) {
+      if (mounted && version == _searchVersion) {
+        setState(
+          () =>
+              _searchError = 'Не удалось загрузить клиентов. Повторите поиск.',
+        );
+      }
+    } finally {
+      if (mounted && version == _searchVersion) {
+        setState(() => _searching = false);
+      }
+    }
+  }
+
   @override
   void dispose() {
+    _debounce?.cancel();
+    _searchVersion++;
     _clientSearchController.dispose();
     super.dispose();
   }
@@ -27,6 +81,7 @@ class _ClientSelectionPanelState extends State<ClientSelectionPanel> {
       context: context,
       builder: (_) => const ClientDialog(),
     );
+    if (mounted) await _search();
   }
 
   @override
@@ -34,15 +89,7 @@ class _ClientSelectionPanelState extends State<ClientSelectionPanel> {
     final provider = widget.provider;
     final clientProvider = context.watch<ClientsProvider>();
     final colorScheme = Theme.of(context).colorScheme;
-    final searchQuery = _clientSearchController.text.trim().toLowerCase();
-
-    final filteredClients = clientProvider.clients.where((client) {
-      if (searchQuery.isEmpty) return true;
-
-      return client.name.toLowerCase().contains(searchQuery) ||
-          client.address.toLowerCase().contains(searchQuery) ||
-          client.phone.toLowerCase().contains(searchQuery);
-    }).toList();
+    final filteredClients = _searchResults ?? clientProvider.clients;
 
     // ДОБАВЛЕНО: Обернули всю панель в Padding 16, как в RouteMetaPanel
     return Padding(
@@ -59,9 +106,9 @@ class _ClientSelectionPanelState extends State<ClientSelectionPanel> {
                 ),
               ),
               // Сдвигаем иконку чуть правее, чтобы компенсировать внутренний отступ кнопки
-              IconButton(
+              AppIconButton(
                 onPressed: () => _showAddClientDialog(context),
-                icon: const Icon(Icons.add),
+                icon: Icons.add,
                 tooltip: 'Добавить клиента',
               ),
             ],
@@ -69,17 +116,18 @@ class _ClientSelectionPanelState extends State<ClientSelectionPanel> {
           const SizedBox(height: 8),
           TextField(
             controller: _clientSearchController,
-            onChanged: (_) => setState(() {}),
+            onChanged: (_) => _scheduleSearch(),
             decoration: InputDecoration(
               hintText: 'Имя, адрес или телефон',
               prefixIcon: const Icon(Icons.search),
               suffixIcon: _clientSearchController.text.isEmpty
                   ? null
-                  : IconButton(
-                      icon: const Icon(Icons.clear),
+                  : AppIconButton(
+                      icon: Icons.clear,
+                      tooltip: 'Очистить поиск',
                       onPressed: () {
                         _clientSearchController.clear();
-                        setState(() {});
+                        _scheduleSearch();
                       },
                     ),
               border: const OutlineInputBorder(),
@@ -87,6 +135,20 @@ class _ClientSelectionPanelState extends State<ClientSelectionPanel> {
             ),
           ),
           const SizedBox(height: 8),
+          CheckboxListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Показать деактивированных'),
+            value: _includeInactive,
+            onChanged: (value) {
+              setState(() => _includeInactive = value ?? false);
+              _scheduleSearch();
+            },
+          ),
+          if (_searching) const LinearProgressIndicator(),
+          if (_searchError != null)
+            Text(_searchError!, style: TextStyle(color: colorScheme.error)),
+          if (!_searching && _searchError == null && filteredClients.isEmpty)
+            const Text('Клиенты не найдены'),
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.only(right: 12.0),
@@ -115,6 +177,7 @@ class _ClientSelectionPanelState extends State<ClientSelectionPanel> {
                               context: context,
                               builder: (_) => ClientDialog(client: client),
                             );
+                            if (mounted) await _search();
                           },
                   ),
                   title: Text(
@@ -128,7 +191,7 @@ class _ClientSelectionPanelState extends State<ClientSelectionPanel> {
                     ),
                   ),
                   subtitle: Text(
-                    client.address,
+                    '${client.address}${client.isActive ? '' : ' — Деактивирован'}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -137,11 +200,13 @@ class _ClientSelectionPanelState extends State<ClientSelectionPanel> {
                           : null,
                     ),
                   ),
-                  trailing: isAlreadyAdded
+                  trailing: !client.isActive
+                      ? const Icon(Icons.archive_outlined)
+                      : isAlreadyAdded
                       ? const Icon(Icons.check_circle, color: Colors.grey)
                       : const Icon(Icons.add_circle, color: Colors.green),
                   dense: true,
-                  onTap: isAlreadyAdded
+                  onTap: isAlreadyAdded || !client.isActive
                       ? null
                       : () => provider.addClientPoint(client),
                 );

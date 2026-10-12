@@ -7,7 +7,7 @@ part of 'route_point_model.dart';
 // **************************************************************************
 
 RoutePoint _$RoutePointFromJson(Map<String, dynamic> json) => RoutePoint(
-  clientId: (json['clientId'] as num).toInt(),
+  clientId: json['clientId'] as String,
   clientName: json['clientName'] as String,
   city: json['city'] as String,
   address: json['address'] as String,

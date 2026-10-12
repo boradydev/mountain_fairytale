@@ -78,16 +78,18 @@ class _Clients implements ClientRepository {
   UpdateClientRequest? request;
   bool fail = false;
   @override
-  Future<Client> updateClient(int id, UpdateClientRequest request) async {
+  Future<Client> updateClient(String id, UpdateClientRequest request) async {
     if (fail) throw Exception('offline');
     this.request = request;
     return Client(
       id: id,
+      createdAt: DateTime(2026),
+      isActive: true,
       name: 'Клиент',
       phone: '123',
       address: 'Адрес',
       sleepingThresholdDays: 7,
-      defaultPaymentMethodId: request.defaultPaymentMethodId,
+      defaultPaymentMethodId: request.defaultPaymentMethodId as String?,
     );
   }
 
@@ -112,14 +114,16 @@ class _Orders extends OrderPointsProvider {
       paymentMethodsById[row.id] = row;
     }
     addClientPoint(
-      const Client(
-        id: 1,
+      Client(
+        id: '1',
+        createdAt: DateTime(2026),
+        isActive: true,
         name: 'Клиент',
         phone: '123',
         address: 'Адрес',
         sleepingThresholdDays: 7,
         defaultPaymentMethodId: 'active',
-        defaultPaymentMethod: 'Наличные',
+        defaultPaymentMethodName: 'Наличные',
       ),
     );
   }
@@ -149,7 +153,7 @@ Future<void> _open(
                 builder: (context, _) => PaymentMethodSelector(
                   provider: orders,
                   clientsProvider: clientsProvider,
-                  clientId: 1,
+                  clientId: '1',
                   selectedId: orders.points.single.paymentMethodId,
                   selectedName: orders.points.single.paymentMethod,
                 ),
@@ -178,7 +182,7 @@ void main() {
       expect(repo.creates, 1);
       expect(orders.points.single.paymentMethodId, 'created');
       expect(clients.request!.defaultPaymentMethodId, 'created');
-      expect(clients.request!.defaultPaymentMethod, isNull);
+      expect(clients.request!.toJson(), {'defaultPaymentMethodId': 'created'});
     },
   );
 

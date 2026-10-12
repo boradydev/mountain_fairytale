@@ -40,7 +40,7 @@ void main() {
       startMileage: 85200.0,
       points: [
         const RoutePoint(
-          clientId: 2,
+          clientId: '2',
           clientName: 'ИП Петров',
           city: 'Михайловск',
           address: "ул. Ленина, д. 45",

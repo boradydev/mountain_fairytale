@@ -1,124 +1,161 @@
-import 'package:json_annotation/json_annotation.dart';
+const _omitted = Object();
 
-part 'clients_model.g.dart';
+/// Keep server-local timestamps without timezone conversion.
+String clientDateTime(DateTime value) => DateTime(
+  value.year,
+  value.month,
+  value.day,
+  value.hour,
+  value.minute,
+  value.second,
+  value.millisecond,
+  value.microsecond,
+).toIso8601String();
 
-/// Модель данных клиента для системы учета доставок.
-/// Содержит профиль клиента, информацию о последней активности
-/// и настройки для контроля "засыпания" клиента менеджерами.
-@JsonSerializable()
 class Client {
-  /// Уникальный идентификатор клиента в системе (ID).
-  final int id;
-
-  /// Название организации или ФИО клиента.
+  final String id;
   final String name;
-
-  /// Контактный номер телефона для связи.
   final String phone;
-
-  /// Фактический адрес доставки (Населенный пункт, улица, дом).
   final String address;
-
-  /// Дата и время последней успешной доставки.
-  /// Равно [null], если доставок еще не было.
-  final DateTime? lastDeliveryDate;
-
-  /// Количество товара (например, бутылей воды), доставленное в последний раз.
-  final int? lastDeliveryQuantity;
-
-  /// Дата и время, до которых клиент "заморожен" (скрыт из списка засыпающих).
-  /// Устанавливается после звонка менеджера, чтобы клиент не всплывал на дашборде
-  /// определенное время (например, неделю), пока идет обработка.
-  final DateTime? cooldownUntil;
-
-  /// Индивидуальный порог "засыпания" клиента (в днях).
-  /// Задается при создании клиента (например, 1 день или 7 дней).
-  /// Если с момента [lastDeliveryDate] прошло больше дней, чем указано здесь,
-  /// клиент автоматически считается засыпающим и попадает на дашборд.
-  /// Индивидуальный порог "засыпания" клиента (в днях).
   final int sleepingThresholdDays;
-
-  /// ID торгового представителя
-  final int? salesRepresentativeId;
-
-  /// ФИО торгового представителя
+  final DateTime? lastDeliveryDate;
+  final int? lastDeliveryQuantity;
+  final DateTime? cooldownUntil;
+  final String? salesRepresentativeId;
   final String? salesRepresentativeName;
-
-  /// Форма оплаты по умолчанию
-  final String? defaultPaymentMethod;
-  @JsonKey(includeIfNull: false)
   final String? defaultPaymentMethodId;
-
+  final String? defaultPaymentMethodName;
+  final DateTime createdAt;
+  final bool isActive;
   const Client({
     required this.id,
     required this.name,
     required this.phone,
     required this.address,
+    required this.sleepingThresholdDays,
+    required this.createdAt,
+    required this.isActive,
     this.lastDeliveryDate,
     this.lastDeliveryQuantity,
     this.cooldownUntil,
-    required this.sleepingThresholdDays,
     this.salesRepresentativeId,
     this.salesRepresentativeName,
-    this.defaultPaymentMethod,
     this.defaultPaymentMethodId,
+    this.defaultPaymentMethodName,
   });
-
-  factory Client.fromJson(Map<String, dynamic> json) => _$ClientFromJson(json);
-
-  Map<String, dynamic> toJson() => _$ClientToJson(this);
+  factory Client.fromJson(Map<String, dynamic> json) => Client(
+    id: json['clientId'] as String,
+    name: json['name'] as String,
+    phone: json['phone'] as String,
+    address: json['address'] as String,
+    sleepingThresholdDays: (json['sleepingThresholdDays'] as num).toInt(),
+    lastDeliveryDate: json['lastDeliveryDate'] == null
+        ? null
+        : DateTime.parse(json['lastDeliveryDate'] as String),
+    lastDeliveryQuantity: (json['lastDeliveryQuantity'] as num?)?.toInt(),
+    cooldownUntil: json['cooldownUntil'] == null
+        ? null
+        : DateTime.parse(json['cooldownUntil'] as String),
+    salesRepresentativeId: json['salesRepresentativeId'] as String?,
+    salesRepresentativeName: json['salesRepresentativeName'] as String?,
+    defaultPaymentMethodId: json['defaultPaymentMethodId'] as String?,
+    defaultPaymentMethodName: json['defaultPaymentMethodName'] as String?,
+    createdAt: DateTime.parse(json['createdAt'] as String),
+    isActive: json['isActive'] as bool,
+  );
+  Map<String, dynamic> toJson() => {
+    'clientId': id,
+    'name': name,
+    'phone': phone,
+    'address': address,
+    'sleepingThresholdDays': sleepingThresholdDays,
+    'lastDeliveryDate': lastDeliveryDate == null
+        ? null
+        : clientDateTime(lastDeliveryDate!),
+    'lastDeliveryQuantity': lastDeliveryQuantity,
+    'cooldownUntil': cooldownUntil == null
+        ? null
+        : clientDateTime(cooldownUntil!),
+    'salesRepresentativeId': salesRepresentativeId,
+    'salesRepresentativeName': salesRepresentativeName,
+    'defaultPaymentMethodId': defaultPaymentMethodId,
+    'defaultPaymentMethodName': defaultPaymentMethodName,
+    'createdAt': clientDateTime(createdAt),
+    'isActive': isActive,
+  };
 }
 
-@JsonSerializable()
+class ClientDirectoryEntry {
+  final String id;
+  final String name;
+  final bool isActive;
+  const ClientDirectoryEntry(this.id, this.name, {this.isActive = true});
+}
+
 class CreateClientRequest {
   final String name;
   final String phone;
   final String address;
   final int sleepingThresholdDays;
-  final int? salesRepresentativeId;
-  final String? salesRepresentativeName;
-  final String? defaultPaymentMethod;
-  @JsonKey(includeIfNull: false)
+  final DateTime? cooldownUntil;
+  final String? salesRepresentativeId;
   final String? defaultPaymentMethodId;
-
   const CreateClientRequest({
     required this.name,
     required this.phone,
     required this.address,
     required this.sleepingThresholdDays,
+    this.cooldownUntil,
     this.salesRepresentativeId,
-    this.salesRepresentativeName,
-    this.defaultPaymentMethod,
     this.defaultPaymentMethodId,
   });
-
-  Map<String, dynamic> toJson() => _$CreateClientRequestToJson(this);
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'phone': phone,
+    'address': address,
+    'sleepingThresholdDays': sleepingThresholdDays,
+    'cooldownUntil': cooldownUntil == null
+        ? null
+        : clientDateTime(cooldownUntil!),
+    'salesRepresentativeId': salesRepresentativeId,
+    'defaultPaymentMethodId': defaultPaymentMethodId,
+  };
 }
 
-@JsonSerializable(
-  includeIfNull: true,
-) // Поменяли на true, чтобы можно было занулить / перетереть при редактировании
+/// A sentinel distinguishes omitted nullable fields from explicit null.
 class UpdateClientRequest {
   final String? name;
   final String? phone;
   final String? address;
   final int? sleepingThresholdDays;
-  final int? salesRepresentativeId;
-  final String? salesRepresentativeName;
-  final String? defaultPaymentMethod;
-  @JsonKey(includeIfNull: false)
-  final String? defaultPaymentMethodId;
-
+  final Object? cooldownUntil;
+  final Object? salesRepresentativeId;
+  final Object? defaultPaymentMethodId;
+  final bool? isActive;
   const UpdateClientRequest({
     this.name,
     this.phone,
     this.address,
     this.sleepingThresholdDays,
-    this.salesRepresentativeId,
-    this.salesRepresentativeName,
-    this.defaultPaymentMethod,
-    this.defaultPaymentMethodId,
+    this.cooldownUntil = _omitted,
+    this.salesRepresentativeId = _omitted,
+    this.defaultPaymentMethodId = _omitted,
+    this.isActive,
   });
-
-  Map<String, dynamic> toJson() => _$UpdateClientRequestToJson(this);
+  Map<String, dynamic> toJson() => {
+    if (name != null) 'name': name,
+    if (phone != null) 'phone': phone,
+    if (address != null) 'address': address,
+    if (sleepingThresholdDays != null)
+      'sleepingThresholdDays': sleepingThresholdDays,
+    if (!identical(cooldownUntil, _omitted))
+      'cooldownUntil': cooldownUntil == null
+          ? null
+          : clientDateTime(cooldownUntil as DateTime),
+    if (!identical(salesRepresentativeId, _omitted))
+      'salesRepresentativeId': salesRepresentativeId as String?,
+    if (!identical(defaultPaymentMethodId, _omitted))
+      'defaultPaymentMethodId': defaultPaymentMethodId as String?,
+    if (isActive != null) 'isActive': isActive,
+  };
 }

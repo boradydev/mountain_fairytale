@@ -17,6 +17,7 @@ import 'package:mountain_fairytale/features/auth/data/auth_api_data_source.dart'
 import 'package:mountain_fairytale/features/cars/data/cars_repo.dart';
 import 'package:mountain_fairytale/features/cars/data/cars_api_data_source.dart';
 import 'package:mountain_fairytale/features/clients/data/clients_repo.dart';
+import 'package:mountain_fairytale/features/clients/data/clients_api_data_source.dart';
 import 'package:mountain_fairytale/features/clients/data/clients_demo_data.dart';
 import 'package:mountain_fairytale/features/delivery_days/data/delivery_days_repo.dart';
 import 'package:mountain_fairytale/features/delivery_days/data/delivery_days_demo_data.dart';
@@ -99,7 +100,7 @@ Future<void> main() async {
   final routeDataSource = DemoDeliveryRouteDataSource(
     deliveryDayDataSource: deliveryDayDataSource,
   );
-  final clientDataSource = DemoClientDataSource();
+  final analyticsDemoClientDataSource = DemoClientDataSource();
   final salesRepDataSource = DemoSalesRepresentativeDataSource();
   final salesRepCommissionDataSource =
       DemoSalesRepresentativeCommissionDataSource();
@@ -115,7 +116,6 @@ Future<void> main() async {
   // Принимают сущности от UI, конвертируют в JSON-Map и общаются с Data Sources
   // ===========================================================================
   final routeRepository = DeliveryRouteRepositoryImpl(routeDataSource);
-  final clientRepository = ClientRepositoryImpl(clientDataSource);
   final deliveryDayRepository = ApiDeliveryRepository(deliveryDayDataSource);
   final salesRepRepository = SalesRepresentativeRepositoryImpl(
     salesRepDataSource,
@@ -130,7 +130,7 @@ Future<void> main() async {
 
   // Инициализация модуля клиентов торгового представителя
   final salesRepClientDataSource = DemoSalesRepresentativeClientDataSource(
-    clientDataSource: clientDataSource,
+    clientDataSource: analyticsDemoClientDataSource,
     salesRepRepo: salesRepRepository,
   );
   final salesRepClientRepository = SalesRepresentativeClientRepositoryImpl(
@@ -168,6 +168,8 @@ Future<void> main() async {
     authService: authService,
     userAgent: 'MountainFairytale/1.0 Windows',
   );
+
+  final clientRepository = ClientRepositoryImpl(ApiClientDataSource(apiClient));
 
   final driverRepository = DriverRepositoryImpl(ApiDriverDataSource(apiClient));
   final employeeRepository = EmployeeRepositoryImpl(

@@ -10,7 +10,7 @@ import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 class PaymentMethodSelector extends StatefulWidget {
   final OrderPointsProvider provider;
   final ClientsProvider clientsProvider;
-  final int clientId;
+  final String clientId;
   final String? selectedId;
   final String? selectedName;
 

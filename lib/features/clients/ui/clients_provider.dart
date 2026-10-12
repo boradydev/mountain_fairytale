@@ -1,3 +1,4 @@
+import 'package:mountain_fairytale/core/network/api_exception.dart';
 import 'package:mountain_fairytale/core/state/safe_change_notifier.dart';
 import 'package:mountain_fairytale/features/clients/data/clients_model.dart';
 import 'package:mountain_fairytale/features/clients/clients_abcs.dart';
@@ -13,6 +14,21 @@ class ClientsProvider extends SafeChangeNotifier {
 
   ClientStatus _status = ClientStatus.initial;
   String _errorMessage = '';
+  String? phoneError;
+  int _fetchVersion = 0;
+
+  void clearPhoneError() {
+    phoneError = null;
+  }
+
+  void _recordError(Object error) {
+    if (error is ApiException && error.statusCode == 409) {
+      phoneError = 'Телефон уже используется другим клиентом';
+      _errorMessage = '';
+    } else {
+      _errorMessage = 'Не удалось выполнить запрос. Повторите попытку.';
+    }
+  }
 
   // Новый стейт: показывать только просроченных?
   bool _showOnlySleeping = false;
@@ -41,7 +57,9 @@ class ClientsProvider extends SafeChangeNotifier {
     double getUrgencyCoefficient(Client client) {
       if (client.lastDeliveryDate == null) return 999.0;
       final differenceDays = now.difference(client.lastDeliveryDate!).inDays;
-      return differenceDays / client.sleepingThresholdDays;
+      return client.sleepingThresholdDays == 0
+          ? double.infinity
+          : differenceDays / client.sleepingThresholdDays;
     }
 
     // Вспомогательная функция проверки: просрочен ли клиент? (K >= 1.0)
@@ -73,12 +91,15 @@ class ClientsProvider extends SafeChangeNotifier {
     }
 
     // ----------------------------------------------------
-    // РЕЖИМ 2: Обычный режим (Сортировка по ID от новых к старым)
+    // РЕЖИМ 2: Сортировка по времени создания, затем UUID
     // ----------------------------------------------------
     final allClients = [..._clients];
     allClients.sort(
-      (a, b) => b.id.compareTo(a.id),
-    ); // Новые (больший ID) будут сверху
+      (a, b) {
+        final date = b.createdAt.compareTo(a.createdAt);
+        return date != 0 ? date : b.id.compareTo(a.id);
+      },
+    );
     return allClients;
   }
 
@@ -87,24 +108,29 @@ class ClientsProvider extends SafeChangeNotifier {
       return;
     }
 
+    final version = ++_fetchVersion;
     _status = ClientStatus.loading;
     _errorMessage = '';
+    phoneError = null;
 
     notifyListeners();
 
     try {
-      _clients = await _repository.getAllClients();
+      final loaded = await _repository.getAllClients();
+      if (version != _fetchVersion) return;
+      _clients = loaded;
 
       _status = ClientStatus.success;
     } catch (e) {
-      _errorMessage = e.toString();
+      if (version != _fetchVersion) return;
+      _recordError(e);
       _status = ClientStatus.failure;
     } finally {
-      notifyListeners();
+      if (version == _fetchVersion) notifyListeners();
     }
   }
 
-  Future<void> updateClientCooldown(int clientId, int weeks) async {
+  Future<bool> updateClientCooldown(String clientId, int weeks) async {
     try {
       // Высчитываем дату окончания кулдауна относительно текущего момента
       final cooldownDate = DateTime.now().add(Duration(days: weeks * 7));
@@ -116,38 +142,52 @@ class ClientsProvider extends SafeChangeNotifier {
       );
 
       // Обновляем локальный список в стейте провайдера
+      _fetchVersion++;
       _clients = _clients.map((client) {
         return client.id == clientId ? updatedClient : client;
       }).toList();
 
+      _status = ClientStatus.success;
       // Уведомляем UI для перерисовки и пересортировки
       notifyListeners();
+      return true;
     } catch (e) {
-      _errorMessage = e.toString();
+      _recordError(e);
       // Здесь можно сгенерировать отдельный эвент ошибки для Снэкбара
       notifyListeners();
+      return false;
     }
   }
 
-  Future<Client?> checkClientDuplicate(String name, String address) async {
-    try {
-      return await _repository.checkDuplicate(name, address);
-    } catch (e) {
-      _errorMessage = e.toString();
-      return null;
-    }
-  }
+  Future<Client?> checkClientDuplicate(
+    String name,
+    String phone,
+    String address,
+  ) => _repository.checkDuplicate(name, phone, address);
+
+  Future<List<ClientDirectoryEntry>> getSalesRepresentatives() =>
+      _repository.getSalesRepresentatives();
+  Future<List<ClientDirectoryEntry>> getPaymentMethods() =>
+      _repository.getPaymentMethods();
+  Future<List<Client>> searchClients(
+    String search, {
+    bool includeDeactivated = false,
+  }) => _repository.getAllClients(
+    search: search,
+    includeDeactivated: includeDeactivated,
+  );
 
   Future<bool> addClient({
     required String name,
     required String phone,
     required String address,
     required int thresholdDays,
-    int? salesRepId,
-    String? salesRepName,
+    String? salesRepId,
+    String? paymentMethodId,
+    DateTime? cooldownUntil,
   }) async {
-    _status = ClientStatus.loading;
     _errorMessage = '';
+    phoneError = null;
     notifyListeners();
 
     try {
@@ -157,19 +197,20 @@ class ClientsProvider extends SafeChangeNotifier {
         address: address,
         sleepingThresholdDays: thresholdDays,
         salesRepresentativeId: salesRepId,
-        salesRepresentativeName: salesRepName,
+        defaultPaymentMethodId: paymentMethodId,
+        cooldownUntil: cooldownUntil,
       );
 
       final newClient = await _repository.createClient(request);
 
+      _fetchVersion++;
       _clients = [newClient, ..._clients];
       _status = ClientStatus.success;
 
       notifyListeners();
       return true;
     } catch (e) {
-      _errorMessage = e.toString();
-      _status = ClientStatus.failure;
+      _recordError(e);
 
       notifyListeners();
       return false;
@@ -177,15 +218,17 @@ class ClientsProvider extends SafeChangeNotifier {
   }
 
   Future<bool> updateClient({
-    required int clientId,
+    required String clientId,
     required String name,
     required String phone,
     required String address,
     required int thresholdDays,
-    int? salesRepId, // <-- Добавлено
-    String? salesRepName, // <-- Добавлено
+    String? salesRepId,
+    String? paymentMethodId,
+    DateTime? cooldownUntil,
   }) async {
     _errorMessage = '';
+    phoneError = null;
 
     try {
       final request = UpdateClientRequest(
@@ -194,8 +237,9 @@ class ClientsProvider extends SafeChangeNotifier {
         address: address,
         sleepingThresholdDays: thresholdDays,
         salesRepresentativeId: salesRepId,
-        // <-- Добавлено
-        salesRepresentativeName: salesRepName, // <-- Добавлено
+
+        defaultPaymentMethodId: paymentMethodId,
+        cooldownUntil: cooldownUntil,
       );
 
       final updatedClient = await _repository.updateClient(
@@ -203,6 +247,7 @@ class ClientsProvider extends SafeChangeNotifier {
         request,
       );
 
+      _fetchVersion++;
       _clients = _clients.map((client) {
         return client.id == clientId ? updatedClient : client;
       }).toList();
@@ -212,18 +257,20 @@ class ClientsProvider extends SafeChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _errorMessage = e.toString();
+      _recordError(e);
       notifyListeners();
       return false;
     }
   }
 
-  Future<bool> deleteClient(int clientId) async {
+  Future<bool> deleteClient(String clientId) async {
     _errorMessage = '';
+    phoneError = null;
 
     try {
       await _repository.deleteClient(clientId);
 
+      _fetchVersion++;
       _clients = _clients.where((client) => client.id != clientId).toList();
 
       _status = ClientStatus.success;
@@ -231,13 +278,36 @@ class ClientsProvider extends SafeChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _errorMessage = e.toString();
+      _recordError(e);
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> setClientActive(String id, bool active) async {
+    _errorMessage = '';
+    phoneError = null;
+    try {
+      final client = await _repository.updateClient(
+        id,
+        UpdateClientRequest(isActive: active),
+      );
+      _fetchVersion++;
+      _clients = _clients.where((row) => row.id != id).toList();
+      if (active) _clients = [client, ..._clients];
+      _status = ClientStatus.success;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _recordError(e);
       notifyListeners();
       return false;
     }
   }
 
   void syncUpdatedClient(Client updatedClient) {
+    _fetchVersion++;
+    _status = ClientStatus.success;
     _clients = _clients.map((client) {
       return client.id == updatedClient.id ? updatedClient : client;
     }).toList();

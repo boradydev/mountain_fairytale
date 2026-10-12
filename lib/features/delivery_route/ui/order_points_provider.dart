@@ -137,7 +137,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       );
 
   Future<bool> selectPointPaymentMethod(
-    int clientId,
+    String clientId,
     PaymentMethod method,
     ClientsProvider clientsProvider,
   ) async {
@@ -228,7 +228,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
   }
 
   void addClientPoint(Client client) {
-    if (points.any((p) => p.clientId == client.id)) {
+    if (!client.isActive || points.any((p) => p.clientId == client.id)) {
       return;
     }
 
@@ -242,7 +242,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
         paymentMethodId: client.defaultPaymentMethodId,
         paymentMethod:
             paymentMethodsById[client.defaultPaymentMethodId]?.name ??
-            client.defaultPaymentMethod,
+            client.defaultPaymentMethodName,
         salesRepresentative:
             client.salesRepresentativeName ?? 'Нет представителя',
         items: [],

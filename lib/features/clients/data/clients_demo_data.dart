@@ -1,9 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
-import 'package:mountain_fairytale/features/clients/clients_abcs.dart';
 
-class DemoClientDataSource implements ClientDataSource {
+class DemoClientDataSource {
   final AssetBundle _assetBundle;
 
   // Кэш теперь живет здесь. Именно его мы будем мутировать.
@@ -29,13 +28,11 @@ class DemoClientDataSource implements ClientDataSource {
     return jsonData;
   }
 
-  @override
   Future<List<Map<String, dynamic>>> getAllClients() async {
     await Future<void>.delayed(const Duration(milliseconds: 600));
     return _getDemoJson(); // Просто возвращаем весь кэш
   }
 
-  @override
   Future<Map<String, dynamic>> getClientById(int id) async {
     await Future.delayed(const Duration(milliseconds: 30));
     if (_cache == null) await _getDemoJson();
@@ -45,7 +42,6 @@ class DemoClientDataSource implements ClientDataSource {
     );
   }
 
-  @override
   Future<Map<String, dynamic>> patchClient(
     int id,
     Map<String, dynamic> json,
@@ -62,14 +58,12 @@ class DemoClientDataSource implements ClientDataSource {
     return updated;
   }
 
-  @override
   Future<void> deleteClient(int id) async {
     await Future.delayed(const Duration(milliseconds: 40));
     if (_cache == null) await _getDemoJson();
     _cache!.removeWhere((e) => e['id'] == id);
   }
 
-  @override
   Future<Map<String, dynamic>> updateCooldown(
     int clientId,
     String cooldownUntilIso,
@@ -95,7 +89,6 @@ class DemoClientDataSource implements ClientDataSource {
     return _cache![index];
   }
 
-  @override
   Future<Map<String, dynamic>?> checkDuplicate(
     String name,
     String address,
@@ -127,7 +120,6 @@ class DemoClientDataSource implements ClientDataSource {
   }
 
   // Реализуем метод добавления внутри дата-сорса:
-  @override
   Future<Map<String, dynamic>> createClient(
     Map<String, dynamic> clientJson,
   ) async {
@@ -157,7 +149,6 @@ class DemoClientDataSource implements ClientDataSource {
     return newClientJson;
   }
 
-  @override
   Future<void> massUpdateSalesRepresentative({
     required int fromId,
     required int? toId,
