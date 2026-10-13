@@ -505,7 +505,12 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     notifyListeners();
   }
 
-  void addTaskToPoint(int pointIndex, Product product, int quantity) {
+  void addTaskToPoint(
+    int pointIndex,
+    Product product,
+    int quantity, {
+    String? productName,
+  }) {
     if (!canEdit) return;
     if (!product.isActive || quantity <= 0) return;
     final currentPoint = points[pointIndex];
@@ -520,7 +525,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     updatedItems.add(
       DeliveryTaskItem(
         productId: product.id,
-        productName: product.name,
+        productName: productName ?? product.name,
         quantity: quantity,
         price: product.basePrice,
       ),
@@ -593,8 +598,9 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
   Future<bool> addCurrentProduct(
     int pointIndex,
     String productId,
-    int quantity,
-  ) async {
+    int quantity, {
+    required String productName,
+  }) async {
     if (!canEdit) {
       return false;
     }
@@ -616,7 +622,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       if (index < 0) {
         return false;
       }
-      addTaskToPoint(index, product, quantity);
+      addTaskToPoint(index, product, quantity, productName: productName);
       return true;
     } catch (error) {
       documentError = documentFailure(error);
@@ -646,7 +652,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     final items = List<DeliveryTaskItem>.from(point.items);
     items[itemIndex] = DeliveryTaskItem(
       productId: item.productId,
-      productName: product.name,
+      productName: item.productName,
       quantity: item.quantity,
       price: product.basePrice,
     );

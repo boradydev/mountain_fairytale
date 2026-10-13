@@ -16,6 +16,7 @@ class DeliveryTaskItem {
   double get amount => amountCents / 100;
   Map<String, dynamic> toRequestJson() => {
     'productId': productId,
+    'productName': productName,
     'quantity': quantity,
     'price': price,
   };

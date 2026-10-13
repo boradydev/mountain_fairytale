@@ -118,6 +118,7 @@ class _AddTaskDialogState extends State<_AddTaskDialog> {
       widget.pointIndex,
       product.id,
       _quantity,
+      productName: product.name,
     );
     if (!mounted) return;
     if (added) {

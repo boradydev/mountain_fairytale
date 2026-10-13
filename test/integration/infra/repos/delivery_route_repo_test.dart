@@ -162,7 +162,12 @@ void main() {
           expect((request['points'] as List).single, {
             'clientId': id,
             'items': [
-              {'productId': id, 'quantity': 3, 'price': 1.005},
+              {
+                'productId': id,
+                'productName': 'Вода',
+                'quantity': 3,
+                'price': 1.005,
+              },
             ],
           });
           if (!delivery) {

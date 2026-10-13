@@ -25,11 +25,12 @@ class Payments implements PaymentMethodRepository {
 
 class Catalog implements ProductRepository {
   double price = 10;
+  String name = 'Товар';
   bool active = true;
   @override
   Future<Product> getProductById(String id) async => Product(
     id: id,
-    name: 'Товар',
+    name: name,
     basePrice: price,
     createdAt: DateTime(2026),
     isActive: active,
@@ -109,6 +110,60 @@ void main() {
     provider.points = [point];
   });
   tearDown(() => provider.dispose());
+  test(
+    'selected name survives catalog rename, edits and request serialization',
+    () async {
+      catalog.name = 'Новое имя каталога';
+      catalog.price = 30;
+      expect(
+        await provider.addCurrentProduct(
+          0,
+          'second',
+          3,
+          productName: '  Вода Горная  ',
+        ),
+        isTrue,
+      );
+      final added = provider.points.single.items.last;
+      expect(added.productName, '  Вода Горная  ');
+      expect(added.price, 30);
+      provider.updateTaskQuantity(0, 1, 4);
+      catalog.name = 'Ещё одно имя каталога';
+      catalog.price = 40;
+      expect(
+        provider.replaceItemPrice(
+          provider.points.single,
+          provider.points.single.items.last,
+          await catalog.getProductById('second'),
+        ),
+        isTrue,
+      );
+      expect(provider.points.single.items.last.toRequestJson(), {
+        'productId': 'second',
+        'productName': '  Вода Горная  ',
+        'quantity': 4,
+        'price': 40.0,
+      });
+      expect(
+        DeliveryTaskItem.fromJson(item.toJson()).toRequestJson()['productName'],
+        'Товар',
+      );
+      provider.removeTaskFromPoint(0, 1);
+      expect(
+        await provider.addCurrentProduct(
+          0,
+          'second',
+          1,
+          productName: catalog.name,
+        ),
+        isTrue,
+      );
+      expect(
+        provider.points.single.items.last.productName,
+        'Ещё одно имя каталога',
+      );
+    },
+  );
   test('HALF_UP rounds each row before point/document sums', () {
     expect(lineAmountCents(1, 1.005), 101);
     expect(lineAmountCents(3, 1.005), 302);
@@ -135,10 +190,16 @@ void main() {
   });
   test('new rows fetch current price; explicit refresh preserves quantity and rejects inactive products', () async {
     catalog.price = 15;
-    expect(await provider.addCurrentProduct(0, 'second', 3), isTrue);
+    expect(
+      await provider.addCurrentProduct(0, 'second', 3, productName: 'Товар'),
+      isTrue,
+    );
     expect(provider.points.single.items.last.price, 15);
     catalog.price = 25;
-    expect(await provider.addCurrentProduct(0, 'second', 7), isFalse);
+    expect(
+      await provider.addCurrentProduct(0, 'second', 7, productName: 'Товар'),
+      isFalse,
+    );
     expect(provider.points.single.items.last.quantity, 3);
     expect(provider.points.single.items.last.price, 15);
     final target = provider.points.single;
@@ -163,7 +224,10 @@ void main() {
       ),
       isFalse,
     );
-    expect(await provider.addCurrentProduct(0, 'third', 1), isFalse);
+    expect(
+      await provider.addCurrentProduct(0, 'third', 1, productName: 'Товар'),
+      isFalse,
+    );
   });
   test(
     'reading never acquires a lock and cancelled documents cannot edit',

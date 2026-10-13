@@ -15,7 +15,9 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      final catalog = Catalog()..price = 25;
+      final catalog = Catalog()
+        ..price = 25
+        ..name = 'Переименованный товар';
       final provider = Orders(catalog, Locks())..points = [point];
       final clients = ClientsProvider(Clients());
       final formKey = GlobalKey<FormState>();
@@ -56,6 +58,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(provider.points.single.items.single.price, 25);
       expect(provider.points.single.items.single.quantity, 2);
+      expect(provider.points.single.items.single.productName, 'Товар');
+      expect(find.text('Товар'), findsWidgets);
+      expect(find.text('Переименованный товар'), findsNothing);
       catalog.active = false;
       catalog.price = 50;
       await tester.tap(find.byTooltip('Обновить цену из каталога'));
