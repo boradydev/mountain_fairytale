@@ -1,26 +1,18 @@
 import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_sheet_model.dart';
+import 'package:mountain_fairytale/features/delivery_route/data/delivery_document_api.dart';
 
-abstract interface class DeliveryRouteDataSource {
-  Future<List<Map<String, dynamic>>> getAllRouteSheets();
+abstract interface class DeliveryRouteDataSource
+    implements DeliveryDocumentDataSource {}
 
-  Future<Map<String, dynamic>> getRouteSheetById(int id);
-  Future<Map<String, dynamic>> createRouteSheet(Map<String, dynamic> sheetJson);
-
-  Future<Map<String, dynamic>> patchRouteSheet(
-    int id,
-    Map<String, dynamic> json,
-  );
-
-  Future<void> deleteRouteSheet(int id);
-}
-
-abstract interface class DeliveryRouteRepository {
-  Future<List<DeliveryRouteSheet>> getRouteSheets();
-
-  Future<DeliveryRouteSheet> getRouteSheetById(int id);
+abstract interface class DeliveryRouteRepository
+    implements DocumentLockRepository {
+  Future<List<DeliveryRouteSheet>> getRouteSheets({
+    bool includeCancelled = false,
+  });
+  Future<DeliveryRouteSheet> getRouteSheetById(String id);
   Future<DeliveryRouteSheet> saveRouteSheet(DeliveryRouteSheet sheet);
-
-  Future<void> deleteRouteSheet(int id);
+  Future<DeliveryRouteSheet> cancelRouteSheet(String id);
+  Future<DeliveryRouteSheet> restoreRouteSheet(String id);
 }
 
 abstract class RoutePrintService {

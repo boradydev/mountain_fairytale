@@ -1,28 +1,13 @@
 import 'package:mountain_fairytale/features/pickup/data/pickup_model.dart';
+import 'package:mountain_fairytale/features/delivery_route/data/delivery_document_api.dart';
 
-abstract class PickupDataSource {
-  Future<List<Map<String, dynamic>>> getAllPickupSheets();
+abstract interface class PickupDataSource
+    implements DeliveryDocumentDataSource {}
 
-  Future<Map<String, dynamic>> getPickupSheetById(int id);
-
-  Future<Map<String, dynamic>> createPickupSheet(
-    Map<String, dynamic> sheetJson,
-  );
-
-  Future<Map<String, dynamic>> patchPickupSheet(
-    int id,
-    Map<String, dynamic> json,
-  );
-
-  Future<void> deletePickupSheet(int id);
-}
-
-abstract class PickupRepository {
-  Future<List<PickupSheet>> getPickupSheets();
-
-  Future<PickupSheet> getPickupSheetById(int id);
-
+abstract interface class PickupRepository implements DocumentLockRepository {
+  Future<List<PickupSheet>> getPickupSheets({bool includeCancelled = false});
+  Future<PickupSheet> getPickupSheetById(String id);
   Future<PickupSheet> savePickupSheet(PickupSheet sheet);
-
-  Future<void> deletePickupSheet(int id);
+  Future<PickupSheet> cancelPickupSheet(String id);
+  Future<PickupSheet> restorePickupSheet(String id);
 }

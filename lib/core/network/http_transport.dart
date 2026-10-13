@@ -38,6 +38,11 @@ class HttpTransport {
     Object? body,
   }) => _send(method: 'PUT', path: path, headers: headers, body: body);
 
+  Future<HttpTransportResponse> delete(
+    String path, {
+    Map<String, String>? headers,
+  }) => _send(method: 'DELETE', path: path, headers: headers);
+
   Future<HttpTransportResponse> _send({
     required String method,
     required String path,

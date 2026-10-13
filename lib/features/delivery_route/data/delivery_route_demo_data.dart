@@ -1,10 +1,11 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:mountain_fairytale/features/delivery_days/data/delivery_days_demo_data.dart';
-import 'package:mountain_fairytale/features/delivery_route/delivery_route_abcs.dart';
 
-class DemoDeliveryRouteDataSource implements DeliveryRouteDataSource {
+/// Legacy offline sample generator; production documents use the API data source.
+class DemoDeliveryRouteDataSource {
   final AssetBundle _assetBundle;
   final DemoDeliveryDataSource _deliveryDayDataSource;
   List<Map<String, dynamic>>? _routesCache;
@@ -14,7 +15,6 @@ class DemoDeliveryRouteDataSource implements DeliveryRouteDataSource {
     required this._deliveryDayDataSource,
   }) : _assetBundle = assetBundle ?? rootBundle;
 
-  @override
   Future<List<Map<String, dynamic>>> getAllRouteSheets() async {
     await Future.delayed(const Duration(milliseconds: 60));
     if (_routesCache != null) return _routesCache!;
@@ -26,7 +26,6 @@ class DemoDeliveryRouteDataSource implements DeliveryRouteDataSource {
     return _routesCache!;
   }
 
-  @override
   Future<Map<String, dynamic>> getRouteSheetById(int id) async {
     await Future.delayed(const Duration(milliseconds: 30));
     if (_routesCache == null) await getAllRouteSheets();
@@ -36,7 +35,6 @@ class DemoDeliveryRouteDataSource implements DeliveryRouteDataSource {
     );
   }
 
-  @override
   Future<Map<String, dynamic>> createRouteSheet(
     Map<String, dynamic> sheetJson,
   ) async {
@@ -61,7 +59,6 @@ class DemoDeliveryRouteDataSource implements DeliveryRouteDataSource {
     return finalSheet;
   }
 
-  @override
   Future<Map<String, dynamic>> patchRouteSheet(
     int id,
     Map<String, dynamic> json,
@@ -85,7 +82,6 @@ class DemoDeliveryRouteDataSource implements DeliveryRouteDataSource {
     return updated;
   }
 
-  @override
   Future<void> deleteRouteSheet(int id) async {
     await Future.delayed(const Duration(milliseconds: 40));
     if (_routesCache == null) await getAllRouteSheets();
@@ -167,7 +163,7 @@ class DemoDeliveryRouteDataSource implements DeliveryRouteDataSource {
 
       await _deliveryDayDataSource.updateOrCreateDeliveryDay(generatedDayJson);
     } catch (e) {
-      print('Ошибка работы демо-хака: $e');
+      debugPrint('Ошибка работы демо-хака: $e');
     }
   }
 }

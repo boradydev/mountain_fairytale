@@ -150,8 +150,8 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
               final picked = await showDatePicker(
                 context: context,
                 initialDate: provider.selectedDate,
-                firstDate: DateTime.now().subtract(const Duration(days: 30)),
-                lastDate: DateTime.now().add(const Duration(days: 30)),
+                firstDate: DateTime(1900),
+                lastDate: DateTime(2200),
               );
               if (picked != null) provider.setDate(picked);
             },
@@ -173,7 +173,8 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
                 : _toggleInactiveDrivers,
             items: provider.drivers,
             value: provider.selectedDriver,
-            itemLabelBuilder: (driver) => driver.name,
+            itemLabelBuilder: (driver) =>
+                '${driver.name}${driver.isActive ? '' : ' — Неактивен'}',
             itemBuilder: (driver) => Text(
               driver.isActive ? driver.name : '${driver.name} — Неактивен',
               overflow: TextOverflow.ellipsis,
@@ -184,7 +185,11 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
                     ),
             ),
             onChanged: _selectDriver,
-            validator: (value) => value == null ? 'Выберите водителя' : null,
+            validator: (value) => value == null
+                ? 'Выберите водителя'
+                : !value.isActive && !provider.assignmentUnchanged
+                ? 'Назначенный водитель неактивен'
+                : null,
             onAdd: () => _showDriverDialog(context),
             onEdit: provider.selectedDriver == null
                 ? null
@@ -240,7 +245,7 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
             items: provider.cars,
             value: provider.selectedCar,
             itemLabelBuilder: (car) =>
-                '${car.model} (${formatCarNumber(car.number)})',
+                '${car.model} (${formatCarNumber(car.number)})${car.isActive ? '' : ' — Неактивен'}',
             itemBuilder: (car) => Text(
               car.isActive
                   ? '${car.model} (${formatCarNumber(car.number)})'
@@ -253,7 +258,11 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
                     ),
             ),
             onChanged: _selectCar,
-            validator: (value) => value == null ? 'Выберите автомобиль' : null,
+            validator: (value) => value == null
+                ? 'Выберите автомобиль'
+                : !value.isActive && !provider.assignmentUnchanged
+                ? 'Назначенный автомобиль неактивен'
+                : null,
             onAdd: () => _showCarDialog(context),
             onEdit: provider.selectedCar == null
                 ? null
@@ -305,7 +314,7 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
 
               final mileage = double.tryParse(value);
 
-              if (mileage == null) {
+              if (mileage == null || !mileage.isFinite) {
                 return 'Введите корректный километраж';
               }
 
@@ -342,7 +351,7 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
 
               final mileage = double.tryParse(value);
 
-              if (mileage == null) {
+              if (mileage == null || !mileage.isFinite) {
                 return 'Введите корректный километраж';
               }
 
@@ -350,8 +359,8 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
                 return 'Километраж не может быть отрицательным';
               }
 
-              if (mileage < provider.startMileage) {
-                return 'Не может быть меньше километража выезда';
+              if (mileage <= provider.startMileage) {
+                return 'Должен быть больше километража выезда';
               }
 
               return null;

@@ -19,13 +19,21 @@ class RouteConstructorProvider extends OrderPointsProvider {
   RouteConstructorProvider({
     required this._carRepo,
     required this._driverRepo,
-    required this._routeRepo,
+    required DeliveryRouteRepository routeRepo,
     required this._printService,
     // Поля родителя передаем напрямую через super.
     required super.productRepo,
     required super.paymentMethodRepo,
     required super.clientRepo,
-  });
+  }) : _routeRepo = routeRepo,
+       super(lockRepository: routeRepo);
+
+  DeliveryRouteSheet? _savedSheet;
+  bool get assignmentUnchanged =>
+      _savedSheet != null &&
+      selectedDate == _savedSheet!.date &&
+      selectedDriver?.id == _savedSheet!.driverId &&
+      selectedCar?.id == _savedSheet!.carId;
 
   List<Car> cars = [];
   List<Driver> drivers = [];
@@ -51,6 +59,11 @@ class RouteConstructorProvider extends OrderPointsProvider {
       );
       if (version != _carLoadVersion) return;
       final previousSelection = selectedCar;
+      if (previousSelection != null &&
+          previousSelection.id == _savedSheet?.carId &&
+          !loaded.any((car) => car.id == previousSelection.id)) {
+        loaded.add(previousSelection);
+      }
       cars = loaded.map((car) {
         if (previousSelection != null &&
             car.id == previousSelection.id &&
@@ -65,7 +78,9 @@ class RouteConstructorProvider extends OrderPointsProvider {
       final selectedId = selectedCar?.id;
       if (selectedId != null) {
         final matches = cars.where(
-          (car) => car.id == selectedId && car.isActive,
+          (car) =>
+              car.id == selectedId &&
+              (car.isActive || car.id == _savedSheet?.carId),
         );
         selectedCar = matches.isEmpty ? null : matches.first;
         if (selectedCar == null) startMileage = 0;
@@ -93,8 +108,11 @@ class RouteConstructorProvider extends OrderPointsProvider {
     cars = cars.where((existing) => existing.id != car.id).toList();
     if (car.isActive || showInactiveCars) cars.insert(0, car);
     if (selectedCar?.id == car.id) {
-      selectCar(car.isActive ? car : null);
-      if (!car.isActive) startMileage = 0;
+      if (car.isActive || car.id == _savedSheet?.carId) {
+        selectedCar = car;
+      } else {
+        selectedCar = null;
+      }
     }
     notifyListeners();
   }
@@ -128,6 +146,11 @@ class RouteConstructorProvider extends OrderPointsProvider {
       final previousSelection = selectedDriver;
       // Reuse an unchanged selection so the dropdown keeps its form state and
       // focus when a refreshed API response creates new model instances.
+      if (previousSelection != null &&
+          previousSelection.id == _savedSheet?.driverId &&
+          !loaded.any((driver) => driver.id == previousSelection.id)) {
+        loaded.add(previousSelection);
+      }
       drivers = loaded.map((driver) {
         if (previousSelection != null &&
             driver.id == previousSelection.id &&
@@ -140,7 +163,11 @@ class RouteConstructorProvider extends OrderPointsProvider {
       }).toList();
       final selectedId = selectedDriver?.id;
       if (selectedId != null) {
-        final matches = drivers.where((d) => d.id == selectedId && d.isActive);
+        final matches = drivers.where(
+          (d) =>
+              d.id == selectedId &&
+              (d.isActive || d.id == _savedSheet?.driverId),
+        );
         selectedDriver = matches.isEmpty ? null : matches.first;
         driverName = selectedDriver?.name ?? '';
       }
@@ -167,7 +194,13 @@ class RouteConstructorProvider extends OrderPointsProvider {
     drivers = drivers.where((d) => d.id != driver.id).toList();
     if (driver.isActive || showInactiveDrivers) drivers.insert(0, driver);
     if (selectedDriver?.id == driver.id) {
-      selectDriver(driver.isActive ? driver : null);
+      if (driver.isActive || driver.id == _savedSheet?.driverId) {
+        selectedDriver = driver;
+        driverName = driver.name;
+      } else {
+        selectedDriver = null;
+        driverName = '';
+      }
     }
     notifyListeners();
   }
@@ -195,10 +228,11 @@ class RouteConstructorProvider extends OrderPointsProvider {
   double startMileage = 0.0;
   double? endMileage;
 
-  int? currentRouteId;
+  String? get currentRouteId => documentId;
 
   void resetForm() {
-    currentRouteId = null;
+    initializeDocumentSession();
+    _savedSheet = null;
     selectedDate = DateTime.now();
     driverName = '';
     selectedDriver = null;
@@ -227,6 +261,7 @@ class RouteConstructorProvider extends OrderPointsProvider {
   }
 
   void selectDriver(Driver? driver) {
+    if (!canEdit) return;
     if (driver != null && !driver.isActive) return;
     selectedDriver = driver;
     driverName = driver?.name ?? '';
@@ -240,11 +275,12 @@ class RouteConstructorProvider extends OrderPointsProvider {
   }
 
   void selectCar(Car? car) {
+    if (!canEdit) return;
     if (car != null && !car.isActive) return;
-    selectedCar = car;
-    if (car != null) {
+    if (car != null && selectedCar?.id != car.id) {
       startMileage = car.currentMileage;
     }
+    selectedCar = car;
     notifyListeners();
   }
 
@@ -255,46 +291,77 @@ class RouteConstructorProvider extends OrderPointsProvider {
   }
 
   void setDate(DateTime date) {
+    if (!canEdit) return;
     selectedDate = date;
     notifyListeners();
   }
 
   Future<bool> saveRoute() async {
-    final sheet = currentRouteSheet;
-
-    if (sheet == null) {
+    if (!canSave) {
       return false;
     }
-
-    try {
-      await _routeRepo.saveRouteSheet(sheet);
-
-      if (endMileage != null && selectedCar != null) {
-        final updatedCar = await _carRepo.updateCar(
-          selectedCar!.id,
-          UpdateCarRequest(
-            currentMileage: endMileage,
-          ),
-        );
-
-        cars = cars.map((car) {
-          return car.id == updatedCar.id ? updatedCar : car;
-        }).toList();
-
-        selectedCar = updatedCar;
-      }
-
+    final sheet = currentRouteSheet;
+    if (sheet == null) {
+      documentError =
+          'Проверьте назначение водителя и автомобиля, дату и пробег.';
       notifyListeners();
-
-      return true;
-    } catch (_) {
       return false;
+    }
+    final creating = documentId == null;
+    documentBusy = true;
+    documentError = null;
+    notifyListeners();
+    try {
+      final saved = await _routeRepo.saveRouteSheet(sheet);
+      documentId = saved.id;
+      documentCreatedAt = saved.createdAt;
+      _savedSheet = saved;
+      points = List.from(saved.points);
+      markDocumentSaved(created: creating);
+      return true;
+    } catch (error) {
+      handleDocumentError(error);
+      return false;
+    } finally {
+      documentBusy = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> changeDocumentActive() async {
+    if (documentId == null || documentBusy) {
+      return false;
+    }
+    documentBusy = true;
+    documentError = null;
+    notifyListeners();
+    try {
+      final saved = documentActive
+          ? await _routeRepo.cancelRouteSheet(documentId!)
+          : await _routeRepo.restoreRouteSheet(documentId!);
+      initializeDocumentSession(
+        id: saved.id,
+        createdAt: saved.createdAt,
+        active: saved.isActive,
+      );
+      documentChanged = true;
+      documentBusy = true;
+      await _applySheet(saved);
+      return true;
+    } catch (error) {
+      handleDocumentError(error);
+      return false;
+    } finally {
+      documentBusy = false;
+      notifyListeners();
     }
   }
 
   Future<Driver?> addDriver(String name) async {
     final normalizedName = name.trim();
-    if (normalizedName.isEmpty) return null;
+    if (normalizedName.isEmpty) {
+      return null;
+    }
 
     try {
       final request = CreateDriverRequest(name: normalizedName);
@@ -310,7 +377,9 @@ class RouteConstructorProvider extends OrderPointsProvider {
 
   Future<bool> updateDriver(String id, String name) async {
     final normalizedName = name.trim();
-    if (normalizedName.isEmpty) return false;
+    if (normalizedName.isEmpty) {
+      return false;
+    }
 
     try {
       final request = UpdateDriverRequest(name: normalizedName);
@@ -347,7 +416,9 @@ class RouteConstructorProvider extends OrderPointsProvider {
   }) async {
     final normalizedModel = model.trim();
     final normalizedNumber = number.trim();
-    if (normalizedModel.isEmpty || normalizedNumber.isEmpty) return null;
+    if (normalizedModel.isEmpty || normalizedNumber.isEmpty) {
+      return null;
+    }
 
     try {
       final request = CreateCarRequest(
@@ -373,7 +444,9 @@ class RouteConstructorProvider extends OrderPointsProvider {
   }) async {
     final normalizedModel = model.trim();
     final normalizedNumber = number.trim();
-    if (normalizedModel.isEmpty || normalizedNumber.isEmpty) return false;
+    if (normalizedModel.isEmpty || normalizedNumber.isEmpty) {
+      return false;
+    }
 
     try {
       final request = UpdateCarRequest(
@@ -405,60 +478,51 @@ class RouteConstructorProvider extends OrderPointsProvider {
     return _carRepo.checkDuplicate(number);
   }
 
-  Future<void> loadExistingRouteById(int routeId) async {
+  Future<void> _applySheet(DeliveryRouteSheet sheet) async {
+    _savedSheet = sheet;
+    documentId = sheet.id;
+    documentCreatedAt = sheet.createdAt;
+    documentActive = sheet.isActive;
+    selectedDate = sheet.date;
+    startMileage = sheet.startMileage;
+    endMileage = sheet.endMileage;
+    driverName = sheet.driverName;
+    points = List.from(sheet.points);
+    selectedDriver = await _driverRepo.getDriverById(sheet.driverId!);
+    selectedCar = await _carRepo.getCarById(sheet.carId);
+    drivers = [
+      selectedDriver!,
+      ...drivers.where((d) => d.id != selectedDriver!.id),
+    ];
+    cars = [selectedCar!, ...cars.where((c) => c.id != selectedCar!.id)];
+    isOldDocument = DateTime.now().difference(sheet.date).inDays >= 7;
+  }
+
+  Future<void> loadExistingRouteById(String routeId) async {
+    resetForm();
+    initializeDocumentSession(id: routeId);
     isLoadingDirectories = true;
     notifyListeners();
     try {
-      await loadCars();
-      await loadDrivers();
-      await loadProducts();
-      await loadPaymentMethods();
-
-      // Запрашиваем конкретный маршрутный лист по ID
+      await loadDirectories();
       final sheet = await _routeRepo.getRouteSheetById(routeId);
-
-      currentRouteId = sheet.id;
-      startMileage = sheet.startMileage;
-      endMileage = sheet.endMileage;
-      points = List.from(sheet.points);
-
-      final now = DateTime.now();
-      final difference = now.difference(sheet.date).inDays;
-      isOldDocument = difference >= 7;
-
-      final matches = drivers
-          .where(
-            (d) =>
-                d.isActive &&
-                (sheet.driverId != null
-                    ? d.id == sheet.driverId
-                    : d.name == sheet.driverName),
-          )
-          .toList();
-      // Legacy demo routes only store names. Do not invent an API identity or
-      // guess between different people with the same name.
-      selectedDriver = matches.length == 1 ? matches.single : null;
-      driverName = selectedDriver?.name ?? sheet.driverName;
-
-      try {
-        selectedCar = cars.firstWhere((c) => c.id == sheet.carId && c.isActive);
-      } catch (_) {
-        selectedCar = null;
-      }
-    } catch (e) {
-      points = [];
-      selectedDriver = null;
-      selectedCar = null;
+      await _applySheet(sheet);
+    } catch (error) {
+      documentError = documentFailure(error);
+      isEditing = false;
     } finally {
       isLoadingDirectories = false;
       notifyListeners();
     }
   }
 
-  Future<List<DeliveryRouteSheet>> getRouteSheetsByDate(DateTime date) async {
-    try {
-      final allSheets = await _routeRepo.getRouteSheets();
-      return allSheets
+  @override
+  Future<void> refreshForEditing() async {
+    await _applySheet(await _routeRepo.getRouteSheetById(documentId!));
+  }
+
+  Future<List<DeliveryRouteSheet>> getRouteSheetsByDate(DateTime date) async =>
+      (await _routeRepo.getRouteSheets())
           .where(
             (sheet) =>
                 sheet.date.year == date.year &&
@@ -466,22 +530,19 @@ class RouteConstructorProvider extends OrderPointsProvider {
                 sheet.date.day == date.day,
           )
           .toList();
-    } catch (_) {
-      return const [];
-    }
-  }
 
   DeliveryRouteSheet? get currentRouteSheet {
     if (selectedDriver == null ||
-        !selectedDriver!.isActive ||
+        (!selectedDriver!.isActive && !assignmentUnchanged) ||
         selectedCar == null ||
-        !selectedCar!.isActive ||
-        points.isEmpty) {
+        (!selectedCar!.isActive && !assignmentUnchanged)) {
       return null;
     }
 
     return DeliveryRouteSheet(
       id: currentRouteId,
+      createdAt: documentCreatedAt,
+      isActive: documentActive,
       // Применится существующий ID или null при создании нового
       date: selectedDate,
       driverName: selectedDriver!.name,

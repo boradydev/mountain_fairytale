@@ -1,3 +1,5 @@
+import 'package:mountain_fairytale/features/delivery_route/delivery_route_abcs.dart';
+import 'package:mountain_fairytale/features/pickup/pickup_abcs.dart';
 import 'package:mountain_fairytale/features/sales_representatives/data/sales_representative_api_repo.dart';
 
 import 'dart:async';
@@ -24,7 +26,7 @@ import 'package:mountain_fairytale/features/clients/data/clients_demo_data.dart'
 import 'package:mountain_fairytale/features/delivery_days/data/delivery_days_repo.dart';
 import 'package:mountain_fairytale/features/delivery_days/data/delivery_days_demo_data.dart';
 import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_repo.dart';
-import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_demo_data.dart';
+import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_api_data_source.dart';
 import 'package:mountain_fairytale/features/drivers/data/drivers_repo.dart';
 import 'package:mountain_fairytale/features/drivers/data/drivers_api_data_source.dart';
 import 'package:mountain_fairytale/features/employees/data/employees_api_data_source.dart';
@@ -34,7 +36,7 @@ import 'package:mountain_fairytale/features/employees/ui/employees_provider.dart
 import 'package:mountain_fairytale/features/payment_methods/data/payment_method_repo.dart';
 import 'package:mountain_fairytale/features/payment_methods/data/payment_method_api_data_source.dart';
 import 'package:mountain_fairytale/features/pickup/data/pickup_repo.dart';
-import 'package:mountain_fairytale/features/pickup/data/pickup_demo_data.dart';
+import 'package:mountain_fairytale/features/pickup/data/pickup_api_data_source.dart';
 import 'package:mountain_fairytale/features/products/data/products_repo.dart';
 import 'package:mountain_fairytale/features/products/data/products_api_data_source.dart';
 import 'package:mountain_fairytale/features/sales_representative_clients/data/sales_representative_clients_repo.dart';
@@ -99,14 +101,10 @@ Future<void> main() async {
   // Каждый источник независим, хранит свой кэш и имитирует сетевые запросы
   // ===========================================================================
   final deliveryDayDataSource = DemoDeliveryDataSource();
-  final routeDataSource = DemoDeliveryRouteDataSource(
-    deliveryDayDataSource: deliveryDayDataSource,
-  );
   final analyticsDemoClientDataSource = DemoClientDataSource();
   final salesRepDataSource = DemoSalesRepresentativeDataSource();
   final salesRepCommissionDataSource =
       DemoSalesRepresentativeCommissionDataSource();
-  final pickupDataSource = DemoPickupDataSource();
 
   final auditLogDataSource = DemoAuditLogDataSource();
 
@@ -117,7 +115,6 @@ Future<void> main() async {
   // 2. ИНИЦИАЛИЗАЦИЯ РЕПОЗИТОРИЕВ
   // Принимают сущности от UI, конвертируют в JSON-Map и общаются с Data Sources
   // ===========================================================================
-  final routeRepository = DeliveryRouteRepositoryImpl(routeDataSource);
   final deliveryDayRepository = ApiDeliveryRepository(deliveryDayDataSource);
   final salesRepRepository = SalesRepresentativeRepositoryImpl(
     salesRepDataSource,
@@ -126,9 +123,6 @@ Future<void> main() async {
       SalesRepresentativeCommissionRepositoryImpl(
         salesRepCommissionDataSource,
       );
-  final pickupRepository = PickupRepositoryImpl(
-    pickupDataSource,
-  );
 
   // Инициализация модуля клиентов торгового представителя
   final salesRepClientDataSource = DemoSalesRepresentativeClientDataSource(
@@ -171,6 +165,11 @@ Future<void> main() async {
     userAgent: 'MountainFairytale/1.0 Windows',
   );
 
+  final routeRepository = DeliveryRouteRepositoryImpl(
+    ApiDeliveryRouteDataSource(apiClient),
+  );
+  final pickupRepository = PickupRepositoryImpl(ApiPickupDataSource(apiClient));
+
   final clientRepository = ClientRepositoryImpl(ApiClientDataSource(apiClient));
 
   final driverRepository = DriverRepositoryImpl(ApiDriverDataSource(apiClient));
@@ -189,6 +188,8 @@ Future<void> main() async {
   // Передаем созданные синглтоны репозиториев в UI-провайдеры управления стейтом
   // ===========================================================================
   final sessionProviders = <SingleChildWidget>[
+    Provider<DeliveryRouteRepository>.value(value: routeRepository),
+    Provider<PickupRepository>.value(value: pickupRepository),
     Provider<SalesRepresentativeApiRepository>(
       create: (_) => SalesRepresentativeApiRepository(apiClient),
     ),

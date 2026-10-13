@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/shared/widgets/confirm_dialog.dart';
+import 'package:mountain_fairytale/shared/widgets/app_notify.dart';
 import 'package:mountain_fairytale/features/clients/ui/clients_provider.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/order_points_provider.dart';
 import 'package:mountain_fairytale/features/payment_methods/ui/payment_method_selector.dart';
@@ -66,7 +68,10 @@ class _RoutePointsListState extends State<RoutePointsList> {
       padding: const EdgeInsets.all(16),
       buildDefaultDragHandles: false,
       itemCount: provider.points.length,
-      onReorder: provider.reorderPoints,
+      onReorderItem: (oldIndex, newIndex) => provider.reorderPoints(
+        oldIndex,
+        oldIndex < newIndex ? newIndex + 1 : newIndex,
+      ),
       itemBuilder: (context, index) {
         final point = provider.points[index];
 
@@ -132,6 +137,7 @@ class _RoutePointsListState extends State<RoutePointsList> {
                       children: [
                         ReorderableDragStartListener(
                           index: index,
+                          enabled: provider.canEdit,
                           child: MouseRegion(
                             cursor: SystemMouseCursors.grab,
                             child: Padding(
@@ -149,7 +155,9 @@ class _RoutePointsListState extends State<RoutePointsList> {
                             Icons.delete_outline,
                             color: Colors.red,
                           ),
-                          onPressed: () => provider.removePoint(index),
+                          onPressed: provider.canEdit
+                              ? () => provider.removePoint(index)
+                              : null,
                         ),
                       ],
                     ),
@@ -169,13 +177,18 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      PaymentMethodSelector(
-                                        provider: provider,
-                                        clientsProvider: clientsProvider,
-                                        clientId: point.clientId,
-                                        selectedId: point.paymentMethodId,
-                                        selectedName: point.paymentMethod,
-                                      ),
+                                      if (!provider.canEdit)
+                                        Text(
+                                          'Способ оплаты: ${point.paymentMethod ?? 'Не указан'}',
+                                        )
+                                      else
+                                        PaymentMethodSelector(
+                                          provider: provider,
+                                          clientsProvider: clientsProvider,
+                                          clientId: point.clientId,
+                                          selectedId: point.paymentMethodId,
+                                          selectedName: point.paymentMethod,
+                                        ),
                                     ],
                                   ),
                                 ),
@@ -267,6 +280,48 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                       return Column(
                                         children: [
                                           TaskItemRow(
+                                            key: ValueKey(item.productId),
+                                            enabled: provider.canEdit,
+                                            onRefreshPrice: () async {
+                                              try {
+                                                final product = await provider
+                                                    .currentCatalogProduct(
+                                                      item.productId,
+                                                    );
+                                                if (!context.mounted ||
+                                                    !provider.canEdit) {
+                                                  return;
+                                                }
+                                                if (!product.isActive) {
+                                                  AppNotify.show(
+                                                    'Нельзя обновить цену неактивного товара.',
+                                                    isError: true,
+                                                  );
+                                                  return;
+                                                }
+                                                final confirmed =
+                                                    await ConfirmDialog.show(
+                                                      context,
+                                                      title: 'Обновить цену строки?',
+                                                      content:
+                                                          'Сохранённая цена: ${item.price} ₽. Цена каталога: ${product.basePrice} ₽. Количество останется прежним.',
+                                                      confirmText:
+                                                          'Обновить цену',
+                                                    );
+                                                if (confirmed) {
+                                                  provider.replaceItemPrice(
+                                                    point,
+                                                    item,
+                                                    product,
+                                                  );
+                                                }
+                                              } catch (_) {
+                                                AppNotify.show(
+                                                  'Не удалось загрузить цену каталога.',
+                                                  isError: true,
+                                                );
+                                              }
+                                            },
                                             index: taskIndex,
                                             item: item,
                                             onDelete: () =>
@@ -314,12 +369,13 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                             'Добавить продукцию/услугу',
                                             style: TextStyle(fontSize: 13),
                                           ),
-                                          onPressed: () =>
-                                              TaskDialogs.showAddTask(
-                                                context,
-                                                provider,
-                                                index,
-                                              ),
+                                          onPressed: provider.canEdit
+                                              ? () => TaskDialogs.showAddTask(
+                                                  context,
+                                                  provider,
+                                                  index,
+                                                )
+                                              : null,
                                         ),
                                         const Spacer(),
                                         Text(

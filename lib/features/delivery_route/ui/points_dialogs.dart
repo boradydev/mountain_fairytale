@@ -39,7 +39,9 @@ class _AddTaskDialogState extends State<_AddTaskDialog> {
 
   Product? get _selected {
     for (final product in widget.provider.products) {
-      if (product.id == _selectedId && product.isActive) return product;
+      if (product.id == _selectedId && product.isActive) {
+        return product;
+      }
     }
     return null;
   }
@@ -103,12 +105,29 @@ class _AddTaskDialogState extends State<_AddTaskDialog> {
     }
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (_busy || !_formKey.currentState!.validate()) return;
     final product = _selected;
     if (product == null) return;
-    widget.provider.addTaskToPoint(widget.pointIndex, product, _quantity);
-    Navigator.of(context).pop();
+
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    final added = await widget.provider.addCurrentProduct(
+      widget.pointIndex,
+      product.id,
+      _quantity,
+    );
+    if (!mounted) return;
+    if (added) {
+      Navigator.of(context).pop();
+    } else {
+      setState(() {
+        _busy = false;
+        _error = widget.provider.documentError;
+      });
+    }
   }
 
   @override
@@ -162,6 +181,10 @@ class _AddTaskDialogState extends State<_AddTaskDialog> {
               onChanged: _select,
               validator: (value) => value == null || !value.isActive
                   ? 'Выберите активный товар'
+                  : provider.points[widget.pointIndex].items.any(
+                      (item) => item.productId == value.id,
+                    )
+                  ? 'Товар уже добавлен. Измените количество строки.'
                   : null,
               onAdd: _busy ? null : () => _showProductDialog(),
               onEdit: _busy || _selected == null

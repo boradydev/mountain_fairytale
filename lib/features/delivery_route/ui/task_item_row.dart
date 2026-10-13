@@ -4,6 +4,8 @@ import 'package:mountain_fairytale/shared/widgets/icon_button_widget.dart';
 
 class TaskItemRow extends StatefulWidget {
   final int index;
+  final bool enabled;
+  final VoidCallback? onRefreshPrice;
   final DeliveryTaskItem item;
   final VoidCallback onDelete;
   final ValueChanged<int> onQuantityChanged;
@@ -11,6 +13,8 @@ class TaskItemRow extends StatefulWidget {
   const TaskItemRow({
     super.key,
     required this.index,
+    this.enabled = true,
+    this.onRefreshPrice,
     required this.item,
     required this.onDelete,
     required this.onQuantityChanged,
@@ -22,6 +26,7 @@ class TaskItemRow extends StatefulWidget {
 
 class _TaskItemRowState extends State<TaskItemRow> {
   bool _isEditing = false;
+  String? _quantityError;
   late TextEditingController _controller;
 
   @override
@@ -43,7 +48,11 @@ class _TaskItemRowState extends State<TaskItemRow> {
 
   void _saveEditing() {
     final value = int.tryParse(_controller.text);
-    if (value != null && value > 0) {
+    if (value == null || value <= 0) {
+      setState(() => _quantityError = 'Введите количество больше нуля');
+      return;
+    }
+    if (value > 0) {
       widget.onQuantityChanged(value);
     }
     setState(() => _isEditing = false);
@@ -90,15 +99,30 @@ class _TaskItemRowState extends State<TaskItemRow> {
                     icon: Icons.edit,
                     tooltip: 'Изменить количество',
                     color: colorScheme.primary,
-                    onPressed: _startEditing,
+                    onPressed: widget.enabled ? _startEditing : null,
                   ),
                 ] else ...[
                   Expanded(
-                    child: TextField(
+                    child: TextFormField(
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
                       controller: _controller,
+                      validator: (value) =>
+                          !_isEditing || (int.tryParse(value ?? '') ?? 0) > 0
+                          ? null
+                          : 'Введите количество больше нуля',
+                      onChanged: (text) {
+                        setState(() => _quantityError = null);
+                        final quantity = int.tryParse(text);
+                        if (widget.enabled &&
+                            quantity != null &&
+                            quantity > 0) {
+                          widget.onQuantityChanged(quantity);
+                        }
+                      },
                       keyboardType: TextInputType.number,
                       style: const TextStyle(fontSize: 14),
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
+                        errorText: _quantityError,
                         isDense: true,
                         contentPadding: EdgeInsets.symmetric(
                           horizontal: 8,
@@ -113,13 +137,20 @@ class _TaskItemRowState extends State<TaskItemRow> {
                     icon: Icons.check,
                     tooltip: 'Подтвердить',
                     color: colorScheme.primary,
-                    onPressed: _saveEditing,
+                    onPressed: widget.enabled ? _saveEditing : null,
                   ),
                 ],
               ],
             ),
           ),
+
           const SizedBox(width: 16),
+          Text('${widget.item.price.toStringAsFixed(2)} ₽ / шт.'),
+          AppIconButton(
+            icon: Icons.price_change_outlined,
+            tooltip: 'Обновить цену из каталога',
+            onPressed: widget.enabled ? widget.onRefreshPrice : null,
+          ),
           SizedBox(
             width: 105,
             child: Text(
@@ -133,7 +164,7 @@ class _TaskItemRowState extends State<TaskItemRow> {
             icon: Icons.delete_outline,
             destructive: true,
             tooltip: 'Удалить позицию',
-            onPressed: widget.onDelete,
+            onPressed: widget.enabled ? widget.onDelete : null,
           ),
         ],
       ),

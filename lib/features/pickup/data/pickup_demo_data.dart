@@ -1,9 +1,9 @@
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
-import 'package:mountain_fairytale/features/pickup/pickup_abcs.dart';
 
-class DemoPickupDataSource implements PickupDataSource {
+/// Legacy offline samples; production documents use the API data source.
+class DemoPickupDataSource {
   final AssetBundle _assetBundle;
 
   List<Map<String, dynamic>>? _pickupCache;
@@ -13,7 +13,6 @@ class DemoPickupDataSource implements PickupDataSource {
 
   static const _pickupPath = 'assets/demo/pickup/pickup_sheets_data.json';
 
-  @override
   Future<List<Map<String, dynamic>>> getAllPickupSheets() async {
     await Future.delayed(const Duration(milliseconds: 60));
 
@@ -28,7 +27,6 @@ class DemoPickupDataSource implements PickupDataSource {
     return _pickupCache!;
   }
 
-  @override
   Future<Map<String, dynamic>> getPickupSheetById(int id) async {
     await Future.delayed(const Duration(milliseconds: 30));
 
@@ -42,7 +40,6 @@ class DemoPickupDataSource implements PickupDataSource {
     );
   }
 
-  @override
   Future<Map<String, dynamic>> createPickupSheet(
     Map<String, dynamic> sheetJson,
   ) async {
@@ -66,7 +63,6 @@ class DemoPickupDataSource implements PickupDataSource {
     return newSheet;
   }
 
-  @override
   Future<Map<String, dynamic>> patchPickupSheet(
     int id,
     Map<String, dynamic> json,
@@ -98,7 +94,6 @@ class DemoPickupDataSource implements PickupDataSource {
     return updated;
   }
 
-  @override
   Future<void> deletePickupSheet(int id) async {
     await Future.delayed(const Duration(milliseconds: 40));
 

@@ -1,169 +1,29 @@
 import 'package:flutter/material.dart';
-import 'package:mountain_fairytale/shared/widgets/app_notify.dart';
-import 'package:mountain_fairytale/features/pickup/ui/pickup_constructor_provider.dart';
-import 'package:mountain_fairytale/features/clients/ui/clients_selection_panel.dart';
-import 'package:mountain_fairytale/features/pickup/ui/pickup_meta_panel.dart';
-import 'package:mountain_fairytale/features/delivery_route/ui/route_points_list.dart';
-import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
-import 'package:mountain_fairytale/shared/widgets/theme_toggle_button.dart';
 import 'package:provider/provider.dart';
+import 'package:mountain_fairytale/features/pickup/ui/pickup_constructor_provider.dart';
+import 'package:mountain_fairytale/features/pickup/ui/pickup_meta_panel.dart';
+import 'package:mountain_fairytale/features/delivery_route/ui/delivery_document_editor.dart';
 
-class PickupConstructorScreen extends StatefulWidget {
-  final int? existingPickupId;
-
+class PickupConstructorScreen extends StatelessWidget {
+  final String? existingPickupId;
   const PickupConstructorScreen({super.key, this.existingPickupId});
-
-  @override
-  State<PickupConstructorScreen> createState() =>
-      _PickupConstructorScreenState();
-}
-
-class _PickupConstructorScreenState extends State<PickupConstructorScreen> {
-  final _formKey = GlobalKey<FormState>();
-
-  @override
-  void initState() {
-    super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (!mounted) return;
-
-      final pickupProvider = context.read<PickupConstructorProvider>();
-
-      if (widget.existingPickupId != null) {
-        // Режим редактирования существующего маршрута
-        await pickupProvider.loadExistingPickupById(widget.existingPickupId!);
-
-        if (!mounted) return;
-
-        if (pickupProvider.isOldDocument) {
-          AppNotify.show(
-            'Самовывоз недельной давности и более',
-            isWarning: true,
-          );
-        }
-      } else {
-        // Режим создания нового маршрута
-        pickupProvider.resetForm();
-        pickupProvider.loadDirectories();
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<PickupConstructorProvider>();
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.existingPickupId != null ? 'Просмотр самовывоза' : 'Самовывоз',
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Center(
-              child: Text(
-                'Итого по самовывозу: ${provider.grandTotal.toStringAsFixed(2)} ₽',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-          VerticalDivider(
-            thickness: 2, // Толщина линии
-            width: 20, // Отступы вокруг линии (общая ширина виджета)
-            indent: 10, // Отступ сверху
-            endIndent: 10, // Отступ снизу
-          ),
-          const ThemeToggleButton(),
-        ],
-      ),
-      body: provider.isLoadingDirectories
-          ? const Center(child: CircularProgressIndicator())
-          : Form(
-              key: _formKey,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // ЛЕВАЯ ЧАСТЬ: Фиксированная колонка панелей
-                  SizedBox(
-                    width: 360,
-                    child: Column(
-                      children: [
-                        PickupMetaPanel(formKey: _formKey),
-                        const Divider(height: 1),
-                        Expanded(
-                          child: ClientSelectionPanel(
-                            provider: context
-                                .watch<PickupConstructorProvider>(),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const VerticalDivider(width: 1),
-
-                  // ПРАВАЯ ЧАСТЬ: Полностью отведена под список точек маршрута
-                  Expanded(
-                    child: RoutePointsList(
-                      provider: context.watch<PickupConstructorProvider>(),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-      // Кнопки управления теперь железно зафиксированы внизу экрана
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          border: Border(
-            top: BorderSide(color: colorScheme.outlineVariant, width: 1),
-          ),
-        ),
-        padding: const EdgeInsets.all(16.0),
-        child: Padding(
-          // идеально центрирует кнопки относительно правого списка точек
-          padding: const EdgeInsets.only(left: 361.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.max,
-            children: [
-              // Кнопка Отмена
-              AppSecondaryButton(
-                text: 'Отмена',
-                onPressed: () {
-                  Navigator.pop(context, false);
-                },
-              ),
-              const SizedBox(width: 16),
-              // Кнопка Сохранить
-              AppPrimaryButton(
-                text: 'Сохранить самовывоз',
-                onPressed: () async {
-                  if (_formKey.currentState!.validate()) {
-                    final success = await provider.savePickup();
-
-                    if (!context.mounted) return;
-
-                    if (success) {
-                      AppNotify.show('Самовывоз успешно сохранен');
-                      Navigator.pop(context, true);
-                    } else {
-                      AppNotify.show(
-                        'Ошибка при сохранении самовывоза',
-                        isError: true,
-                      );
-                    }
-                  }
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
+    final provider = context.read<PickupConstructorProvider>();
+    return DeliveryDocumentEditor(
+      provider: provider,
+      title: 'Самовывоз',
+      initialize: () async {
+        if (existingPickupId == null) {
+          provider.resetForm();
+          await provider.loadDirectories();
+        } else {
+          await provider.loadExistingPickupById(existingPickupId!);
+        }
+      },
+      save: provider.savePickup,
+      changeActive: provider.changeDocumentActive,
+      metaBuilder: (key) => PickupMetaPanel(formKey: key),
     );
   }
 }

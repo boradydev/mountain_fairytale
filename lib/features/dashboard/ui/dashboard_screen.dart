@@ -1,3 +1,5 @@
+import 'package:mountain_fairytale/features/delivery_route/ui/delivery_documents_screen.dart';
+import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/features/clients/ui/clients_provider.dart';
 import 'package:mountain_fairytale/features/delivery_days/ui/delivery_days_provider.dart';
@@ -50,15 +52,38 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen> {
   @override
   Widget build(BuildContext context) {
     final status = context.select((DeliveryDaysProvider p) => p.status);
-    return switch (status) {
-      DeliveryStatus.initial || DeliveryStatus.loading => const Center(
-        child: CircularProgressIndicator(),
-      ),
-      DeliveryStatus.failure => _ErrorView(),
-      DeliveryStatus.success => _Dashboard(
-        scrollController: _scrollController,
-      ),
-    };
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(12),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: AppSecondaryButton(
+              text: 'Документы доставки и самовывоза',
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const DeliveryDocumentsScreen(),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        Expanded(
+          child: switch (status) {
+            DeliveryStatus.initial || DeliveryStatus.loading => const Center(
+              child: CircularProgressIndicator(),
+            ),
+            DeliveryStatus.failure => _ErrorView(),
+            DeliveryStatus.success => _Dashboard(
+              scrollController: _scrollController,
+            ),
+          },
+        ),
+      ],
+    );
   }
 }
 

@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:mountain_fairytale/features/delivery_route/data/delivery_document_api.dart';
 import 'package:mountain_fairytale/core/state/safe_change_notifier.dart';
 import 'package:mountain_fairytale/core/network/api_exception.dart';
 import 'package:flutter/material.dart';
@@ -26,7 +29,207 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     required this.productRepo,
     required this.paymentMethodRepo,
     required this.clientRepo,
+    this.lockRepository,
   });
+
+  final DocumentLockRepository? lockRepository;
+  String? documentId;
+  DateTime? documentCreatedAt;
+  bool documentActive = true;
+  bool isEditing = true;
+  bool documentBusy = false;
+  String? documentError;
+  String? lockOwner;
+  bool documentChanged = false;
+  bool _draftStarted = false;
+  bool _hasLock = false;
+  bool _closing = false;
+  bool _closed = false;
+  int _sessionVersion = 0;
+  Timer? _renewTimer;
+  Future<void>? _renewRequest;
+  Future<bool>? _acquireRequest;
+  bool get canEdit =>
+      isEditing && documentActive && !documentBusy && !_closed && !_closing;
+  bool get canSave => canEdit && !isLoadingDirectories;
+  void initializeDocumentSession({
+    String? id,
+    DateTime? createdAt,
+    bool active = true,
+  }) {
+    _sessionVersion++;
+    _renewTimer?.cancel();
+    documentId = id;
+    documentCreatedAt = createdAt;
+    documentActive = active;
+    isEditing = id == null;
+    _draftStarted = id == null;
+    _hasLock = false;
+    _closing = false;
+    _closed = false;
+    documentBusy = false;
+    documentError = null;
+    lockOwner = null;
+    documentChanged = false;
+  }
+
+  void markDocumentSaved({required bool created}) {
+    documentChanged = true;
+    if (created) {
+      isEditing = false;
+      _draftStarted = false;
+    }
+  }
+
+  Future<void> refreshForEditing() async {}
+  Future<bool> beginEditing() {
+    if (_acquireRequest != null) {
+      return _acquireRequest!;
+    }
+    final request = _beginEditing();
+    _acquireRequest = request;
+    return request.whenComplete(() => _acquireRequest = null);
+  }
+
+  Future<bool> _beginEditing() async {
+    final id = documentId;
+    final version = _sessionVersion;
+    if (id == null || !documentActive || documentBusy || _closed || _closing) {
+      return false;
+    }
+    documentBusy = true;
+    documentError = null;
+    notifyListeners();
+    try {
+      lockOwner = await lockRepository!.acquireEditLock(id);
+      _hasLock = true;
+      if (version != _sessionVersion || _closed || _closing) {
+        await lockRepository!.releaseEditLock(id);
+        _hasLock = false;
+        return false;
+      }
+      if (!_draftStarted) await refreshForEditing();
+      if (version != _sessionVersion || _closed || _closing) {
+        await lockRepository!.releaseEditLock(id);
+        _hasLock = false;
+        return false;
+      }
+      isEditing = true;
+      _draftStarted = true;
+      _renewTimer?.cancel();
+      _renewTimer = Timer.periodic(
+        const Duration(seconds: 30),
+        (_) => renewDocumentLock(),
+      );
+      return true;
+    } catch (error) {
+      isEditing = false;
+      documentError = documentFailure(error);
+      return false;
+    } finally {
+      documentBusy = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> renewDocumentLock() {
+    if (_renewRequest != null) {
+      return _renewRequest!;
+    }
+    final request = _renewDocumentLock();
+    _renewRequest = request;
+    return request.whenComplete(() => _renewRequest = null);
+  }
+
+  Future<void> _renewDocumentLock() async {
+    final id = documentId;
+    final version = _sessionVersion;
+    if (id == null || !isEditing || _closed || _closing || documentBusy) return;
+    try {
+      final owner = await lockRepository!.renewEditLock(id);
+      if (version == _sessionVersion && !_closed && !_closing) {
+        lockOwner = owner;
+      }
+    } catch (error) {
+      if (version != _sessionVersion || _closed || _closing) return;
+      isEditing = false;
+      _renewTimer?.cancel();
+      documentError =
+          'Блокировка потеряна. Получите её повторно перед сохранением. ${documentFailure(error)}';
+      notifyListeners();
+    }
+  }
+
+  Future<bool> closeDocument() async {
+    if (_closed) {
+      return true;
+    }
+    if (_closing) {
+      return false;
+    }
+    _closing = true;
+    _renewTimer?.cancel();
+    notifyListeners();
+    await _acquireRequest;
+    await _renewRequest;
+    _renewTimer?.cancel();
+    try {
+      if (documentId != null && _hasLock) {
+        await lockRepository!.releaseEditLock(documentId!);
+      }
+    } catch (error) {
+      if (error is! ApiException || !{403, 409}.contains(error.statusCode)) {
+        documentError =
+            'Не удалось освободить блокировку. Повторите закрытие. ${documentFailure(error)}';
+        _closing = false;
+        isEditing = false;
+        notifyListeners();
+        return false;
+      }
+    }
+    _sessionVersion++;
+    _closed = true;
+    _hasLock = false;
+    _closing = false;
+    isEditing = false;
+    notifyListeners();
+    return true;
+  }
+
+  void handleDocumentError(Object error) {
+    documentError = documentFailure(error);
+    if (error is ApiException && {403, 409, 423}.contains(error.statusCode)) {
+      isEditing = false;
+      _renewTimer?.cancel();
+      lockOwner = error.ownerName;
+    }
+  }
+
+  String documentFailure(Object error) {
+    if (error is ApiException) {
+      if (error.statusCode == 423) {
+        return 'Документ редактирует: ${error.ownerName ?? 'другой сотрудник'}.';
+      }
+      if (error.statusCode == 409) {
+        return 'Блокировка отсутствует или документ отменён. Обновите документ или начните редактирование повторно.';
+      }
+      if (error.statusCode == 422) {
+        return 'Данные не приняты сервером. Проверьте поля и активность выбранных записей.';
+      }
+      if (error.statusCode == 404) {
+        return 'Документ или связанная запись не найдены.';
+      }
+    }
+    return 'Не удалось выполнить запрос. Проверьте соединение и повторите попытку.';
+  }
+
+  @override
+  void dispose() {
+    _renewTimer?.cancel();
+    _closed = true;
+    _sessionVersion++;
+    super.dispose();
+  }
 
   List<Product> products = [];
   bool showInactiveProducts = false;
@@ -125,6 +328,9 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
 
   RoutePoint _withPaymentMethod(RoutePoint point, PaymentMethod method) =>
       RoutePoint(
+        pointId: point.pointId,
+        position: point.position,
+        salesRepresentativeId: point.salesRepresentativeId,
         clientId: point.clientId,
         clientName: point.clientName,
         city: point.city,
@@ -141,7 +347,9 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     PaymentMethod method,
     ClientsProvider clientsProvider,
   ) async {
-    if (!method.isActive) return false;
+    if (!method.isActive) {
+      return false;
+    }
     paymentMethodErrorMessage = null;
     paymentMethodNameError = null;
     try {
@@ -165,7 +373,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
   }
 
   double get grandTotal =>
-      points.fold(0.0, (sum, point) => sum + point.totalAmount);
+      points.fold(0, (sum, point) => sum + point.totalCents) / 100;
 
   Future<void> loadOrderDirectories() async {
     isLoadingDirectories = true;
@@ -233,6 +441,9 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
           (point) => point.clientId != client.id
               ? point
               : RoutePoint(
+                  pointId: point.pointId,
+                  position: point.position,
+                  salesRepresentativeId: client.salesRepresentativeId,
                   clientId: point.clientId,
                   clientName: client.name,
                   city: point.city,
@@ -250,6 +461,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
   }
 
   void addClientPoint(Client client) {
+    if (!canEdit) return;
     if (!client.isActive || points.any((p) => p.clientId == client.id)) {
       return;
     }
@@ -258,7 +470,8 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       RoutePoint(
         clientId: client.id,
         clientName: client.name,
-        city: 'г. Ставрополь',
+        city: '',
+        salesRepresentativeId: client.salesRepresentativeId,
         address: client.address,
         phone: client.phone,
         paymentMethodId: client.defaultPaymentMethodId,
@@ -275,11 +488,13 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
   }
 
   void removePoint(int index) {
+    if (!canEdit) return;
     points.removeAt(index);
     notifyListeners();
   }
 
   void reorderPoints(int oldIndex, int newIndex) {
+    if (!canEdit) return;
     if (oldIndex < newIndex) {
       newIndex -= 1;
     }
@@ -291,6 +506,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
   }
 
   void addTaskToPoint(int pointIndex, Product product, int quantity) {
+    if (!canEdit) return;
     if (!product.isActive || quantity <= 0) return;
     final currentPoint = points[pointIndex];
 
@@ -300,27 +516,20 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       (item) => item.productId == product.id,
     );
 
-    if (existingIndex != -1) {
-      final oldItem = updatedItems[existingIndex];
-
-      updatedItems[existingIndex] = DeliveryTaskItem(
+    if (existingIndex != -1) return;
+    updatedItems.add(
+      DeliveryTaskItem(
         productId: product.id,
         productName: product.name,
-        quantity: oldItem.quantity + quantity,
+        quantity: quantity,
         price: product.basePrice,
-      );
-    } else {
-      updatedItems.add(
-        DeliveryTaskItem(
-          productId: product.id,
-          productName: product.name,
-          quantity: quantity,
-          price: product.basePrice,
-        ),
-      );
-    }
+      ),
+    );
 
     points[pointIndex] = RoutePoint(
+      pointId: currentPoint.pointId,
+      position: currentPoint.position,
+      salesRepresentativeId: currentPoint.salesRepresentativeId,
       clientId: currentPoint.clientId,
       clientName: currentPoint.clientName,
       city: currentPoint.city,
@@ -336,7 +545,10 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
   }
 
   void removeTaskFromPoint(int pointIndex, int taskIndex) {
-    points[pointIndex].items.removeAt(taskIndex);
+    if (!canEdit) return;
+    final point = points[pointIndex];
+    final items = List<DeliveryTaskItem>.from(point.items)..removeAt(taskIndex);
+    points[pointIndex] = point.copyWith(items: items);
     notifyListeners();
   }
 
@@ -345,7 +557,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     int taskIndex,
     int quantity,
   ) {
-    if (pointIndex < 0 || pointIndex >= points.length) return;
+    if (!canEdit || pointIndex < 0 || pointIndex >= points.length) return;
     if (taskIndex < 0 || taskIndex >= points[pointIndex].items.length) return;
     if (quantity <= 0) return;
 
@@ -361,6 +573,9 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     );
 
     points[pointIndex] = RoutePoint(
+      pointId: currentPoint.pointId,
+      position: currentPoint.position,
+      salesRepresentativeId: currentPoint.salesRepresentativeId,
       clientId: currentPoint.clientId,
       clientName: currentPoint.clientName,
       city: currentPoint.city,
@@ -373,6 +588,71 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     );
 
     notifyListeners();
+  }
+
+  Future<bool> addCurrentProduct(
+    int pointIndex,
+    String productId,
+    int quantity,
+  ) async {
+    if (!canEdit) {
+      return false;
+    }
+    final point = points[pointIndex];
+    if (point.items.any((item) => item.productId == productId)) {
+      documentError =
+          'Этот товар уже добавлен. Измените количество существующей строки.';
+      notifyListeners();
+      return false;
+    }
+    try {
+      final product = await productRepo.getProductById(productId);
+      if (!canEdit || !product.isActive) {
+        documentError = 'Нельзя добавить неактивный товар.';
+        notifyListeners();
+        return false;
+      }
+      final index = points.indexOf(point);
+      if (index < 0) {
+        return false;
+      }
+      addTaskToPoint(index, product, quantity);
+      return true;
+    } catch (error) {
+      documentError = documentFailure(error);
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<Product> currentCatalogProduct(String id) =>
+      productRepo.getProductById(id);
+  bool replaceItemPrice(
+    RoutePoint point,
+    DeliveryTaskItem item,
+    Product product,
+  ) {
+    if (!canEdit || !product.isActive || product.id != item.productId) {
+      return false;
+    }
+    final index = points.indexOf(point);
+    if (index < 0) {
+      return false;
+    }
+    final itemIndex = point.items.indexOf(item);
+    if (itemIndex < 0) {
+      return false;
+    }
+    final items = List<DeliveryTaskItem>.from(point.items);
+    items[itemIndex] = DeliveryTaskItem(
+      productId: item.productId,
+      productName: product.name,
+      quantity: item.quantity,
+      price: product.basePrice,
+    );
+    points[index] = point.copyWith(items: items);
+    notifyListeners();
+    return true;
   }
 
   Future<PaymentMethod?> addPaymentMethod(String name) async {
@@ -520,7 +800,9 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
 
   Future<Product?> checkProductDuplicate(String name) async {
     final cleanName = name.trim();
-    if (cleanName.isEmpty) return null;
+    if (cleanName.isEmpty) {
+      return null;
+    }
     return await productRepo.checkDuplicate(cleanName);
   }
 

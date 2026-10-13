@@ -3,10 +3,12 @@ import 'dart:convert';
 class ApiException implements Exception {
   final int statusCode;
   final String message;
+  final String? ownerName;
 
   const ApiException({
     required this.statusCode,
     required this.message,
+    this.ownerName,
   });
 
   factory ApiException.fromResponse({
@@ -14,9 +16,11 @@ class ApiException implements Exception {
     required String body,
   }) {
     String message = 'Ошибка запроса к серверу.';
+    String? ownerName;
     try {
       final decoded = jsonDecode(body);
       if (decoded is Map<String, dynamic>) {
+        ownerName = decoded['ownerName'] as String?;
         final detail = decoded['detail'];
         if (detail is String) {
           message = detail;
@@ -31,7 +35,11 @@ class ApiException implements Exception {
     } on FormatException {
       // A proxy may return HTML instead of the API error envelope.
     }
-    return ApiException(statusCode: statusCode, message: message);
+    return ApiException(
+      statusCode: statusCode,
+      message: message,
+      ownerName: ownerName,
+    );
   }
 
   @override

@@ -1,5 +1,7 @@
 import 'package:json_annotation/json_annotation.dart';
 
+import 'package:mountain_fairytale/features/delivery_route/data/document_money.dart';
+
 part 'delivery_task_item_model.g.dart';
 
 @JsonSerializable(explicitToJson: true)
@@ -10,7 +12,13 @@ class DeliveryTaskItem {
   final double price;
 
   // Вычисляемое поле суммы для удобства на UI
-  double get amount => quantity * price;
+  int get amountCents => lineAmountCents(quantity, price);
+  double get amount => amountCents / 100;
+  Map<String, dynamic> toRequestJson() => {
+    'productId': productId,
+    'quantity': quantity,
+    'price': price,
+  };
 
   const DeliveryTaskItem({
     required this.productId,

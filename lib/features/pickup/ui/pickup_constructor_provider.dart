@@ -1,111 +1,119 @@
-import 'package:mountain_fairytale/features/delivery_route/data/route_point_model.dart';
 import 'package:mountain_fairytale/features/pickup/data/pickup_model.dart';
 import 'package:mountain_fairytale/features/pickup/pickup_abcs.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/order_points_provider.dart';
 
 class PickupConstructorProvider extends OrderPointsProvider {
   final PickupRepository _pickupRepo;
-
   PickupConstructorProvider({
-    required this._pickupRepo,
+    required PickupRepository pickupRepo,
     required super.productRepo,
     required super.paymentMethodRepo,
     required super.clientRepo,
-  });
-
+  }) : _pickupRepo = pickupRepo,
+       super(lockRepository: pickupRepo);
   DateTime selectedDate = DateTime.now();
-
-  int? currentPickupId;
-
+  String? get currentPickupId => documentId;
   bool isOldDocument = false;
-
   void resetForm() {
-    currentPickupId = null;
+    initializeDocumentSession();
     selectedDate = DateTime.now();
     points = [];
     isOldDocument = false;
-
     notifyListeners();
   }
 
   void setDate(DateTime date) {
+    if (!canEdit) return;
     selectedDate = date;
     notifyListeners();
   }
 
-  Future<void> loadDirectories() async {
-    await loadOrderDirectories();
+  Future<void> loadDirectories() => loadOrderDirectories();
+  void _applySheet(PickupSheet sheet) {
+    documentId = sheet.id;
+    documentCreatedAt = sheet.createdAt;
+    documentActive = sheet.isActive;
+    selectedDate = sheet.date;
+    points = List.from(sheet.points);
+    isOldDocument = DateTime.now().difference(sheet.date).inDays >= 7;
   }
 
-  Future<void> loadExistingPickupById(int id) async {
+  Future<void> loadExistingPickupById(String id) async {
+    resetForm();
+    initializeDocumentSession(id: id);
     isLoadingDirectories = true;
     notifyListeners();
-
     try {
       await loadOrderDirectories();
-      final sheet = await _pickupRepo.getPickupSheetById(id);
-
-      currentPickupId = sheet.id;
-      selectedDate = sheet.date;
-      points = List<RoutePoint>.from(sheet.points);
-
-      final now = DateTime.now();
-      final difference = now.difference(sheet.date).inDays;
-      isOldDocument = difference >= 7;
+      _applySheet(await _pickupRepo.getPickupSheetById(id));
+    } catch (error) {
+      documentError = documentFailure(error);
+      isEditing = false;
     } finally {
       isLoadingDirectories = false;
       notifyListeners();
     }
   }
 
-  PickupSheet? get currentPickupSheet {
-    if (points.isEmpty) {
-      return null;
-    }
-
-    return PickupSheet(id: currentPickupId, date: selectedDate, points: points);
+  @override
+  Future<void> refreshForEditing() async {
+    _applySheet(await _pickupRepo.getPickupSheetById(documentId!));
   }
 
+  PickupSheet get currentPickupSheet => PickupSheet(
+    id: documentId,
+    createdAt: documentCreatedAt,
+    isActive: documentActive,
+    date: selectedDate,
+    points: points,
+  );
   Future<bool> savePickup() async {
-    final sheet = currentPickupSheet;
-
-    if (sheet == null) {
-      return false;
-    }
-
+    if (!canSave) return false;
+    final creating = documentId == null;
+    documentBusy = true;
+    documentError = null;
+    notifyListeners();
     try {
-      final savedSheet = await _pickupRepo.savePickupSheet(sheet);
-
-      currentPickupId = savedSheet.id;
-
+      _applySheet(await _pickupRepo.savePickupSheet(currentPickupSheet));
+      markDocumentSaved(created: creating);
+      return true;
+    } catch (error) {
+      handleDocumentError(error);
+      return false;
+    } finally {
+      documentBusy = false;
       notifyListeners();
-
-      return true;
-    } catch (_) {
-      return false;
     }
   }
 
-  Future<bool> deletePickup() async {
-    if (currentPickupId == null) {
-      return false;
-    }
-
+  Future<bool> changeDocumentActive() async {
+    if (documentId == null || documentBusy) return false;
+    documentBusy = true;
+    documentError = null;
+    notifyListeners();
     try {
-      await _pickupRepo.deletePickupSheet(currentPickupId!);
-
-      resetForm();
-
+      final saved = documentActive
+          ? await _pickupRepo.cancelPickupSheet(documentId!)
+          : await _pickupRepo.restorePickupSheet(documentId!);
+      _applySheet(saved);
+      initializeDocumentSession(
+        id: saved.id,
+        createdAt: saved.createdAt,
+        active: saved.isActive,
+      );
+      documentChanged = true;
       return true;
-    } catch (_) {
+    } catch (error) {
+      handleDocumentError(error);
       return false;
+    } finally {
+      documentBusy = false;
+      notifyListeners();
     }
   }
 
-  Future<List<PickupSheet>> getPickupSheetsByDate(DateTime date) async {
-    try {
-      final allSheets = await _pickupRepo.getPickupSheets();
-      return allSheets
+  Future<List<PickupSheet>> getPickupSheetsByDate(DateTime date) async =>
+      (await _pickupRepo.getPickupSheets())
           .where(
             (sheet) =>
                 sheet.date.year == date.year &&
@@ -113,8 +121,4 @@ class PickupConstructorProvider extends OrderPointsProvider {
                 sheet.date.day == date.day,
           )
           .toList();
-    } catch (_) {
-      return const [];
-    }
-  }
 }

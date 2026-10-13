@@ -8,11 +8,15 @@ part of 'delivery_route_sheet_model.dart';
 
 DeliveryRouteSheet _$DeliveryRouteSheetFromJson(Map<String, dynamic> json) =>
     DeliveryRouteSheet(
-      id: (json['id'] as num?)?.toInt(),
-      date: DateTime.parse(json['date'] as String),
+      id: json['deliveryDocumentId'] as String?,
+      createdAt: json['createdAt'] == null
+          ? null
+          : DateTime.parse(json['createdAt'] as String),
+      isActive: json['isActive'] as bool? ?? true,
+      date: DateTime.parse(json['plannedDate'] as String),
       driverName: json['driverName'] as String,
       driverId: json['driverId'] as String?,
-      carId: json['carId'].toString(),
+      carId: json['carId'] as String,
       carModelAndNumber: json['carModelAndNumber'] as String,
       startMileage: (json['startMileage'] as num).toDouble(),
       endMileage: (json['endMileage'] as num?)?.toDouble(),
@@ -23,8 +27,10 @@ DeliveryRouteSheet _$DeliveryRouteSheetFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$DeliveryRouteSheetToJson(DeliveryRouteSheet instance) =>
     <String, dynamic>{
-      'id': instance.id,
-      'date': instance.date.toIso8601String(),
+      'deliveryDocumentId': instance.id,
+      'createdAt': instance.createdAt?.toIso8601String(),
+      'isActive': instance.isActive,
+      'plannedDate': instance.date.toIso8601String(),
       'driverName': instance.driverName,
       'driverId': instance.driverId,
       'carId': instance.carId,

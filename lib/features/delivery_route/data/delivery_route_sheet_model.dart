@@ -4,7 +4,9 @@ import 'package:mountain_fairytale/features/delivery_route/data/route_point_mode
 part 'delivery_route_sheet_model.g.dart';
 
 abstract class RouteDocument {
-  int? get id;
+  String? get id;
+  DateTime? get createdAt;
+  bool get isActive;
   DateTime get date;
   String get title;
 }
@@ -12,8 +14,15 @@ abstract class RouteDocument {
 @JsonSerializable(explicitToJson: true)
 class DeliveryRouteSheet implements RouteDocument {
   @override
-  final int? id;
+  @JsonKey(name: 'deliveryDocumentId')
+  final String? id;
   @override
+  final DateTime? createdAt;
+  @override
+  @JsonKey(defaultValue: true)
+  final bool isActive;
+  @override
+  @JsonKey(name: 'plannedDate')
   final DateTime date;
   final String driverName;
   final String? driverId;
@@ -28,10 +37,22 @@ class DeliveryRouteSheet implements RouteDocument {
   String get title => 'Доставка: $driverName';
 
   double get grandTotal =>
-      points.fold(0.0, (sum, point) => sum + point.totalAmount);
+      points.fold(0, (sum, point) => sum + point.totalCents) / 100;
+  Map<String, dynamic> toRequestJson() => {
+    'plannedDate': date.toIso8601String().substring(0, 10),
+    'driverId': driverId,
+    'carId': carId,
+    'startMileage': startMileage,
+    'endMileage': endMileage,
+    'points': points
+        .map((point) => point.toRequestJson(creating: id == null))
+        .toList(),
+  };
 
   const DeliveryRouteSheet({
     this.id,
+    this.createdAt,
+    this.isActive = true,
     required this.date,
     required this.driverName,
     this.driverId,
@@ -43,7 +64,7 @@ class DeliveryRouteSheet implements RouteDocument {
   });
 
   DeliveryRouteSheet copyWith({
-    int? id,
+    String? id,
     DateTime? date,
     String? driverName,
     String? driverId,
@@ -55,6 +76,8 @@ class DeliveryRouteSheet implements RouteDocument {
   }) {
     return DeliveryRouteSheet(
       id: id ?? this.id,
+      createdAt: createdAt,
+      isActive: isActive,
       date: date ?? this.date,
       driverName: driverName ?? this.driverName,
       driverId: driverId ?? this.driverId,

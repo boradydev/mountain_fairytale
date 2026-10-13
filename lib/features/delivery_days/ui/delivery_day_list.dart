@@ -1,3 +1,4 @@
+import 'package:mountain_fairytale/shared/widgets/app_notify.dart';
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/core/utils/datetime_extensions.dart';
 import 'package:mountain_fairytale/features/delivery_days/data/delivery_days_model.dart';
@@ -132,8 +133,7 @@ class _DeliveryDayItem extends StatelessWidget {
         final productMetrics = allProducts.map((product) {
           final dayProduct = day.products.firstWhere(
             (p) => p.productId.toString() == product.id,
-            orElse: () =>
-                const DeliveryDayProduct(productId: -1, quantity: 0),
+            orElse: () => const DeliveryDayProduct(productId: -1, quantity: 0),
           );
 
           return MetricRow(
@@ -161,17 +161,29 @@ class _DeliveryDayItem extends StatelessWidget {
             );
 
             // Получаем списки всех маршрутов и самовывозов за выбранный день
-            final routes = await routeProvider.getRouteSheetsByDate(day.date);
-            final pickups = await pickupProvider.getPickupSheetsByDate(
-              day.date,
-            );
-            final allDocs = <RouteDocument>[...routes, ...pickups];
+            List<RouteDocument> allDocs;
+            try {
+              final routes = await routeProvider.getRouteSheetsByDate(day.date);
+              final pickups = await pickupProvider.getPickupSheetsByDate(
+                day.date,
+              );
+              allDocs = <RouteDocument>[...routes, ...pickups];
+            } catch (_) {
+              if (context.mounted) {
+                Navigator.of(context).pop();
+                AppNotify.show(
+                  'Не удалось загрузить документы. Повторите запрос.',
+                  isError: true,
+                );
+              }
+              return;
+            }
 
             if (context.mounted) {
               Navigator.of(context).pop(); // Закрываем лоадер
             }
 
-            int? targetRouteId;
+            String? targetRouteId;
             RouteDocument? selectedDoc;
 
             if (allDocs.isEmpty) {

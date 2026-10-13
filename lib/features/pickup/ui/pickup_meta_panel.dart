@@ -24,7 +24,6 @@ class _PickupMetaPanelState extends State<PickupMetaPanel> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<PickupConstructorProvider>();
-    final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
       width: double.infinity,
@@ -44,8 +43,8 @@ class _PickupMetaPanelState extends State<PickupMetaPanel> {
               final picked = await showDatePicker(
                 context: context,
                 initialDate: provider.selectedDate,
-                firstDate: DateTime.now().subtract(const Duration(days: 30)),
-                lastDate: DateTime.now().add(const Duration(days: 30)),
+                firstDate: DateTime(1900),
+                lastDate: DateTime(2200),
               );
               if (picked != null) provider.setDate(picked);
             },
