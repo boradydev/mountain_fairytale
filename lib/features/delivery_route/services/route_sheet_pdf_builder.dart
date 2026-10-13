@@ -224,7 +224,7 @@ class RouteSheetPdfBuilder {
               _tableCell(item.productName),
               _tableCell('${item.quantity}', align: pw.TextAlign.center),
               _tableCell(
-                '${item.price.toStringAsFixed(2)} ₽',
+                '${formatSavedUnitPrice(item.price)} ₽',
                 align: pw.TextAlign.right,
               ),
               _tableCell(
@@ -305,4 +305,14 @@ class RouteSheetPdfBuilder {
   String _formatNumber(double value) {
     return value.toStringAsFixed(0);
   }
+}
+
+/// Amounts have two decimal places, but a saved unit price may have more.
+String formatSavedUnitPrice(double price) {
+  final saved = price.toString();
+  if (saved.contains('e') ||
+      (saved.split('.').last.length > 2 && saved.contains('.'))) {
+    return saved;
+  }
+  return price.toStringAsFixed(2);
 }
