@@ -6,7 +6,14 @@ import 'package:mountain_fairytale/features/delivery_route/ui/delivery_document_
 
 class PickupConstructorScreen extends StatelessWidget {
   final String? existingPickupId;
-  const PickupConstructorScreen({super.key, this.existingPickupId});
+  final DateTime? initialDate;
+  final VoidCallback? onDocumentChanged;
+  const PickupConstructorScreen({
+    super.key,
+    this.existingPickupId,
+    this.initialDate,
+    this.onDocumentChanged,
+  });
   @override
   Widget build(BuildContext context) {
     final provider = context.read<PickupConstructorProvider>();
@@ -16,6 +23,7 @@ class PickupConstructorScreen extends StatelessWidget {
       initialize: () async {
         if (existingPickupId == null) {
           provider.resetForm();
+          if (initialDate != null) provider.setDate(initialDate!);
           await provider.loadDirectories();
         } else {
           await provider.loadExistingPickupById(existingPickupId!);
@@ -23,6 +31,7 @@ class PickupConstructorScreen extends StatelessWidget {
       },
       save: provider.savePickup,
       changeActive: provider.changeDocumentActive,
+      onDocumentChanged: onDocumentChanged,
       metaBuilder: (key) => PickupMetaPanel(formKey: key),
     );
   }

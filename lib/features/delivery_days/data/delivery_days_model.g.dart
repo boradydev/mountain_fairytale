@@ -7,10 +7,9 @@ part of 'delivery_days_model.dart';
 // **************************************************************************
 
 DeliveryDay _$DeliveryDayFromJson(Map<String, dynamic> json) => DeliveryDay(
-  id: (json['id'] as num).toInt(),
-  date: DateTime.parse(json['date'] as String),
-  clientsCount: (json['clientsCount'] as num).toInt(),
-  returnsCount: (json['returnsCount'] as num).toInt(),
+  plannedDate: DateTime.parse(json['plannedDate'] as String),
+  deliveryPointsCount: (json['deliveryPointsCount'] as num).toInt(),
+  pickupPointsCount: (json['pickupPointsCount'] as num).toInt(),
   products: (json['products'] as List<dynamic>)
       .map((e) => DeliveryDayProduct.fromJson(e as Map<String, dynamic>))
       .toList(),
@@ -19,10 +18,9 @@ DeliveryDay _$DeliveryDayFromJson(Map<String, dynamic> json) => DeliveryDay(
 
 Map<String, dynamic> _$DeliveryDayToJson(DeliveryDay instance) =>
     <String, dynamic>{
-      'id': instance.id,
-      'date': instance.date.toIso8601String(),
-      'clientsCount': instance.clientsCount,
-      'returnsCount': instance.returnsCount,
+      'plannedDate': instance.plannedDate.toIso8601String(),
+      'deliveryPointsCount': instance.deliveryPointsCount,
+      'pickupPointsCount': instance.pickupPointsCount,
       'products': instance.products,
       'totalAmount': instance.totalAmount,
     };

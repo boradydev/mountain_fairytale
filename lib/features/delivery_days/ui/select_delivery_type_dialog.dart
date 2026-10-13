@@ -17,7 +17,7 @@ class SelectDeliveryTypeDialog extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Добавить на сегодня',
+              'Добавить документ',
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 20),

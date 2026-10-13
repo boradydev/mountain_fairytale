@@ -4,12 +4,14 @@ class DeliveryDayCard extends StatelessWidget {
   final String title;
   final List<Widget> metrics;
   final VoidCallback? onTap;
+  final Widget? titleSuffix;
 
   const DeliveryDayCard({
     super.key,
     required this.title,
     required this.metrics,
     this.onTap,
+    this.titleSuffix,
   });
 
   @override
@@ -36,13 +38,23 @@ class DeliveryDayCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.onSurface,
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
+                  if (titleSuffix != null) ...[
+                    const SizedBox(width: 8),
+                    titleSuffix!,
+                  ],
+                ],
               ),
               const SizedBox(height: 8),
               Divider(color: colorScheme.outlineVariant, height: 1),

@@ -68,11 +68,13 @@ class AppPrimaryButton extends StatelessWidget {
 class AppSecondaryButton extends StatelessWidget {
   final String text;
   final VoidCallback? onPressed;
+  final IconData? icon;
 
   const AppSecondaryButton({
     super.key,
     required this.text,
     this.onPressed,
+    this.icon,
   });
 
   @override
@@ -96,12 +98,20 @@ class AppSecondaryButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
         ),
       ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[Icon(icon, size: 18), const SizedBox(width: 8)],
+          Flexible(
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

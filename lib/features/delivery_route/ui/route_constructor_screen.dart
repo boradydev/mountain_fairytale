@@ -8,7 +8,14 @@ import 'package:mountain_fairytale/features/delivery_route/ui/delivery_document_
 
 class RouteConstructorScreen extends StatelessWidget {
   final String? existingRouteId;
-  const RouteConstructorScreen({super.key, this.existingRouteId});
+  final DateTime? initialDate;
+  final VoidCallback? onDocumentChanged;
+  const RouteConstructorScreen({
+    super.key,
+    this.existingRouteId,
+    this.initialDate,
+    this.onDocumentChanged,
+  });
   @override
   Widget build(BuildContext context) {
     final provider = context.read<RouteConstructorProvider>();
@@ -18,6 +25,7 @@ class RouteConstructorScreen extends StatelessWidget {
       initialize: () async {
         if (existingRouteId == null) {
           provider.resetForm();
+          if (initialDate != null) provider.setDate(initialDate!);
           await provider.loadDirectories();
         } else {
           await provider.loadExistingRouteById(existingRouteId!);
@@ -25,6 +33,7 @@ class RouteConstructorScreen extends StatelessWidget {
       },
       save: provider.saveRoute,
       changeActive: provider.changeDocumentActive,
+      onDocumentChanged: onDocumentChanged,
       metaBuilder: (key) => RouteMetaPanel(formKey: key),
       printDocument: () async {
         final sheet = provider.currentRouteSheet;

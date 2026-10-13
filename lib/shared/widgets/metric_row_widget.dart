@@ -9,6 +9,7 @@ class MetricRow extends StatelessWidget {
   final Color? iconColor;
   final Color? valueColor;
   final TextOverflow? valueOverflow;
+  final bool truncateLabel;
 
   const MetricRow({
     super.key,
@@ -20,6 +21,7 @@ class MetricRow extends StatelessWidget {
     this.iconColor,
     this.valueColor,
     this.valueOverflow,
+    this.truncateLabel = false,
   });
 
   @override
@@ -40,16 +42,32 @@ class MetricRow extends StatelessWidget {
             const SizedBox(width: 12),
           ],
           // SizedBox с width: null не ограничивает ширину и подстраивается под текст
-          SizedBox(
-            width: labelWidth,
-            child: Text(
-              label,
-              style: TextStyle(
-                color: colorScheme.onSurfaceVariant,
-                fontSize: 14,
+          if (truncateLabel)
+            Expanded(
+              child: Tooltip(
+                message: label,
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: colorScheme.onSurfaceVariant,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            )
+          else
+            SizedBox(
+              width: labelWidth,
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: colorScheme.onSurfaceVariant,
+                  fontSize: 14,
+                ),
               ),
             ),
-          ),
           const SizedBox(width: 12),
           // Обернуто в SizedBox по аналогии с labelWidth
           SizedBox(

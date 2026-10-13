@@ -47,12 +47,12 @@ class _DeliveryRepository implements DeliveryDayRepository {
   int calls = 0;
 
   @override
-  Future<List<DeliveryDay>> getDeliveryDays({
+  Future<DeliveryDaysPage> getDeliveryDays({
     required int offset,
     required int limit,
   }) async {
     calls++;
-    return [];
+    return const DeliveryDaysPage(days: [], total: 0);
   }
 
   @override

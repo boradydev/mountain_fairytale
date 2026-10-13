@@ -15,6 +15,7 @@ class DeliveryDocumentEditor extends StatefulWidget {
   final Future<bool> Function() changeActive;
   final Widget Function(GlobalKey<FormState>) metaBuilder;
   final Future<bool> Function()? printDocument;
+  final VoidCallback? onDocumentChanged;
   const DeliveryDocumentEditor({
     super.key,
     required this.provider,
@@ -24,6 +25,7 @@ class DeliveryDocumentEditor extends StatefulWidget {
     required this.changeActive,
     required this.metaBuilder,
     this.printDocument,
+    this.onDocumentChanged,
   });
   @override
   State<DeliveryDocumentEditor> createState() => _DeliveryDocumentEditorState();
@@ -61,7 +63,10 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
         !(_formKey.currentState?.validate() ?? false)) {
       return;
     }
-    if (await widget.save()) await _close();
+    if (await widget.save()) {
+      widget.onDocumentChanged?.call();
+      await _close();
+    }
   }
 
   Future<void> _changeActive() async {
@@ -76,7 +81,7 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
       destructive: active,
     );
     if (!mounted || !confirmed) return;
-    await widget.changeActive();
+    if (await widget.changeActive()) widget.onDocumentChanged?.call();
   }
 
   @override

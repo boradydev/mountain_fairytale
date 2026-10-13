@@ -4,11 +4,13 @@ part 'delivery_days_product_model.g.dart';
 
 @JsonSerializable()
 class DeliveryDayProduct {
-  final int productId;
+  final String productId;
+  final String productName;
   final int quantity;
 
   const DeliveryDayProduct({
     required this.productId,
+    required this.productName,
     required this.quantity,
   });
 

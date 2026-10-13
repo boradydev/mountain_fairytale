@@ -24,7 +24,7 @@ import 'package:mountain_fairytale/features/clients/data/clients_repo.dart';
 import 'package:mountain_fairytale/features/clients/data/clients_api_data_source.dart';
 import 'package:mountain_fairytale/features/clients/data/clients_demo_data.dart';
 import 'package:mountain_fairytale/features/delivery_days/data/delivery_days_repo.dart';
-import 'package:mountain_fairytale/features/delivery_days/data/delivery_days_demo_data.dart';
+import 'package:mountain_fairytale/features/delivery_days/data/delivery_days_api_data_source.dart';
 import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_repo.dart';
 import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_api_data_source.dart';
 import 'package:mountain_fairytale/features/drivers/data/drivers_repo.dart';
@@ -100,7 +100,6 @@ Future<void> main() async {
   // 1. ИНИЦИАЛИЗАЦИЯ АТОМАРНЫХ ДАННЫХ (DATA SOURCES)
   // Каждый источник независим, хранит свой кэш и имитирует сетевые запросы
   // ===========================================================================
-  final deliveryDayDataSource = DemoDeliveryDataSource();
   final analyticsDemoClientDataSource = DemoClientDataSource();
   final salesRepDataSource = DemoSalesRepresentativeDataSource();
   final salesRepCommissionDataSource =
@@ -115,7 +114,6 @@ Future<void> main() async {
   // 2. ИНИЦИАЛИЗАЦИЯ РЕПОЗИТОРИЕВ
   // Принимают сущности от UI, конвертируют в JSON-Map и общаются с Data Sources
   // ===========================================================================
-  final deliveryDayRepository = ApiDeliveryRepository(deliveryDayDataSource);
   final salesRepRepository = SalesRepresentativeRepositoryImpl(
     salesRepDataSource,
   );
@@ -169,6 +167,9 @@ Future<void> main() async {
     ApiDeliveryRouteDataSource(apiClient),
   );
   final pickupRepository = PickupRepositoryImpl(ApiPickupDataSource(apiClient));
+  final deliveryDayRepository = ApiDeliveryRepository(
+    ApiDeliveryDaysDataSource(apiClient),
+  );
 
   final clientRepository = ClientRepositoryImpl(ApiClientDataSource(apiClient));
 

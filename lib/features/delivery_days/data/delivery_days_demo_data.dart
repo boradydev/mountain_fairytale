@@ -1,9 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
-import 'package:mountain_fairytale/features/delivery_days/delivery_days_abcs.dart';
 
-class DemoDeliveryDataSource implements DeliveryDataSource {
+class DemoDeliveryDataSource {
   final AssetBundle _assetBundle;
   List<Map<String, dynamic>>? _cache;
 
@@ -32,7 +31,6 @@ class DemoDeliveryDataSource implements DeliveryDataSource {
     return jsonData;
   }
 
-  @override
   Future<List<Map<String, dynamic>>> getDeliveryDays({
     required int offset,
     required int limit,
@@ -47,7 +45,6 @@ class DemoDeliveryDataSource implements DeliveryDataSource {
     return jsonData.skip(offset).take(limit).toList();
   }
 
-  @override
   Future<Map<String, dynamic>> getDeliveryDay(int id) async {
     // Эмулируем задержку сети.
     await Future<void>.delayed(

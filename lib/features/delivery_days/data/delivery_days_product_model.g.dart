@@ -8,12 +8,14 @@ part of 'delivery_days_product_model.dart';
 
 DeliveryDayProduct _$DeliveryDayProductFromJson(Map<String, dynamic> json) =>
     DeliveryDayProduct(
-      productId: (json['productId'] as num).toInt(),
+      productId: json['productId'] as String,
+      productName: json['productName'] as String,
       quantity: (json['quantity'] as num).toInt(),
     );
 
 Map<String, dynamic> _$DeliveryDayProductToJson(DeliveryDayProduct instance) =>
     <String, dynamic>{
       'productId': instance.productId,
+      'productName': instance.productName,
       'quantity': instance.quantity,
     };

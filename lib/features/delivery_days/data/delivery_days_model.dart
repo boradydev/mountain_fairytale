@@ -5,18 +5,16 @@ part 'delivery_days_model.g.dart';
 
 @JsonSerializable()
 class DeliveryDay {
-  final int id;
-  final DateTime date;
-  final int clientsCount;
-  final int returnsCount;
+  final DateTime plannedDate;
+  final int deliveryPointsCount;
+  final int pickupPointsCount;
   final List<DeliveryDayProduct> products;
   final double totalAmount;
 
   const DeliveryDay({
-    required this.id,
-    required this.date,
-    required this.clientsCount,
-    required this.returnsCount,
+    required this.plannedDate,
+    required this.deliveryPointsCount,
+    required this.pickupPointsCount,
     required this.products,
     required this.totalAmount,
   });
@@ -25,4 +23,10 @@ class DeliveryDay {
       _$DeliveryDayFromJson(json);
 
   Map<String, dynamic> toJson() => _$DeliveryDayToJson(this);
+}
+
+class DeliveryDaysPage {
+  final List<DeliveryDay> days;
+  final int total;
+  const DeliveryDaysPage({required this.days, required this.total});
 }
