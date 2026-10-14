@@ -88,8 +88,16 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.textContaining('Базовая цена: 100'), findsOneWidget);
-    expect(find.textContaining('деактивировал'), findsOneWidget);
+    expect(find.text('Базовая цена'), findsNothing);
+    expect(find.byTooltip('Деактивация'), findsOneWidget);
+    final updated = provider.events.firstWhere(
+      (event) => event.action == AuditAction.updated,
+    );
+    await tester.tap(
+      find.byKey(ValueKey('audit-header-${updated.operationId}')),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Базовая цена'), findsOneWidget);
     expect(find.textContaining(name), findsWidgets);
     expect(provider.events, hasLength(3));
     expect(tester.takeException(), isNull);

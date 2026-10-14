@@ -38,11 +38,18 @@ class AuditSubject {
   final String type;
   final String id;
   final String? displayName;
-  const AuditSubject({required this.type, required this.id, this.displayName});
+  final String? documentType;
+  const AuditSubject({
+    required this.type,
+    required this.id,
+    this.displayName,
+    this.documentType,
+  });
   factory AuditSubject.fromJson(Map<String, dynamic> json) => AuditSubject(
     type: json['type'] as String,
     id: json['id'] as String,
     displayName: json['displayName'] as String?,
+    documentType: json['documentType'] as String?,
   );
 }
 
@@ -97,4 +104,8 @@ class AuditOperation {
   final String operationId;
   final List<AuditEvent> events;
   const AuditOperation(this.operationId, this.events);
+  AuditEvent get primaryEvent => events.firstWhere(
+    (event) => event.subject.type == 'delivery_document',
+    orElse: () => events.first,
+  );
 }

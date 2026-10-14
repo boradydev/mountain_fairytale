@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/features/audit_event/ui/audit_event_provider.dart';
 import 'package:mountain_fairytale/features/audit_event/ui/audit_event_row.dart';
-import 'package:mountain_fairytale/shared/widgets/base_card_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/icon_button_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 import 'package:provider/provider.dart';
@@ -22,7 +21,10 @@ class _AuditLogScreenState extends State<AuditLogScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) context.read<AuditLogProvider>().fetchEvents();
+      if (mounted) {
+        final provider = context.read<AuditLogProvider>();
+        if (provider.status == AuditLogStatus.initial) provider.fetchEvents();
+      }
     });
     _scrollController.addListener(_onScroll);
   }
@@ -130,28 +132,19 @@ class _AuditLogScreenState extends State<AuditLogScreen> {
             AuditLogStatus.success =>
               groups.isEmpty
                   ? const Center(child: Text('События не найдены'))
-                  : ListView.builder(
+                  : ListView.separated(
                       controller: _scrollController,
                       itemCount: groups.length,
+                      separatorBuilder: (context, _) => Divider(
+                        height: 1,
+                        thickness: 0.5,
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                      ),
                       itemBuilder: (_, index) {
                         final group = groups[index];
-                        return AppBaseCard(
+                        return AuditOperationRow(
                           key: ValueKey(group.operationId),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (group.events.length > 1)
-                                Text(
-                                  'Связанные изменения · ${group.events.length}',
-                                  style: Theme.of(context).textTheme.labelLarge,
-                                ),
-                              for (final event in group.events)
-                                AuditEventRow(
-                                  key: ValueKey(event.eventId),
-                                  event: event,
-                                ),
-                            ],
-                          ),
+                          operation: group,
                         );
                       },
                     ),

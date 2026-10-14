@@ -64,98 +64,365 @@ String formatAuditValue(Object? value) {
   return value.toString();
 }
 
-class AuditEventRow extends StatelessWidget {
-  final AuditEvent event;
-  const AuditEventRow({super.key, required this.event});
+String auditActorName(AuditEvent event) =>
+    event.actor.displayName ??
+    (event.actor.actorId == '00000000-0000-0000-0000-000000000000'
+        ? 'Система'
+        : 'Сотрудник ${event.actor.actorId}');
+
+String auditSubjectName(AuditEvent event) {
+  final name = event.subject.displayName ?? event.subject.id;
+  if (event.subject.type != 'delivery_document') return name;
+  final type = event.subject.documentType ?? event.data['documentType'];
+  final label = switch (type) {
+    'delivery_route_sheet' => 'Маршрутный лист',
+    'pickup_sheet' => 'Лист самовывоза',
+    _ => 'Документ',
+  };
+  return '$label · ${formatAuditValue(name)}';
+}
+
+String auditSummary(AuditEvent event) {
+  final actor = auditActorName(event);
+  return event.action == AuditAction.login
+      ? '$actor — вошёл в систему'
+      : '$actor → ${auditSubjectName(event)}';
+}
+
+String auditActionLabel(AuditAction action) => switch (action) {
+  AuditAction.created => 'Создание',
+  AuditAction.updated => 'Изменение',
+  AuditAction.activated => 'Активация',
+  AuditAction.deactivated => 'Деактивация',
+  AuditAction.cancelled => 'Отмена документа',
+  AuditAction.restored => 'Восстановление документа',
+  AuditAction.deleted => 'Удаление',
+  AuditAction.passwordChanged => 'Смена пароля',
+  AuditAction.login => 'Вход в систему',
+  AuditAction.other => 'Другое действие',
+};
+
+IconData auditActionIcon(AuditAction action) => switch (action) {
+  AuditAction.created => Icons.add_circle_outline,
+  AuditAction.updated => Icons.edit_outlined,
+  AuditAction.activated => Icons.toggle_on_outlined,
+  AuditAction.deactivated => Icons.power_settings_new,
+  AuditAction.cancelled => Icons.block_outlined,
+  AuditAction.restored => Icons.restore,
+  AuditAction.deleted => Icons.delete_outline,
+  AuditAction.passwordChanged => Icons.key_outlined,
+  AuditAction.login => Icons.login,
+  AuditAction.other => Icons.more_horiz,
+};
+
+Color auditActionColor(AuditAction action, ThemeData theme) {
+  final dark = theme.brightness == Brightness.dark;
+  return switch (action) {
+    AuditAction.created || AuditAction.activated =>
+      dark ? Colors.green.shade400 : Colors.green.shade700,
+    AuditAction.updated => dark ? Colors.blue.shade300 : Colors.blue.shade700,
+    AuditAction.deactivated || AuditAction.deleted => theme.colorScheme.error,
+    AuditAction.cancelled =>
+      dark ? Colors.orange.shade300 : Colors.orange.shade800,
+    AuditAction.restored => dark ? Colors.teal.shade300 : Colors.teal.shade700,
+    AuditAction.passwordChanged =>
+      dark ? Colors.purple.shade300 : Colors.purple.shade700,
+    AuditAction.login ||
+    AuditAction.other => theme.colorScheme.onSurfaceVariant,
+  };
+}
+
+class AuditOperationRow extends StatelessWidget {
+  final AuditOperation operation;
+  const AuditOperationRow({super.key, required this.operation});
+
   @override
   Widget build(BuildContext context) {
-    final action = switch (event.action) {
-      AuditAction.created => 'создал',
-      AuditAction.updated => 'изменил',
-      AuditAction.activated => 'активировал',
-      AuditAction.deactivated => 'деактивировал',
-      AuditAction.cancelled => 'отменил',
-      AuditAction.restored => 'восстановил',
-      AuditAction.deleted => 'удалил',
-      AuditAction.passwordChanged => 'сменил пароль',
-      AuditAction.login => 'вошёл в систему',
-      AuditAction.other => 'выполнил действие (${event.eventType})',
-    };
-    final kind = switch (event.subject.type) {
-      'product' => 'товар',
-      'client' => 'клиента',
-      'driver' => 'водителя',
-      'car' => 'автомобиль',
-      'payment_method' => 'способ оплаты',
-      'sales_representative' => 'представителя',
-      'employee' => 'сотрудника',
-      'delivery_document' => 'документ',
-      'delivery_point' => 'точку документа',
-      'delivery_item' => 'позицию документа',
-      _ => event.subject.type,
-    };
-    final name = event.subject.displayName ?? event.subject.id;
-    final header = event.action == AuditAction.login
-        ? action
-        : '$action $kind $name';
-    final fields = event.data.entries
-        .where((entry) => entry.key != 'displayName')
-        .toList();
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+    final primary = operation.primaryEvent;
+    return AuditEventRow(
+      event: primary,
+      relatedEvents: operation.events
+          .where((event) => event.eventId != primary.eventId)
+          .toList(),
+    );
+  }
+}
+
+class AuditEventRow extends StatefulWidget {
+  final AuditEvent event;
+  final List<AuditEvent> relatedEvents;
+  const AuditEventRow({
+    super.key,
+    required this.event,
+    this.relatedEvents = const [],
+  });
+
+  @override
+  State<AuditEventRow> createState() => _AuditEventRowState();
+}
+
+class _AuditEventRowState extends State<AuditEventRow> {
+  bool _expanded = false;
+  void _toggle() => setState(() => _expanded = !_expanded);
+
+  bool get _hasDetails =>
+      widget.relatedEvents.isNotEmpty ||
+      widget.event.changes.isNotEmpty ||
+      widget.event.data.keys.any((key) => key != 'displayName');
+
+  @override
+  Widget build(BuildContext context) {
+    final event = widget.event;
+    final theme = Theme.of(context);
+    final summary = auditSummary(event);
+    final action = auditActionLabel(event.action);
+    final date = DateFormat('dd.MM.yyyy HH:mm')
+        .format(event.createdAt.toLocal());
+    final fullDate = DateFormat('dd.MM.yyyy HH:mm:ss')
+        .format(event.createdAt.toLocal());
+    return Material(
+      color: theme.colorScheme.surface,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            DateFormat('dd.MM.yyyy HH:mm:ss').format(event.createdAt.toLocal()),
-            style: Theme.of(context).textTheme.labelSmall,
-          ),
-          const SizedBox(height: 4),
-          Text.rich(
-            TextSpan(
-              children: [
-                TextSpan(
-                  text:
-                      event.actor.displayName ??
-                      (event.actor.actorId ==
-                              '00000000-0000-0000-0000-000000000000'
-                          ? 'Система'
-                          : 'Сотрудник ${event.actor.actorId}'),
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                TextSpan(text: ' $header'),
-              ],
-            ),
-          ),
-          for (final entry in event.changes.entries)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                '${auditFieldLabels[entry.key] ?? entry.key}: ${formatAuditValue(entry.value.oldValue)} → ${formatAuditValue(entry.value.newValue)}',
-              ),
-            ),
-          if (fields.isNotEmpty)
-            ExpansionTile(
-              tilePadding: EdgeInsets.zero,
-              title: Text(
-                event.action == AuditAction.deleted
-                    ? 'Данные удалённой записи'
-                    : 'Начальные значения',
-              ),
-              children: [
-                for (final entry in fields)
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 6),
-                      child: Text(
-                        '${auditFieldLabels[entry.key] ?? entry.key}: ${formatAuditValue(entry.value)}',
-                      ),
-                    ),
+          Semantics(
+            button: _hasDetails,
+            expanded: _hasDetails ? _expanded : null,
+            label: '$action. $fullDate. $summary',
+            excludeSemantics: true,
+            onTap: _hasDetails ? _toggle : null,
+            child: InkWell(
+              key: ValueKey('audit-header-${event.operationId}'),
+              onTap: _hasDetails ? _toggle : null,
+              hoverColor: theme.colorScheme.onSurface.withValues(alpha: 0.04),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 44),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
                   ),
-              ],
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final dateWidth = constraints.maxWidth >= 600
+                          ? 140.0
+                          : 110.0;
+                      return Row(
+                        children: [
+                          Tooltip(
+                            message: action,
+                            child: Icon(
+                              auditActionIcon(event.action),
+                              color: auditActionColor(event.action, theme),
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          SizedBox(
+                            width: dateWidth,
+                            child: Tooltip(
+                              message: fullDate,
+                              child: Text(
+                                date,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Tooltip(
+                              message: summary,
+                              child: Text(
+                                summary,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.onSurface,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          SizedBox(
+                            width: 20,
+                            child: _hasDetails
+                                ? Tooltip(
+                                    message: _expanded
+                                        ? 'Скрыть подробности'
+                                        : 'Показать подробности',
+                                    child: AnimatedRotation(
+                                      turns: _expanded ? 0.5 : 0,
+                                      duration: const Duration(
+                                        milliseconds: 160,
+                                      ),
+                                      child: Icon(
+                                        Icons.expand_more,
+                                        size: 20,
+                                        color:
+                                            theme.colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  )
+                                : null,
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ),
             ),
+          ),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeInOut,
+            alignment: Alignment.topCenter,
+            child: _expanded && _hasDetails
+                ? Container(
+                    key: ValueKey('details-${event.operationId}'),
+                    width: double.infinity,
+                    padding: const EdgeInsets.fromLTRB(42, 8, 16, 16),
+                    color: theme.colorScheme.surfaceContainerLowest,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _AuditDetails(event: event),
+                        if (widget.relatedEvents.isNotEmpty) ...[
+                          Padding(
+                            padding: const EdgeInsets.only(top: 16, bottom: 6),
+                            child: Text(
+                              'Связанные изменения',
+                              style: theme.textTheme.labelLarge,
+                            ),
+                          ),
+                          for (final related in widget.relatedEvents)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: _AuditDetails(event: related),
+                            ),
+                        ],
+                      ],
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class _AuditDetails extends StatelessWidget {
+  final AuditEvent event;
+  const _AuditDetails({required this.event});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final fields = event.data.entries.where(
+      (entry) => entry.key != 'displayName',
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              auditActionIcon(event.action),
+              size: 16,
+              color: auditActionColor(event.action, theme),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                auditActionLabel(event.action),
+                style: theme.textTheme.labelLarge,
+              ),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 4, bottom: 8),
+          child: SelectableText(
+            auditSummary(event),
+            style: theme.textTheme.bodySmall,
+          ),
+        ),
+        for (final entry in fields)
+          _AuditFieldRow(
+            label: auditFieldLabels[entry.key] ?? entry.key,
+            value: entry.value,
+          ),
+        for (final entry in event.changes.entries)
+          _AuditFieldRow(
+            label: auditFieldLabels[entry.key] ?? entry.key,
+            change: entry.value,
+          ),
+      ],
+    );
+  }
+}
+
+class _AuditFieldRow extends StatelessWidget {
+  final String label;
+  final Object? value;
+  final AuditChange? change;
+  const _AuditFieldRow({required this.label, this.value, this.change});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    Widget text(Object? value) => SelectableText(
+      formatAuditValue(value),
+      style: theme.textTheme.bodySmall,
+    );
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final labelWidget = Text(
+            label,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          );
+          final values = change == null
+              ? text(value)
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: text(change!.oldValue)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: Text('→', style: theme.textTheme.bodySmall),
+                    ),
+                    Expanded(child: text(change!.newValue)),
+                  ],
+                );
+          if (constraints.maxWidth < 520) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                labelWidget,
+                const SizedBox(height: 4),
+                values,
+              ],
+            );
+          }
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(width: 156, child: labelWidget),
+              const SizedBox(width: 12),
+              Expanded(child: values),
+            ],
+          );
+        },
       ),
     );
   }
