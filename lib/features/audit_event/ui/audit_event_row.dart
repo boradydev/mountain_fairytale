@@ -379,7 +379,14 @@ class _AuditEventRowState extends State<AuditEventRow> {
                           for (final related in relatedEvents)
                             Padding(
                               padding: const EdgeInsets.only(top: 12),
-                              child: _AuditDetails(event: related),
+                              child: _AuditDisclosure(
+                                key: ValueKey(
+                                  'audit-related-${related.eventId}',
+                                ),
+                                label: auditSummary(related),
+                                action: related.action,
+                                child: _AuditDetails(event: related),
+                              ),
                             ),
                         ],
                       ],
@@ -399,7 +406,6 @@ class _AuditDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final document = event.subject.type == 'delivery_document';
     final pickup =
         (event.subject.documentType ?? event.data['documentType']) ==
@@ -442,17 +448,6 @@ class _AuditDetails extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          auditActionLabel(event.action),
-          style: theme.textTheme.labelLarge,
-        ),
-        Padding(
-          padding: const EdgeInsets.only(top: 4, bottom: 8),
-          child: SelectableText(
-            auditSummary(event),
-            style: theme.textTheme.bodySmall,
-          ),
-        ),
         if (document) ...[
           for (final key in keys)
             _AuditFieldRow(

@@ -274,16 +274,7 @@ class _AuditDisclosureState extends State<_AuditDisclosure> {
           child: _expanded
               ? Padding(
                   padding: const EdgeInsets.only(left: 16, bottom: 8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      SelectableText(
-                        label,
-                        style: theme.textTheme.bodySmall,
-                      ),
-                      widget.child,
-                    ],
-                  ),
+                  child: widget.child,
                 )
               : const SizedBox.shrink(),
         ),
