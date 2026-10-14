@@ -6,6 +6,7 @@ class DeliveryDayCard extends StatelessWidget {
   final VoidCallback? onTap;
   final Widget? titleSuffix;
   final Color? backgroundColor;
+  final InlineSpan? titleSpan;
 
   const DeliveryDayCard({
     super.key,
@@ -14,6 +15,7 @@ class DeliveryDayCard extends StatelessWidget {
     this.onTap,
     this.titleSuffix,
     this.backgroundColor,
+    this.titleSpan,
   });
 
   @override
@@ -43,8 +45,8 @@ class DeliveryDayCard extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                    child: Text(
-                      title,
+                    child: Text.rich(
+                      titleSpan ?? TextSpan(text: title),
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,

@@ -126,19 +126,25 @@ class DeliveryDayItem extends StatelessWidget {
     final weekend =
         day.plannedDate.weekday == DateTime.saturday ||
         day.plannedDate.weekday == DateTime.sunday;
+    final date = DateFormat.yMd(locale).format(day.plannedDate);
+    final weekday = DateFormat.EEEE(locale).format(day.plannedDate);
     return DeliveryDayCard(
-      backgroundColor: weekend
-          ? Color.alphaBlend(
-              Colors.pink.shade200.withValues(
-                alpha: Theme.of(context).brightness == Brightness.dark
-                    ? 0.10
-                    : 0.14,
-              ),
-              colorScheme.surfaceContainerLow,
-            )
-          : null,
-      title:
-          '${DateFormat.yMd(locale).format(day.plannedDate)} · ${DateFormat.EEEE(locale).format(day.plannedDate)}',
+      title: '$date · $weekday',
+      titleSpan: TextSpan(
+        children: [
+          TextSpan(text: '$date · '),
+          TextSpan(
+            text: weekday,
+            style: weekend
+                ? TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? const Color(0xFFE0A0BA)
+                        : const Color(0xFF9A4568),
+                  )
+                : null,
+          ),
+        ],
+      ),
       onTap: () {
         final provider = context.read<DeliveryDaysProvider>();
         showDialog<void>(
