@@ -6,7 +6,6 @@ import 'package:mountain_fairytale/features/clients/ui/clients_provider.dart';
 import 'package:mountain_fairytale/features/clients/ui/client_dialog.dart';
 import 'package:mountain_fairytale/shared/widgets/add_action_card.dart';
 import 'package:mountain_fairytale/shared/widgets/base_card_widget.dart';
-import 'package:mountain_fairytale/shared/widgets/metric_row_widget.dart';
 import 'package:provider/provider.dart';
 
 class ClientsAttentionListView extends StatelessWidget {
@@ -27,38 +26,45 @@ class ClientsAttentionListView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Wrap(
-                spacing: 16,
-                runSpacing: 8,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  Text(
-                    'Клиенты',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  SegmentedButton<ClientListMode>(
-                    segments: const [
-                      ButtonSegment(
-                        value: ClientListMode.database,
-                        label: Text('База клиентов'),
-                        icon: Icon(Icons.people_outline),
-                      ),
-                      ButtonSegment(
-                        value: ClientListMode.followUp,
-                        label: Text('Обзвон клиентов'),
-                        icon: Icon(Icons.phone_outlined),
-                      ),
-                    ],
-                    selected: {listMode},
-                    onSelectionChanged: (selection) => context
-                        .read<ClientsProvider>()
-                        .setListMode(selection.single),
-                    style: SegmentedButton.styleFrom(
-                      selectedBackgroundColor: colors.primary,
-                      selectedForegroundColor: colors.onPrimary,
+              LayoutBuilder(
+                builder: (context, constraints) => Wrap(
+                  spacing: 16,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text(
+                      'Клиенты',
+                      style: Theme.of(context).textTheme.titleMedium,
                     ),
-                  ),
-                ],
+                    SegmentedButton<ClientListMode>(
+                      direction:
+                          constraints.maxWidth <
+                              380 * MediaQuery.textScalerOf(context).scale(1)
+                          ? Axis.vertical
+                          : Axis.horizontal,
+                      segments: const [
+                        ButtonSegment(
+                          value: ClientListMode.database,
+                          label: Text('База клиентов'),
+                          icon: Icon(Icons.people_outline),
+                        ),
+                        ButtonSegment(
+                          value: ClientListMode.followUp,
+                          label: Text('Обзвон клиентов'),
+                          icon: Icon(Icons.phone_outlined),
+                        ),
+                      ],
+                      selected: {listMode},
+                      onSelectionChanged: (selection) => context
+                          .read<ClientsProvider>()
+                          .setListMode(selection.single),
+                      style: SegmentedButton.styleFrom(
+                        selectedBackgroundColor: colors.primary,
+                        selectedForegroundColor: colors.onPrimary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 8),
               Text(
@@ -164,115 +170,142 @@ class _ClientAttentionCard extends StatelessWidget {
       onTap: () {
         showClientDialog(context, client: client);
       },
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: Container(
+        padding: const EdgeInsets.only(left: 16),
+        decoration: BoxDecoration(
+          border: Border(
+            left: BorderSide(color: statusConfig.lineColor, width: 5),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Левая цветная индикаторная линия
-            Container(
-              width: 5,
-              decoration: BoxDecoration(
-                color: statusConfig.lineColor,
-                borderRadius: BorderRadius.circular(4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    client.name,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+                // Кнопка вызова меню откладывания
+                PopupMenuButton<int>(
+                  icon: Icon(
+                    Icons.access_time_rounded,
+                    color: statusConfig.badgeTextColor,
+                  ),
+                  tooltip: 'Отложить следующий контакт',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  onSelected: (weeks) async {
+                    final provider = context.read<ClientsProvider>();
+                    final success = await provider.updateClientCooldown(
+                      client.id,
+                      weeks,
+                    );
+                    if (!success && context.mounted) {
+                      AppNotify.show(
+                        provider.errorMessage,
+                        isError: true,
+                      );
+                    }
+                  },
+                  itemBuilder: (BuildContext context) => <PopupMenuEntry<int>>[
+                    const PopupMenuItem<int>(
+                      value: 1,
+                      child: Text('Отложить на 1 неделю'),
+                    ),
+                    const PopupMenuItem<int>(
+                      value: 2,
+                      child: Text('Отложить на 2 недели'),
+                    ),
+                    const PopupMenuItem<int>(
+                      value: 3,
+                      child: Text('Отложить на 3 недели'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            Text(
+              statusConfig.statusText,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              flex: 3,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          client.name,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: colorScheme.onSurface,
-                          ),
-                        ),
-                      ),
-                      // Кнопка вызова меню откладывания
-                      PopupMenuButton<int>(
-                        icon: Icon(
-                          Icons.access_time_rounded,
-                          color: statusConfig.badgeTextColor,
-                        ),
-                        tooltip: 'Отложить следующий контакт',
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                        onSelected: (weeks) async {
-                          final provider = context.read<ClientsProvider>();
-                          final success = await provider.updateClientCooldown(
-                            client.id,
-                            weeks,
-                          );
-                          if (!success && context.mounted) {
-                            AppNotify.show(
-                              provider.errorMessage,
-                              isError: true,
-                            );
-                          }
-                        },
-                        itemBuilder: (BuildContext context) =>
-                            <PopupMenuEntry<int>>[
-                              const PopupMenuItem<int>(
-                                value: 1,
-                                child: Text('Отложить на 1 неделю'),
-                              ),
-                              const PopupMenuItem<int>(
-                                value: 2,
-                                child: Text('Отложить на 2 недели'),
-                              ),
-                              const PopupMenuItem<int>(
-                                value: 3,
-                                child: Text('Отложить на 3 недели'),
-                              ),
-                            ],
-                      ),
-                      MetricRow(
-                        label: 'Статус доставок:',
-                        value: statusConfig.statusText,
-                        valueWidth: 170,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Divider(color: colorScheme.outlineVariant, height: 1),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      MetricRow(
-                        label: 'Телефон:',
+            const SizedBox(height: 12),
+            Divider(color: colorScheme.outlineVariant, height: 1),
+            const SizedBox(height: 8),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final scale = MediaQuery.textScalerOf(context).scale(1);
+                final wide = constraints.maxWidth >= 680 * scale;
+                final width = constraints.maxWidth;
+                final space = wide ? width - 24 : width;
+                return Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: [
+                    SizedBox(
+                      width: wide ? space * 0.24 : width,
+                      child: _ClientCardField(
+                        label: 'Телефон',
                         value: client.phone,
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: MetricRow(
-                          label: 'Адрес:',
-                          value: client.address,
-                          valueOverflow: TextOverflow.ellipsis,
-                        ),
+                    ),
+                    SizedBox(
+                      width: wide ? space * 0.46 : width,
+                      child: _ClientCardField(
+                        label: 'Адрес',
+                        value: client.address,
                       ),
-                      MetricRow(
-                        label: 'Последняя доставка:',
+                    ),
+                    SizedBox(
+                      width: wide ? space * 0.30 : width,
+                      child: _ClientCardField(
+                        label: 'Последняя доставка',
                         value:
                             client.lastDeliveryDate?.toFormattedString() ??
-                            'никогда',
-                        valueWidth: 170,
+                            'Никогда',
                       ),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                  ],
+                );
+              },
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ClientCardField extends StatelessWidget {
+  final String label;
+  final String value;
+  const _ClientCardField({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(value, softWrap: true, style: theme.textTheme.bodyMedium),
+      ],
     );
   }
 }

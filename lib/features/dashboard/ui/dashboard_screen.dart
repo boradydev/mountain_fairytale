@@ -39,13 +39,28 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen> {
   }
 
   @override
-  Widget build(BuildContext context) => Row(
-    children: [
-      SizedBox(
-        width: 500,
-        child: DeliveryDaysListView(scrollController: _scrollController),
-      ),
-      const Expanded(flex: 3, child: ClientsAttentionListView()),
-    ],
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final days = DeliveryDaysListView(scrollController: _scrollController);
+      final scale = MediaQuery.textScalerOf(context).scale(1);
+      if (constraints.maxWidth < 960 * scale) {
+        return Column(
+          children: [
+            Expanded(child: days),
+            const Divider(height: 1),
+            const Expanded(flex: 2, child: ClientsAttentionListView()),
+          ],
+        );
+      }
+      return Row(
+        children: [
+          SizedBox(
+            width: (constraints.maxWidth * 0.38).clamp(360.0, 500.0),
+            child: days,
+          ),
+          const Expanded(flex: 3, child: ClientsAttentionListView()),
+        ],
+      );
+    },
   );
 }
