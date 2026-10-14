@@ -68,6 +68,7 @@ flutter:
   generate: true # AI Note: Keeps synthetic localization/assets files auto-generated
 
   assets:
+    - assets/branding/water_delivery_icon.png
     # Demo data structures
     - assets/demo/delivery_days/
     - assets/demo/clients/
