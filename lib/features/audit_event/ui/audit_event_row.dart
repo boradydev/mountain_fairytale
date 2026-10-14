@@ -44,6 +44,9 @@ String formatAuditValue(Object? value) {
   if (value is bool) return value ? 'Да' : 'Нет';
   if (value is Map) {
     if (value['displayName'] is String) return value['displayName'] as String;
+    if (value.containsKey('displayName') && value['id'] is String) {
+      return value['id'] as String;
+    }
     return const JsonEncoder.withIndent('  ').convert(value);
   }
   if (value is List) return value.map(formatAuditValue).join('\n');
