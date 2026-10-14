@@ -165,7 +165,7 @@ class _AuditItemDetails extends StatelessWidget {
             item.action == null
                 ? name
                 : '$name · ${auditActionLabel(item.action!)}',
-            style: theme.textTheme.bodySmall,
+            style: theme.textTheme.bodyMedium?.copyWith(fontSize: 14),
           ),
           if (item.before != null && item.after != null) ...[
             for (final key in ['quantity', 'price'])
@@ -240,7 +240,7 @@ class _AuditDisclosureState extends State<_AuditDisclosure> {
               focusColor: theme.colorScheme.onSurface.withValues(alpha: 0.08),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
-                  vertical: 10,
+                  vertical: 14,
                   horizontal: 4,
                 ),
                 child: Row(
@@ -250,7 +250,9 @@ class _AuditDisclosureState extends State<_AuditDisclosure> {
                         message: label,
                         child: Text(
                           label,
-                          style: theme.textTheme.bodySmall,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontSize: 14,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),

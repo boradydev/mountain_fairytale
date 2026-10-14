@@ -229,7 +229,7 @@ class _AuditEventRowState extends State<AuditEventRow> {
               onTap: _hasDetails ? _toggle : null,
               hoverColor: theme.colorScheme.onSurface.withValues(alpha: 0.04),
               child: ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: 44),
+                constraints: const BoxConstraints(minHeight: 48),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
@@ -249,7 +249,9 @@ class _AuditEventRowState extends State<AuditEventRow> {
                           action,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontSize: 14,
+                          ),
                         ),
                       );
                       return Column(
@@ -275,6 +277,7 @@ class _AuditEventRowState extends State<AuditEventRow> {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: theme.textTheme.bodySmall?.copyWith(
+                                      fontSize: 13,
                                       color: theme.colorScheme.onSurfaceVariant,
                                     ),
                                   ),
@@ -299,6 +302,7 @@ class _AuditEventRowState extends State<AuditEventRow> {
                                       overflow: TextOverflow.ellipsis,
                                       style: theme.textTheme.bodyMedium
                                           ?.copyWith(
+                                            fontSize: 14,
                                             color: theme.colorScheme.onSurface,
                                           ),
                                     ),
@@ -341,6 +345,7 @@ class _AuditEventRowState extends State<AuditEventRow> {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontSize: 14,
                                     color: theme.colorScheme.onSurface,
                                   ),
                                 ),
@@ -484,7 +489,7 @@ class _AuditFieldRow extends StatelessWidget {
     final theme = Theme.of(context);
     Widget text(Object? value) => SelectableText(
       formatAuditValue(value),
-      style: theme.textTheme.bodySmall,
+      style: theme.textTheme.bodyMedium?.copyWith(fontSize: 14),
     );
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5),
@@ -492,7 +497,8 @@ class _AuditFieldRow extends StatelessWidget {
         builder: (context, constraints) {
           final labelWidget = Text(
             label,
-            style: theme.textTheme.bodySmall?.copyWith(
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontSize: 14,
               color: theme.colorScheme.onSurfaceVariant,
             ),
           );
@@ -504,7 +510,12 @@ class _AuditFieldRow extends StatelessWidget {
                     Expanded(child: text(change!.oldValue)),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
-                      child: Text('→', style: theme.textTheme.bodySmall),
+                      child: Text(
+                        '→',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontSize: 14,
+                        ),
+                      ),
                     ),
                     Expanded(child: text(change!.newValue)),
                   ],
