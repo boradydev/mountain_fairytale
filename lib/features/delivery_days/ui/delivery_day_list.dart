@@ -126,58 +126,54 @@ class DeliveryDayItem extends StatelessWidget {
     final weekend =
         day.plannedDate.weekday == DateTime.saturday ||
         day.plannedDate.weekday == DateTime.sunday;
-    return DeliveryDayCard(
-      title:
-          '${DateFormat.yMd(locale).format(day.plannedDate)} · ${DateFormat.EEEE(locale).format(day.plannedDate)}',
-      titleSuffix: weekend
-          ? Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: colorScheme.secondaryContainer,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                'Выходной',
-                style: TextStyle(color: colorScheme.onSecondaryContainer),
-              ),
-            )
-          : null,
-      onTap: () {
-        final provider = context.read<DeliveryDaysProvider>();
-        showDialog<void>(
-          context: context,
-          builder: (_) =>
-              DayDocumentsDialog(date: day.plannedDate, daysProvider: provider),
-        );
-      },
-      metrics: [
-        MetricRow(
-          icon: Icons.local_shipping_outlined,
-          label: 'Точки доставки',
-          truncateLabel: true,
-          value: '${day.deliveryPointsCount}',
-        ),
-        MetricRow(
-          icon: Icons.store_outlined,
-          label: 'Точки самовывоза',
-          truncateLabel: true,
-          value: '${day.pickupPointsCount}',
-        ),
-        for (final product in day.products)
+    return ColoredBox(
+      color: weekend
+          ? (Theme.of(context).brightness == Brightness.dark
+                ? Colors.pink.shade200.withValues(alpha: 0.10)
+                : Colors.pink.shade200.withValues(alpha: 0.14))
+          : Colors.transparent,
+      child: DeliveryDayCard(
+        title:
+            '${DateFormat.yMd(locale).format(day.plannedDate)} · ${DateFormat.EEEE(locale).format(day.plannedDate)}',
+        onTap: () {
+          final provider = context.read<DeliveryDaysProvider>();
+          showDialog<void>(
+            context: context,
+            builder: (_) => DayDocumentsDialog(
+              date: day.plannedDate,
+              daysProvider: provider,
+            ),
+          );
+        },
+        metrics: [
           MetricRow(
-            icon: Icons.shopping_bag_outlined,
-            label: product.productName,
+            icon: Icons.local_shipping_outlined,
+            label: 'Точки доставки',
             truncateLabel: true,
-            value: '${product.quantity} шт.',
+            value: '${day.deliveryPointsCount}',
           ),
-        MetricRow(
-          icon: Icons.payments_outlined,
-          label: 'Оборот',
-          truncateLabel: true,
-          value: '${day.totalAmount.toStringAsFixed(2)} ₽',
-          valueColor: colorScheme.primary,
-        ),
-      ],
+          MetricRow(
+            icon: Icons.store_outlined,
+            label: 'Точки самовывоза',
+            truncateLabel: true,
+            value: '${day.pickupPointsCount}',
+          ),
+          for (final product in day.products)
+            MetricRow(
+              icon: Icons.shopping_bag_outlined,
+              label: product.productName,
+              truncateLabel: true,
+              value: '${product.quantity} шт.',
+            ),
+          MetricRow(
+            icon: Icons.payments_outlined,
+            label: 'Оборот',
+            truncateLabel: true,
+            value: '${day.totalAmount.toStringAsFixed(2)} ₽',
+            valueColor: colorScheme.primary,
+          ),
+        ],
+      ),
     );
   }
 }
