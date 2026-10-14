@@ -161,17 +161,11 @@ class _AuditItemDetails extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (item.action != null) ...[
-                _AuditNestedAction(action: item.action!),
-                const SizedBox(width: 8),
-              ],
-              Expanded(
-                child: SelectableText(name, style: theme.textTheme.bodySmall),
-              ),
-            ],
+          SelectableText(
+            item.action == null
+                ? name
+                : '$name · ${auditActionLabel(item.action!)}',
+            style: theme.textTheme.bodySmall,
           ),
           if (item.before != null && item.after != null) ...[
             for (final key in ['quantity', 'price'])
@@ -201,21 +195,6 @@ class _AuditItemDetails extends StatelessWidget {
   }
 }
 
-class _AuditNestedAction extends StatelessWidget {
-  final AuditAction action;
-  const _AuditNestedAction({required this.action});
-
-  @override
-  Widget build(BuildContext context) => Tooltip(
-    message: auditActionLabel(action),
-    child: Icon(
-      auditActionIcon(action),
-      size: 16,
-      color: auditActionColor(action, Theme.of(context)),
-    ),
-  );
-}
-
 // Разделы журнала имеют собственное состояние раскрытия и стабильные ключи.
 class _AuditDisclosure extends StatefulWidget {
   final String label;
@@ -239,6 +218,9 @@ class _AuditDisclosureState extends State<_AuditDisclosure> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final label = widget.action == null
+        ? widget.label
+        : '${widget.label} · ${auditActionLabel(widget.action!)}';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -249,34 +231,39 @@ class _AuditDisclosureState extends State<_AuditDisclosure> {
               '${widget.action == null ? '' : '${auditActionLabel(widget.action!)}. '}${widget.label}',
           onTap: _toggle,
           excludeSemantics: true,
-          child: InkWell(
-            onTap: _toggle,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-              child: Row(
-                children: [
-                  if (widget.action != null) ...[
-                    _AuditNestedAction(action: widget.action!),
-                    const SizedBox(width: 8),
-                  ],
-                  Expanded(
-                    child: Tooltip(
-                      message: widget.label,
-                      child: Text(
-                        widget.label,
-                        style: theme.textTheme.bodySmall,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: _toggle,
+              mouseCursor: SystemMouseCursors.click,
+              hoverColor: theme.colorScheme.onSurface.withValues(alpha: 0.04),
+              focusColor: theme.colorScheme.onSurface.withValues(alpha: 0.08),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 10,
+                  horizontal: 4,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Tooltip(
+                        message: label,
+                        child: Text(
+                          label,
+                          style: theme.textTheme.bodySmall,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  AnimatedRotation(
-                    turns: _expanded ? 0.5 : 0,
-                    duration: const Duration(milliseconds: 160),
-                    child: const Icon(Icons.expand_more, size: 20),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    AnimatedRotation(
+                      turns: _expanded ? 0.5 : 0,
+                      duration: const Duration(milliseconds: 160),
+                      child: const Icon(Icons.expand_more, size: 20),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -291,7 +278,7 @@ class _AuditDisclosureState extends State<_AuditDisclosure> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       SelectableText(
-                        widget.label,
+                        label,
                         style: theme.textTheme.bodySmall,
                       ),
                       widget.child,

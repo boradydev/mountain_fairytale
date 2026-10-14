@@ -77,14 +77,28 @@ String auditActorName(AuditEvent event) =>
 
 String auditSubjectName(AuditEvent event) {
   final name = event.subject.displayName ?? event.subject.id;
-  if (event.subject.type != 'delivery_document') return name;
+  if (event.subject.type != 'delivery_document') {
+    final label = switch (event.subject.type) {
+      'product' => 'Товар',
+      'client' => 'Клиент',
+      'driver' => 'Водитель',
+      'car' => 'Автомобиль',
+      'payment_method' => 'Способ оплаты',
+      'sales_representative' => 'Представитель',
+      'employee' => 'Сотрудник',
+      'delivery_point' => 'Точка',
+      'delivery_item' => 'Товар в точке',
+      _ => event.subject.type,
+    };
+    return '$label: $name';
+  }
   final type = event.subject.documentType ?? event.data['documentType'];
   final label = switch (type) {
     'delivery_route_sheet' => 'Маршрутный лист',
     'pickup_sheet' => 'Лист самовывоза',
     _ => 'Документ',
   };
-  return '$label · ${formatAuditValue(name)}';
+  return '$label: ${formatAuditValue(name)}';
 }
 
 String auditSummary(AuditEvent event) {
@@ -223,71 +237,115 @@ class _AuditEventRowState extends State<AuditEventRow> {
                   ),
                   child: LayoutBuilder(
                     builder: (context, constraints) {
+                      final textScale = MediaQuery.textScalerOf(context)
+                          .scale(1);
+                      final compact = constraints.maxWidth < 650 * textScale;
                       final dateWidth = constraints.maxWidth >= 600
                           ? 140.0
                           : 110.0;
-                      return Row(
+                      final actionText = Tooltip(
+                        message: action,
+                        child: Text(
+                          action,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      );
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Tooltip(
-                            message: action,
-                            child: Icon(
-                              auditActionIcon(event.action),
-                              color: auditActionColor(event.action, theme),
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          SizedBox(
-                            width: dateWidth,
-                            child: Tooltip(
-                              message: fullDate,
-                              child: Text(
-                                date,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
+                          Row(
+                            children: [
+                              Tooltip(
+                                message: action,
+                                child: Icon(
+                                  auditActionIcon(event.action),
+                                  color: auditActionColor(event.action, theme),
+                                  size: 20,
                                 ),
                               ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Tooltip(
-                              message: summary,
-                              child: Text(
-                                summary,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: theme.colorScheme.onSurface,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          SizedBox(
-                            width: 20,
-                            child: _hasDetails
-                                ? Tooltip(
-                                    message: _expanded
-                                        ? 'Скрыть подробности'
-                                        : 'Показать подробности',
-                                    child: AnimatedRotation(
-                                      turns: _expanded ? 0.5 : 0,
-                                      duration: const Duration(
-                                        milliseconds: 160,
-                                      ),
-                                      child: Icon(
-                                        Icons.expand_more,
-                                        size: 20,
-                                        color:
-                                            theme.colorScheme.onSurfaceVariant,
-                                      ),
+                              const SizedBox(width: 10),
+                              SizedBox(
+                                width: dateWidth,
+                                child: Tooltip(
+                                  message: fullDate,
+                                  child: Text(
+                                    date,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
                                     ),
-                                  )
-                                : null,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              if (compact)
+                                Expanded(child: actionText)
+                              else
+                                SizedBox(
+                                  width: 200 * textScale,
+                                  child: actionText,
+                                ),
+                              if (!compact) ...[
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Tooltip(
+                                    message: summary,
+                                    child: Text(
+                                      summary,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            color: theme.colorScheme.onSurface,
+                                          ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              const SizedBox(width: 8),
+                              SizedBox(
+                                width: 20,
+                                child: _hasDetails
+                                    ? Tooltip(
+                                        message: _expanded
+                                            ? 'Скрыть подробности'
+                                            : 'Показать подробности',
+                                        child: AnimatedRotation(
+                                          turns: _expanded ? 0.5 : 0,
+                                          duration: const Duration(
+                                            milliseconds: 160,
+                                          ),
+                                          child: Icon(
+                                            Icons.expand_more,
+                                            size: 20,
+                                            color: theme
+                                                .colorScheme
+                                                .onSurfaceVariant,
+                                          ),
+                                        ),
+                                      )
+                                    : null,
+                              ),
+                            ],
                           ),
+                          if (compact)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 30, top: 4),
+                              child: Tooltip(
+                                message: summary,
+                                child: Text(
+                                  summary,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: theme.colorScheme.onSurface,
+                                  ),
+                                ),
+                              ),
+                            ),
                         ],
                       );
                     },
@@ -384,22 +442,9 @@ class _AuditDetails extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(
-              auditActionIcon(event.action),
-              size: 16,
-              color: auditActionColor(event.action, theme),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                auditActionLabel(event.action),
-                style: theme.textTheme.labelLarge,
-              ),
-            ),
-          ],
+        Text(
+          auditActionLabel(event.action),
+          style: theme.textTheme.labelLarge,
         ),
         Padding(
           padding: const EdgeInsets.only(top: 4, bottom: 8),
