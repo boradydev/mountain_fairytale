@@ -15,7 +15,7 @@ import 'package:mountain_fairytale/core/network/http_transport.dart';
 import 'package:mountain_fairytale/features/delivery_route/services/route_sheet_pdf_builder.dart';
 import 'package:mountain_fairytale/features/delivery_route/services/windows_route_print_service.dart';
 import 'package:mountain_fairytale/features/audit_event/data/audit_events_repo.dart';
-import 'package:mountain_fairytale/features/audit_event/data/audit_events_demo_data.dart';
+import 'package:mountain_fairytale/features/audit_event/data/audit_events_api_data_source.dart';
 import 'package:mountain_fairytale/features/auth/data/auth_repo.dart';
 import 'package:mountain_fairytale/features/auth/data/auth_api_data_source.dart';
 import 'package:mountain_fairytale/features/cars/data/cars_repo.dart';
@@ -105,11 +105,6 @@ Future<void> main() async {
   final salesRepCommissionDataSource =
       DemoSalesRepresentativeCommissionDataSource();
 
-  final auditLogDataSource = DemoAuditLogDataSource();
-
-  final auditLogRepository = AuditLogRepositoryImpl(
-    auditLogDataSource,
-  );
   // ===========================================================================
   // 2. ИНИЦИАЛИЗАЦИЯ РЕПОЗИТОРИЕВ
   // Принимают сущности от UI, конвертируют в JSON-Map и общаются с Data Sources
@@ -183,6 +178,9 @@ Future<void> main() async {
   );
   final productDataSource = ApiProductDataSource(apiClient);
   final productRepository = ProductRepositoryImpl(productDataSource);
+  final auditLogRepository = AuditLogRepositoryImpl(
+    ApiAuditLogDataSource(apiClient),
+  );
 
   // ===========================================================================
   // 4. ЗАПУСК ПРИЛОЖЕНИЯ И ВНЕДРЕНИЕ ЗАВИСИМОСТЕЙ (DI)

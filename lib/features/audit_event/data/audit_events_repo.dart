@@ -3,21 +3,26 @@ import 'package:mountain_fairytale/features/audit_event/audit_events_abcs.dart';
 
 class AuditLogRepositoryImpl implements AuditLogRepository {
   final AuditLogDataSource _dataSource;
-
   AuditLogRepositoryImpl(this._dataSource);
-
   @override
-  Future<List<AuditEvent>> getAuditEvents({
+  Future<AuditPage> getAuditEvents({
     String? search,
-    required int offset,
+    String? cursor,
     required int limit,
   }) async {
-    final json = await _dataSource.getAuditEvents(
+    final response = await _dataSource.getAuditEvents(
       search: search,
-      offset: offset,
+      cursor: cursor,
       limit: limit,
     );
-
-    return json.map(AuditEvent.fromJson).toList();
+    final data = response['data'] as Map;
+    return AuditPage(
+      events: (data['events'] as List)
+          .map(
+            (row) => AuditEvent.fromJson(Map<String, dynamic>.from(row as Map)),
+          )
+          .toList(),
+      nextCursor: data['nextCursor'] as String?,
+    );
   }
 }

@@ -63,13 +63,13 @@ class _AuditRepository implements AuditLogRepository {
   final searches = <String?>[];
 
   @override
-  Future<List<AuditEvent>> getAuditEvents({
+  Future<AuditPage> getAuditEvents({
     String? search,
-    required int offset,
+    String? cursor,
     required int limit,
   }) async {
     searches.add(search);
-    return [];
+    return const AuditPage(events: []);
   }
 }
 
@@ -210,6 +210,7 @@ void main() {
         await tester.tap(find.text('Журнал событий'));
         await tester.pumpAndSettle();
         await tester.enterText(find.byType(TextField), 'доставка');
+        await tester.pump(const Duration(milliseconds: 300));
         await tester.pumpAndSettle();
         expect(auditRepo.searches, [null, 'доставка']);
 
