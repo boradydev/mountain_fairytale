@@ -32,7 +32,7 @@ class _AuditSnapshotPair {
 
   Map<String, Object?> get value => after ?? before ?? const {};
   AuditAction? get action => before == null
-      ? AuditAction.created
+      ? null
       : after == null
       ? AuditAction.deleted
       : _auditEqual(before, after)
@@ -82,9 +82,9 @@ class _AuditDocumentPoints extends StatelessWidget {
     });
     return _AuditDisclosure(
       key: ValueKey('audit-points-${event.eventId}'),
-      label: 'Точки · ${points.length}',
+      label: 'Клиенты · ${points.length}',
       child: points.isEmpty
-          ? const _AuditFieldRow(label: 'Точки', value: 'Нет точек')
+          ? const _AuditFieldRow(label: 'Клиенты', value: 'Нет клиентов')
           : Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [

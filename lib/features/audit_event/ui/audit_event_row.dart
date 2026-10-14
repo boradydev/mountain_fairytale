@@ -30,8 +30,8 @@ const auditFieldLabels = <String, String>{
   'productName': 'Название товара',
   'position': 'Порядок',
   'items': 'Позиции',
-  'points': 'Точки',
-  'pointId': 'Точка',
+  'points': 'Клиенты',
+  'pointId': 'Клиент документа',
   'documentType': 'Тип документа',
   'cooldownUntil': 'Не беспокоить до',
   'sleepingThresholdDays': 'Порог сна, дней',
@@ -86,8 +86,8 @@ String auditSubjectName(AuditEvent event) {
       'payment_method' => 'Способ оплаты',
       'sales_representative' => 'Представитель',
       'employee' => 'Сотрудник',
-      'delivery_point' => 'Точка',
-      'delivery_item' => 'Товар в точке',
+      'delivery_point' => 'Клиент документа',
+      'delivery_item' => 'Товар клиента',
       _ => event.subject.type,
     };
     return '$label: $name';
