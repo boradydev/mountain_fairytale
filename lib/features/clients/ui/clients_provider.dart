@@ -34,6 +34,14 @@ class ClientsProvider extends SafeChangeNotifier {
   }
 
   ClientListMode _listMode = ClientListMode.database;
+  bool _showDeactivated = false;
+  bool get showDeactivated => _showDeactivated;
+
+  Future<void> setShowDeactivated(bool value) async {
+    if (_showDeactivated == value) return;
+    _showDeactivated = value;
+    await fetchClients(force: true);
+  }
 
   List<Client> get clients => _clients;
   ClientStatus get status => _status;
@@ -78,7 +86,9 @@ class ClientsProvider extends SafeChangeNotifier {
     // ----------------------------------------------------
     if (_listMode == ClientListMode.followUp) {
       // Сначала фильтруем: оставляем только тех, кто реально спит
-      final filtered = _clients.where(isSleeping).toList();
+      final filtered = _clients
+          .where((client) => client.isActive && isSleeping(client))
+          .toList();
 
       // Сортируем их по критичности (чем больше K, тем выше)
       filtered.sort((a, b) {
@@ -94,7 +104,9 @@ class ClientsProvider extends SafeChangeNotifier {
     // ----------------------------------------------------
     // РЕЖИМ 2: Сортировка по времени создания, затем UUID
     // ----------------------------------------------------
-    final allClients = [..._clients];
+    final allClients = _clients
+        .where((client) => client.isActive || _showDeactivated)
+        .toList();
     allClients.sort(
       (a, b) {
         final date = b.createdAt.compareTo(a.createdAt);
@@ -104,8 +116,8 @@ class ClientsProvider extends SafeChangeNotifier {
     return allClients;
   }
 
-  Future<void> fetchClients() async {
-    if (_status == ClientStatus.loading) {
+  Future<void> fetchClients({bool force = false}) async {
+    if (_status == ClientStatus.loading && !force) {
       return;
     }
 
@@ -117,7 +129,9 @@ class ClientsProvider extends SafeChangeNotifier {
     notifyListeners();
 
     try {
-      final loaded = await _repository.getAllClients();
+      final loaded = await _repository.getAllClients(
+        includeDeactivated: _showDeactivated,
+      );
       if (version != _fetchVersion) return;
       _clients = loaded;
 
@@ -272,26 +286,8 @@ class ClientsProvider extends SafeChangeNotifier {
     }
   }
 
-  Future<bool> deleteClient(String clientId) async {
-    _errorMessage = '';
-    phoneError = null;
-
-    try {
-      await _repository.deleteClient(clientId);
-
-      _fetchVersion++;
-      _clients = _clients.where((client) => client.id != clientId).toList();
-
-      _status = ClientStatus.success;
-
-      notifyListeners();
-      return true;
-    } catch (e) {
-      _recordError(e);
-      notifyListeners();
-      return false;
-    }
-  }
+  Future<bool> deleteClient(String clientId) =>
+      setClientActive(clientId, false);
 
   Future<bool> setClientActive(String id, bool active) async {
     _errorMessage = '';
@@ -302,9 +298,11 @@ class ClientsProvider extends SafeChangeNotifier {
         UpdateClientRequest(isActive: active),
       );
       _fetchVersion++;
-      _clients = _clients.where((row) => row.id != id).toList();
+      final exists = _clients.any((row) => row.id == id);
+      _clients = exists
+          ? _clients.map((row) => row.id == id ? client : row).toList()
+          : [client, ..._clients];
       lastSavedClient = client;
-      if (active) _clients = [client, ..._clients];
       _status = ClientStatus.success;
       notifyListeners();
       return true;

@@ -6,10 +6,12 @@ import 'package:mountain_fairytale/features/clients/ui/clients_provider.dart';
 import 'package:mountain_fairytale/features/clients/ui/client_dialog.dart';
 import 'package:mountain_fairytale/shared/widgets/add_action_card.dart';
 import 'package:mountain_fairytale/shared/widgets/base_card_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/list_section_header.dart';
 import 'package:provider/provider.dart';
 
 class ClientsAttentionListView extends StatelessWidget {
-  const ClientsAttentionListView({super.key});
+  final double? headerHeight;
+  const ClientsAttentionListView({super.key, this.headerHeight});
 
   @override
   Widget build(BuildContext context) {
@@ -17,68 +19,71 @@ class ClientsAttentionListView extends StatelessWidget {
       (ClientsProvider p) => p.listMode,
     );
     final colors = Theme.of(context).colorScheme;
+    final showDeactivated = context.select(
+      (ClientsProvider p) => p.showDeactivated,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              LayoutBuilder(
-                builder: (context, constraints) => Wrap(
-                  spacing: 16,
-                  runSpacing: 8,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    Text(
-                      'Клиенты',
-                      style: Theme.of(context).textTheme.titleMedium,
+        AppListSectionHeader(
+          height: headerHeight,
+          title: 'Клиенты',
+          description: listMode == ClientListMode.database
+              ? 'База клиентов: добавление и редактирование данных.'
+              : 'Засыпающие клиенты: обзвон и перенос следующего контакта.',
+          controls: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                SegmentedButton<ClientListMode>(
+                  segments: const [
+                    ButtonSegment(
+                      value: ClientListMode.database,
+                      label: Text('База клиентов'),
+                      icon: Icon(Icons.people_outline),
                     ),
-                    SegmentedButton<ClientListMode>(
-                      direction:
-                          constraints.maxWidth <
-                              380 * MediaQuery.textScalerOf(context).scale(1)
-                          ? Axis.vertical
-                          : Axis.horizontal,
-                      segments: const [
-                        ButtonSegment(
-                          value: ClientListMode.database,
-                          label: Text('База клиентов'),
-                          icon: Icon(Icons.people_outline),
-                        ),
-                        ButtonSegment(
-                          value: ClientListMode.followUp,
-                          label: Text('Обзвон клиентов'),
-                          icon: Icon(Icons.phone_outlined),
-                        ),
-                      ],
-                      selected: {listMode},
-                      onSelectionChanged: (selection) => context
-                          .read<ClientsProvider>()
-                          .setListMode(selection.single),
-                      style: SegmentedButton.styleFrom(
-                        selectedBackgroundColor: colors.primary,
-                        selectedForegroundColor: colors.onPrimary,
-                      ),
+                    ButtonSegment(
+                      value: ClientListMode.followUp,
+                      label: Text('Обзвон клиентов'),
+                      icon: Icon(Icons.phone_outlined),
                     ),
                   ],
+                  selected: {listMode},
+                  onSelectionChanged: (selection) => context
+                      .read<ClientsProvider>()
+                      .setListMode(selection.single),
+                  style: SegmentedButton.styleFrom(
+                    selectedBackgroundColor: colors.primary,
+                    selectedForegroundColor: colors.onPrimary,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                listMode == ClientListMode.database
-                    ? 'Все клиенты: добавление и редактирование данных.'
-                    : 'Засыпающие клиенты: обзвон и перенос следующего контакта.',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: colors.onSurfaceVariant,
-                ),
-              ),
-            ],
+                if (listMode == ClientListMode.database) ...[
+                  const SizedBox(width: 16),
+                  Tooltip(
+                    message: 'Показывать деактивированных клиентов вместе с активными',
+                    child: Row(
+                      children: [
+                        Switch(
+                          value: showDeactivated,
+                          onChanged: context
+                              .read<ClientsProvider>()
+                              .setShowDeactivated,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text('Деактивированные'),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
         ),
-        const Divider(height: 1),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          child: Divider(height: 1),
+        ),
         Expanded(child: _buildList(context)),
       ],
     );
@@ -195,42 +200,44 @@ class _ClientAttentionCard extends StatelessWidget {
                   ),
                 ),
                 // Кнопка вызова меню откладывания
-                PopupMenuButton<int>(
-                  icon: Icon(
-                    Icons.access_time_rounded,
-                    color: statusConfig.badgeTextColor,
-                  ),
-                  tooltip: 'Отложить следующий контакт',
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  onSelected: (weeks) async {
-                    final provider = context.read<ClientsProvider>();
-                    final success = await provider.updateClientCooldown(
-                      client.id,
-                      weeks,
-                    );
-                    if (!success && context.mounted) {
-                      AppNotify.show(
-                        provider.errorMessage,
-                        isError: true,
+                if (client.isActive)
+                  PopupMenuButton<int>(
+                    icon: Icon(
+                      Icons.access_time_rounded,
+                      color: statusConfig.badgeTextColor,
+                    ),
+                    tooltip: 'Отложить следующий контакт',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onSelected: (weeks) async {
+                      final provider = context.read<ClientsProvider>();
+                      final success = await provider.updateClientCooldown(
+                        client.id,
+                        weeks,
                       );
-                    }
-                  },
-                  itemBuilder: (BuildContext context) => <PopupMenuEntry<int>>[
-                    const PopupMenuItem<int>(
-                      value: 1,
-                      child: Text('Отложить на 1 неделю'),
-                    ),
-                    const PopupMenuItem<int>(
-                      value: 2,
-                      child: Text('Отложить на 2 недели'),
-                    ),
-                    const PopupMenuItem<int>(
-                      value: 3,
-                      child: Text('Отложить на 3 недели'),
-                    ),
-                  ],
-                ),
+                      if (!success && context.mounted) {
+                        AppNotify.show(
+                          provider.errorMessage,
+                          isError: true,
+                        );
+                      }
+                    },
+                    itemBuilder: (BuildContext context) =>
+                        <PopupMenuEntry<int>>[
+                          const PopupMenuItem<int>(
+                            value: 1,
+                            child: Text('Отложить на 1 неделю'),
+                          ),
+                          const PopupMenuItem<int>(
+                            value: 2,
+                            child: Text('Отложить на 2 недели'),
+                          ),
+                          const PopupMenuItem<int>(
+                            value: 3,
+                            child: Text('Отложить на 3 недели'),
+                          ),
+                        ],
+                  ),
               ],
             ),
             Text(
@@ -324,6 +331,14 @@ class _ClientStatusConfig {
   });
 
   factory _ClientStatusConfig.calculate(Client client, DateTime now) {
+    if (!client.isActive) {
+      return const _ClientStatusConfig(
+        lineColor: Colors.grey,
+        badgeBgColor: Color(0xFFEEEEEE),
+        badgeTextColor: Color(0xFF616161),
+        statusText: 'Деактивирован',
+      );
+    }
     // 1. Состояние: Режим ожидания (Кулдаун) — высший приоритет для отображения
     final cooldownUntil = client.cooldownUntil;
     if (cooldownUntil != null && cooldownUntil.isAfter(now)) {

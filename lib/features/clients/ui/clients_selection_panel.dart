@@ -136,7 +136,9 @@ class _ClientSelectionPanelState extends State<ClientSelectionPanel> {
     final provider = widget.provider;
     final clientProvider = context.watch<ClientsProvider>();
     final colorScheme = Theme.of(context).colorScheme;
-    final filteredClients = _searchResults ?? clientProvider.clients;
+    final filteredClients = (_searchResults ?? clientProvider.clients)
+        .where((client) => _includeInactive || client.isActive)
+        .toList();
 
     // ДОБАВЛЕНО: Обернули всю панель в Padding 16, как в RouteMetaPanel
     return Padding(

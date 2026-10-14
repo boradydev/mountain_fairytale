@@ -4,6 +4,7 @@ import 'package:mountain_fairytale/features/clients/ui/client_list.dart';
 import 'package:mountain_fairytale/features/delivery_days/ui/delivery_days_provider.dart';
 import 'package:mountain_fairytale/features/delivery_days/ui/delivery_day_list.dart';
 import 'package:provider/provider.dart';
+import 'package:mountain_fairytale/shared/widgets/list_section_header.dart';
 
 class DeliveryDaysScreen extends StatefulWidget {
   const DeliveryDaysScreen({super.key});
@@ -41,14 +42,28 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen> {
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
-      final days = DeliveryDaysListView(scrollController: _scrollController);
       final scale = MediaQuery.textScalerOf(context).scale(1);
-      if (constraints.maxWidth < 960 * scale) {
+      final compact = constraints.maxWidth < 960 * scale;
+      final headerHeight = AppListSectionHeader.preferredHeight(context).clamp(
+        0.0,
+        constraints.maxHeight * (compact ? 0.2 : 0.6),
+      );
+      if (compact) {
         return Column(
           children: [
-            Expanded(child: days),
+            Expanded(
+              child: DeliveryDaysListView(
+                scrollController: _scrollController,
+                headerHeight: headerHeight,
+              ),
+            ),
             const Divider(height: 1),
-            const Expanded(flex: 2, child: ClientsAttentionListView()),
+            Expanded(
+              flex: 2,
+              child: ClientsAttentionListView(
+                headerHeight: headerHeight,
+              ),
+            ),
           ],
         );
       }
@@ -56,9 +71,16 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen> {
         children: [
           SizedBox(
             width: (constraints.maxWidth * 0.38).clamp(360.0, 500.0),
-            child: days,
+            child: DeliveryDaysListView(
+              scrollController: _scrollController,
+              headerHeight: headerHeight,
+            ),
           ),
-          const Expanded(flex: 3, child: ClientsAttentionListView()),
+          const VerticalDivider(width: 1),
+          Expanded(
+            flex: 3,
+            child: ClientsAttentionListView(headerHeight: headerHeight),
+          ),
         ],
       );
     },
