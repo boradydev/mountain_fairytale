@@ -19,6 +19,8 @@ class AuditLogProvider extends SafeChangeNotifier {
   bool _isLoadingMore = false;
   int _generation = 0;
   String _search = '';
+  AuditFilters _filters = const AuditFilters();
+  AuditFilters get filters => _filters;
   List<AuditEvent> _events = const [];
   AuditLogStatus _status = AuditLogStatus.initial;
   String _errorMessage = '';
@@ -57,11 +59,20 @@ class AuditLogProvider extends SafeChangeNotifier {
     _errorMessage = '';
     notifyListeners();
     try {
-      final page = await _repository.getAuditEvents(
-        search: _search.isEmpty ? null : _search,
-        cursor: cursor,
-        limit: _pageSize,
-      );
+      final repository = _repository;
+      final page = !_filters.isEmpty && repository is AuditFilteredRepository
+          ? await (repository as AuditFilteredRepository)
+                .getFilteredAuditEvents(
+                  filters: _filters,
+                  search: _search.isEmpty ? null : _search,
+                  cursor: cursor,
+                  limit: _pageSize,
+                )
+          : await repository.getAuditEvents(
+              search: _search.isEmpty ? null : _search,
+              cursor: cursor,
+              limit: _pageSize,
+            );
       if (generation != _generation) return;
       final combined = cursor == null
           ? page.events
@@ -75,7 +86,8 @@ class AuditLogProvider extends SafeChangeNotifier {
     } catch (error) {
       if (generation != _generation) return;
       if (error is ApiException && error.statusCode == 422 && cursor != null) {
-        await refreshEvents();
+        _resetPages();
+        await fetchEvents();
         return;
       }
       _errorMessage = error.toString();
@@ -94,6 +106,14 @@ class AuditLogProvider extends SafeChangeNotifier {
     _search = normalized;
     _events = const [];
     await refreshEvents();
+  }
+
+  Future<void> setFilters(AuditFilters filters) async {
+    _filters = filters;
+    _search = '';
+    _events = const [];
+    _resetPages();
+    await fetchEvents();
   }
 
   Future<void> refreshEvents() async {
@@ -138,6 +158,7 @@ class AuditLogProvider extends SafeChangeNotifier {
           after: _updatesCursor ?? _latestCursor!,
           search: _search.isEmpty ? null : _search,
           limit: _pageSize,
+          filters: _filters,
         );
         if (generation != _generation) return;
         final seen = _events.map((event) => event.eventId).toSet();

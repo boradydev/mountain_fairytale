@@ -16,6 +16,22 @@ enum AuditAction {
   };
 }
 
+class AuditFilters {
+  final AuditAction? action;
+  final DateTime? dateFrom;
+  final DateTime? dateTo;
+  const AuditFilters({this.action, this.dateFrom, this.dateTo});
+  bool get isEmpty => action == null && dateFrom == null && dateTo == null;
+  Map<String, String> get queryParameters => {
+    if (action != null)
+      'action': action == AuditAction.passwordChanged
+          ? 'password_changed'
+          : action!.name,
+    if (dateFrom != null) 'date_from': dateFrom!.toUtc().toIso8601String(),
+    if (dateTo != null) 'date_to': dateTo!.toUtc().toIso8601String(),
+  };
+}
+
 class AuditChange {
   final Object? oldValue;
   final Object? newValue;

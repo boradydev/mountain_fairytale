@@ -1,8 +1,12 @@
 import 'package:mountain_fairytale/core/network/api_client.dart';
 import 'package:mountain_fairytale/features/audit_event/audit_events_abcs.dart';
+import 'package:mountain_fairytale/features/audit_event/data/audit_events_model.dart';
 
 class ApiAuditLogDataSource
-    implements AuditLogDataSource, AuditUpdatesDataSource {
+    implements
+        AuditLogDataSource,
+        AuditUpdatesDataSource,
+        AuditFilteredDataSource {
   final ApiClient client;
   ApiAuditLogDataSource(this.client);
   @override
@@ -10,13 +14,32 @@ class ApiAuditLogDataSource
     required String after,
     String? search,
     required int limit,
+    AuditFilters filters = const AuditFilters(),
   }) => client.get(
     Uri(
       path: '/protected/events',
       queryParameters: {
         'limit': '$limit',
         'after': after,
+        ...filters.queryParameters,
         if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
+      },
+    ).toString(),
+  );
+  @override
+  Future<Map<String, dynamic>> getFilteredAuditEvents({
+    required AuditFilters filters,
+    String? search,
+    String? cursor,
+    required int limit,
+  }) => client.get(
+    Uri(
+      path: '/protected/events',
+      queryParameters: {
+        'limit': '$limit',
+        'cursor': ?cursor,
+        if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
+        ...filters.queryParameters,
       },
     ).toString(),
   );

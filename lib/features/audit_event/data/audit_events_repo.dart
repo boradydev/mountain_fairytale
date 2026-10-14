@@ -2,7 +2,10 @@ import 'package:mountain_fairytale/features/audit_event/data/audit_events_model.
 import 'package:mountain_fairytale/features/audit_event/audit_events_abcs.dart';
 
 class AuditLogRepositoryImpl
-    implements AuditLogRepository, AuditUpdatesRepository {
+    implements
+        AuditLogRepository,
+        AuditUpdatesRepository,
+        AuditFilteredRepository {
   final AuditLogDataSource _dataSource;
   AuditLogRepositoryImpl(this._dataSource);
   @override
@@ -13,6 +16,7 @@ class AuditLogRepositoryImpl
     required String after,
     String? search,
     required int limit,
+    AuditFilters filters = const AuditFilters(),
   }) async {
     final source = _dataSource;
     if (source is! AuditUpdatesDataSource) {
@@ -22,6 +26,28 @@ class AuditLogRepositoryImpl
       await (source as AuditUpdatesDataSource).getNewAuditEvents(
         after: after,
         search: search,
+        limit: limit,
+        filters: filters,
+      ),
+    );
+  }
+
+  @override
+  Future<AuditPage> getFilteredAuditEvents({
+    required AuditFilters filters,
+    String? search,
+    String? cursor,
+    required int limit,
+  }) async {
+    final source = _dataSource;
+    if (source is! AuditFilteredDataSource) {
+      throw UnsupportedError('Audit source does not support filters');
+    }
+    return _page(
+      await (source as AuditFilteredDataSource).getFilteredAuditEvents(
+        filters: filters,
+        search: search,
+        cursor: cursor,
         limit: limit,
       ),
     );

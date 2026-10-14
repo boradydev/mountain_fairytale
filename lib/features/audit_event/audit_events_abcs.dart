@@ -21,6 +21,7 @@ abstract interface class AuditUpdatesDataSource {
     required String after,
     String? search,
     required int limit,
+    AuditFilters filters = const AuditFilters(),
   });
 }
 
@@ -29,6 +30,25 @@ abstract interface class AuditUpdatesRepository {
   Future<AuditPage> getNewAuditEvents({
     required String after,
     String? search,
+    required int limit,
+    AuditFilters filters = const AuditFilters(),
+  });
+}
+
+abstract interface class AuditFilteredDataSource {
+  Future<Map<String, dynamic>> getFilteredAuditEvents({
+    required AuditFilters filters,
+    String? search,
+    String? cursor,
+    required int limit,
+  });
+}
+
+abstract interface class AuditFilteredRepository {
+  Future<AuditPage> getFilteredAuditEvents({
+    required AuditFilters filters,
+    String? search,
+    String? cursor,
     required int limit,
   });
 }

@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:mountain_fairytale/features/audit_event/data/audit_events_model.dart';
 import 'package:mountain_fairytale/features/audit_event/ui/audit_event_provider.dart';
 import 'package:mountain_fairytale/features/audit_event/ui/audit_event_row.dart';
 import 'package:mountain_fairytale/shared/widgets/icon_button_widget.dart';
@@ -16,8 +18,6 @@ class AuditLogScreen extends StatefulWidget {
 class _AuditLogScreenState extends State<AuditLogScreen>
     with WidgetsBindingObserver {
   final _scrollController = ScrollController();
-  final _searchController = TextEditingController();
-  Timer? _searchTimer;
   Timer? _pollTimer;
   bool _visible = false;
   bool _appActive = true;
@@ -60,7 +60,7 @@ class _AuditLogScreenState extends State<AuditLogScreen>
   }
 
   Future<void> _poll() async {
-    if (!_canPoll || _pollInFlight || (_searchTimer?.isActive ?? false)) return;
+    if (!_canPoll || _pollInFlight) return;
     _pollInFlight = true;
     final provider = context.read<AuditLogProvider>();
     try {
@@ -94,32 +94,68 @@ class _AuditLogScreenState extends State<AuditLogScreen>
     }
   }
 
-  void _search(String value) {
-    setState(() {});
-    _searchTimer?.cancel();
-    _searchTimer = Timer(const Duration(milliseconds: 300), () {
-      if (mounted) context.read<AuditLogProvider>().searchEvents(value);
-    });
+  Future<void> _filterSelected(String selection) async {
+    final provider = context.read<AuditLogProvider>();
+    final filters = provider.filters;
+    AuditFilters updated;
+    if (selection == 'dates') {
+      final from = filters.dateFrom?.toLocal();
+      final to = filters.dateTo?.toLocal();
+      final range = await showDateRangePicker(
+        context: context,
+        firstDate: DateTime(1900),
+        lastDate: DateTime(2100, 12, 31),
+        initialDateRange: from != null && to != null
+            ? DateTimeRange(
+                start: from,
+                end: DateTime(to.year, to.month, to.day - 1),
+              )
+            : null,
+        helpText: 'Период событий',
+        saveText: 'Применить',
+        cancelText: 'Отмена',
+        fieldStartLabelText: 'От',
+        fieldEndLabelText: 'До',
+      );
+      if (!mounted || range == null) return;
+      updated = AuditFilters(
+        action: filters.action,
+        dateFrom: DateTime(
+          range.start.year,
+          range.start.month,
+          range.start.day,
+        ),
+        dateTo: DateTime(range.end.year, range.end.month, range.end.day + 1),
+      );
+    } else if (selection == 'allDates') {
+      updated = AuditFilters(action: filters.action);
+    } else if (selection == 'reset') {
+      updated = const AuditFilters();
+    } else {
+      final code = selection.substring('action:'.length);
+      updated = AuditFilters(
+        action: code == 'all' ? null : AuditAction.fromCode(code),
+        dateFrom: filters.dateFrom,
+        dateTo: filters.dateTo,
+      );
+    }
+    if (_scrollController.hasClients) _scrollController.jumpTo(0);
+    await provider.setFilters(updated);
   }
 
-  Future<void> _refresh() async {
-    _searchTimer?.cancel();
-    final provider = context.read<AuditLogProvider>();
-    if (provider.search != _searchController.text.trim()) {
-      await provider.searchEvents(_searchController.text);
-    } else {
-      await provider.refreshEvents();
-      if (mounted && provider.events.isNotEmpty) _showNewEvents();
-    }
+  String _periodLabel(AuditFilters filters) {
+    final from = filters.dateFrom?.toLocal();
+    final to = filters.dateTo?.toLocal();
+    if (from == null || to == null) return 'Все даты';
+    final format = DateFormat('dd.MM.yyyy');
+    return '${format.format(from)} — ${format.format(DateTime(to.year, to.month, to.day - 1))}';
   }
 
   @override
   void dispose() {
-    _searchTimer?.cancel();
     _pollTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _scrollController.dispose();
-    _searchController.dispose();
     super.dispose();
   }
 
@@ -127,77 +163,129 @@ class _AuditLogScreenState extends State<AuditLogScreen>
   Widget build(BuildContext context) {
     final provider = context.watch<AuditLogProvider>();
     final groups = provider.operations;
+    final filters = provider.filters;
+    final filterLabel =
+        '${filters.action == null ? 'Все действия' : auditActionLabel(filters.action!)} · ${_periodLabel(filters)}';
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
+        SizedBox(
+          height: 76,
+          child: Column(
             children: [
               Expanded(
-                child: TextField(
-                  controller: _searchController,
-                  onChanged: _search,
-                  maxLength: 500,
-                  decoration: InputDecoration(
-                    counterText: '',
-                    hintText: 'Поиск по журналу...',
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: _searchController.text.isEmpty
-                        ? null
-                        : AppIconButton(
-                            icon: Icons.clear,
-                            tooltip: 'Очистить поиск',
-                            onPressed: () {
-                              _searchController.clear();
-                              _search('');
-                            },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) => Row(
+                      children: [
+                        PopupMenuButton<String>(
+                          tooltip: 'Фильтры: $filterLabel',
+                          icon: Icon(
+                            filters.isEmpty
+                                ? Icons.filter_list
+                                : Icons.filter_alt,
+                            color: filters.isEmpty
+                                ? null
+                                : Theme.of(context).colorScheme.primary,
                           ),
-                    border: const OutlineInputBorder(),
-                    isDense: true,
+                          onSelected: _filterSelected,
+                          itemBuilder: (_) => [
+                            const PopupMenuItem<String>(
+                              enabled: false,
+                              child: Text('Тип действия'),
+                            ),
+                            CheckedPopupMenuItem<String>(
+                              value: 'action:all',
+                              checked: filters.action == null,
+                              child: const Text('Все действия'),
+                            ),
+                            for (final action in AuditAction.values)
+                              CheckedPopupMenuItem<String>(
+                                value:
+                                    'action:${action == AuditAction.passwordChanged ? 'password_changed' : action.name}',
+                                checked: filters.action == action,
+                                child: Text(auditActionLabel(action)),
+                              ),
+                            const PopupMenuDivider(),
+                            PopupMenuItem<String>(
+                              value: 'dates',
+                              child: Text('Период: ${_periodLabel(filters)}'),
+                            ),
+                            if (filters.dateFrom != null ||
+                                filters.dateTo != null)
+                              const PopupMenuItem<String>(
+                                value: 'allDates',
+                                child: Text('Все даты'),
+                              ),
+                            if (!filters.isEmpty)
+                              const PopupMenuItem<String>(
+                                value: 'reset',
+                                child: Text('Сбросить фильтры'),
+                              ),
+                          ],
+                        ),
+                        if (constraints.maxWidth >= 650) ...[
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Tooltip(
+                              message: filterLabel,
+                              child: Text(
+                                filterLabel,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ),
+                          ),
+                        ],
+                        if (provider.hasError ||
+                            provider.updatesError.isNotEmpty)
+                          AppIconButton(
+                            icon: Icons.error_outline,
+                            tooltip: provider.hasError
+                                ? provider.errorMessage
+                                : provider.updatesError,
+                            onPressed: provider.hasError
+                                ? provider.fetchEvents
+                                : _poll,
+                          ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: Visibility(
+                              visible: provider.hasPendingEvents,
+                              maintainSize: true,
+                              maintainAnimation: true,
+                              maintainState: true,
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: AppSecondaryButton(
+                                  text: 'Есть новые события — показать',
+                                  onPressed: _showNewEvents,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
-              AppIconButton(
-                icon: Icons.refresh,
-                tooltip: 'Обновить журнал',
-                onPressed: _refresh,
+              SizedBox(
+                height: 2,
+                child: provider.isLoadingMore && provider.events.isNotEmpty
+                    ? const LinearProgressIndicator(minHeight: 2)
+                    : const SizedBox.shrink(),
               ),
+              const Divider(height: 1),
             ],
           ),
         ),
-        const Divider(height: 1),
-        if (provider.hasPendingEvents)
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: AppSecondaryButton(
-              text: 'Есть новые события — показать',
-              onPressed: _showNewEvents,
-            ),
-          ),
-        if (provider.updatesError.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            child: Text(
-              provider.updatesError,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ),
-        if (provider.isLoadingMore && provider.events.isNotEmpty)
-          const LinearProgressIndicator(),
-        if (provider.hasError)
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                Expanded(child: Text(provider.errorMessage)),
-                AppSecondaryButton(
-                  text: 'Повторить',
-                  onPressed: provider.fetchEvents,
-                ),
-              ],
-            ),
-          ),
         Expanded(
           child: switch (provider.status) {
             AuditLogStatus.initial || AuditLogStatus.loading => const Center(
