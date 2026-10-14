@@ -29,9 +29,13 @@ class DeliveryDaysListView extends StatelessWidget {
           height: headerHeight,
           title: 'Дни доставки',
           description: 'Маршруты и самовывозы по плановой дате.',
-          controls: Text(
-            'Загружено дней: ${provider.days.length}',
-            style: Theme.of(context).textTheme.bodySmall,
+          controls: Tooltip(
+            message: 'Календарные дни от первой даты документа, включая дни без доставок и запланированные даты.',
+            child: Text(
+              'Дней доставки: ${provider.status == DeliveryStatus.success || provider.days.isNotEmpty ? provider.total : '—'}',
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(fontSize: 14),
+            ),
           ),
         ),
         const Padding(

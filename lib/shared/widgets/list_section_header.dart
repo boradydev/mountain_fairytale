@@ -14,6 +14,18 @@ class AppListSectionHeader extends StatelessWidget {
     this.height,
   });
 
+  static TextStyle _titleStyle(BuildContext context) =>
+      (Theme.of(context).textTheme.titleMedium ?? const TextStyle()).copyWith(
+        fontSize: 20,
+        fontWeight: FontWeight.w600,
+      );
+
+  static TextStyle _descriptionStyle(BuildContext context) =>
+      (Theme.of(context).textTheme.bodySmall ?? const TextStyle()).copyWith(
+        fontSize: 14,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      );
+
   static double _lineHeight(BuildContext context, TextStyle? style) {
     final painter = TextPainter(
       text: TextSpan(text: 'А', style: style),
@@ -27,17 +39,17 @@ class AppListSectionHeader extends StatelessWidget {
   }
 
   static double preferredHeight(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return _lineHeight(context, textTheme.titleMedium) +
-        _lineHeight(context, textTheme.bodySmall) +
+    return _lineHeight(context, _titleStyle(context)) +
+        _lineHeight(context, _descriptionStyle(context)) +
         72;
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final titleHeight = _lineHeight(context, theme.textTheme.titleMedium);
-    final descriptionHeight = _lineHeight(context, theme.textTheme.bodySmall);
+    final titleStyle = _titleStyle(context);
+    final descriptionStyle = _descriptionStyle(context);
+    final titleHeight = _lineHeight(context, titleStyle);
+    final descriptionHeight = _lineHeight(context, descriptionStyle);
     final content = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
@@ -51,7 +63,7 @@ class AppListSectionHeader extends StatelessWidget {
                 title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleMedium,
+                style: titleStyle,
               ),
             ),
           ),
@@ -64,9 +76,7 @@ class AppListSectionHeader extends StatelessWidget {
                 description,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+                style: descriptionStyle,
               ),
             ),
           ),
