@@ -5,6 +5,7 @@ class DeliveryDayCard extends StatelessWidget {
   final List<Widget> metrics;
   final VoidCallback? onTap;
   final Widget? titleSuffix;
+  final Color? backgroundColor;
 
   const DeliveryDayCard({
     super.key,
@@ -12,6 +13,7 @@ class DeliveryDayCard extends StatelessWidget {
     required this.metrics,
     this.onTap,
     this.titleSuffix,
+    this.backgroundColor,
   });
 
   @override
@@ -28,7 +30,7 @@ class DeliveryDayCard extends StatelessWidget {
           width: 1,
         ),
       ),
-      color: colorScheme.surfaceContainerLow,
+      color: backgroundColor ?? colorScheme.surfaceContainerLow,
       clipBehavior: Clip.antiAlias,
       // Чтобы InkWell не вылезал за скругления
       child: InkWell(
