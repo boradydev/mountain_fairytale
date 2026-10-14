@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mountain_fairytale/features/audit_event/data/audit_events_model.dart';
 
+part 'audit_document_details.dart';
+
 const auditFieldLabels = <String, String>{
   'name': 'Название',
   'username': 'Имя сотрудника',
@@ -109,7 +111,7 @@ IconData auditActionIcon(AuditAction action) => switch (action) {
   AuditAction.created => Icons.add_circle_outline,
   AuditAction.updated => Icons.edit_outlined,
   AuditAction.activated => Icons.toggle_on_outlined,
-  AuditAction.deactivated => Icons.power_settings_new,
+  AuditAction.deactivated => Icons.pause_circle_outline,
   AuditAction.cancelled => Icons.block_outlined,
   AuditAction.restored => Icons.restore,
   AuditAction.deleted => Icons.delete_outline,
@@ -179,6 +181,20 @@ class _AuditEventRowState extends State<AuditEventRow> {
     final theme = Theme.of(context);
     final summary = auditSummary(event);
     final action = auditActionLabel(event.action);
+    final document = event.subject.type == 'delivery_document';
+    final hasPointSnapshots =
+        event.data['points'] is List || event.changes['points'] != null;
+    final relatedEvents = widget.relatedEvents
+        .where(
+          (related) =>
+              !(document &&
+                  hasPointSnapshots &&
+                  {
+                    'delivery_point',
+                    'delivery_item',
+                  }.contains(related.subject.type)),
+        )
+        .toList();
     final date = DateFormat('dd.MM.yyyy HH:mm')
         .format(event.createdAt.toLocal());
     final fullDate = DateFormat('dd.MM.yyyy HH:mm:ss')
@@ -294,7 +310,7 @@ class _AuditEventRowState extends State<AuditEventRow> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         _AuditDetails(event: event),
-                        if (widget.relatedEvents.isNotEmpty) ...[
+                        if (relatedEvents.isNotEmpty) ...[
                           Padding(
                             padding: const EdgeInsets.only(top: 16, bottom: 6),
                             child: Text(
@@ -302,7 +318,7 @@ class _AuditEventRowState extends State<AuditEventRow> {
                               style: theme.textTheme.labelLarge,
                             ),
                           ),
-                          for (final related in widget.relatedEvents)
+                          for (final related in relatedEvents)
                             Padding(
                               padding: const EdgeInsets.only(top: 12),
                               child: _AuditDetails(event: related),
@@ -326,6 +342,42 @@ class _AuditDetails extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final document = event.subject.type == 'delivery_document';
+    final pickup =
+        (event.subject.documentType ?? event.data['documentType']) ==
+        'pickup_sheet';
+    bool visible(String key) =>
+        key != 'displayName' &&
+        (!document ||
+            (key != 'points' &&
+                key != 'documentType' &&
+                !(pickup &&
+                    {
+                      'driverId',
+                      'carId',
+                      'startMileage',
+                      'endMileage',
+                    }.contains(key))));
+    final keys = {
+      ...event.data.keys,
+      ...event.changes.keys,
+    }.where(visible).toList();
+    const order = [
+      'plannedDate',
+      'driverId',
+      'carId',
+      'startMileage',
+      'endMileage',
+    ];
+    if (document) {
+      keys.sort((a, b) {
+        final ai = order.indexOf(a);
+        final bi = order.indexOf(b);
+        return (ai < 0 ? order.length : ai).compareTo(
+          bi < 0 ? order.length : bi,
+        );
+      });
+    }
     final fields = event.data.entries.where(
       (entry) => entry.key != 'displayName',
     );
@@ -356,16 +408,26 @@ class _AuditDetails extends StatelessWidget {
             style: theme.textTheme.bodySmall,
           ),
         ),
-        for (final entry in fields)
-          _AuditFieldRow(
-            label: auditFieldLabels[entry.key] ?? entry.key,
-            value: entry.value,
-          ),
-        for (final entry in event.changes.entries)
-          _AuditFieldRow(
-            label: auditFieldLabels[entry.key] ?? entry.key,
-            change: entry.value,
-          ),
+        if (document) ...[
+          for (final key in keys)
+            _AuditFieldRow(
+              label: auditFieldLabels[key] ?? key,
+              value: event.data[key],
+              change: event.changes[key],
+            ),
+          _AuditDocumentPoints(event: event),
+        ] else ...[
+          for (final entry in fields)
+            _AuditFieldRow(
+              label: auditFieldLabels[entry.key] ?? entry.key,
+              value: entry.value,
+            ),
+          for (final entry in event.changes.entries)
+            _AuditFieldRow(
+              label: auditFieldLabels[entry.key] ?? entry.key,
+              change: entry.value,
+            ),
+        ],
       ],
     );
   }
