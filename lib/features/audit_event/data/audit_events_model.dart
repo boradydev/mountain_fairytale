@@ -97,7 +97,8 @@ class AuditEvent {
 class AuditPage {
   final List<AuditEvent> events;
   final String? nextCursor;
-  const AuditPage({required this.events, this.nextCursor});
+  final String? latestCursor;
+  const AuditPage({required this.events, this.nextCursor, this.latestCursor});
 }
 
 class AuditOperation {

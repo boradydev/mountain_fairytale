@@ -15,3 +15,20 @@ abstract interface class AuditLogRepository {
     required int limit,
   });
 }
+
+abstract interface class AuditUpdatesDataSource {
+  Future<Map<String, dynamic>> getNewAuditEvents({
+    required String after,
+    String? search,
+    required int limit,
+  });
+}
+
+abstract interface class AuditUpdatesRepository {
+  bool get supportsUpdates;
+  Future<AuditPage> getNewAuditEvents({
+    required String after,
+    String? search,
+    required int limit,
+  });
+}

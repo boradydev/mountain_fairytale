@@ -125,7 +125,7 @@ IconData auditActionIcon(AuditAction action) => switch (action) {
   AuditAction.created => Icons.add_circle_outline,
   AuditAction.updated => Icons.edit_outlined,
   AuditAction.activated => Icons.toggle_on_outlined,
-  AuditAction.deactivated => Icons.pause_circle_outline,
+  AuditAction.deactivated => Icons.toggle_off_outlined,
   AuditAction.cancelled => Icons.block_outlined,
   AuditAction.restored => Icons.restore,
   AuditAction.deleted => Icons.delete_outline,
@@ -180,9 +180,15 @@ class AuditEventRow extends StatefulWidget {
   State<AuditEventRow> createState() => _AuditEventRowState();
 }
 
-class _AuditEventRowState extends State<AuditEventRow> {
+class _AuditEventRowState extends State<AuditEventRow>
+    with AutomaticKeepAliveClientMixin<AuditEventRow> {
   bool _expanded = false;
-  void _toggle() => setState(() => _expanded = !_expanded);
+  @override
+  bool get wantKeepAlive => _expanded;
+  void _toggle() {
+    setState(() => _expanded = !_expanded);
+    updateKeepAlive();
+  }
 
   bool get _hasDetails =>
       widget.relatedEvents.isNotEmpty ||
@@ -191,6 +197,7 @@ class _AuditEventRowState extends State<AuditEventRow> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final event = widget.event;
     final theme = Theme.of(context);
     final summary = auditSummary(event);

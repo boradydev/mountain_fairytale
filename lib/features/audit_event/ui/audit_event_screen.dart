@@ -13,20 +13,78 @@ class AuditLogScreen extends StatefulWidget {
   State<AuditLogScreen> createState() => _AuditLogScreenState();
 }
 
-class _AuditLogScreenState extends State<AuditLogScreen> {
+class _AuditLogScreenState extends State<AuditLogScreen>
+    with WidgetsBindingObserver {
   final _scrollController = ScrollController();
   final _searchController = TextEditingController();
   Timer? _searchTimer;
+  Timer? _pollTimer;
+  bool _visible = false;
+  bool _appActive = true;
+  bool _pollInFlight = false;
+  bool get _canPoll => mounted && _visible && _appActive;
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        final provider = context.read<AuditLogProvider>();
-        if (provider.status == AuditLogStatus.initial) provider.fetchEvents();
-      }
-    });
+    WidgetsBinding.instance.addObserver(this);
+    final state = WidgetsBinding.instance.lifecycleState;
+    _appActive = state == null || state == AppLifecycleState.resumed;
     _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final visible = TickerMode.valuesOf(context).enabled;
+    if (_visible == visible) return;
+    _visible = visible;
+    _updatePolling();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final active = state == AppLifecycleState.resumed;
+    if (_appActive == active) return;
+    _appActive = active;
+    _updatePolling();
+  }
+
+  void _updatePolling() {
+    _pollTimer?.cancel();
+    _pollTimer = null;
+    if (!_canPoll) return;
+    if (context.read<AuditLogProvider>().supportsUpdates) {
+      _pollTimer = Timer.periodic(const Duration(seconds: 15), (_) => _poll());
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) => _poll());
+  }
+
+  Future<void> _poll() async {
+    if (!_canPoll || _pollInFlight || (_searchTimer?.isActive ?? false)) return;
+    _pollInFlight = true;
+    final provider = context.read<AuditLogProvider>();
+    try {
+      if (provider.status == AuditLogStatus.initial ||
+          provider.status == AuditLogStatus.failure) {
+        await provider.fetchEvents();
+      } else {
+        await provider.checkForUpdates(shouldContinue: () => _canPoll);
+        if (_canPoll &&
+            !provider.hasMoreUpdates &&
+            (!_scrollController.hasClients || _scrollController.offset <= 8)) {
+          provider.showPendingEvents();
+        }
+      }
+    } finally {
+      _pollInFlight = false;
+    }
+  }
+
+  void _showNewEvents() {
+    context.read<AuditLogProvider>().showPendingEvents();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _scrollController.hasClients) _scrollController.jumpTo(0);
+    });
   }
 
   void _onScroll() {
@@ -51,12 +109,15 @@ class _AuditLogScreenState extends State<AuditLogScreen> {
       await provider.searchEvents(_searchController.text);
     } else {
       await provider.refreshEvents();
+      if (mounted && provider.events.isNotEmpty) _showNewEvents();
     }
   }
 
   @override
   void dispose() {
     _searchTimer?.cancel();
+    _pollTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     _scrollController.dispose();
     _searchController.dispose();
     super.dispose();
@@ -106,6 +167,22 @@ class _AuditLogScreenState extends State<AuditLogScreen> {
           ),
         ),
         const Divider(height: 1),
+        if (provider.hasPendingEvents)
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: AppSecondaryButton(
+              text: 'Есть новые события — показать',
+              onPressed: _showNewEvents,
+            ),
+          ),
+        if (provider.updatesError.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            child: Text(
+              provider.updatesError,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
         if (provider.isLoadingMore && provider.events.isNotEmpty)
           const LinearProgressIndicator(),
         if (provider.hasError)
@@ -134,6 +211,13 @@ class _AuditLogScreenState extends State<AuditLogScreen> {
                   ? const Center(child: Text('События не найдены'))
                   : ListView.separated(
                       controller: _scrollController,
+                      findItemIndexCallback: (key) {
+                        if (key is! ValueKey<String>) return null;
+                        final index = groups.indexWhere(
+                          (group) => group.operationId == key.value,
+                        );
+                        return index < 0 ? null : index;
+                      },
                       itemCount: groups.length,
                       separatorBuilder: (context, _) => Divider(
                         height: 1,

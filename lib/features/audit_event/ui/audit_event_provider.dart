@@ -10,6 +10,11 @@ class AuditLogProvider extends SafeChangeNotifier {
   AuditLogProvider(this._repository);
   static const int _pageSize = 50;
   String? _cursor;
+  String? _latestCursor;
+  String? _updatesCursor;
+  bool _isCheckingUpdates = false;
+  List<AuditEvent> _pendingEvents = const [];
+  String _updatesError = '';
   bool _hasMore = true;
   bool _isLoadingMore = false;
   int _generation = 0;
@@ -26,6 +31,13 @@ class AuditLogProvider extends SafeChangeNotifier {
   bool get hasError => _errorMessage.isNotEmpty;
   bool get isEmpty => _status == AuditLogStatus.success && _events.isEmpty;
   String get search => _search;
+  bool get supportsUpdates =>
+      _repository is AuditUpdatesRepository &&
+      (_repository as AuditUpdatesRepository).supportsUpdates;
+  bool get isCheckingUpdates => _isCheckingUpdates;
+  bool get hasPendingEvents => _pendingEvents.isNotEmpty;
+  bool get hasMoreUpdates => _updatesCursor != null;
+  String get updatesError => _updatesError;
   List<AuditOperation> get operations {
     final groups = <String, List<AuditEvent>>{};
     for (final event in _events) {
@@ -57,6 +69,7 @@ class AuditLogProvider extends SafeChangeNotifier {
       final seen = <String>{};
       _events = combined.where((event) => seen.add(event.eventId)).toList();
       _cursor = page.nextCursor;
+      if (cursor == null) _latestCursor = page.latestCursor;
       _hasMore = _cursor != null && page.events.isNotEmpty;
       _status = AuditLogStatus.success;
     } catch (error) {
@@ -84,11 +97,83 @@ class AuditLogProvider extends SafeChangeNotifier {
   }
 
   Future<void> refreshEvents() async {
+    if (_events.isNotEmpty && _latestCursor != null && supportsUpdates) {
+      await checkForUpdates();
+      showPendingEvents();
+      return;
+    }
+    _resetPages();
+    await fetchEvents();
+  }
+
+  void _resetPages() {
     _generation++;
     _cursor = null;
+    _latestCursor = null;
+    _updatesCursor = null;
+    _pendingEvents = const [];
+    _updatesError = '';
+    _isCheckingUpdates = false;
     _hasMore = true;
     _isLoadingMore = false;
-    await fetchEvents();
+  }
+
+  Future<void> checkForUpdates({bool Function()? shouldContinue}) async {
+    if (!supportsUpdates ||
+        _latestCursor == null ||
+        _isCheckingUpdates ||
+        isLoading) {
+      return;
+    }
+    final repository = _repository as AuditUpdatesRepository;
+    final generation = _generation;
+    _isCheckingUpdates = true;
+    _updatesError = '';
+    notifyListeners();
+    try {
+      // Ограничиваем одну проверку; большой поток продолжаем со следующего курсора.
+      for (var pageNumber = 0; pageNumber < 5; pageNumber++) {
+        if (shouldContinue != null && !shouldContinue()) break;
+        final page = await repository.getNewAuditEvents(
+          after: _updatesCursor ?? _latestCursor!,
+          search: _search.isEmpty ? null : _search,
+          limit: _pageSize,
+        );
+        if (generation != _generation) return;
+        final seen = _events.map((event) => event.eventId).toSet();
+        _pendingEvents = [
+          ..._pendingEvents,
+          ...page.events,
+        ].where((event) => seen.add(event.eventId)).toList();
+        _latestCursor = page.latestCursor ?? _latestCursor;
+        _updatesCursor = page.nextCursor;
+        if (_updatesCursor == null) break;
+      }
+    } catch (error) {
+      if (generation != _generation) return;
+      _updatesError = 'Не удалось проверить новые события';
+    } finally {
+      if (generation == _generation) {
+        _isCheckingUpdates = false;
+        notifyListeners();
+      }
+    }
+  }
+
+  void showPendingEvents() {
+    if (_pendingEvents.isEmpty) return;
+    final seen = <String>{};
+    _events =
+        [
+          ..._pendingEvents,
+          ..._events,
+        ].where((event) => seen.add(event.eventId)).toList()..sort((a, b) {
+          final time = b.createdAt.compareTo(a.createdAt);
+          return time == 0 ? b.eventId.compareTo(a.eventId) : time;
+        });
+    _pendingEvents = const [];
+    _status = AuditLogStatus.success;
+    notifyListeners();
   }
 
   @override
