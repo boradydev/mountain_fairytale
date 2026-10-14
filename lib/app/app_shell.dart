@@ -54,12 +54,27 @@ class _AppShellState extends State<AppShell> {
             tabAlignment: TabAlignment.start,
             dividerColor: Colors.transparent,
             indicatorSize: TabBarIndicatorSize.tab,
-            indicatorPadding: const EdgeInsets.symmetric(vertical: 8),
+            indicatorPadding: EdgeInsets.zero,
             indicator: BoxDecoration(
-              color: colors.secondaryContainer,
-              borderRadius: BorderRadius.circular(10),
+              color: colors.primary.withValues(alpha: 0.10),
+              border: Border(
+                bottom: BorderSide(color: colors.primary, width: 2),
+              ),
             ),
-            labelColor: colors.onSecondaryContainer,
+            splashBorderRadius: BorderRadius.zero,
+            overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
+              if (states.contains(WidgetState.pressed)) {
+                return colors.primary.withValues(alpha: 0.10);
+              }
+              if (states.contains(WidgetState.focused)) {
+                return colors.primary.withValues(alpha: 0.08);
+              }
+              if (states.contains(WidgetState.hovered)) {
+                return colors.primary.withValues(alpha: 0.04);
+              }
+              return null;
+            }),
+            labelColor: colors.primary,
             unselectedLabelColor: colors.onSurfaceVariant,
             labelStyle: const TextStyle(fontWeight: FontWeight.w600),
             onTap: (index) {
