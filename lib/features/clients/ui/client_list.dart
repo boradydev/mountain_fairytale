@@ -211,10 +211,12 @@ class _ClientAttentionCard extends StatelessWidget {
                     constraints: const BoxConstraints(),
                     onSelected: (weeks) async {
                       final provider = context.read<ClientsProvider>();
-                      final success = await provider.updateClientCooldown(
-                        client.id,
-                        weeks,
-                      );
+                      final success = weeks == 0
+                          ? await provider.resetClientCooldown(client.id)
+                          : await provider.updateClientCooldown(
+                              client.id,
+                              weeks,
+                            );
                       if (!success && context.mounted) {
                         AppNotify.show(
                           provider.errorMessage,
@@ -235,6 +237,16 @@ class _ClientAttentionCard extends StatelessWidget {
                           const PopupMenuItem<int>(
                             value: 3,
                             child: Text('Отложить на 3 недели'),
+                          ),
+                          const PopupMenuItem<int>(
+                            value: 4,
+                            child: Text('Отложить на 4 недели'),
+                          ),
+                          const PopupMenuDivider(),
+                          PopupMenuItem<int>(
+                            value: 0,
+                            enabled: client.cooldownUntil != null,
+                            child: const Text('Сбросить отсрочку'),
                           ),
                         ],
                   ),

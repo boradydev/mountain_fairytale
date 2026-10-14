@@ -145,17 +145,28 @@ class ClientsProvider extends SafeChangeNotifier {
     }
   }
 
-  Future<bool> updateClientCooldown(String clientId, int weeks) async {
-    try {
-      // Высчитываем дату окончания кулдауна относительно текущего момента
-      final now = DateTime.now();
-      final cooldownDate = DateTime(now.year, now.month, now.day + weeks * 7);
+  Future<bool> updateClientCooldown(String clientId, int weeks) {
+    final now = DateTime.now();
+    final cooldownDate = DateTime(now.year, now.month, now.day + weeks * 7);
+    return _changeClientCooldown(clientId, cooldownDate);
+  }
 
-      // Обновляем на "сервере" (в репозитории)
-      final updatedClient = await _repository.updateCooldown(
-        clientId,
-        cooldownDate,
-      );
+  Future<bool> resetClientCooldown(String clientId) =>
+      _changeClientCooldown(clientId, null);
+
+  Future<bool> _changeClientCooldown(
+    String clientId,
+    DateTime? cooldownDate,
+  ) async {
+    _errorMessage = '';
+    phoneError = null;
+    try {
+      final updatedClient = cooldownDate == null
+          ? await _repository.updateClient(
+              clientId,
+              const UpdateClientRequest(cooldownUntil: null),
+            )
+          : await _repository.updateCooldown(clientId, cooldownDate);
 
       // Обновляем локальный список в стейте провайдера
       _fetchVersion++;
