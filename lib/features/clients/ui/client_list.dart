@@ -6,6 +6,7 @@ import 'package:mountain_fairytale/features/clients/ui/clients_provider.dart';
 import 'package:mountain_fairytale/features/clients/ui/client_dialog.dart';
 import 'package:mountain_fairytale/shared/widgets/add_action_card.dart';
 import 'package:mountain_fairytale/shared/widgets/base_card_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/labeled_checkbox_toggle.dart';
 import 'package:mountain_fairytale/shared/widgets/list_section_header.dart';
 import 'package:provider/provider.dart';
 
@@ -60,20 +61,13 @@ class ClientsAttentionListView extends StatelessWidget {
                 ),
                 if (listMode == ClientListMode.database) ...[
                   const SizedBox(width: 16),
-                  Tooltip(
-                    message: 'Показывать деактивированных клиентов вместе с активными',
-                    child: Row(
-                      children: [
-                        Switch(
-                          value: showDeactivated,
-                          onChanged: context
-                              .read<ClientsProvider>()
-                              .setShowDeactivated,
-                        ),
-                        const SizedBox(width: 8),
-                        const Text('Деактивированные'),
-                      ],
-                    ),
+                  LabeledCheckboxToggle(
+                    label: 'Деактивированные',
+                    value: showDeactivated,
+                    onChanged: context
+                        .read<ClientsProvider>()
+                        .setShowDeactivated,
+                    tooltip: 'Показывать деактивированных клиентов вместе с активными',
                   ),
                 ],
               ],

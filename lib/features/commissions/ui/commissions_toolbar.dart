@@ -6,6 +6,7 @@ import 'package:mountain_fairytale/features/commissions/data/commission_models.d
 import 'package:mountain_fairytale/features/commissions/ui/commission_widgets.dart';
 import 'package:mountain_fairytale/features/commissions/ui/commissions_provider.dart';
 import 'package:mountain_fairytale/features/sales_representative_commissions/ui/month_picker_dialog.dart';
+import 'package:mountain_fairytale/shared/widgets/labeled_checkbox_toggle.dart';
 
 class CommissionsToolbar extends StatelessWidget {
   final CommissionsProvider provider;
@@ -55,48 +56,12 @@ class CommissionsToolbar extends StatelessWidget {
                 width: 232 * scale,
                 height: controlHeight,
                 child: provider.mode == CommissionMode.representatives
-                    ? Tooltip(
-                        message: 'Показать всех представителей, включая деактивированных без клиентов и начислений',
-                        child: Row(
-                          children: [
-                            Switch(
-                              value: provider.includeDeactivated,
-                              onChanged: provider.setIncludeDeactivated,
-                              activeThumbColor: colors.onPrimary,
-                              activeTrackColor: colors.primary,
-                              inactiveTrackColor: colors.surfaceContainerLow,
-                              inactiveThumbColor: colors.outline,
-                              trackOutlineColor:
-                                  WidgetStateProperty.resolveWith<Color?>((
-                                    states,
-                                  ) {
-                                    if (states.contains(WidgetState.selected)) {
-                                      return colors.primary;
-                                    }
-                                    return colors.outline;
-                                  }),
-                              trackOutlineWidth: const WidgetStatePropertyAll(
-                                1.0,
-                              ),
-                              overlayColor:
-                                  WidgetStateProperty.resolveWith<Color?>((
-                                    states,
-                                  ) {
-                                    if (states.contains(WidgetState.hovered)) {
-                                      return Colors.transparent;
-                                    }
-                                    return null;
-                                  }),
-                            ),
-                            const SizedBox(width: 8),
-                            const Expanded(
-                              child: Text(
-                                'Деактивированные',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
+                    ? Center(
+                        child: LabeledCheckboxToggle(
+                          label: 'Деактивированные',
+                          value: provider.includeDeactivated,
+                          onChanged: provider.setIncludeDeactivated,
+                          tooltip: 'Показать всех представителей, включая деактивированных без клиентов и начислений',
                         ),
                       )
                     : null,

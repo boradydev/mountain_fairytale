@@ -8,6 +8,7 @@ import 'package:mountain_fairytale/features/delivery_days/ui/select_delivery_typ
 import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_sheet_model.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_screen.dart';
 import 'package:mountain_fairytale/features/pickup/ui/pickup_constructor_screen.dart';
+import 'package:mountain_fairytale/shared/widgets/labeled_checkbox_toggle.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 
 typedef DayDocumentOpener = Future<bool?> Function(
@@ -117,16 +118,10 @@ class _DayDocumentsDialogState extends State<DayDocumentsDialog> {
                   'Документы на ${DateFormat.yMd(locale).format(widget.date)}',
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
-                Row(
-                  children: [
-                    Switch(
-                      value: _provider.includeCancelled,
-                      onChanged: _opening
-                          ? null
-                          : _provider.setIncludeCancelled,
-                    ),
-                    const Flexible(child: Text('Показывать отменённые')),
-                  ],
+                LabeledCheckboxToggle(
+                  label: 'Показывать отменённые',
+                  value: _provider.includeCancelled,
+                  onChanged: _opening ? null : _provider.setIncludeCancelled,
                 ),
                 LayoutBuilder(
                   builder: (context, constraints) {
