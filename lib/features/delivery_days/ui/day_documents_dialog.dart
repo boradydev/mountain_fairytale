@@ -118,10 +118,18 @@ class _DayDocumentsDialogState extends State<DayDocumentsDialog> {
                   'Документы на ${DateFormat.yMd(locale).format(widget.date)}',
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
-                LabeledCheckboxToggle(
-                  label: 'Показывать отменённые',
-                  value: _provider.includeCancelled,
-                  onChanged: _opening ? null : _provider.setIncludeCancelled,
+                Padding(
+                  padding: const EdgeInsets.only(top: 8, bottom: 12),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: LabeledCheckboxToggle(
+                      label: 'Показывать отменённые',
+                      value: _provider.includeCancelled,
+                      onChanged: _opening
+                          ? null
+                          : _provider.setIncludeCancelled,
+                    ),
+                  ),
                 ),
                 LayoutBuilder(
                   builder: (context, constraints) {
