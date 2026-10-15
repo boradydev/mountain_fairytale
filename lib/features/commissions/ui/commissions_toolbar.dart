@@ -62,6 +62,31 @@ class CommissionsToolbar extends StatelessWidget {
                             Switch(
                               value: provider.includeDeactivated,
                               onChanged: provider.setIncludeDeactivated,
+                              activeThumbColor: colors.onPrimary,
+                              activeTrackColor: colors.primary,
+                              inactiveTrackColor: colors.surfaceContainerLow,
+                              inactiveThumbColor: colors.outline,
+                              trackOutlineColor:
+                                  WidgetStateProperty.resolveWith<Color?>((
+                                    states,
+                                  ) {
+                                    if (states.contains(WidgetState.selected)) {
+                                      return colors.primary;
+                                    }
+                                    return colors.outline;
+                                  }),
+                              trackOutlineWidth: const WidgetStatePropertyAll(
+                                1.0,
+                              ),
+                              overlayColor:
+                                  WidgetStateProperty.resolveWith<Color?>((
+                                    states,
+                                  ) {
+                                    if (states.contains(WidgetState.hovered)) {
+                                      return Colors.transparent;
+                                    }
+                                    return null;
+                                  }),
                             ),
                             const SizedBox(width: 8),
                             const Expanded(
