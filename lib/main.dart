@@ -6,6 +6,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/features/dashboard/data/dashboard_updates_repo.dart';
 import 'package:mountain_fairytale/core/utils/scaffold_messenger_key.dart';
 import 'package:mountain_fairytale/features/auth/auth_abcs.dart';
 import 'package:mountain_fairytale/features/auth/services/auth_service_impl.dart';
@@ -220,6 +221,10 @@ Future<void> main() async {
     ),
 
     // Провайдер дашборда дней доставки
+    Provider<DashboardUpdatesRepository>(
+      create: (context) =>
+          DashboardUpdatesRepository(context.read<ApiClient>()),
+    ),
     ChangeNotifierProvider(
       create: (context) => DeliveryDaysProvider(deliveryDayRepository),
     ),

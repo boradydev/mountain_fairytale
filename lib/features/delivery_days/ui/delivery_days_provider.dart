@@ -27,6 +27,26 @@ class DeliveryDaysProvider extends SafeChangeNotifier {
   bool get hasError => _errorMessage.isNotEmpty;
   bool get isEmpty => _status == DeliveryStatus.success && _days.isEmpty;
   Future<void> refreshDeliveryDays() => _load(refresh: true);
+  Future<bool> refreshDashboardDays() async {
+    if (_isLoadingMore) return false;
+    final version = ++_version;
+    try {
+      final page = await repository.getDeliveryDays(
+        offset: 0,
+        limit: max(_pageSize, _days.length),
+      );
+      if (version != _version) return false;
+      _days = page.days;
+      _total = page.total;
+      _status = DeliveryStatus.success;
+      _errorMessage = '';
+      notifyListeners();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> fetchDeliveryDays() async {
     if (_isLoadingMore || (_status == DeliveryStatus.success && !hasMore)) {
       return;

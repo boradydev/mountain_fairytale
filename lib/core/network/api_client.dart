@@ -18,6 +18,13 @@ class ApiClient {
   Future<Map<String, dynamic>> get(String path) async =>
       _decodeJson(await _send(method: 'GET', path: path));
 
+  Future<Map<String, dynamic>> longPoll(
+    String path,
+    HttpRequestCancellation cancellation,
+  ) async => _decodeJson(
+    await _send(method: 'LONG_POLL', path: path, cancellation: cancellation),
+  );
+
   Future<Map<String, dynamic>> post(String path, {Object? body}) async =>
       _decodeJson(await _send(method: 'POST', path: path, body: body));
 
@@ -40,6 +47,7 @@ class ApiClient {
     required String method,
     required String path,
     Object? body,
+    HttpRequestCancellation? cancellation,
   }) {
     return _authService.authenticatedRequest((accessToken) async {
       final headers = <String, String>{
@@ -48,6 +56,11 @@ class ApiClient {
         'Authorization': 'Bearer $accessToken',
       };
       final response = await switch (method) {
+        'LONG_POLL' => _transport.getLongPolling(
+          path,
+          headers: headers,
+          cancellation: cancellation,
+        ),
         'GET' => _transport.get(path, headers: headers),
         'POST' => _transport.post(path, headers: headers, body: body),
         'PUT' => _transport.put(path, headers: headers, body: body),

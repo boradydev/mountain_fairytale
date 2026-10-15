@@ -2,6 +2,16 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+class HttpRequestCancellation {
+  bool _cancelled = false;
+  void Function()? _abort;
+  bool get isCancelled => _cancelled;
+  void cancel() {
+    _cancelled = true;
+    _abort?.call();
+  }
+}
+
 class HttpTransport {
   final String baseUrl;
   final HttpClient _client;
@@ -26,6 +36,18 @@ class HttpTransport {
     Object? body,
   }) => _send(method: 'POST', path: path, headers: headers, body: body);
 
+  Future<HttpTransportResponse> getLongPolling(
+    String path, {
+    Map<String, String>? headers,
+    HttpRequestCancellation? cancellation,
+  }) => _send(
+    method: 'GET',
+    path: path,
+    headers: headers,
+    timeout: const Duration(seconds: 35),
+    cancellation: cancellation,
+  );
+
   Future<HttpTransportResponse> patch(
     String path, {
     Map<String, String>? headers,
@@ -48,16 +70,28 @@ class HttpTransport {
     required String path,
     Map<String, String>? headers,
     Object? body,
+    Duration? timeout,
+    HttpRequestCancellation? cancellation,
   }) {
     HttpClientRequest? request;
     var timedOut = false;
+    final effectiveTimeout = timeout ?? requestTimeout;
+    cancellation?._abort = () =>
+        request?.abort(const HttpException('Request cancelled'));
     Future<HttpTransportResponse> perform() async {
+      if (cancellation?.isCancelled ?? false) {
+        throw const HttpException('Request cancelled');
+      }
       final uri = Uri.parse("${baseUrl.replaceFirst(RegExp(r'/+$'), '')}$path");
       final opened = await _client.openUrl(method, uri);
       request = opened;
+      if (cancellation?.isCancelled ?? false) {
+        opened.abort();
+        throw const HttpException('Request cancelled');
+      }
       if (timedOut) {
         opened.abort();
-        throw TimeoutException('API request timed out.', requestTimeout);
+        throw TimeoutException('API request timed out.', effectiveTimeout);
       }
       opened.headers.contentType = ContentType.json;
       opened.headers.set(HttpHeaders.acceptHeader, 'application/json');
@@ -75,14 +109,18 @@ class HttpTransport {
       );
     }
 
-    return perform().timeout(
-      requestTimeout,
-      onTimeout: () {
-        timedOut = true;
-        request?.abort();
-        throw TimeoutException('API request timed out.', requestTimeout);
-      },
-    );
+    return perform()
+        .timeout(
+          effectiveTimeout,
+          onTimeout: () {
+            timedOut = true;
+            request?.abort();
+            throw TimeoutException('API request timed out.', effectiveTimeout);
+          },
+        )
+        .whenComplete(() {
+          cancellation?._abort = null;
+        });
   }
 
   void close() => _client.close(force: true);

@@ -154,6 +154,23 @@ class ClientsProvider extends SafeChangeNotifier {
   Future<bool> resetClientCooldown(String clientId) =>
       _changeClientCooldown(clientId, null);
 
+  Future<bool> refreshDashboardClients() async {
+    if (isLoading) return false;
+    final version = ++_fetchVersion;
+    try {
+      final loaded = await _repository.getAllClients(
+        includeDeactivated: _showDeactivated,
+      );
+      if (version != _fetchVersion) return false;
+      _clients = loaded;
+      _status = ClientStatus.success;
+      notifyListeners();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<bool> _changeClientCooldown(
     String clientId,
     DateTime? cooldownDate,
