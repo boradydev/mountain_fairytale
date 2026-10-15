@@ -51,66 +51,85 @@ class CommissionsToolbar extends StatelessWidget {
                   selectedForegroundColor: colors.onPrimary,
                 ),
               );
-              final filter = provider.mode == CommissionMode.representatives
-                  ? Tooltip(
-                      message: 'Показать всех представителей, включая деактивированных без клиентов и начислений',
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Switch(
-                            value: provider.includeDeactivated,
-                            onChanged: provider.setIncludeDeactivated,
-                          ),
-                          const SizedBox(width: 8),
-                          const Text('Деактивированные'),
-                        ],
-                      ),
-                    )
-                  : const SizedBox.shrink();
+              final filter = SizedBox(
+                width: 232 * scale,
+                height: controlHeight,
+                child: provider.mode == CommissionMode.representatives
+                    ? Tooltip(
+                        message: 'Показать всех представителей, включая деактивированных без клиентов и начислений',
+                        child: Row(
+                          children: [
+                            Switch(
+                              value: provider.includeDeactivated,
+                              onChanged: provider.setIncludeDeactivated,
+                            ),
+                            const SizedBox(width: 8),
+                            const Expanded(
+                              child: Text(
+                                'Деактивированные',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : null,
+              );
 
-              final monthControl = Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    tooltip: 'Предыдущий месяц',
-                    onPressed: provider.loading
-                        ? null
-                        : () => provider.setMonth(
-                            DateTime(
-                              provider.month.year,
-                              provider.month.month - 1,
+              final monthControl = SizedBox(
+                width: 300 * scale,
+                height: controlHeight,
+                child: Row(
+                  children: [
+                    IconButton(
+                      tooltip: 'Предыдущий месяц',
+                      onPressed: provider.loading
+                          ? null
+                          : () => provider.setMonth(
+                              DateTime(
+                                provider.month.year,
+                                provider.month.month - 1,
+                              ),
                             ),
-                          ),
-                    icon: const Icon(Icons.chevron_left),
-                  ),
-                  TextButton.icon(
-                    key: const ValueKey('commissions-month-control'),
-                    icon: const Icon(Icons.calendar_month_outlined),
-                    label: Text(commissionPeriodLabel(provider.month)),
-                    onPressed: () async {
-                      final month = await showDialog<DateTime>(
-                        context: context,
-                        builder: (_) =>
-                            MonthPickerDialog(initialMonth: provider.month),
-                      );
-                      if (month != null && context.mounted) {
-                        await provider.setMonth(month);
-                      }
-                    },
-                  ),
-                  IconButton(
-                    tooltip: 'Следующий месяц',
-                    onPressed: provider.loading
-                        ? null
-                        : () => provider.setMonth(
-                            DateTime(
-                              provider.month.year,
-                              provider.month.month + 1,
+                      icon: const Icon(Icons.chevron_left),
+                    ),
+                    Expanded(
+                      child: TextButton.icon(
+                        key: const ValueKey('commissions-month-control'),
+                        icon: const Icon(Icons.calendar_month_outlined),
+                        label: Text(
+                          commissionPeriodLabel(provider.month),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        onPressed: () async {
+                          final month = await showDialog<DateTime>(
+                            context: context,
+                            builder: (_) => MonthPickerDialog(
+                              initialMonth: provider.month,
                             ),
-                          ),
-                    icon: const Icon(Icons.chevron_right),
-                  ),
-                ],
+                          );
+                          if (month != null && context.mounted) {
+                            await provider.setMonth(month);
+                          }
+                        },
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Следующий месяц',
+                      onPressed: provider.loading
+                          ? null
+                          : () => provider.setMonth(
+                              DateTime(
+                                provider.month.year,
+                                provider.month.month + 1,
+                              ),
+                            ),
+                      icon: const Icon(Icons.chevron_right),
+                    ),
+                  ],
+                ),
               );
 
               final controls = Wrap(
