@@ -3,7 +3,7 @@ import 'package:mountain_fairytale/features/audit_event/ui/audit_event_screen.da
 import 'package:mountain_fairytale/features/auth/ui/auth_provider.dart';
 import 'package:mountain_fairytale/features/dashboard/ui/dashboard_screen.dart';
 import 'package:mountain_fairytale/features/employees/ui/employees_screen.dart';
-import 'package:mountain_fairytale/features/sales_representative_commissions/ui/sales_analytics_screen.dart';
+import 'package:mountain_fairytale/features/commissions/ui/commissions_screen.dart';
 import 'package:mountain_fairytale/shared/widgets/account_menu_button.dart';
 import 'package:mountain_fairytale/shared/widgets/theme_toggle_button.dart';
 import 'package:provider/provider.dart';
@@ -23,7 +23,7 @@ class _AppShellState extends State<AppShell> {
 
   static const _screens = <Widget>[
     DeliveryDaysScreen(),
-    SalesRepresentativeCommissionScreen(),
+    CommissionsScreen(),
     AuditLogScreen(),
     EmployeesScreen(),
   ];
@@ -85,7 +85,7 @@ class _AppShellState extends State<AppShell> {
             },
             tabs: [
               const Tab(text: 'Дашборд'),
-              const Tab(text: 'Вознаграждения'),
+              const Tab(text: 'Комиссии'),
               const Tab(text: 'Журнал событий'),
               if (isAdmin) const Tab(text: 'Сотрудники'),
             ],

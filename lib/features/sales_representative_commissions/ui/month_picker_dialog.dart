@@ -47,7 +47,7 @@ class MonthPickerDialogState extends State<MonthPickerDialog> {
             Row(
               children: [
                 IconButton(
-                  onPressed: () => setState(() => _year--),
+                  onPressed: _year > 1 ? () => setState(() => _year--) : null,
                   icon: const Icon(Icons.chevron_left),
                 ),
                 Expanded(
@@ -59,7 +59,9 @@ class MonthPickerDialogState extends State<MonthPickerDialog> {
                   ),
                 ),
                 IconButton(
-                  onPressed: () => setState(() => _year++),
+                  onPressed: _year < 9998
+                      ? () => setState(() => _year++)
+                      : null,
                   icon: const Icon(Icons.chevron_right),
                 ),
               ],

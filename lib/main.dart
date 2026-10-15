@@ -1,3 +1,5 @@
+import 'package:mountain_fairytale/features/commissions/data/commissions_repo.dart';
+import 'package:mountain_fairytale/features/commissions/ui/commissions_provider.dart';
 import 'package:mountain_fairytale/features/delivery_route/delivery_route_abcs.dart';
 import 'package:mountain_fairytale/features/pickup/pickup_abcs.dart';
 import 'package:mountain_fairytale/features/sales_representatives/data/sales_representative_api_repo.dart';
@@ -23,7 +25,6 @@ import 'package:mountain_fairytale/features/cars/data/cars_repo.dart';
 import 'package:mountain_fairytale/features/cars/data/cars_api_data_source.dart';
 import 'package:mountain_fairytale/features/clients/data/clients_repo.dart';
 import 'package:mountain_fairytale/features/clients/data/clients_api_data_source.dart';
-import 'package:mountain_fairytale/features/clients/data/clients_demo_data.dart';
 import 'package:mountain_fairytale/features/delivery_days/data/delivery_days_repo.dart';
 import 'package:mountain_fairytale/features/delivery_days/data/delivery_days_api_data_source.dart';
 import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_repo.dart';
@@ -40,12 +41,6 @@ import 'package:mountain_fairytale/features/pickup/data/pickup_repo.dart';
 import 'package:mountain_fairytale/features/pickup/data/pickup_api_data_source.dart';
 import 'package:mountain_fairytale/features/products/data/products_repo.dart';
 import 'package:mountain_fairytale/features/products/data/products_api_data_source.dart';
-import 'package:mountain_fairytale/features/sales_representative_clients/data/sales_representative_clients_repo.dart';
-import 'package:mountain_fairytale/features/sales_representative_clients/data/sales_representative_client_demo_data.dart';
-import 'package:mountain_fairytale/features/sales_representative_commissions/data/sales_representative_commission_repo.dart';
-import 'package:mountain_fairytale/features/sales_representative_commissions/data/sales_representative_commission_demo_data.dart';
-import 'package:mountain_fairytale/features/sales_representatives/data/sales_representative_repo.dart';
-import 'package:mountain_fairytale/features/sales_representatives/data/sales_representative_demo_data.dart';
 import 'package:mountain_fairytale/core/window_settings_service.dart';
 import 'package:mountain_fairytale/l10n/app_localizations.dart';
 import 'package:mountain_fairytale/features/audit_event/ui/audit_event_provider.dart';
@@ -55,9 +50,6 @@ import 'package:mountain_fairytale/features/delivery_days/ui/delivery_days_provi
 import 'package:mountain_fairytale/shared/providers/locale_provider.dart';
 import 'package:mountain_fairytale/features/pickup/ui/pickup_constructor_provider.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_provider.dart';
-import 'package:mountain_fairytale/features/sales_representative_clients/ui/sales_representative_clients_provider.dart';
-import 'package:mountain_fairytale/features/sales_representative_commissions/ui/sales_representative_commission_provider.dart';
-import 'package:mountain_fairytale/features/sales_representatives/ui/sales_representative_provider.dart';
 import 'package:mountain_fairytale/shared/providers/theme_provider.dart';
 import 'package:mountain_fairytale/app/app_shell.dart';
 import 'package:mountain_fairytale/features/products/products_abcs.dart';
@@ -105,7 +97,7 @@ Future<void> main() async {
     );
 
     windowManager.waitUntilReadyToShow(windowOptions, () async {
-      if (restorePosition && storedPosition != null) {
+      if (restorePosition) {
         await windowManager.setPosition(storedPosition);
       }
       await windowManager.show();
@@ -114,39 +106,6 @@ Future<void> main() async {
 
     windowManager.addListener(WindowSettingsService());
   }
-  // ===========================================================================
-  // 1. ИНИЦИАЛИЗАЦИЯ АТОМАРНЫХ ДАННЫХ (DATA SOURCES)
-  // Каждый источник независим, хранит свой кэш и имитирует сетевые запросы
-  // ===========================================================================
-  final analyticsDemoClientDataSource = DemoClientDataSource();
-  final salesRepDataSource = DemoSalesRepresentativeDataSource();
-  final salesRepCommissionDataSource =
-      DemoSalesRepresentativeCommissionDataSource();
-
-  // ===========================================================================
-  // 2. ИНИЦИАЛИЗАЦИЯ РЕПОЗИТОРИЕВ
-  // Принимают сущности от UI, конвертируют в JSON-Map и общаются с Data Sources
-  // ===========================================================================
-  final salesRepRepository = SalesRepresentativeRepositoryImpl(
-    salesRepDataSource,
-  );
-  final salesRepCommissionRepository =
-      SalesRepresentativeCommissionRepositoryImpl(
-        salesRepCommissionDataSource,
-      );
-
-  // Инициализация модуля клиентов торгового представителя
-  final salesRepClientDataSource = DemoSalesRepresentativeClientDataSource(
-    clientDataSource: analyticsDemoClientDataSource,
-    salesRepRepo: salesRepRepository,
-  );
-  final salesRepClientRepository = SalesRepresentativeClientRepositoryImpl(
-    salesRepClientDataSource,
-  );
-
-  // ===========================================================================
-  // 3. ИНИЦИАЛИЗАЦИЯ СЕРВИСОВ
-  // ===========================================================================
   final routePrintService = WindowsRoutePrintService(RouteSheetPdfBuilder());
   final httpTransport = HttpTransport(
     baseUrl: const String.fromEnvironment(
@@ -234,17 +193,6 @@ Future<void> main() async {
       create: (context) => ClientsProvider(clientRepository),
     ),
 
-    // Провайдер торговых представителей
-    ChangeNotifierProvider(
-      create: (_) => SalesRepresentativeProvider(salesRepRepository),
-    ),
-
-    // Провайдер деталей клиентов торгового представителя
-    ChangeNotifierProvider(
-      create: (context) =>
-          SalesRepresentativeClientsProvider(salesRepClientRepository),
-    ),
-
     // Обновленный провайдер конструктора маршрутов со строго изолированными репозиториями
     ChangeNotifierProvider(
       create: (context) => RouteConstructorProvider(
@@ -258,9 +206,7 @@ Future<void> main() async {
       ),
     ),
     ChangeNotifierProvider(
-      create: (_) => SalesRepresentativeCommissionProvider(
-        salesRepCommissionRepository,
-      ),
+      create: (_) => CommissionsProvider(ApiCommissionsRepository(apiClient)),
     ),
     ChangeNotifierProvider(
       create: (context) => PickupConstructorProvider(

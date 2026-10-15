@@ -1,3 +1,9 @@
+import 'package:mountain_fairytale/features/commissions/ui/commission_widgets.dart';
+import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
+import 'package:mountain_fairytale/features/commissions/data/commission_amount.dart';
+import 'package:mountain_fairytale/features/commissions/data/commission_models.dart';
+import 'package:mountain_fairytale/features/commissions/data/commissions_repo.dart';
+import 'package:mountain_fairytale/features/commissions/ui/commissions_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mountain_fairytale/app/app_shell.dart';
@@ -16,9 +22,6 @@ import 'package:mountain_fairytale/features/delivery_days/ui/delivery_days_provi
 import 'package:mountain_fairytale/features/employees/data/employee_model.dart';
 import 'package:mountain_fairytale/features/employees/employees_abcs.dart';
 import 'package:mountain_fairytale/features/employees/ui/employees_provider.dart';
-import 'package:mountain_fairytale/features/sales_representative_commissions/data/sales_representative_commission_model.dart';
-import 'package:mountain_fairytale/features/sales_representative_commissions/sales_representative_commission_abcs.dart';
-import 'package:mountain_fairytale/features/sales_representative_commissions/ui/sales_representative_commission_provider.dart';
 import 'package:mountain_fairytale/l10n/app_localizations.dart';
 import 'package:mountain_fairytale/shared/providers/theme_provider.dart';
 import 'package:mountain_fairytale/shared/widgets/locate_toggle_widget.dart';
@@ -73,21 +76,23 @@ class _AuditRepository implements AuditLogRepository {
   }
 }
 
-class _CommissionRepository implements SalesRepresentativeCommissionRepository {
+class _CommissionRepository implements CommissionsRepository {
   int calls = 0;
-
   @override
-  Future<SalesRepresentativeCommissionReport>
-  getSalesRepresentativeCommissions({
-    required DateTime dateFrom,
-    required DateTime dateTo,
+  Future<CommissionReport> report(
+    DateTime month, {
+    required bool includeDeactivated,
   }) async {
     calls++;
-    return const SalesRepresentativeCommissionReport(
-      commissions: [],
-      totalCommissionAmount: 0,
+    return const CommissionReport(
+      representatives: [],
+      employees: [],
+      unassignedTurnover: CommissionAmount.zero,
     );
   }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class _EmployeeRepository implements EmployeeRepository {
@@ -106,7 +111,7 @@ class _EmployeeRepository implements EmployeeRepository {
 void main() {
   for (final isAdmin in [false, true]) {
     testWidgets(
-      'loads tabs on demand and retains client mode, search, month; admin=$isAdmin',
+      'loads tabs on demand and retains client mode and commission month; admin=$isAdmin',
       (tester) async {
         tester.view.physicalSize = const Size(1400, 900);
         tester.view.devicePixelRatio = 1;
@@ -135,7 +140,7 @@ void main() {
         final auditRepo = _AuditRepository();
         final audit = AuditLogProvider(auditRepo);
         final commissionRepo = _CommissionRepository();
-        final commissions = SalesRepresentativeCommissionProvider(
+        final commissions = CommissionsProvider(
           commissionRepo,
         );
         final theme = ThemeProvider(prefs);
@@ -200,7 +205,7 @@ void main() {
         expect(find.text('Добавить клиента'), findsNothing);
 
         if (isAdmin) {
-          await tester.tap(find.text('Сотрудники'));
+          await tester.tap(find.widgetWithText(Tab, 'Сотрудники'));
           await tester.pumpAndSettle();
           expect(employeeRepo.calls, 1);
           expect(find.text('Сотрудники ещё не добавлены.'), findsOneWidget);
@@ -209,20 +214,22 @@ void main() {
 
         await tester.tap(find.text('Журнал событий'));
         await tester.pumpAndSettle();
-        await tester.enterText(find.byType(TextField), 'доставка');
-        await tester.pump(const Duration(milliseconds: 300));
-        await tester.pumpAndSettle();
-        expect(auditRepo.searches, [null, 'доставка']);
+        expect(auditRepo.searches, [null]);
 
-        await tester.tap(find.text('Вознаграждения'));
+        await tester.tap(find.text('Комиссии'));
         await tester.pumpAndSettle();
         expect(commissionRepo.calls, 1);
-        await tester.tap(find.text('Выбрать месяц'));
+        await tester.tap(
+          find.widgetWithText(
+            AppSecondaryButton,
+            commissionPeriodLabel(commissions.month),
+          ),
+        );
         await tester.pumpAndSettle();
         await tester.tap(find.text('Февраль'));
         await tester.tap(find.text('Выбрать'));
         await tester.pumpAndSettle();
-        expect(commissions.dateFrom.month, 2);
+        expect(commissions.month.month, 2);
         await tester.tap(find.text('Обновить'));
         await tester.pumpAndSettle();
         expect(commissionRepo.calls, 3);
@@ -244,11 +251,7 @@ void main() {
 
         await tester.tap(find.text('Журнал событий'));
         await tester.pumpAndSettle();
-        expect(
-          tester.widget<TextField>(find.byType(TextField)).controller!.text,
-          'доставка',
-        );
-        expect(auditRepo.searches.length, 2);
+        expect(auditRepo.searches.length, 1);
         await tester.tap(find.text('Дашборд'));
         await tester.pumpAndSettle();
         expect(
@@ -264,15 +267,15 @@ void main() {
         expect(find.text('Добавить клиента'), findsOneWidget);
         expect(clientRepo.calls, 1);
         expect(dayRepo.calls, 1);
-        await tester.tap(find.text('Вознаграждения'));
+        await tester.tap(find.text('Комиссии'));
         await tester.pumpAndSettle();
         expect(
-          find.text('Февраль ${commissions.dateFrom.year}'),
+          find.text('Февраль ${commissions.month.year}'),
           findsOneWidget,
         );
-        expect(commissionRepo.calls, 3);
+        expect(commissionRepo.calls, 4);
         if (isAdmin) {
-          await tester.tap(find.text('Сотрудники'));
+          await tester.tap(find.widgetWithText(Tab, 'Сотрудники'));
           await tester.pumpAndSettle();
           expect(employeeRepo.calls, 1);
         }
