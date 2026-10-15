@@ -73,22 +73,39 @@ Future<void> main() async {
 
   final prefs = await SharedPreferences.getInstance();
 
-  double width = prefs.getDouble('window_width') ?? 1200;
-  double height = prefs.getDouble('window_height') ?? 600;
-  double? posX = prefs.getDouble('window_x');
-  double? posY = prefs.getDouble('window_y');
+  final storedSize = Size(
+    prefs.getDouble('window_width') ??
+        WindowSettingsService.defaultWindowSize.width,
+    prefs.getDouble('window_height') ??
+        WindowSettingsService.defaultWindowSize.height,
+  );
+  final windowSize = WindowSettingsService.isValidSize(storedSize)
+      ? storedSize
+      : WindowSettingsService.defaultWindowSize;
+  final posX = prefs.getDouble('window_x');
+  final posY = prefs.getDouble('window_y');
 
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-    WindowOptions windowOptions = WindowOptions(
-      size: Size(width, height),
-      minimumSize: Size(1200, 600),
-      center: posX == null,
+    final storedPosition = posX != null && posY != null
+        ? Offset(posX, posY)
+        : null;
+    final restorePosition =
+        storedPosition != null &&
+        await WindowSettingsService.isPositionVisible(
+          storedPosition,
+          windowSize,
+        );
+
+    final windowOptions = WindowOptions(
+      size: windowSize,
+      minimumSize: WindowSettingsService.minimumWindowSize,
+      center: !restorePosition,
       title: "Mountain Fairytale",
     );
 
     windowManager.waitUntilReadyToShow(windowOptions, () async {
-      if (posX != null && posY != null) {
-        await windowManager.setPosition(Offset(posX, posY));
+      if (restorePosition && storedPosition != null) {
+        await windowManager.setPosition(storedPosition);
       }
       await windowManager.show();
       await windowManager.focus();
