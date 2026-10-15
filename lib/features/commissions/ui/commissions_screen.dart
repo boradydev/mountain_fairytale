@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:mountain_fairytale/features/clients/ui/clients_provider.dart';
-import 'package:mountain_fairytale/features/sales_representative_commissions/ui/month_picker_dialog.dart';
 import 'package:mountain_fairytale/shared/widgets/base_card_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 
-import 'package:mountain_fairytale/features/commissions/data/commission_amount.dart';
 import 'package:mountain_fairytale/features/commissions/data/commission_models.dart';
 import 'package:mountain_fairytale/features/commissions/ui/commission_widgets.dart';
 import 'package:mountain_fairytale/features/commissions/ui/commissions_provider.dart';
+import 'package:mountain_fairytale/features/commissions/ui/commissions_toolbar.dart';
 import 'package:mountain_fairytale/features/commissions/ui/representative_commission_dialog.dart';
 
 class CommissionsScreen extends StatefulWidget {
@@ -17,14 +16,8 @@ class CommissionsScreen extends StatefulWidget {
   State<CommissionsScreen> createState() => _CommissionsScreenState();
 }
 
-class _CommissionsScreenState extends State<CommissionsScreen>
-    with WidgetsBindingObserver {
+class _CommissionsScreenState extends State<CommissionsScreen> {
   bool _visible = false;
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-  }
 
   @override
   void didChangeDependencies() {
@@ -39,89 +32,19 @@ class _CommissionsScreenState extends State<CommissionsScreen>
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && _visible && mounted) {
-      context.read<CommissionsProvider>().refresh();
-    }
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final provider = context.watch<CommissionsProvider>();
     final report = provider.report;
-    final colors = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: Wrap(
-            spacing: 16,
-            runSpacing: 12,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              SegmentedButton<CommissionMode>(
-                segments: const [
-                  ButtonSegment(
-                    value: CommissionMode.representatives,
-                    label: Text('Представители'),
-                    icon: Icon(Icons.people_outline),
-                  ),
-                  ButtonSegment(
-                    value: CommissionMode.employees,
-                    label: Text('Сотрудники'),
-                    icon: Icon(Icons.badge_outlined),
-                  ),
-                ],
-                selected: {provider.mode},
-                onSelectionChanged: (value) => provider.setMode(value.single),
-                style: SegmentedButton.styleFrom(
-                  selectedBackgroundColor: colors.primary,
-                  selectedForegroundColor: colors.onPrimary,
-                ),
-              ),
-              if (provider.mode == CommissionMode.representatives)
-                Tooltip(
-                  message: 'Показать всех представителей, включая деактивированных без клиентов и начислений',
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Switch(
-                        value: provider.includeDeactivated,
-                        onChanged: provider.setIncludeDeactivated,
-                      ),
-                      const SizedBox(width: 8),
-                      const Text('Деактивированные'),
-                    ],
-                  ),
-                ),
-              AppSecondaryButton(
-                text: commissionPeriodLabel(provider.month),
-                onPressed: () async {
-                  final selected = await showDialog<DateTime>(
-                    context: context,
-                    builder: (_) =>
-                        MonthPickerDialog(initialMonth: provider.month),
-                  );
-                  if (selected != null && context.mounted) {
-                    await provider.setMonth(selected);
-                  }
-                },
-              ),
-              AppSecondaryButton(
-                text: 'Обновить',
-                onPressed: provider.loading ? null : provider.refresh,
-              ),
-            ],
-          ),
+        CommissionsToolbar(provider: provider, report: report),
+        SizedBox(
+          height: 3,
+          child: provider.loading
+              ? const LinearProgressIndicator(minHeight: 3)
+              : null,
         ),
-        if (provider.loading) const LinearProgressIndicator(),
         if (provider.error != null)
           Padding(
             padding: const EdgeInsets.all(12),
@@ -136,7 +59,6 @@ class _CommissionsScreenState extends State<CommissionsScreen>
               ],
             ),
           ),
-        if (report != null) _Summary(report, provider.mode),
         Expanded(
           child: report == null
               ? Center(
@@ -286,45 +208,4 @@ class _CommissionsScreenState extends State<CommissionsScreen>
       },
     );
   }
-}
-
-class _Summary extends StatelessWidget {
-  final CommissionReport report;
-  final CommissionMode mode;
-  const _Summary(this.report, this.mode);
-  @override
-  Widget build(BuildContext context) => AppBaseCard(
-    child: Wrap(
-      spacing: 32,
-      runSpacing: 16,
-      children: [
-        CommissionMetric(
-          'Общий оборот',
-          formatCommissionCents(report.totalTurnover),
-        ),
-        CommissionMetric(
-          'Всего к выплате',
-          formatCommissionCents(report.totalPayable),
-        ),
-        CommissionMetric(
-          'Представителям',
-          formatCommissionCents(report.representativesPayable),
-        ),
-        CommissionMetric(
-          'Сотрудникам',
-          formatCommissionCents(report.employeesPayable),
-        ),
-        CommissionMetric(
-          mode == CommissionMode.representatives
-              ? 'Оборот представителей'
-              : 'Общая база сотрудников',
-          formatCommissionCents(
-            mode == CommissionMode.representatives
-                ? report.representedTurnover
-                : report.totalTurnover,
-          ),
-        ),
-      ],
-    ),
-  );
 }
