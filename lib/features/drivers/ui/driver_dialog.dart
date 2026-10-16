@@ -1,3 +1,4 @@
+import 'package:mountain_fairytale/core/state/form_editing.dart';
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/features/drivers/data/driver_model.dart';
 import 'package:mountain_fairytale/features/drivers/ui/driver_activation_dialog.dart';
@@ -29,25 +30,57 @@ class _DriverDialogState extends State<DriverDialog> {
   Driver? _duplicate;
   int _checkVersion = 0;
 
+  late final Map<String, Object?> _originalValues;
+  late final String _originalDuplicateInput;
+  late final DuplicateCheckCoordinator _duplicateCheck;
+  Map<String, Object?> get _values => {'name': _nameController.text.trim()};
+  Map<String, Object?> get _changes =>
+      changedFormFields(_originalValues, _values);
+  String get _duplicateInput => _nameController.text.trim();
+  bool get _needsDuplicateCheck =>
+      !widget.isEditMode || _duplicateInput != _originalDuplicateInput;
+
+  bool get _validDuplicateInput =>
+      _nameController.text.trim().isNotEmpty &&
+      _nameController.text.trim().length <= 120;
+
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.driver?.name ?? '');
-    _nameFocusNode.addListener(() {
-      if (!_nameFocusNode.hasFocus && !_busy) _checkDuplicate();
-    });
-    _nameController.addListener(() {
-      _checkVersion++;
-      setState(() {
+
+    _originalValues = Map.of(_values);
+    _originalDuplicateInput = _duplicateInput;
+    _duplicateCheck = DuplicateCheckCoordinator(_duplicateInput);
+    _nameController.addListener(_onDuplicateInputChanged);
+  }
+
+  void _onDuplicateInputChanged() {
+    final changed = _duplicateCheck.inputChanged(
+      _duplicateInput,
+      canCheck:
+          _needsDuplicateCheck &&
+          _nameController.text.trim().isNotEmpty &&
+          _nameController.text.trim().length <= 120,
+      check: _checkDuplicate,
+    );
+    setState(() {
+      if (changed) {
+        _checkVersion++;
         _duplicate = null;
         _checkedName = null;
         _checking = false;
         _error = null;
-      });
+      }
     });
   }
 
-  Future<bool> _checkDuplicate() async {
+  Future<bool> _checkDuplicate() =>
+      _duplicateCheck.run(_duplicateInput, _performDuplicateCheck);
+
+  Future<bool> _performDuplicateCheck() async {
+    if (!_needsDuplicateCheck) return true;
+    if (_checkedName == _duplicateInput) return true;
     final name = _nameController.text.trim();
     if (name.isEmpty || name.length > 120) return false;
     final version = ++_checkVersion;
@@ -80,11 +113,16 @@ class _DriverDialogState extends State<DriverDialog> {
   }
 
   Future<void> _save() async {
-    if (_busy || !_formKey.currentState!.validate()) return;
+    if (_busy) return;
+    if (widget.isEditMode && _changes.isEmpty) {
+      Navigator.of(context).pop();
+      return;
+    }
+    if (!_formKey.currentState!.validate()) return;
     final provider = context.read<RouteConstructorProvider>();
     setState(() => _busy = true);
     try {
-      if (!widget.isEditMode && _checkedName != _nameController.text.trim()) {
+      if (_needsDuplicateCheck && _checkedName != _duplicateInput) {
         if (!await _checkDuplicate()) return;
       }
       if (!mounted) return;
@@ -178,6 +216,7 @@ class _DriverDialogState extends State<DriverDialog> {
 
   @override
   void dispose() {
+    _duplicateCheck.dispose();
     _checkVersion++;
     _nameController.dispose();
     _nameFocusNode.dispose();
@@ -191,7 +230,10 @@ class _DriverDialogState extends State<DriverDialog> {
       title: widget.isEditMode
           ? 'Редактирование водителя'
           : 'Добавление водителя',
-      submitButtonText: widget.isEditMode ? 'Сохранить' : 'Добавить',
+      submitButtonText: widget.isEditMode
+          ? (_changes.isEmpty ? 'ОК' : 'Сохранить')
+          : 'Добавить',
+      submitButtonWidth: 160,
       formKey: _formKey,
       onSubmit: _save,
       isBusy: _busy,
@@ -206,6 +248,11 @@ class _DriverDialogState extends State<DriverDialog> {
           : null,
       children: [
         DuplicateCheckStatusWidget(
+          idleText: !_needsDuplicateCheck
+              ? 'Поля проверки не изменены'
+              : _validDuplicateInput
+              ? 'Ожидание завершения ввода…'
+              : 'Для проверки заполните ФИО',
           isChecking: _checking,
           isChecked: _checkedName != null,
           hasDuplicate: _duplicate != null,

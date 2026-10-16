@@ -839,12 +839,13 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
 
   Future<bool> updateProduct(
     String id, {
-    required String name,
-    required double basePrice,
+    String? name,
+    double? basePrice,
   }) async {
-    final normalizedName = name.trim();
+    final normalizedName = name?.trim();
 
-    if (normalizedName.isEmpty || basePrice < 0) {
+    if ((normalizedName != null && normalizedName.isEmpty) ||
+        (basePrice != null && basePrice < 0)) {
       return false;
     }
 

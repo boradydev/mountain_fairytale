@@ -43,16 +43,19 @@ class SalesRepresentativeProvider extends SafeChangeNotifier {
     int id,
     String name,
     String phone,
-    double commissionPercent,
-  ) async {
+    double commissionPercent, {
+    UpdateSalesRepresentativeRequest? changes,
+  }) async {
     final normalizedName = name.trim();
     if (normalizedName.isEmpty) return false;
     try {
-      final request = UpdateSalesRepresentativeRequest(
-        name: normalizedName,
-        phone: phone.trim(),
-        commissionPercent: commissionPercent,
-      );
+      final request =
+          changes ??
+          UpdateSalesRepresentativeRequest(
+            name: normalizedName,
+            phone: phone.trim(),
+            commissionPercent: commissionPercent,
+          );
       final updated = await _repository.updateSalesRepresentative(id, request);
       _salesRepresentatives = _salesRepresentatives
           .map((r) => r.id == id ? updated : r)

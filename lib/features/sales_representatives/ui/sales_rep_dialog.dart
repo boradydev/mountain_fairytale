@@ -1,3 +1,4 @@
+import 'package:mountain_fairytale/core/state/form_editing.dart';
 import 'package:mountain_fairytale/features/sales_representatives/data/sales_representative_api_repo.dart';
 import 'package:mountain_fairytale/core/network/api_exception.dart';
 import 'package:mountain_fairytale/shared/widgets/russian_phone_input_formatter.dart';
@@ -51,6 +52,35 @@ class _SalesRepDialogState extends State<SalesRepDialog> {
 
   bool get _isEditMode => widget.salesRep != null || widget.apiSalesRep != null;
 
+  late final Map<String, Object?> _originalValues;
+  late final String _originalDuplicateInput;
+  late final DuplicateCheckCoordinator _duplicateCheck;
+  String get _normalizedPhone =>
+      _apiMode || RussianPhoneInputFormatter.isComplete(_phoneController.text)
+      ? RussianPhoneInputFormatter.toApiPhone(_phoneController.text)
+      : _phoneController.text.trim();
+  Map<String, Object?> get _values => {
+    'name': _nameController.text.trim(),
+    'phone': _normalizedPhone,
+    'commissionPercent':
+        formNumber(_commissionPercentController.text) ??
+        _commissionPercentController.text.trim(),
+  };
+  Map<String, Object?> get _changes =>
+      changedFormFields(_originalValues, _values);
+  String get _duplicateInput =>
+      _apiMode ? _apiInput : _nameController.text.trim();
+  bool get _needsDuplicateCheck =>
+      !_isEditMode || _duplicateInput != _originalDuplicateInput;
+  bool get _validDuplicateInput =>
+      _nameController.text.trim().isNotEmpty &&
+      _nameController.text.trim().length <= 120 &&
+      (!_apiMode ||
+          RussianPhoneInputFormatter.isComplete(_phoneController.text));
+  void _refreshForm() {
+    if (mounted) setState(() {});
+  }
+
   @override
   void initState() {
     super.initState();
@@ -74,106 +104,125 @@ class _SalesRepDialogState extends State<SalesRepDialog> {
           '',
     );
 
-    _nameFocusNode.addListener(_onFocusChange);
-    if (_apiMode) {
-      for (final controller in [_nameController, _phoneController]) {
-        controller.addListener(() {
-          _checkVersion++;
-          setState(() {
-            _apiDuplicate = null;
-            _checkedApiInput = null;
-            _duplicateChecked = false;
-            _isCheckingDuplicate = false;
-            _error = null;
-          });
-        });
-      }
-      _phoneController.addListener(() => setState(() => _phoneError = null));
+    _originalValues = Map.of(_values);
+    _originalDuplicateInput = _duplicateInput;
+    _duplicateCheck = DuplicateCheckCoordinator(_duplicateInput);
+    for (final controller in [_nameController, _phoneController]) {
+      controller.addListener(_onDuplicateInputChanged);
     }
+    _commissionPercentController.addListener(_refreshForm);
   }
 
-  void _onFocusChange() {
-    if (!_nameFocusNode.hasFocus) {
-      _checkDuplicate();
-    }
-  }
-
-  Future<void> _checkDuplicate() async {
-    if (_apiMode) {
-      await _checkApiDuplicate();
-      return;
-    }
-    final name = _nameController.text.trim();
-    if (name.isEmpty) return;
-
-    if (_isEditMode &&
-        widget.salesRep!.name.trim().toLowerCase() == name.toLowerCase()) {
-      setState(() {
-        _isCheckingDuplicate = false;
-        _duplicateChecked = true;
+  void _onDuplicateInputChanged() {
+    final changed = _duplicateCheck.inputChanged(
+      _duplicateInput,
+      canCheck: _needsDuplicateCheck && _validDuplicateInput,
+      check: _checkDuplicate,
+    );
+    setState(() {
+      if (changed) {
+        _checkVersion++;
+        _apiDuplicate = null;
         _duplicateRep = null;
-      });
-      return;
-    }
+        _checkedApiInput = null;
+        _duplicateChecked = false;
+        _isCheckingDuplicate = false;
+      }
+      _phoneError = null;
+      _error = null;
+    });
+  }
 
+  Future<bool> _checkDuplicate() =>
+      _duplicateCheck.run(_duplicateInput, _performDuplicateCheck);
+
+  Future<bool> _performDuplicateCheck() async {
+    if (!_needsDuplicateCheck || _checkedApiInput == _duplicateInput) {
+      return true;
+    }
+    if (!_validDuplicateInput) return false;
+    final input = _duplicateInput;
+    final version = ++_checkVersion;
     setState(() {
       _isCheckingDuplicate = true;
       _duplicateChecked = false;
-      _duplicateRep = null;
+      _error = null;
     });
-
-    final duplicate = await context
-        .read<SalesRepresentativeProvider>()
-        .checkSalesRepDuplicate(name);
-
-    if (!mounted) return;
-
-    setState(() {
-      _isCheckingDuplicate = false;
-      _duplicateChecked = true;
-      _duplicateRep = duplicate;
-    });
+    try {
+      if (_apiMode) {
+        final found = await widget.apiRepository!.checkDuplicate(
+          _nameController.text.trim(),
+          _normalizedPhone,
+        );
+        if (!mounted || version != _checkVersion) return false;
+        _apiDuplicate = found?.id == widget.apiSalesRep?.id ? null : found;
+      } else {
+        final found = await context
+            .read<SalesRepresentativeProvider>()
+            .checkSalesRepDuplicate(_nameController.text.trim());
+        if (!mounted || version != _checkVersion) return false;
+        _duplicateRep = found?.id == widget.salesRep?.id ? null : found;
+      }
+      setState(() {
+        _checkedApiInput = input;
+        _duplicateChecked = true;
+        _isCheckingDuplicate = false;
+      });
+      return true;
+    } catch (_) {
+      if (mounted && version == _checkVersion) {
+        setState(() {
+          _isCheckingDuplicate = false;
+          _error = 'Не удалось проверить представителей. Повторите попытку.';
+        });
+      }
+      return false;
+    }
   }
 
   Future<void> _submitForm() async {
+    if (_busy) return;
+    if (_isEditMode && _changes.isEmpty) {
+      if (_apiMode) {
+        Navigator.of(context).pop(widget.apiSalesRep);
+      } else {
+        Navigator.of(context).pop();
+      }
+      return;
+    }
     if (_apiMode) {
       await _submitApi();
       return;
     }
     if (!_formKey.currentState!.validate()) return;
-
-    final provider = context.read<SalesRepresentativeProvider>();
-    final name = _nameController.text.trim();
-    final phone = _phoneController.text.trim();
-    final commissionPercent = double.parse(
-      _commissionPercentController.text.trim().replaceAll(',', '.'),
-    );
-    final bool success;
-
-    if (_isEditMode) {
-      success = await provider.updateSalesRepresentative(
-        widget.salesRep!.id,
-        name,
-        phone,
-        commissionPercent,
-      );
-    } else {
-      final created = await provider.addSalesRepresentative(
-        name,
-        phone,
-        commissionPercent,
-      );
-      success = created != null;
-    }
-
-    if (!mounted) return;
-
-    if (success) {
-      Navigator.of(context).pop(success); // Возвращаем признак успеха
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Не удалось сохранить изменения')),
-      );
+    setState(() => _busy = true);
+    try {
+      if (!await _checkDuplicate() || !mounted) return;
+      final provider = context.read<SalesRepresentativeProvider>();
+      final name = _nameController.text.trim();
+      final phone = _normalizedPhone;
+      final percent = formNumber(_commissionPercentController.text)!;
+      final success = _isEditMode
+          ? await provider.updateSalesRepresentative(
+              widget.salesRep!.id,
+              name,
+              phone,
+              percent,
+              changes: UpdateSalesRepresentativeRequest(
+                name: _changes['name'] as String?,
+                phone: _changes['phone'] as String?,
+                commissionPercent: _changes['commissionPercent'] as double?,
+              ),
+            )
+          : await provider.addSalesRepresentative(name, phone, percent) != null;
+      if (!mounted) return;
+      if (success) {
+        Navigator.of(context).pop(true);
+      } else {
+        setState(() => _error = 'Не удалось сохранить изменения.');
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
     }
   }
 
@@ -214,44 +263,7 @@ class _SalesRepDialogState extends State<SalesRepDialog> {
 
   String get _apiInput =>
       '${_nameController.text.trim()}|${RussianPhoneInputFormatter.toApiPhone(_phoneController.text)}';
-  Future<bool> _checkApiDuplicate() async {
-    final name = _nameController.text.trim();
-    if (name.isEmpty ||
-        name.length > 120 ||
-        !RussianPhoneInputFormatter.isComplete(_phoneController.text)) {
-      return false;
-    }
-    if (_checkedApiInput == _apiInput) return true;
-    final version = ++_checkVersion;
-    final input = _apiInput;
-    setState(() {
-      _isCheckingDuplicate = true;
-      _duplicateChecked = false;
-      _error = null;
-    });
-    try {
-      final found = await widget.apiRepository!.checkDuplicate(
-        name,
-        RussianPhoneInputFormatter.toApiPhone(_phoneController.text),
-      );
-      if (!mounted || version != _checkVersion) return false;
-      setState(() {
-        _apiDuplicate = found?.id == widget.apiSalesRep?.id ? null : found;
-        _checkedApiInput = input;
-        _duplicateChecked = true;
-        _isCheckingDuplicate = false;
-      });
-      return true;
-    } catch (_) {
-      if (mounted && version == _checkVersion) {
-        setState(() {
-          _isCheckingDuplicate = false;
-          _error = 'Не удалось проверить представителей. Повторите попытку.';
-        });
-      }
-      return false;
-    }
-  }
+  Future<bool> _checkApiDuplicate() => _checkDuplicate();
 
   Future<void> _submitApi() async {
     if (_busy || !_formKey.currentState!.validate()) return;
@@ -274,11 +286,10 @@ class _SalesRepDialogState extends State<SalesRepDialog> {
               phone: phone,
               commissionPercent: percent,
             )
-          : await widget.apiRepository!.update(widget.apiSalesRep!.id, {
-              'name': name,
-              'phone': phone,
-              'commissionPercent': percent,
-            });
+          : await widget.apiRepository!.update(
+              widget.apiSalesRep!.id,
+              _changes,
+            );
       if (mounted) Navigator.pop(context, saved);
     } catch (error) {
       if (mounted) {
@@ -330,6 +341,7 @@ class _SalesRepDialogState extends State<SalesRepDialog> {
 
   @override
   void dispose() {
+    _duplicateCheck.dispose();
     _checkVersion++;
     _nameController.dispose();
     _phoneController.dispose();
@@ -348,7 +360,10 @@ class _SalesRepDialogState extends State<SalesRepDialog> {
         title: _isEditMode
             ? 'Редактирование представителя'
             : 'Добавление представителя',
-        submitButtonText: _isEditMode ? 'Сохранить' : 'Добавить',
+        submitButtonText: _isEditMode
+            ? (_changes.isEmpty ? 'ОК' : 'Сохранить')
+            : 'Добавить',
+        submitButtonWidth: 160,
         formKey: _formKey,
         onSubmit: _submitForm,
         isBusy: _busy,
@@ -371,6 +386,13 @@ class _SalesRepDialogState extends State<SalesRepDialog> {
             : null,
         children: [
           DuplicateCheckStatusWidget(
+            idleText: !_needsDuplicateCheck
+                ? 'Поля проверки не изменены'
+                : _validDuplicateInput
+                ? 'Ожидание завершения ввода…'
+                : _apiMode
+                ? 'Для проверки заполните имя и телефон'
+                : 'Для проверки заполните имя',
             isChecking: _isCheckingDuplicate,
             isChecked: _duplicateChecked,
             hasDuplicate: _apiMode
@@ -425,6 +447,7 @@ class _SalesRepDialogState extends State<SalesRepDialog> {
             ),
             validator: (value) {
               if (value == null || value.trim().isEmpty) return 'Введите ФИО';
+              if (value.trim().length > 120) return 'Не более 120 символов';
               return null;
             },
           ),

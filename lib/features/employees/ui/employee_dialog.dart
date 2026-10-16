@@ -1,3 +1,4 @@
+import 'package:mountain_fairytale/core/state/form_editing.dart';
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/features/employees/data/employee_model.dart';
 import 'package:mountain_fairytale/features/employees/ui/employee_password_dialog.dart';
@@ -41,6 +42,29 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
 
   bool get _isEditMode => widget.employee != null;
 
+  late final Map<String, Object?> _originalValues;
+  late final String _originalDuplicateInput;
+  late final DuplicateCheckCoordinator _duplicateCheck;
+  Map<String, Object?> get _values => {
+    'username': _usernameController.text.trim(),
+    'commissionPercent': _commissionController.text.trim().isEmpty
+        ? null
+        : formNumber(_commissionController.text) ??
+              _commissionController.text.trim(),
+  };
+  Map<String, Object?> get _changes =>
+      changedFormFields(_originalValues, _values);
+  bool get _needsDuplicateCheck =>
+      !_isEditMode ||
+      _usernameController.text.trim() != _originalDuplicateInput;
+  void _refreshForm() {
+    if (mounted) setState(() {});
+  }
+
+  bool get _validDuplicateInput =>
+      _usernameController.text.trim().isNotEmpty &&
+      _usernameController.text.trim().length <= 50;
+
   @override
   void initState() {
     super.initState();
@@ -51,36 +75,45 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
     _commissionController = TextEditingController(
       text: widget.employee?.commissionPercent?.toString() ?? '',
     );
-    _usernameFocusNode.addListener(_onUsernameFocusChanged);
+    _originalValues = Map.of(_values);
+    _originalDuplicateInput = _usernameController.text.trim();
+    _duplicateCheck = DuplicateCheckCoordinator(_originalDuplicateInput);
+    _commissionController.addListener(_refreshForm);
   }
 
-  void _onUsernameFocusChanged() {
-    if (!_usernameFocusNode.hasFocus && !_busy) _checkDuplicate();
-  }
+  Future<bool> _checkDuplicate() => _duplicateCheck.run(
+    _usernameController.text.trim(),
+    _performDuplicateCheck,
+  );
 
-  Future<void> _checkDuplicate() async {
+  Future<bool> _performDuplicateCheck() async {
     final username = _usernameController.text.trim();
-    if (username.isEmpty || username.length > 50) return;
+    if (!_needsDuplicateCheck || _checkedUsername == username) return true;
+    if (username.isEmpty || username.length > 50) return false;
     final version = ++_checkVersion;
     setState(() {
       _checking = true;
       _checkedUsername = null;
       _duplicate = null;
+      _error = null;
     });
     try {
       final duplicate = await widget.provider.checkDuplicate(username);
-      if (!mounted || version != _checkVersion) return;
+      if (!mounted || version != _checkVersion) return false;
       setState(() {
         _checking = false;
         _checkedUsername = username;
         _duplicate = duplicate?.id == widget.employee?.id ? null : duplicate;
       });
+      return true;
     } catch (_) {
-      if (!mounted || version != _checkVersion) return;
-      setState(() {
-        _checking = false;
-        _error = 'Не удалось проверить логин. Повторите попытку.';
-      });
+      if (mounted && version == _checkVersion) {
+        setState(() {
+          _checking = false;
+          _error = 'Не удалось проверить логин. Повторите попытку.';
+        });
+      }
+      return false;
     }
   }
 
@@ -114,21 +147,34 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
   }
 
   void _onUsernameChanged() {
-    _checkVersion++;
+    final changed = _duplicateCheck.inputChanged(
+      _usernameController.text.trim(),
+      canCheck:
+          _needsDuplicateCheck &&
+          _usernameController.text.trim().isNotEmpty &&
+          _usernameController.text.trim().length <= 50,
+      check: _checkDuplicate,
+    );
     setState(() {
-      _duplicate = null;
-      _checkedUsername = null;
-      _checking = false;
+      if (changed) {
+        _checkVersion++;
+        _duplicate = null;
+        _checkedUsername = null;
+        _checking = false;
+      }
+      _usernameError = null;
+      _error = null;
     });
-    if (_usernameError != null || widget.provider.usernameError != null) {
-      setState(() => _usernameError = null);
-      widget.provider.clearUsernameError();
-    }
-    if (_error != null) setState(() => _error = null);
+    widget.provider.clearUsernameError();
   }
 
   Future<void> _save() async {
-    if (_busy || !_formKey.currentState!.validate()) return;
+    if (_busy) return;
+    if (_isEditMode && _changes.isEmpty) {
+      Navigator.of(context).pop(widget.employee);
+      return;
+    }
+    if (!_formKey.currentState!.validate()) return;
     final username = _usernameController.text.trim();
     final commissionPercent = double.tryParse(
       _commissionController.text.trim().replaceAll(',', '.'),
@@ -140,16 +186,18 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
     });
     widget.provider.clearError();
     try {
-      if (_checkedUsername != username) await _checkDuplicate();
+      await _checkDuplicate();
       if (!mounted) return;
       final Employee? saved;
       if (_isEditMode) {
         saved = await widget.provider.updateEmployee(
           widget.employee!.id,
           UpdateEmployeeRequest(
-            username: username,
-            commissionPercent: commissionPercent,
-            clearCommissionPercent: commissionPercent == null,
+            username: _changes['username'] as String?,
+            commissionPercent: _changes['commissionPercent'] as double?,
+            clearCommissionPercent:
+                _changes.containsKey('commissionPercent') &&
+                commissionPercent == null,
           ),
         );
       } else {
@@ -233,7 +281,7 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
   @override
   void dispose() {
     _checkVersion++;
-    _usernameFocusNode.removeListener(_onUsernameFocusChanged);
+    _duplicateCheck.dispose();
     _usernameFocusNode.dispose();
     _usernameController.removeListener(_onUsernameChanged);
     _usernameController.dispose();
@@ -249,7 +297,10 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
       title: _isEditMode
           ? 'Редактирование сотрудника'
           : 'Добавление сотрудника',
-      submitButtonText: _isEditMode ? 'Сохранить' : 'Добавить',
+      submitButtonText: _isEditMode
+          ? (_changes.isEmpty ? 'ОК' : 'Сохранить')
+          : 'Добавить',
+      submitButtonWidth: 160,
       formKey: _formKey,
       onSubmit: _save,
       isBusy: _busy,
@@ -270,6 +321,11 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
           : null,
       children: [
         DuplicateCheckStatusWidget(
+          idleText: !_needsDuplicateCheck
+              ? 'Поля проверки не изменены'
+              : _validDuplicateInput
+              ? 'Ожидание завершения ввода…'
+              : 'Для проверки заполните логин',
           isChecking: _checking,
           isChecked: _checkedUsername != null,
           hasDuplicate: _duplicate != null,

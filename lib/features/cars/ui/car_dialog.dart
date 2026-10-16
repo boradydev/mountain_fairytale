@@ -1,3 +1,4 @@
+import 'package:mountain_fairytale/core/state/form_editing.dart';
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/features/cars/data/cars_model.dart';
 import 'package:mountain_fairytale/features/cars/data/cars_number.dart';
@@ -38,36 +39,70 @@ class _CarDialogState extends State<CarDialog> {
 
   bool get _isEditMode => widget.car != null;
 
+  late final Map<String, Object?> _originalValues;
+  late final String _originalDuplicateInput;
+  late final DuplicateCheckCoordinator _duplicateCheck;
+  Map<String, Object?> get _values => {
+    'model': _modelController.text.trim(),
+    'number': canonicalCarNumber(_numberController.text),
+    'currentMileage': _mileageController.text.trim().isEmpty
+        ? (widget.car?.currentMileage ?? 0.0)
+        : formNumber(_mileageController.text),
+  };
+  Map<String, Object?> get _changes =>
+      changedFormFields(_originalValues, _values);
+  String get _duplicateInput => canonicalCarNumber(_numberController.text);
+  bool get _needsDuplicateCheck =>
+      !_isEditMode || _duplicateInput != _originalDuplicateInput;
+  void _refreshForm() {
+    if (mounted) setState(() {});
+  }
+
+  bool get _validDuplicateInput => isValidCarNumber(_numberController.text);
+
   @override
   void initState() {
     super.initState();
     _modelController = TextEditingController(text: widget.car?.model ?? '');
     _numberController = TextEditingController(
       text: formatCarNumber(widget.car?.number ?? ''),
-    )..addListener(_onNumberChanged);
+    );
     _mileageController = TextEditingController(
       text: widget.car?.currentMileage.toString() ?? '0',
     );
-    _numberFocusNode.addListener(_onFocusChange);
+    _originalValues = Map.of(_values);
+    _originalDuplicateInput = _duplicateInput;
+    _duplicateCheck = DuplicateCheckCoordinator(_duplicateInput);
+    _modelController.addListener(_refreshForm);
+    _mileageController.addListener(_refreshForm);
+    _numberController.addListener(_onNumberChanged);
   }
 
   void _onNumberChanged() {
-    _checkVersion++;
-    if (!mounted) return;
+    final changed = _duplicateCheck.inputChanged(
+      _duplicateInput,
+      canCheck:
+          _needsDuplicateCheck && isValidCarNumber(_numberController.text),
+      check: _checkDuplicate,
+    );
     setState(() {
-      _duplicateCar = null;
-      _duplicateChecked = false;
-      _checkedNumber = null;
-      _isCheckingDuplicate = false;
+      if (changed) {
+        _checkVersion++;
+        _duplicateCar = null;
+        _checkedNumber = null;
+        _isCheckingDuplicate = false;
+        _duplicateChecked = false;
+      }
       _error = null;
     });
   }
 
-  void _onFocusChange() {
-    if (!_numberFocusNode.hasFocus && !_busy) _checkDuplicate();
-  }
+  Future<bool> _checkDuplicate() =>
+      _duplicateCheck.run(_duplicateInput, _performDuplicateCheck);
 
-  Future<bool> _checkDuplicate() async {
+  Future<bool> _performDuplicateCheck() async {
+    if (!_needsDuplicateCheck) return true;
+    if (_checkedNumber == _duplicateInput) return true;
     final number = canonicalCarNumber(_numberController.text);
     if (!isValidCarNumber(number)) return false;
 
@@ -114,7 +149,12 @@ class _CarDialogState extends State<CarDialog> {
   }
 
   Future<void> _save() async {
-    if (_busy || !_formKey.currentState!.validate()) return;
+    if (_busy) return;
+    if (_isEditMode && _changes.isEmpty) {
+      Navigator.of(context).pop();
+      return;
+    }
+    if (!_formKey.currentState!.validate()) return;
     setState(() {
       _busy = true;
       _error = null;
@@ -139,15 +179,15 @@ class _CarDialogState extends State<CarDialog> {
       final provider = context.read<RouteConstructorProvider>();
       final model = _modelController.text.trim();
       final mileage =
-          double.tryParse(_mileageController.text.trim()) ??
+          formNumber(_mileageController.text) ??
           widget.car?.currentMileage ??
           0.0;
       final success = _isEditMode
           ? await provider.updateCar(
               widget.car!.id,
-              model: model,
-              number: number,
-              currentMileage: mileage,
+              model: _changes['model'] as String?,
+              number: _changes['number'] as String?,
+              currentMileage: _changes['currentMileage'] as double?,
             )
           : await provider.addCar(
                   model: model,
@@ -214,6 +254,7 @@ class _CarDialogState extends State<CarDialog> {
 
   @override
   void dispose() {
+    _duplicateCheck.dispose();
     _checkVersion++;
     _modelController.dispose();
     _numberController
@@ -230,7 +271,10 @@ class _CarDialogState extends State<CarDialog> {
       title: _isEditMode
           ? 'Редактирование автомобиля'
           : 'Добавление автомобиля',
-      submitButtonText: _isEditMode ? 'Сохранить' : 'Добавить',
+      submitButtonText: _isEditMode
+          ? (_changes.isEmpty ? 'ОК' : 'Сохранить')
+          : 'Добавить',
+      submitButtonWidth: 160,
       formKey: _formKey,
       onSubmit: _save,
       isBusy: _busy,
@@ -245,6 +289,11 @@ class _CarDialogState extends State<CarDialog> {
           : null,
       children: [
         DuplicateCheckStatusWidget(
+          idleText: !_needsDuplicateCheck
+              ? 'Поля проверки не изменены'
+              : _validDuplicateInput
+              ? 'Ожидание завершения ввода…'
+              : 'Для проверки заполните госномер',
           isChecking: _isCheckingDuplicate,
           isChecked: _duplicateChecked,
           hasDuplicate: _duplicateCar != null,
@@ -335,7 +384,7 @@ class _CarDialogState extends State<CarDialog> {
           ),
           validator: (value) {
             if (value != null && value.trim().isNotEmpty) {
-              final mileage = double.tryParse(value);
+              final mileage = formNumber(value);
               if (mileage == null || mileage < 0) {
                 return 'Введите корректный пробег';
               }

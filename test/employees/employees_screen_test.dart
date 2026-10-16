@@ -188,7 +188,9 @@ void main() {
       final rateField = find.widgetWithText(TextFormField, 'Комиссия');
       await tester.ensureVisible(rateField);
       await tester.enterText(rateField, '');
+      await tester.pump();
       await tester.ensureVisible(find.text('Сохранить'));
+      await tester.pump();
       await tester.tap(find.text('Сохранить'));
       await tester.pumpAndSettle();
       expect(repository.updated.single.toJson()['commissionPercent'], isNull);
@@ -203,7 +205,9 @@ void main() {
       expect(tester.widget<TextFormField>(rateField).controller!.text, isEmpty);
       await tester.ensureVisible(rateField);
       await tester.enterText(rateField, '0');
+      await tester.pump();
       await tester.ensureVisible(find.text('Сохранить'));
+      await tester.pump();
       await tester.tap(find.text('Сохранить'));
       await tester.pumpAndSettle();
       expect(repository.updated.last.toJson()['commissionPercent'], 0);

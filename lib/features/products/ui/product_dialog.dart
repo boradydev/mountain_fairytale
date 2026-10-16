@@ -1,3 +1,4 @@
+import 'package:mountain_fairytale/core/state/form_editing.dart';
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/order_points_provider.dart';
 import 'package:mountain_fairytale/features/products/data/product_model.dart';
@@ -38,6 +39,26 @@ class _ProductDialogState extends State<ProductDialog> {
 
   bool get _isEditMode => widget.product != null;
 
+  late final Map<String, Object?> _originalValues;
+  late final String _originalDuplicateInput;
+  late final DuplicateCheckCoordinator _duplicateCheck;
+  Map<String, Object?> get _values => {
+    'name': _nameController.text.trim(),
+    'basePrice': formNumber(_basePriceController.text),
+  };
+  Map<String, Object?> get _changes =>
+      changedFormFields(_originalValues, _values);
+  String get _duplicateInput => _nameController.text.trim();
+  bool get _needsDuplicateCheck =>
+      !_isEditMode || _duplicateInput != _originalDuplicateInput;
+  void _refreshForm() {
+    if (mounted) setState(() {});
+  }
+
+  bool get _validDuplicateInput =>
+      _nameController.text.trim().isNotEmpty &&
+      _nameController.text.trim().length <= 120;
+
   @override
   void initState() {
     super.initState();
@@ -45,25 +66,40 @@ class _ProductDialogState extends State<ProductDialog> {
     _basePriceController = TextEditingController(
       text: widget.product?.basePrice.toString() ?? '',
     );
+
+    _originalValues = Map.of(_values);
+    _originalDuplicateInput = _duplicateInput;
+    _duplicateCheck = DuplicateCheckCoordinator(_duplicateInput);
+    _basePriceController.addListener(_refreshForm);
     _nameController.addListener(_onNameChanged);
-    _nameFocusNode.addListener(_onFocusChange);
   }
 
   void _onNameChanged() {
-    _checkVersion++;
+    final changed = _duplicateCheck.inputChanged(
+      _duplicateInput,
+      canCheck:
+          _needsDuplicateCheck &&
+          _nameController.text.trim().isNotEmpty &&
+          _nameController.text.trim().length <= 120,
+      check: _checkDuplicate,
+    );
     setState(() {
-      _duplicate = null;
-      _checkedName = null;
-      _checking = false;
+      if (changed) {
+        _checkVersion++;
+        _duplicate = null;
+        _checkedName = null;
+        _checking = false;
+      }
       _error = null;
     });
   }
 
-  void _onFocusChange() {
-    if (!_nameFocusNode.hasFocus && !_busy) _checkDuplicate();
-  }
+  Future<bool> _checkDuplicate() =>
+      _duplicateCheck.run(_duplicateInput, _performDuplicateCheck);
 
-  Future<bool> _checkDuplicate() async {
+  Future<bool> _performDuplicateCheck() async {
+    if (!_needsDuplicateCheck) return true;
+    if (_checkedName == _duplicateInput) return true;
     final name = _nameController.text.trim();
     if (name.isEmpty || name.length > 120) return false;
     final version = ++_checkVersion;
@@ -102,7 +138,12 @@ class _ProductDialogState extends State<ProductDialog> {
   }
 
   Future<void> _save() async {
-    if (_busy || !_formKey.currentState!.validate()) return;
+    if (_busy) return;
+    if (_isEditMode && _changes.isEmpty) {
+      Navigator.of(context).pop(widget.product);
+      return;
+    }
+    if (!_formKey.currentState!.validate()) return;
     setState(() {
       _busy = true;
       _error = null;
@@ -130,8 +171,8 @@ class _ProductDialogState extends State<ProductDialog> {
       if (_isEditMode) {
         success = await widget.provider.updateProduct(
           widget.product!.id,
-          name: name,
-          basePrice: basePrice,
+          name: _changes['name'] as String?,
+          basePrice: _changes['basePrice'] as double?,
         );
       } else {
         created = await widget.provider.addProduct(
@@ -212,6 +253,7 @@ class _ProductDialogState extends State<ProductDialog> {
   @override
   void dispose() {
     _checkVersion++;
+    _duplicateCheck.dispose();
     _nameController.removeListener(_onNameChanged);
     _nameController.dispose();
     _basePriceController.dispose();
@@ -226,7 +268,10 @@ class _ProductDialogState extends State<ProductDialog> {
       title: _isEditMode
           ? 'Редактирование продукции/услуги'
           : 'Добавление продукции/услуги',
-      submitButtonText: _isEditMode ? 'Сохранить' : 'Добавить',
+      submitButtonText: _isEditMode
+          ? (_changes.isEmpty ? 'ОК' : 'Сохранить')
+          : 'Добавить',
+      submitButtonWidth: 160,
       formKey: _formKey,
       onSubmit: _save,
       isBusy: _busy,
@@ -249,6 +294,11 @@ class _ProductDialogState extends State<ProductDialog> {
           : null,
       children: [
         DuplicateCheckStatusWidget(
+          idleText: !_needsDuplicateCheck
+              ? 'Поля проверки не изменены'
+              : _validDuplicateInput
+              ? 'Ожидание завершения ввода…'
+              : 'Для проверки заполните название',
           isChecking: _checking,
           isChecked: _checkedName != null,
           hasDuplicate: _duplicate != null,

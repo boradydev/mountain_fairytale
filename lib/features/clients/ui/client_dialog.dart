@@ -1,3 +1,4 @@
+import 'package:mountain_fairytale/core/state/form_editing.dart';
 import 'package:flutter/services.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/order_points_provider.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_provider.dart';
@@ -94,8 +95,38 @@ class _ClientDialogState extends State<ClientDialog> {
   String? _paymentMethodId;
   List<ClientDirectoryEntry> _salesReps = [];
   List<ClientDirectoryEntry> _paymentMethods = [];
-  String get _input =>
-      [_name.text.trim(), _phone.text.trim(), _address.text.trim()].join('\n');
+  String get _input => [
+    _name.text.trim(),
+    RussianPhoneInputFormatter.toApiPhone(_phone.text),
+    _address.text.trim(),
+  ].join('\n');
+
+  late final Map<String, Object?> _originalValues;
+  late final String _originalDuplicateInput;
+  late final DuplicateCheckCoordinator _duplicateCheck;
+  Map<String, Object?> get _values => {
+    'name': _name.text.trim(),
+    'phone': RussianPhoneInputFormatter.toApiPhone(_phone.text),
+    'address': _address.text.trim(),
+    'sleepingThresholdDays':
+        int.tryParse(_threshold.text.trim()) ?? _threshold.text.trim(),
+    'cooldownUntil': _cooldownDate,
+    'salesRepresentativeId': _salesRepId,
+    'defaultPaymentMethodId': _paymentMethodId,
+  };
+  Map<String, Object?> get _changes =>
+      changedFormFields(_originalValues, _values);
+  bool get _needsDuplicateCheck =>
+      !widget.isEditMode || _input != _originalDuplicateInput;
+  bool get _validDuplicateInput =>
+      _name.text.trim().isNotEmpty &&
+      _name.text.trim().length <= 120 &&
+      RussianPhoneInputFormatter.isComplete(_phone.text) &&
+      _address.text.trim().isNotEmpty &&
+      _address.text.trim().length <= 500;
+  void _refreshForm() {
+    if (mounted) setState(() {});
+  }
 
   @override
   void initState() {
@@ -122,21 +153,29 @@ class _ClientDialogState extends State<ClientDialog> {
       _paymentMethodId,
       client?.defaultPaymentMethodName,
     );
-    for (final focus in _focusNodes) {
-      focus.addListener(() {
-        if (!focus.hasFocus && !_busy) _checkDuplicate();
-      });
-    }
+    _originalValues = Map.of(_values);
+    _originalDuplicateInput = _input;
+    _duplicateCheck = DuplicateCheckCoordinator(_input);
     for (final controller in [_name, _phone, _address]) {
       controller.addListener(() {
-        _checkVersion++;
+        final changed = _duplicateCheck.inputChanged(
+          _input,
+          canCheck: _needsDuplicateCheck && _validDuplicateInput,
+          check: _checkDuplicate,
+        );
         setState(() {
-          _duplicate = null;
-          _checkedInput = null;
-          _checking = false;
+          if (changed) {
+            _checkVersion++;
+            _duplicate = null;
+            _checkedInput = null;
+            _checking = false;
+          }
+          _error = null;
         });
       });
     }
+    _threshold.addListener(_refreshForm);
+    _cooldown.addListener(_refreshForm);
     _phone.addListener(() {
       setState(() => _phoneError = null);
     });
@@ -233,7 +272,11 @@ class _ClientDialogState extends State<ClientDialog> {
     }
   }
 
-  Future<bool> _checkDuplicate() async {
+  Future<bool> _checkDuplicate() =>
+      _duplicateCheck.run(_input, _performDuplicateCheck);
+
+  Future<bool> _performDuplicateCheck() async {
+    if (!_needsDuplicateCheck) return true;
     if (_name.text.trim().isEmpty ||
         !RussianPhoneInputFormatter.isComplete(_phone.text) ||
         _address.text.trim().isEmpty ||
@@ -296,17 +339,20 @@ class _ClientDialogState extends State<ClientDialog> {
   }
 
   Future<void> _save() async {
-    if (_busy || _editingDirectory || !_formKey.currentState!.validate()) {
+    if (_busy || _editingDirectory) return;
+    if (widget.isEditMode && _changes.isEmpty) {
+      Navigator.of(context).pop(widget.client);
       return;
     }
+    if (!_formKey.currentState!.validate()) return;
     final provider = context.read<ClientsProvider>();
     setState(() {
       _busy = true;
       _error = null;
     });
     try {
+      if (!await _checkDuplicate() || !mounted) return;
       if (!widget.isEditMode) {
-        if (!await _checkDuplicate() || !mounted) return;
         if (_duplicate != null) {
           final confirmed = await ConfirmDialog.show(
             context,
@@ -322,6 +368,7 @@ class _ClientDialogState extends State<ClientDialog> {
       final success = widget.isEditMode
           ? await provider.updateClient(
               clientId: widget.client!.id,
+              changes: UpdateClientRequest.fromChanges(_changes),
               name: _name.text.trim(),
               phone: RussianPhoneInputFormatter.toApiPhone(_phone.text),
               address: _address.text.trim(),
@@ -384,6 +431,7 @@ class _ClientDialogState extends State<ClientDialog> {
 
   @override
   void dispose() {
+    _duplicateCheck.dispose();
     _checkVersion++;
     _directoryVersion++;
     for (final controller in [_name, _phone, _address, _threshold, _cooldown]) {
@@ -674,7 +722,10 @@ class _ClientDialogState extends State<ClientDialog> {
       title: widget.isEditMode
           ? 'Редактирование клиента'
           : 'Добавление клиента',
-      submitButtonText: widget.isEditMode ? 'Сохранить' : 'Добавить',
+      submitButtonText: widget.isEditMode
+          ? (_changes.isEmpty ? 'ОК' : 'Сохранить')
+          : 'Добавить',
+      submitButtonWidth: 160,
       formKey: _formKey,
       onSubmit: _save,
       isBusy: _busy || _editingDirectory,
@@ -696,6 +747,11 @@ class _ClientDialogState extends State<ClientDialog> {
         if (widget.client != null && !widget.client!.isActive)
           const Text('Клиент деактивирован'),
         DuplicateCheckStatusWidget(
+          idleText: !_needsDuplicateCheck
+              ? 'Поля проверки не изменены'
+              : _validDuplicateInput
+              ? 'Ожидание завершения ввода…'
+              : 'Для проверки заполните имя, телефон и адрес',
           isChecking: _checking,
           isChecked: _checkedInput != null,
           hasDuplicate: _duplicate != null,

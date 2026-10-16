@@ -142,6 +142,22 @@ class UpdateClientRequest {
     this.defaultPaymentMethodId = _omitted,
     this.isActive,
   });
+  factory UpdateClientRequest.fromChanges(Map<String, Object?> changes) =>
+      UpdateClientRequest(
+        name: changes['name'] as String?,
+        phone: changes['phone'] as String?,
+        address: changes['address'] as String?,
+        sleepingThresholdDays: changes['sleepingThresholdDays'] as int?,
+        cooldownUntil: changes.containsKey('cooldownUntil')
+            ? changes['cooldownUntil']
+            : _omitted,
+        salesRepresentativeId: changes.containsKey('salesRepresentativeId')
+            ? changes['salesRepresentativeId']
+            : _omitted,
+        defaultPaymentMethodId: changes.containsKey('defaultPaymentMethodId')
+            ? changes['defaultPaymentMethodId']
+            : _omitted,
+      );
   Map<String, dynamic> toJson() => {
     if (name != null) 'name': name,
     if (phone != null) 'phone': phone,

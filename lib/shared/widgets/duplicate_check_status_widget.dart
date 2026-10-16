@@ -6,6 +6,7 @@ class DuplicateCheckStatusWidget extends StatefulWidget {
   final bool isChecked;
   final bool hasDuplicate;
   final String warningText;
+  final String idleText;
   final Widget? expandedChild;
 
   const DuplicateCheckStatusWidget({
@@ -14,6 +15,7 @@ class DuplicateCheckStatusWidget extends StatefulWidget {
     required this.isChecked,
     required this.hasDuplicate,
     this.warningText = 'Найдены возможные дубликаты',
+    this.idleText = 'Введите данные для проверки...',
     this.expandedChild,
   });
 
@@ -55,7 +57,7 @@ class _DuplicateCheckStatusWidgetState
     } else if (!widget.isChecked) {
       contentColor = colorScheme.onSurfaceVariant;
       icon = Icons.help_outline_rounded;
-      text = 'Введите данные для проверки...';
+      text = widget.idleText;
     } else if (widget.hasDuplicate) {
       contentColor = customColors.warningColor;
       icon = Icons.info_outline;

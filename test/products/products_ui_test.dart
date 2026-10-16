@@ -256,6 +256,8 @@ void main() {
       await tester.enterText(find.byType(TextFormField).at(0), 'Вода');
       await tester.enterText(find.byType(TextFormField).at(1), '200');
       await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pumpAndSettle();
       await tester.tap(find.textContaining('Найден похожий товар:'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Выбрать для задания'));

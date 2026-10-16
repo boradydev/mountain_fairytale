@@ -302,6 +302,7 @@ Future<void> fill(WidgetTester tester) async {
   await tester.enterText(field('Адрес доставки *'), 'Адрес');
   await tester.enterText(field('Номер телефона *'), '9123456789');
   await tester.enterText(field('Порог засыпания (в днях) *'), '0');
+  await tester.pump(const Duration(milliseconds: 600));
   await tester.pump();
 }
 
@@ -483,13 +484,12 @@ void main() {
         findsOneWidget,
       );
       expect(find.byType(AppDropdown<String>), findsNWidgets(2));
-      await tester.tap(find.text('Сохранить'));
+      await tester.tap(find.text('ОК'));
       await tester.pumpAndSettle();
-      expect(repo.updated!.toJson()['salesRepresentativeId'], 'inactive-rep');
-      expect(
-        repo.updated!.toJson()['defaultPaymentMethodId'],
-        'inactive-method',
-      );
+      expect(repo.updated, isNull);
+      expect(repo.checks, 0);
+      expect(repo.selected!.salesRepresentativeId, 'inactive-rep');
+      expect(repo.selected!.defaultPaymentMethodId, 'inactive-method');
     },
   );
 
@@ -693,6 +693,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       await tester.enterText(field('ФИО представителя *'), 'Новое имя');
+      await tester.pump();
       await tester.tap(find.text('Сохранить').last);
       await tester.pumpAndSettle();
       expect(find.text('Новое имя'), findsOneWidget);
@@ -763,16 +764,19 @@ void main() {
       await tester.tap(field('Отсрочка до'));
       await tester.pumpAndSettle();
       expect(find.byType(DatePickerDialog), findsOneWidget);
+      await tester.tap(find.text('20'));
       await tester.tap(find.text('OK'));
       await tester.pumpAndSettle();
       expect(find.byType(DatePickerDialog), findsNothing);
       expect(find.byType(TimePickerDialog), findsNothing);
+      await tester.pump();
       await tester.ensureVisible(find.text('Сохранить'));
+      await tester.pump();
       await tester.tap(find.text('Сохранить'));
       await tester.pumpAndSettle();
       expect(
         repo.updated!.toJson()['cooldownUntil'],
-        '2026-10-19T00:00:00.000',
+        '2026-10-20T00:00:00.000',
       );
     },
   );

@@ -269,6 +269,7 @@ class ClientsProvider extends SafeChangeNotifier {
 
   Future<bool> updateClient({
     required String clientId,
+    UpdateClientRequest? changes,
     required String name,
     required String phone,
     required String address,
@@ -281,16 +282,18 @@ class ClientsProvider extends SafeChangeNotifier {
     phoneError = null;
 
     try {
-      final request = UpdateClientRequest(
-        name: name,
-        phone: phone,
-        address: address,
-        sleepingThresholdDays: thresholdDays,
-        salesRepresentativeId: salesRepId,
+      final request =
+          changes ??
+          UpdateClientRequest(
+            name: name,
+            phone: phone,
+            address: address,
+            sleepingThresholdDays: thresholdDays,
+            salesRepresentativeId: salesRepId,
 
-        defaultPaymentMethodId: paymentMethodId,
-        cooldownUntil: cooldownUntil,
-      );
+            defaultPaymentMethodId: paymentMethodId,
+            cooldownUntil: cooldownUntil,
+          );
 
       final updatedClient = await _repository.updateClient(
         clientId,

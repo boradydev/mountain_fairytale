@@ -472,6 +472,7 @@ void main() {
       );
       await tester.enterText(field, 'Иванов');
       FocusManager.instance.primaryFocus!.unfocus();
+      await tester.pump(const Duration(milliseconds: 600));
       await tester.pumpAndSettle();
       expect(find.text('Активировать'), findsNothing);
       await tester.tap(find.widgetWithText(FilledButton, 'Добавить'));
@@ -520,6 +521,7 @@ void main() {
         )
         .focusNode!
         .unfocus();
+    await tester.pump(const Duration(milliseconds: 600));
     await tester.pumpAndSettle();
     expect(find.text('Выбрать для маршрута'), findsNothing);
     await tester.tap(find.textContaining('Найден водитель с похожим именем:'));

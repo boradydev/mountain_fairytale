@@ -438,13 +438,14 @@ class RouteConstructorProvider extends OrderPointsProvider {
 
   Future<bool> updateCar(
     String id, {
-    required String model,
-    required String number,
+    String? model,
+    String? number,
     double? currentMileage,
   }) async {
-    final normalizedModel = model.trim();
-    final normalizedNumber = number.trim();
-    if (normalizedModel.isEmpty || normalizedNumber.isEmpty) {
+    final normalizedModel = model?.trim();
+    final normalizedNumber = number?.trim();
+    if ((normalizedModel != null && normalizedModel.isEmpty) ||
+        (normalizedNumber != null && normalizedNumber.isEmpty)) {
       return false;
     }
 

@@ -54,5 +54,6 @@ class UpdateSalesRepresentativeRequest {
   });
 
   Map<String, dynamic> toJson() =>
-      _$UpdateSalesRepresentativeRequestToJson(this);
+      _$UpdateSalesRepresentativeRequestToJson(this)
+        ..removeWhere((key, value) => value == null);
 }

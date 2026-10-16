@@ -13,6 +13,7 @@ class BaseFormDialog extends StatelessWidget {
   /// Проверку дубликатов отображает DuplicateCheckStatusWidget отдельно.
   final bool isLoading;
   final bool canSubmit;
+  final double? submitButtonWidth;
 
   /// Дополнительное действие слева от кнопок.
   ///
@@ -30,6 +31,7 @@ class BaseFormDialog extends StatelessWidget {
     this.isBusy = false,
     this.isLoading = false,
     this.canSubmit = true,
+    this.submitButtonWidth,
   });
 
   @override
@@ -84,9 +86,13 @@ class BaseFormDialog extends StatelessWidget {
                       text: 'Отмена',
                     ),
                     const SizedBox(width: 8),
-                    AppPrimaryButton(
-                      onPressed: isBusy || !canSubmit ? null : onSubmit,
-                      text: submitButtonText,
+                    SizedBox(
+                      width: submitButtonWidth,
+                      child: AppPrimaryButton(
+                        onPressed: isBusy || !canSubmit ? null : onSubmit,
+                        text: submitButtonText,
+                        maxLines: 1,
+                      ),
                     ),
                   ],
                 ),
