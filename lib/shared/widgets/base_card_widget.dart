@@ -24,7 +24,7 @@ class AppBaseCard extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: colorScheme.outlineVariant.withAlpha(128),
+          color: colorScheme.outline.withAlpha(128),
           width: 1,
         ),
       ),
