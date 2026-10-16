@@ -10,6 +10,7 @@ import 'package:mountain_fairytale/features/commissions/data/commissions_repo.da
 import 'package:mountain_fairytale/features/commissions/ui/commissions_provider.dart';
 import 'package:mountain_fairytale/features/commissions/ui/commissions_screen.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/labeled_checkbox_toggle.dart';
 import 'package:provider/provider.dart';
 
 import '../auth/auth_fakes.dart';
@@ -220,15 +221,26 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('Уволенный представитель'), findsOneWidget);
-      await tester.tap(find.byType(Switch));
+      await tester.tap(find.byType(LabeledCheckboxToggle));
       await tester.pumpAndSettle();
       expect(repo.calls.last.$2, isTrue);
       final calls = repo.calls.length;
       await tester.tap(find.text('Сотрудники'));
       await tester.pumpAndSettle();
-      expect(find.byType(Switch), findsNothing);
+      expect(
+        tester
+            .widget<LabeledCheckboxToggle>(find.byType(LabeledCheckboxToggle))
+            .value,
+        isTrue,
+      );
       expect(find.text('Менеджер'), findsOneWidget);
       expect(repo.calls.length, calls);
+      await tester.tap(find.byType(LabeledCheckboxToggle));
+      await tester.pumpAndSettle();
+      expect(repo.calls.last.$2, isFalse);
+      await tester.tap(find.byType(LabeledCheckboxToggle));
+      await tester.pumpAndSettle();
+      expect(repo.calls.last.$2, isTrue);
       await tester.tap(find.text('Менеджер'));
       await tester.pumpAndSettle();
       expect(find.text('1.25%'), findsOneWidget);
@@ -236,7 +248,12 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Представители'));
       await tester.pumpAndSettle();
-      expect(tester.widget<Switch>(find.byType(Switch)).value, isTrue);
+      expect(
+        tester
+            .widget<LabeledCheckboxToggle>(find.byType(LabeledCheckboxToggle))
+            .value,
+        isTrue,
+      );
       await tester.tap(find.text('Уволенный представитель'));
       await tester.pumpAndSettle();
       expect(find.text('Неактивный клиент'), findsOneWidget);
@@ -263,7 +280,7 @@ void main() {
       expect(find.text('Передан / снят'), findsOneWidget);
       await tester.tap(find.text('Закрыть'));
       await tester.pumpAndSettle();
-      expect(repo.calls.length, calls + 1);
+      expect(repo.calls.length, calls + 3);
       expect(tester.takeException(), isNull);
     },
   );

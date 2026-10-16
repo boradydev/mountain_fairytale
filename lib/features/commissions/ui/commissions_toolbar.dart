@@ -53,18 +53,18 @@ class CommissionsToolbar extends StatelessWidget {
                 ),
               );
               final filter = SizedBox(
-                width: 232 * scale,
+                width: 300 * scale,
                 height: controlHeight,
-                child: provider.mode == CommissionMode.representatives
-                    ? Center(
-                        child: LabeledCheckboxToggle(
-                          label: 'Деактивированные',
-                          value: provider.includeDeactivated,
-                          onChanged: provider.setIncludeDeactivated,
-                          tooltip: 'Показать всех представителей, включая деактивированных без клиентов и начислений',
-                        ),
-                      )
-                    : null,
+                child: Center(
+                  child: LabeledCheckboxToggle(
+                    label: 'Деактивированные',
+                    value: provider.includeDeactivated,
+                    onChanged: provider.setIncludeDeactivated,
+                    tooltip: provider.mode == CommissionMode.representatives
+                        ? 'Показать всех представителей, включая деактивированных без клиентов и начислений'
+                        : 'Показать всех сотрудников, включая деактивированных без начислений',
+                  ),
+                ),
               );
 
               final monthControl = SizedBox(
