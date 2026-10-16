@@ -195,6 +195,7 @@ class _DriverDialogState extends State<DriverDialog> {
       formKey: _formKey,
       onSubmit: _save,
       isBusy: _busy,
+      isLoading: _busy && !_checking,
       leadingAction: widget.isEditMode && widget.driver!.isActive
           ? AppIconButton(
               icon: Icons.archive_outlined,
@@ -204,7 +205,6 @@ class _DriverDialogState extends State<DriverDialog> {
             )
           : null,
       children: [
-        if (_busy) const LinearProgressIndicator(),
         DuplicateCheckStatusWidget(
           isChecking: _checking,
           isChecked: _checkedName != null,

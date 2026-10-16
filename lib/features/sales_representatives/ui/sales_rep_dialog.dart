@@ -352,6 +352,7 @@ class _SalesRepDialogState extends State<SalesRepDialog> {
         formKey: _formKey,
         onSubmit: _submitForm,
         isBusy: _busy,
+        isLoading: _busy && !_isCheckingDuplicate,
         leadingAction: _isEditMode
             ? AppIconButton(
                 icon: _apiMode
@@ -369,7 +370,6 @@ class _SalesRepDialogState extends State<SalesRepDialog> {
               )
             : null,
         children: [
-          if (_busy) const LinearProgressIndicator(),
           DuplicateCheckStatusWidget(
             isChecking: _isCheckingDuplicate,
             isChecked: _duplicateChecked,

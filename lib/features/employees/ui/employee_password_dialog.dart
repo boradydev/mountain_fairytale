@@ -63,10 +63,10 @@ class _EmployeePasswordDialogState extends State<EmployeePasswordDialog> {
       formKey: _formKey,
       onSubmit: _save,
       isBusy: _busy,
+      isLoading: _busy,
       children: [
         Text('Сотрудник: ${widget.employee.username}'),
         const SizedBox(height: 16),
-        if (_busy) const LinearProgressIndicator(),
         TextFormField(
           controller: _passwordController,
           enabled: !_busy,

@@ -230,6 +230,7 @@ class _ProductDialogState extends State<ProductDialog> {
       formKey: _formKey,
       onSubmit: _save,
       isBusy: _busy,
+      isLoading: _busy && !_checking,
       leadingAction: _isEditMode
           ? AppIconButton(
               icon: widget.product!.isActive
@@ -247,7 +248,6 @@ class _ProductDialogState extends State<ProductDialog> {
             )
           : null,
       children: [
-        if (_busy) const LinearProgressIndicator(),
         DuplicateCheckStatusWidget(
           isChecking: _checking,
           isChecked: _checkedName != null,

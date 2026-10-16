@@ -8,6 +8,10 @@ class BaseFormDialog extends StatelessWidget {
   final GlobalKey<FormState> formKey;
   final List<Widget> children;
   final bool isBusy;
+
+  /// Загрузка операции формы; место под полоску сохраняется и в покое.
+  /// Проверку дубликатов отображает DuplicateCheckStatusWidget отдельно.
+  final bool isLoading;
   final bool canSubmit;
 
   /// Дополнительное действие слева от кнопок.
@@ -24,6 +28,7 @@ class BaseFormDialog extends StatelessWidget {
     required this.children,
     this.leadingAction,
     this.isBusy = false,
+    this.isLoading = false,
     this.canSubmit = true,
   });
 
@@ -53,7 +58,14 @@ class BaseFormDialog extends StatelessWidget {
                     color: colorScheme.onSurface,
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(
+                  height: 16,
+                  child: isLoading
+                      ? const Center(
+                          child: LinearProgressIndicator(minHeight: 4),
+                        )
+                      : null,
+                ),
 
                 ...children,
 

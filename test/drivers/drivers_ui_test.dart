@@ -1,3 +1,4 @@
+import 'package:mountain_fairytale/shared/widgets/duplicate_check_status_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/dropdown_widget.dart';
 
 import 'dart:async';
@@ -69,6 +70,8 @@ class _Drivers implements DriverRepository {
   int patches = 0;
   int creates = 0;
   Completer<List<Driver>>? loadGate;
+  Completer<Driver?>? duplicateGate;
+  Completer<Driver>? createGate;
   Driver duplicate = inactive;
   @override
   Future<List<Driver>> getAvailableDrivers({
@@ -92,18 +95,19 @@ class _Drivers implements DriverRepository {
   }
 
   @override
-  Future<Driver?> checkDuplicate(String name) async => duplicate;
+  Future<Driver?> checkDuplicate(String name) async =>
+      duplicateGate == null ? duplicate : await duplicateGate!.future;
   @override
   Future<Driver> createDriver(CreateDriverRequest request) async {
     creates++;
-    return active;
+    return createGate == null ? active : await createGate!.future;
   }
 
   @override
   dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
 }
 
-RouteConstructorProvider makeProvider(_Drivers repo) =>
+RouteConstructorProvider _makeProvider(_Drivers repo) =>
     RouteConstructorProvider(
       carRepo: _Cars(),
       driverRepo: repo,
@@ -118,7 +122,7 @@ void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
   test('inactive filter persists and deactivation clears selection without deleting row', () async {
     final repo = _Drivers();
-    final provider = makeProvider(repo);
+    final provider = _makeProvider(repo);
     await provider.loadDrivers();
     expect(provider.drivers.length, 1);
     provider.selectDriver(provider.drivers.single);
@@ -128,7 +132,7 @@ void main() {
     expect(provider.selectedDriver, isNull);
     expect(provider.drivers.length, 2);
     expect(repo.rows.length, 2);
-    final next = makeProvider(repo);
+    final next = _makeProvider(repo);
     await next.loadDrivers();
     expect(next.showInactiveDrivers, isTrue);
     expect(next.drivers.length, 2);
@@ -138,7 +142,7 @@ void main() {
 
   test('failed activation preserves selection; inactive direct selection is rejected', () async {
     final repo = _Drivers()..fail = true;
-    final provider = makeProvider(repo)..drivers = [active, inactive];
+    final provider = _makeProvider(repo)..drivers = [active, inactive];
     provider.selectDriver(active);
     provider.selectDriver(inactive);
     expect(provider.selectedDriver, active);
@@ -172,9 +176,81 @@ void main() {
   }
 
   testWidgets(
+    'submit shows only duplicate spinner during check and fixed dialog progress during save',
+    (tester) async {
+      final duplicateGate = Completer<Driver?>();
+      final createGate = Completer<Driver>();
+      final repo = _Drivers()
+        ..duplicateGate = duplicateGate
+        ..createGate = createGate;
+      final provider = _makeProvider(repo)..drivers = [active, inactive];
+      addTearDown(provider.dispose);
+      await panel(tester, provider);
+      await tester.tap(find.widgetWithIcon(IconButton, Icons.add).first);
+      await tester.pumpAndSettle();
+      final dialog = find.byType(DriverDialog);
+      final field = find.descendant(
+        of: dialog,
+        matching: find.byType(TextFormField),
+      );
+      await tester.enterText(field, 'Новый водитель');
+      await tester.pump();
+      final initialDialogRect = tester.getRect(dialog);
+      final initialFieldRect = tester.getRect(field);
+      await tester.tap(find.widgetWithText(FilledButton, 'Добавить'));
+      await tester.pump();
+      expect(
+        find.descendant(
+          of: dialog,
+          matching: find.byType(LinearProgressIndicator),
+        ),
+        findsNothing,
+      );
+      expect(
+        find.descendant(
+          of: find.byType(DuplicateCheckStatusWidget),
+          matching: find.byType(CircularProgressIndicator),
+        ),
+        findsOneWidget,
+      );
+      expect(tester.getRect(dialog), initialDialogRect);
+      expect(tester.getRect(field), initialFieldRect);
+      duplicateGate.complete(null);
+      await tester.pump();
+      expect(
+        find.descendant(
+          of: dialog,
+          matching: find.byType(LinearProgressIndicator),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: dialog,
+          matching: find.byType(CircularProgressIndicator),
+        ),
+        findsNothing,
+      );
+      expect(tester.getRect(dialog), initialDialogRect);
+      expect(tester.getRect(field), initialFieldRect);
+      createGate.complete(
+        Driver(
+          id: 'new-driver',
+          name: 'Новый водитель',
+          createdAt: DateTime(2026),
+          isActive: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(dialog, findsNothing);
+      expect(repo.creates, 1);
+      expect(tester.takeException(), isNull);
+    },
+  );
+  testWidgets(
     'edit stays visible disabled without selection; panel fits 360px',
     (tester) async {
-      final provider = makeProvider(_Drivers())..drivers = [active, inactive];
+      final provider = _makeProvider(_Drivers())..drivers = [active, inactive];
       await panel(tester, provider);
       final edit = find.descendant(
         of: find.byType(AppDropdown<Driver>),
@@ -196,7 +272,7 @@ void main() {
     tester,
   ) async {
     final repo = _Drivers()..loadGate = Completer<List<Driver>>();
-    final provider = makeProvider(repo)..drivers = [active];
+    final provider = _makeProvider(repo)..drivers = [active];
     provider.selectDriver(active);
     await panel(tester, provider);
     final add = find.widgetWithIcon(IconButton, Icons.add).first;
@@ -275,7 +351,7 @@ void main() {
     'failed background refresh preserves list, selection and driver focus',
     (tester) async {
       final repo = _Drivers()..loadGate = Completer<List<Driver>>();
-      final provider = makeProvider(repo)..drivers = [active];
+      final provider = _makeProvider(repo)..drivers = [active];
       provider.selectDriver(active);
       await panel(tester, provider);
       final field = find.byType(DropdownButtonFormField<Driver>);
@@ -332,7 +408,7 @@ void main() {
     'cancel inactive activation keeps selected driver and dropdown in sync',
     (tester) async {
       final repo = _Drivers();
-      final provider = makeProvider(repo)..drivers = [active, inactive];
+      final provider = _makeProvider(repo)..drivers = [active, inactive];
       provider.selectDriver(active);
       await panel(tester, provider);
       await tester.tap(find.text(active.name));
@@ -352,7 +428,7 @@ void main() {
     'duplicate activation closes both dialogs and selects server record',
     (tester) async {
       final repo = _Drivers();
-      final provider = makeProvider(repo)..drivers = [active, inactive];
+      final provider = _makeProvider(repo)..drivers = [active, inactive];
       await panel(tester, provider);
       await tester.tap(find.widgetWithIcon(IconButton, Icons.add).first);
       await tester.pumpAndSettle();
@@ -385,7 +461,7 @@ void main() {
     'duplicate warning offers activation after submit and cancel preserves form',
     (tester) async {
       final repo = _Drivers();
-      final provider = makeProvider(repo)..drivers = [active, inactive];
+      final provider = _makeProvider(repo)..drivers = [active, inactive];
       provider.selectDriver(active);
       await panel(tester, provider);
       await tester.tap(find.widgetWithIcon(IconButton, Icons.add).first);
@@ -457,7 +533,7 @@ void main() {
     'expanded active duplicate selects server record without creating or updating',
     (tester) async {
       final repo = _Drivers()..duplicate = Driver.fromJson(active.toJson());
-      final provider = makeProvider(repo)..drivers = [active];
+      final provider = _makeProvider(repo)..drivers = [active];
       await panel(tester, provider);
       await revealActiveDuplicate(tester);
       await tester.tap(find.text('Выбрать для маршрута'));
@@ -475,7 +551,7 @@ void main() {
     'expanded duplicate opens existing driver for editing without changing route selection',
     (tester) async {
       final repo = _Drivers()..duplicate = active;
-      final provider = makeProvider(repo)..drivers = [active];
+      final provider = _makeProvider(repo)..drivers = [active];
       await panel(tester, provider);
       await revealActiveDuplicate(tester);
       await tester.tap(find.text('Открыть существующего водителя'));

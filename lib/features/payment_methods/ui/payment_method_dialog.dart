@@ -226,6 +226,7 @@ class _PaymentMethodDialogState extends State<PaymentMethodDialog> {
       formKey: _formKey,
       onSubmit: _save,
       isBusy: _busy,
+      isLoading: _busy && !_checking,
       leadingAction: _isEditMode
           ? AppIconButton(
               icon: widget.paymentMethod!.isActive
@@ -243,7 +244,6 @@ class _PaymentMethodDialogState extends State<PaymentMethodDialog> {
             )
           : null,
       children: [
-        if (_busy) const LinearProgressIndicator(),
         DuplicateCheckStatusWidget(
           isChecking: _checking,
           isChecked: _checkedName != null,

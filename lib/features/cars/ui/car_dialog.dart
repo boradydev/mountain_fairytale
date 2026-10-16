@@ -233,6 +233,8 @@ class _CarDialogState extends State<CarDialog> {
       submitButtonText: _isEditMode ? 'Сохранить' : 'Добавить',
       formKey: _formKey,
       onSubmit: _save,
+      isBusy: _busy,
+      isLoading: _busy && !_isCheckingDuplicate,
       leadingAction: _isEditMode && widget.car!.isActive
           ? AppIconButton(
               icon: Icons.archive_outlined,
@@ -242,7 +244,6 @@ class _CarDialogState extends State<CarDialog> {
             )
           : null,
       children: [
-        if (_busy) const LinearProgressIndicator(),
         DuplicateCheckStatusWidget(
           isChecking: _isCheckingDuplicate,
           isChecked: _duplicateChecked,

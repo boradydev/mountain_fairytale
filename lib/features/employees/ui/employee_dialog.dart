@@ -253,6 +253,7 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
       formKey: _formKey,
       onSubmit: _save,
       isBusy: _busy,
+      isLoading: _busy && !_checking,
       leadingAction: _isEditMode && !widget.employee!.isAdmin
           ? AppIconButton(
               icon: widget.employee!.isActive
@@ -268,7 +269,6 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
             )
           : null,
       children: [
-        if (_busy) const LinearProgressIndicator(),
         DuplicateCheckStatusWidget(
           isChecking: _checking,
           isChecked: _checkedUsername != null,
