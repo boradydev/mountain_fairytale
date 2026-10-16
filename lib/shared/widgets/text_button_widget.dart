@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 /// Полноцветная кнопка для основного/предпочтительного действия.
 class AppPrimaryButton extends StatelessWidget {
   final String text;
+  final int? maxLines;
   final VoidCallback? onPressed;
   final bool destructive;
 
   const AppPrimaryButton({
     super.key,
     required this.text,
+    this.maxLines,
     this.onPressed,
     this.destructive = false,
   });
@@ -53,6 +55,8 @@ class AppPrimaryButton extends StatelessWidget {
           ),
       child: Text(
         text,
+        maxLines: maxLines,
+        overflow: maxLines == null ? null : TextOverflow.ellipsis,
         style: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
@@ -65,12 +69,14 @@ class AppPrimaryButton extends StatelessWidget {
 /// Кнопка в окантовке (Outlined) для второстепенного/альтернативного действия (например, "Отмена", "Назад").
 class AppSecondaryButton extends StatelessWidget {
   final String text;
+  final int? maxLines;
   final VoidCallback? onPressed;
   final IconData? icon;
 
   const AppSecondaryButton({
     super.key,
     required this.text,
+    this.maxLines,
     this.onPressed,
     this.icon,
   });
@@ -101,6 +107,8 @@ class AppSecondaryButton extends StatelessWidget {
           Flexible(
             child: Text(
               text,
+              maxLines: maxLines,
+              overflow: maxLines == null ? null : TextOverflow.ellipsis,
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,

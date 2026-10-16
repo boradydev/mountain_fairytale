@@ -160,6 +160,49 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     }
   }
 
+  Future<bool> cancelEditing() async {
+    if (documentId == null ||
+        !isEditing ||
+        documentBusy ||
+        _closed ||
+        _closing) {
+      return false;
+    }
+    documentBusy = true;
+    documentError = null;
+    notifyListeners();
+    try {
+      // Finish any heartbeat before reloading and releasing the same lock.
+      await _renewRequest;
+      await refreshForEditing();
+      if (_hasLock) {
+        try {
+          await lockRepository!.releaseEditLock(documentId!);
+        } catch (error) {
+          if (error is! ApiException ||
+              !{403, 409}.contains(error.statusCode)) {
+            rethrow;
+          }
+        }
+      }
+      _renewTimer?.cancel();
+      _sessionVersion++;
+      _hasLock = false;
+      _draftStarted = false;
+      isEditing = false;
+      lockOwner = null;
+      documentError = null;
+      return true;
+    } catch (error) {
+      documentError =
+          'Не удалось отменить редактирование. Повторите попытку. ${documentFailure(error)}';
+      return false;
+    } finally {
+      documentBusy = false;
+      notifyListeners();
+    }
+  }
+
   Future<bool> closeDocument() async {
     if (_closed) {
       return true;

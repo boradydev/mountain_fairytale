@@ -13,7 +13,7 @@ import 'package:mountain_fairytale/features/pickup/pickup_abcs.dart';
 import 'package:mountain_fairytale/features/pickup/data/pickup_model.dart';
 import 'package:mountain_fairytale/features/pickup/ui/pickup_constructor_provider.dart';
 
-import 'document_provider_test.dart' show Catalog, Payments, Clients;
+import 'document_provider_test.dart' show Catalog, Payments, Clients, point;
 
 class Products extends Catalog {
   @override
@@ -202,6 +202,79 @@ void main() {
     expect(p.canSave, isFalse);
     expect(await p.closeDocument(), isTrue);
   });
+  test('cancel route editing restores saved metadata and points without saving or cancelling document', () async {
+    final repo = Routes();
+    repo.sheet = DeliveryRouteSheet.fromJson({
+      ...repo.sheet.toJson(),
+      'points': [point.toJson()],
+    });
+    final p = RouteConstructorProvider(
+      carRepo: Cars(),
+      driverRepo: Drivers(),
+      routeRepo: repo,
+      printService: PrintService(),
+      productRepo: Products(),
+      paymentMethodRepo: PaymentDirectory(),
+      clientRepo: Clients(),
+    );
+    addTearDown(p.dispose);
+    await p.loadExistingRouteById('document');
+    expect(await p.beginEditing(), isTrue);
+    p.selectedDate = DateTime(2026, 10, 16);
+    p.startMileage = 999;
+    p.endMileage = 1000;
+    p.selectedDriver = null;
+    p.selectedCar = null;
+    p.updateTaskQuantity(0, 0, 9);
+    p.removePoint(0);
+    expect(await p.cancelEditing(), isTrue);
+    expect(p.selectedDate, repo.sheet.date);
+    expect(p.startMileage, 100);
+    expect(p.endMileage, 200);
+    expect(p.selectedDriver!.id, 'driver');
+    expect(p.selectedCar!.id, 'car');
+    expect(p.points.single.items.single.quantity, 2);
+    expect(p.documentActive, isTrue);
+    expect(p.isEditing, isFalse);
+    expect(p.documentChanged, isFalse);
+    expect(repo.saved, 0);
+    expect(repo.released, 1);
+    expect(await p.beginEditing(), isTrue);
+    expect(repo.acquired, 2);
+    await p.closeDocument();
+  });
+  test(
+    'cancel pickup editing restores saved date and items without saving',
+    () async {
+      final repo = Pickups()
+        ..sheet = PickupSheet(
+          id: 'pickup',
+          date: DateTime(2026, 10, 15),
+          points: [point],
+        );
+      final p = PickupConstructorProvider(
+        pickupRepo: repo,
+        productRepo: Products(),
+        paymentMethodRepo: PaymentDirectory(),
+        clientRepo: Clients(),
+      );
+      addTearDown(p.dispose);
+      await p.loadExistingPickupById('pickup');
+      expect(await p.beginEditing(), isTrue);
+      p.setDate(DateTime(2026, 10, 16));
+      p.updateTaskQuantity(0, 0, 9);
+      expect(await p.cancelEditing(), isTrue);
+      expect(p.selectedDate, DateTime(2026, 10, 15));
+      expect(p.points.single.items.single.quantity, 2);
+      expect(p.documentActive, isTrue);
+      expect(p.canSave, isFalse);
+      expect(repo.updates, 0);
+      expect(repo.creates, 0);
+      expect(repo.releases, 1);
+      await p.closeDocument();
+      expect(repo.releases, 1);
+    },
+  );
   test('blank pickup creation retains server ID; subsequent save requires an explicit lock', () async {
     final repo = Pickups();
     final p = PickupConstructorProvider(

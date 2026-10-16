@@ -267,6 +267,45 @@ void main() {
       expect(locks.renewed, 2);
     },
   );
+  testWidgets(
+    'cancel releases lock, stops heartbeat and refreshes again on next edit',
+    (tester) async {
+      provider.initializeDocumentSession(id: 'document');
+      expect(await provider.beginEditing(), isTrue);
+      expect(await provider.cancelEditing(), isTrue);
+      expect(provider.isEditing, isFalse);
+      expect(provider.canSave, isFalse);
+      expect(locks.released, 1);
+      await tester.pump(const Duration(seconds: 60));
+      expect(locks.renewed, 0);
+      expect(await provider.beginEditing(), isTrue);
+      expect(provider.refreshes, 3);
+      expect(locks.acquired, 2);
+      await provider.closeDocument();
+    },
+  );
+  test('failed cancel keeps editing available and allows retry', () async {
+    provider.initializeDocumentSession(id: 'document');
+    await provider.beginEditing();
+    provider.updateTaskQuantity(0, 0, 9);
+    provider.failRead = true;
+    expect(await provider.cancelEditing(), isFalse);
+    expect(provider.isEditing, isTrue);
+    expect(provider.points.single.items.single.quantity, 9);
+    expect(locks.released, 0);
+    expect(
+      provider.documentError,
+      contains('Не удалось отменить редактирование'),
+    );
+    provider.failRead = false;
+    locks.failRelease = true;
+    expect(await provider.cancelEditing(), isFalse);
+    expect(provider.isEditing, isTrue);
+    locks.failRelease = false;
+    expect(await provider.cancelEditing(), isTrue);
+    expect(provider.documentError, isNull);
+    await provider.closeDocument();
+  });
   test('failed post-lock read still releases lock on exit', () async {
     provider.initializeDocumentSession(id: 'document');
     provider.failRead = true;

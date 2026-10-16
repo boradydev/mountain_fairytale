@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -61,11 +62,17 @@ void main() {
     );
     await tester.tap(find.text('Открыть документ'));
     await tester.pumpAndSettle();
+    expect(find.text('Самовывоз (просмотр)'), findsOneWidget);
+    expect(
+      find.textContaining('Просмотр. Начните редактирование'),
+      findsNothing,
+    );
     expect(locks.acquired, 0);
     expect(find.text('Начать редактирование'), findsOneWidget);
     expect(find.text('Сохранить'), findsNothing);
     await tester.tap(find.text('Начать редактирование'));
     await tester.pumpAndSettle();
+    expect(find.text('Самовывоз (редактирование)'), findsOneWidget);
     expect(locks.acquired, 1);
     expect(find.text('Сохранить'), findsOneWidget);
     locks.failRenew = true;
@@ -80,4 +87,121 @@ void main() {
     expect(saves, 0);
     expect(tester.takeException(), isNull);
   });
+  testWidgets(
+    'cancel returns to view and preserves action positions for a second click to close',
+    (tester) async {
+      tester.view.physicalSize = const Size(1600, 1000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final locks = Locks();
+      final provider = Orders(Catalog(), locks);
+      final clients = ClientsProvider(Clients());
+      final theme = ThemeProvider(prefs);
+      addTearDown(provider.dispose);
+      addTearDown(clients.dispose);
+      addTearDown(theme.dispose);
+      var saves = 0;
+      var activeChanges = 0;
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider.value(value: clients),
+            ChangeNotifierProvider.value(value: theme),
+          ],
+          child: MaterialApp(
+            home: Builder(
+              builder: (context) => Scaffold(
+                body: TextButton(
+                  child: const Text('Открыть документ'),
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => DeliveryDocumentEditor(
+                        provider: provider,
+                        title: 'Маршрутный лист',
+                        initialize: () async =>
+                            provider.initializeDocumentSession(),
+                        metaBuilder: (_) =>
+                            TextFormField(initialValue: 'Сохранённое значение'),
+                        save: () async {
+                          saves++;
+                          return true;
+                        },
+                        changeActive: () async {
+                          activeChanges++;
+                          return true;
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Открыть документ'));
+      await tester.pumpAndSettle();
+      expect(find.text('Маршрутный лист (создание)'), findsOneWidget);
+      final creationCloseRect = tester.getRect(
+        find.widgetWithText(AppSecondaryButton, 'Закрыть'),
+      );
+      final creationSaveRect = tester.getRect(
+        find.widgetWithText(AppPrimaryButton, 'Сохранить'),
+      );
+      provider.initializeDocumentSession(id: 'document');
+      provider.notifyListeners();
+      await tester.pumpAndSettle();
+      expect(find.text('Маршрутный лист (просмотр)'), findsOneWidget);
+      final close = find.widgetWithText(AppSecondaryButton, 'Закрыть');
+      final edit = find.widgetWithText(
+        AppPrimaryButton,
+        'Начать редактирование',
+      );
+      final closeRect = tester.getRect(close);
+      final editRect = tester.getRect(edit);
+      expect(closeRect, creationCloseRect);
+      expect(editRect, creationSaveRect);
+      final cancelDocumentRect = tester.getRect(
+        find.widgetWithText(AppSecondaryButton, 'Отменить документ'),
+      );
+      expect(closeRect.center.dx, lessThan(editRect.center.dx));
+      expect(editRect.center.dx, lessThan(cancelDocumentRect.center.dx));
+      await tester.tap(edit);
+      await tester.pumpAndSettle();
+      expect(find.text('Маршрутный лист (редактирование)'), findsOneWidget);
+      expect(find.text('Закрыть'), findsNothing);
+      expect(find.text('Отменить документ'), findsNothing);
+      expect(
+        tester.getRect(find.widgetWithText(AppSecondaryButton, 'Отмена')),
+        closeRect,
+      );
+      expect(
+        tester.getRect(find.widgetWithText(AppPrimaryButton, 'Сохранить')),
+        editRect,
+      );
+      await tester.enterText(
+        find.byType(TextFormField),
+        'Несохранённое изменение',
+      );
+      await tester.tapAt(closeRect.center);
+      await tester.pumpAndSettle();
+      expect(find.text('Маршрутный лист (просмотр)'), findsOneWidget);
+      expect(find.text('Несохранённое изменение'), findsNothing);
+      expect(find.text('Сохранённое значение'), findsOneWidget);
+      expect(tester.getRect(close), closeRect);
+      expect(tester.getRect(edit), editRect);
+      expect(provider.isEditing, isFalse);
+      expect(locks.released, 1);
+      expect(saves, 0);
+      expect(activeChanges, 0);
+      await tester.tapAt(closeRect.center);
+      await tester.pumpAndSettle();
+      expect(find.text('Открыть документ'), findsOneWidget);
+      expect(locks.released, 1);
+      expect(tester.takeException(), isNull);
+    },
+  );
 }

@@ -89,7 +89,13 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
     listenable: widget.provider,
     builder: (context, _) {
       final p = widget.provider;
-      if (p.isEditing && !_lastEditing) _formKey = GlobalKey<FormState>();
+      final creating = p.documentId == null;
+      final mode = creating
+          ? 'создание'
+          : p.isEditing
+          ? 'редактирование'
+          : 'просмотр';
+      if (p.isEditing != _lastEditing) _formKey = GlobalKey<FormState>();
       _lastEditing = p.isEditing;
       return PopScope(
         canPop: _canPop,
@@ -102,7 +108,7 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
               icon: const Icon(Icons.arrow_back),
               onPressed: p.documentBusy ? null : _close,
             ),
-            title: Text(widget.title),
+            title: Text('${widget.title} ($mode)'),
             actions: [
               if (widget.printDocument != null)
                 IconButton(
@@ -141,15 +147,6 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
                         padding: EdgeInsets.all(12),
                         child: Text(
                           'Документ отменён. Для редактирования восстановите его.',
-                        ),
-                      ),
-                    if (p.documentId != null &&
-                        !p.isEditing &&
-                        p.documentActive)
-                      const Padding(
-                        padding: EdgeInsets.all(12),
-                        child: Text(
-                          'Просмотр. Начните редактирование, чтобы изменить документ.',
                         ),
                       ),
                     if (p.documentError != null)
@@ -204,31 +201,51 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
               spacing: 16,
               runSpacing: 8,
               children: [
-                AppSecondaryButton(
-                  text: 'Закрыть',
-                  onPressed: _loading || p.documentBusy ? null : _close,
+                SizedBox(
+                  width: 160,
+                  child: AppSecondaryButton(
+                    maxLines: 1,
+                    text: !creating && p.isEditing ? 'Отмена' : 'Закрыть',
+                    onPressed: _loading || p.documentBusy
+                        ? null
+                        : !creating && p.isEditing
+                        ? p.cancelEditing
+                        : _close,
+                  ),
                 ),
-                if (p.documentId != null)
-                  AppSecondaryButton(
-                    text: p.documentActive
-                        ? 'Отменить документ'
-                        : 'Восстановить',
-                    onPressed: _loading || p.documentBusy
-                        ? null
-                        : _changeActive,
-                  ),
-                if (p.documentId != null && p.documentActive && !p.isEditing)
-                  AppPrimaryButton(
-                    text: 'Начать редактирование',
-                    onPressed: _loading || p.documentBusy
-                        ? null
-                        : p.beginEditing,
-                  ),
-                if (p.documentId == null || p.isEditing)
-                  AppPrimaryButton(
-                    text: 'Сохранить',
-                    onPressed: !_loading && p.canSave ? _save : null,
-                  ),
+                SizedBox(
+                  width: 240,
+                  child: creating || p.isEditing
+                      ? AppPrimaryButton(
+                          maxLines: 1,
+                          text: 'Сохранить',
+                          onPressed: !_loading && p.canSave ? _save : null,
+                        )
+                      : p.documentActive
+                      ? AppPrimaryButton(
+                          maxLines: 1,
+                          text: 'Начать редактирование',
+                          onPressed: _loading || p.documentBusy
+                              ? null
+                              : p.beginEditing,
+                        )
+                      : null,
+                ),
+                // Keep the same horizontal slots in creation, view and edit.
+                SizedBox(
+                  width: 220,
+                  child: !creating && !p.isEditing
+                      ? AppSecondaryButton(
+                          maxLines: 1,
+                          text: p.documentActive
+                              ? 'Отменить документ'
+                              : 'Восстановить',
+                          onPressed: _loading || p.documentBusy
+                              ? null
+                              : _changeActive,
+                        )
+                      : null,
+                ),
               ],
             ),
           ),
