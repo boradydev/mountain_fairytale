@@ -41,7 +41,9 @@ void main() {
       );
       await tester.tap(find.text('Клиент'));
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Обновить цену из каталога'));
+      await tester.tap(find.byTooltip('Действия с позицией'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Обновить цену из каталога'));
       await tester.pumpAndSettle();
       expect(
         find.textContaining(
@@ -52,7 +54,9 @@ void main() {
       await tester.tap(find.text('Отмена'));
       await tester.pumpAndSettle();
       expect(provider.points.single.items.single.price, 1.005);
-      await tester.tap(find.byTooltip('Обновить цену из каталога'));
+      await tester.tap(find.byTooltip('Действия с позицией'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Обновить цену из каталога'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Обновить цену'));
       await tester.pumpAndSettle();
@@ -63,12 +67,12 @@ void main() {
       expect(find.text('Переименованный товар'), findsNothing);
       catalog.active = false;
       catalog.price = 50;
-      await tester.tap(find.byTooltip('Обновить цену из каталога'));
+      await tester.tap(find.byTooltip('Действия с позицией'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Обновить цену из каталога'));
       await tester.pumpAndSettle();
       expect(find.text('Обновить цену строки?'), findsNothing);
       expect(provider.points.single.items.single.price, 25);
-      await tester.tap(find.byTooltip('Изменить количество'));
-      await tester.pumpAndSettle();
       final quantityField = find.byType(TextFormField).last;
       await tester.enterText(quantityField, '4');
       await tester.pump();
@@ -77,7 +81,7 @@ void main() {
       await tester.pump();
       expect(formKey.currentState!.validate(), isFalse);
       await tester.pump();
-      expect(find.text('Введите количество больше нуля'), findsOneWidget);
+      expect(find.text('Больше 0'), findsOneWidget);
       expect(provider.points.single.items.single.quantity, 4);
       expect(tester.takeException(), isNull);
     },

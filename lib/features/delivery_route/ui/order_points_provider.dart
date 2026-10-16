@@ -372,6 +372,40 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     }
   }
 
+  Future<bool> selectPointRepresentative(
+    String clientId,
+    ClientDirectoryEntry representative,
+    ClientsProvider clientsProvider,
+  ) async {
+    if (!canEdit || !representative.isActive) return false;
+    final client = await clientRepo.updateClient(
+      clientId,
+      UpdateClientRequest(salesRepresentativeId: representative.id),
+    );
+    clientsProvider.syncUpdatedClient(client);
+    final index = points.indexWhere((point) => point.clientId == clientId);
+    if (index != -1) {
+      final point = points[index];
+      points[index] = RoutePoint(
+        pointId: point.pointId,
+        position: point.position,
+        clientId: point.clientId,
+        clientName: point.clientName,
+        city: point.city,
+        address: point.address,
+        phone: point.phone,
+        paymentMethodId: point.paymentMethodId,
+        paymentMethod: point.paymentMethod,
+        salesRepresentativeId: client.salesRepresentativeId,
+        salesRepresentative:
+            client.salesRepresentativeName ?? 'Нет представителя',
+        items: point.items,
+      );
+    }
+    notifyListeners();
+    return true;
+  }
+
   double get grandTotal =>
       points.fold(0, (sum, point) => sum + point.totalCents) / 100;
 
