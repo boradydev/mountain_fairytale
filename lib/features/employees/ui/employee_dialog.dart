@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/features/employees/data/employee_model.dart';
+import 'package:mountain_fairytale/features/employees/ui/employee_password_dialog.dart';
 import 'package:mountain_fairytale/features/employees/ui/employees_provider.dart';
 import 'package:mountain_fairytale/shared/widgets/base_form_dialog_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/confirm_dialog.dart';
@@ -175,6 +176,22 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  Future<void> _changePassword() async {
+    if (_busy) return;
+    final changed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => EmployeePasswordDialog(
+        employee: widget.employee!,
+        provider: widget.provider,
+      ),
+    );
+    if (!mounted || changed != true) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Пароль сотрудника изменён.')),
+    );
   }
 
   Future<void> _changeActive(bool isActive) async {
@@ -353,6 +370,13 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
             return null;
           },
         ),
+        if (_isEditMode) ...[
+          const SizedBox(height: 16),
+          AppSecondaryButton(
+            text: 'Изменить пароль',
+            onPressed: _busy ? null : _changePassword,
+          ),
+        ],
         if (_error != null) ...[
           const SizedBox(height: 12),
           Text(

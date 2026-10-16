@@ -31,7 +31,7 @@ class EmployeesProvider extends ChangeNotifier {
     _errorMessage = null;
     _notify();
     try {
-      // Keep deactivated accounts available for the dropdown visibility filter.
+      // Keep deactivated accounts available for the list visibility filter.
       _employees = await _repository.getEmployees(includeDeactivated: true);
     } catch (error) {
       _errorMessage = _friendlyMessage(

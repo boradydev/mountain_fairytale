@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/features/employees/data/employee_model.dart';
 import 'package:mountain_fairytale/features/employees/ui/employee_dialog.dart';
-import 'package:mountain_fairytale/features/employees/ui/employee_password_dialog.dart';
 import 'package:mountain_fairytale/features/employees/ui/employees_provider.dart';
-import 'package:mountain_fairytale/shared/widgets/dropdown_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/add_action_card.dart';
+import 'package:mountain_fairytale/shared/widgets/base_card_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/labeled_checkbox_toggle.dart';
+import 'package:mountain_fairytale/shared/widgets/list_section_header.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 import 'package:provider/provider.dart';
 
@@ -16,7 +18,6 @@ class EmployeesScreen extends StatefulWidget {
 
 class _EmployeesScreenState extends State<EmployeesScreen> {
   bool _includeDeactivated = false;
-  String? _selectedEmployeeId;
 
   @override
   void initState() {
@@ -26,21 +27,11 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
     });
   }
 
-  Employee? _selected(List<Employee> visibleEmployees) {
-    Employee? firstActive;
-    for (final employee in visibleEmployees) {
-      if (employee.id == _selectedEmployeeId) return employee;
-      if (firstActive == null && employee.isActive) firstActive = employee;
-    }
-    return firstActive ??
-        (visibleEmployees.isEmpty ? null : visibleEmployees.first);
-  }
-
   Future<void> _openEditor({Employee? employee}) async {
     final provider = context.read<EmployeesProvider>();
     provider.clearError();
     Employee? employeeToOpen;
-    final saved = await showDialog<Employee>(
+    await showDialog<Employee>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => EmployeeDialog(
@@ -55,26 +46,7 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
     if (!mounted) return;
     if (employeeToOpen != null) {
       await _openEditor(employee: employeeToOpen);
-      return;
     }
-    if (saved == null) return;
-    setState(() => _selectedEmployeeId = saved.id);
-  }
-
-  Future<void> _changePassword(Employee employee) async {
-    final provider = context.read<EmployeesProvider>();
-    final changed = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => EmployeePasswordDialog(
-        employee: employee,
-        provider: provider,
-      ),
-    );
-    if (!mounted || changed != true) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Пароль сотрудника изменён.')),
-    );
   }
 
   @override
@@ -84,130 +56,128 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
     final employees = _includeDeactivated
         ? allEmployees
         : allEmployees.where((employee) => employee.isActive).toList();
-    final selected = _selected(employees);
 
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 700),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: provider.isLoading && allEmployees.isEmpty
-              ? const Center(child: CircularProgressIndicator())
-              : provider.errorMessage != null && allEmployees.isEmpty
-              ? _LoadError(
-                  message: provider.errorMessage!,
-                  onRetry: provider.loadEmployees,
-                )
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    AppDropdown<Employee>(
-                      key: ValueKey(selected?.id),
-                      label: 'Сотрудник',
-                      items: employees,
-                      value: selected,
-                      hint: employees.isEmpty
-                          ? 'Нет сотрудников'
-                          : 'Выберите сотрудника',
-                      prefixIcon: Icons.people_outline,
-                      itemLabelBuilder: (employee) => employee.username,
-                      itemBuilder: (employee) => Row(
-                        children: [
-                          Expanded(child: Text(employee.username)),
-                          if (!employee.isActive)
-                            const Text(
-                              'Неактивен',
-                              style: TextStyle(fontSize: 12),
-                            ),
-                        ],
-                      ),
-                      onChanged: (employee) => setState(
-                        () => _selectedEmployeeId = employee?.id,
-                      ),
-                      enabled: !provider.isLoading,
-                      showAdd: true,
-                      editBeforeAdd: true,
-                      onAdd: () => _openEditor(),
-                      showEdit: true,
-                      onEdit: selected == null
-                          ? null
-                          : () => _openEditor(employee: selected),
-                      showInactiveToggle: true,
-                      includeInactive: _includeDeactivated,
-                      onIncludeInactiveChanged: (value) => setState(() {
-                        _includeDeactivated = value;
-                        if (!value && selected != null && !selected.isActive) {
-                          _selectedEmployeeId = null;
-                        }
-                      }),
-                    ),
-                    if (provider.isLoading && allEmployees.isNotEmpty)
-                      const LinearProgressIndicator(),
-                    if (provider.errorMessage != null &&
-                        allEmployees.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 12),
-                        child: Text(
-                          provider.errorMessage!,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
-                          ),
-                        ),
-                      ),
-                    const SizedBox(height: 24),
-                    if (selected == null)
-                      const Card(
-                        child: Padding(
-                          padding: EdgeInsets.all(24),
-                          child: Text('Сотрудники ещё не добавлены.'),
-                        ),
-                      )
-                    else ...[
-                      Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                selected.username,
-                                style: Theme.of(context).textTheme.titleLarge,
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                'Комиссия: ${_formatPercent(selected.commissionPercent)}%',
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Статус: ${selected.isActive ? 'Активен' : 'Неактивен'}',
-                              ),
-                              if (selected.isAdmin) ...[
-                                const SizedBox(height: 4),
-                                const Text('Роль: администратор'),
-                              ],
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: AppSecondaryButton(
-                          text: 'Изменить пароль',
-                          onPressed: () => _changePassword(selected),
-                        ),
-                      ),
-                    ],
-                  ],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AppListSectionHeader(
+              title: 'Сотрудники',
+              description: 'Добавление и редактирование сотрудников.',
+              controls: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: LabeledCheckboxToggle(
+                  label: 'Деактивированные',
+                  value: _includeDeactivated,
+                  onChanged: (value) =>
+                      setState(() => _includeDeactivated = value),
+                  tooltip: 'Показывать деактивированных сотрудников вместе с активными',
                 ),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: Divider(height: 1),
+            ),
+            if (provider.isLoading && allEmployees.isNotEmpty)
+              const LinearProgressIndicator(),
+            if (provider.errorMessage != null && allEmployees.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  provider.errorMessage!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ),
+            Expanded(
+              child: provider.isLoading && allEmployees.isEmpty
+                  ? const Center(child: CircularProgressIndicator())
+                  : provider.errorMessage != null && allEmployees.isEmpty
+                  ? Center(
+                      child: _LoadError(
+                        message: provider.errorMessage!,
+                        onRetry: provider.loadEmployees,
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      itemCount: employees.isEmpty ? 2 : employees.length + 1,
+                      itemBuilder: (context, index) {
+                        if (index == 0) {
+                          return AddActionButton(
+                            label: 'Добавить сотрудника',
+                            icon: Icons.person_add_alt_1_outlined,
+                            onTap: () => _openEditor(),
+                          );
+                        }
+                        if (employees.isEmpty) {
+                          return Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Text(
+                              allEmployees.isEmpty
+                                  ? 'Сотрудники ещё не добавлены.'
+                                  : 'Нет активных сотрудников.',
+                              textAlign: TextAlign.center,
+                            ),
+                          );
+                        }
+                        final employee = employees[index - 1];
+                        return _EmployeeCard(
+                          key: ValueKey(employee.id),
+                          employee: employee,
+                          onTap: () => _openEditor(employee: employee),
+                        );
+                      },
+                    ),
+            ),
+          ],
         ),
       ),
     );
   }
+}
 
-  String _formatPercent(double value) => value == value.roundToDouble()
-      ? value.toStringAsFixed(0)
-      : value.toString();
+class _EmployeeCard extends StatelessWidget {
+  final Employee employee;
+  final VoidCallback onTap;
+
+  const _EmployeeCard({super.key, required this.employee, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final percent = employee.commissionPercent;
+    final formattedPercent = percent == percent.roundToDouble()
+        ? percent.toStringAsFixed(0)
+        : percent.toString();
+
+    return AppBaseCard(
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(employee.username, style: theme.textTheme.titleMedium),
+          const SizedBox(height: 4),
+          Text(
+            employee.isActive ? 'Активен' : 'Деактивирован',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Divider(color: theme.colorScheme.outlineVariant, height: 1),
+          const SizedBox(height: 8),
+          Text('Комиссия: $formattedPercent%'),
+          if (employee.isAdmin) ...[
+            const SizedBox(height: 4),
+            const Text('Роль: администратор'),
+          ],
+        ],
+      ),
+    );
+  }
 }
 
 class _LoadError extends StatelessWidget {
@@ -217,16 +187,19 @@ class _LoadError extends StatelessWidget {
   const _LoadError({required this.message, required this.onRetry});
 
   @override
-  Widget build(BuildContext context) => Column(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Text(
-        message,
-        textAlign: TextAlign.center,
-        style: TextStyle(color: Theme.of(context).colorScheme.error),
-      ),
-      const SizedBox(height: 12),
-      AppPrimaryButton(text: 'Повторить', onPressed: onRetry),
-    ],
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.all(24),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          message,
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Theme.of(context).colorScheme.error),
+        ),
+        const SizedBox(height: 12),
+        AppPrimaryButton(text: 'Повторить', onPressed: onRetry),
+      ],
+    ),
   );
 }
