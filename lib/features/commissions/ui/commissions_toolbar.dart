@@ -62,7 +62,7 @@ class CommissionsToolbar extends StatelessWidget {
                     onChanged: provider.setIncludeDeactivated,
                     tooltip: provider.mode == CommissionMode.representatives
                         ? 'Показать всех представителей, включая деактивированных без клиентов и начислений'
-                        : 'Показать всех сотрудников, включая деактивированных без начислений',
+                        : 'Показать деактивированных сотрудников со ставкой, даже без начислений',
                   ),
                 ),
               );

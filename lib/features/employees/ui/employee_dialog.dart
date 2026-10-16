@@ -49,7 +49,7 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
     )..addListener(_onUsernameChanged);
     _passwordController = TextEditingController();
     _commissionController = TextEditingController(
-      text: widget.employee?.commissionPercent.toString() ?? '',
+      text: widget.employee?.commissionPercent?.toString() ?? '',
     );
     _usernameFocusNode.addListener(_onUsernameFocusChanged);
   }
@@ -130,7 +130,7 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
   Future<void> _save() async {
     if (_busy || !_formKey.currentState!.validate()) return;
     final username = _usernameController.text.trim();
-    final commissionPercent = double.parse(
+    final commissionPercent = double.tryParse(
       _commissionController.text.trim().replaceAll(',', '.'),
     );
     setState(() {
@@ -149,6 +149,7 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
           UpdateEmployeeRequest(
             username: username,
             commissionPercent: commissionPercent,
+            clearCommissionPercent: commissionPercent == null,
           ),
         );
       } else {
@@ -351,15 +352,18 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
           controller: _commissionController,
           enabled: !_busy,
           decoration: const InputDecoration(
-            labelText: 'Комиссия *',
+            labelText: 'Комиссия',
+            helperText: 'Пусто — без комиссии. 0% — участие с нулевой ставкой',
+            helperMaxLines: 2,
             border: OutlineInputBorder(),
             prefixIcon: Icon(Icons.percent),
             suffixText: '%',
           ),
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           validator: (value) {
+            if (value == null || value.trim().isEmpty) return null;
             final percent = double.tryParse(
-              value?.trim().replaceAll(',', '.') ?? '',
+              value.trim().replaceAll(',', '.'),
             );
             if (percent == null || !percent.isFinite) {
               return 'Введите корректный процент';

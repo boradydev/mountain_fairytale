@@ -149,7 +149,9 @@ class _EmployeeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final percent = employee.commissionPercent;
-    final formattedPercent = percent == percent.roundToDouble()
+    final formattedPercent = percent == null
+        ? null
+        : percent == percent.roundToDouble()
         ? percent.toStringAsFixed(0)
         : percent.toString();
 
@@ -169,7 +171,11 @@ class _EmployeeCard extends StatelessWidget {
           const SizedBox(height: 12),
           Divider(color: theme.colorScheme.outlineVariant, height: 1),
           const SizedBox(height: 8),
-          Text('Комиссия: $formattedPercent%'),
+          Text(
+            formattedPercent == null
+                ? 'Без комиссии'
+                : 'Комиссия: $formattedPercent%',
+          ),
           if (employee.isAdmin) ...[
             const SizedBox(height: 4),
             const Text('Роль: администратор'),

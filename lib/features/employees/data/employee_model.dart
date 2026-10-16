@@ -2,7 +2,7 @@ class Employee {
   final String id;
   final String username;
   final String role;
-  final double commissionPercent;
+  final double? commissionPercent;
   final bool isActive;
   final DateTime createdAt;
 
@@ -21,7 +21,7 @@ class Employee {
     id: json['employeeId'] as String,
     username: json['username'] as String,
     role: json['role'] as String,
-    commissionPercent: (json['commissionPercent'] as num).toDouble(),
+    commissionPercent: (json['commissionPercent'] as num?)?.toDouble(),
     isActive: json['isActive'] as bool,
     createdAt: DateTime.parse(json['createdAt'] as String),
   );
@@ -30,12 +30,12 @@ class Employee {
 class CreateEmployeeRequest {
   final String username;
   final String password;
-  final double commissionPercent;
+  final double? commissionPercent;
 
   const CreateEmployeeRequest({
     required this.username,
     required this.password,
-    required this.commissionPercent,
+    this.commissionPercent,
   });
 
   Map<String, dynamic> toJson() => {
@@ -48,17 +48,20 @@ class CreateEmployeeRequest {
 class UpdateEmployeeRequest {
   final String? username;
   final double? commissionPercent;
+  final bool clearCommissionPercent;
   final bool? isActive;
 
   const UpdateEmployeeRequest({
     this.username,
     this.commissionPercent,
+    this.clearCommissionPercent = false,
     this.isActive,
-  });
+  }) : assert(!clearCommissionPercent || commissionPercent == null);
 
   Map<String, dynamic> toJson() => {
     if (username != null) 'username': username,
-    if (commissionPercent != null) 'commissionPercent': commissionPercent,
+    if (clearCommissionPercent || commissionPercent != null)
+      'commissionPercent': clearCommissionPercent ? null : commissionPercent,
     if (isActive != null) 'isActive': isActive,
   };
 }

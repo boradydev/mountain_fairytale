@@ -15,6 +15,40 @@ import 'package:provider/provider.dart';
 
 class _EmployeesRepository implements EmployeeRepository {
   bool? includeDeactivated;
+  final created = <CreateEmployeeRequest>[];
+  final updated = <UpdateEmployeeRequest>[];
+
+  @override
+  Future<Employee?> checkDuplicate(String username) async => null;
+
+  @override
+  Future<Employee> createEmployee(CreateEmployeeRequest request) async {
+    created.add(request);
+    return Employee(
+      id: 'created',
+      username: request.username,
+      role: 'employee',
+      commissionPercent: request.commissionPercent,
+      isActive: true,
+      createdAt: DateTime(2026),
+    );
+  }
+
+  @override
+  Future<Employee> updateEmployee(
+    String id,
+    UpdateEmployeeRequest request,
+  ) async {
+    updated.add(request);
+    return Employee(
+      id: id,
+      username: request.username ?? 'manager',
+      role: 'admin',
+      commissionPercent: request.commissionPercent,
+      isActive: request.isActive ?? true,
+      createdAt: DateTime(2026),
+    );
+  }
 
   @override
   Future<List<Employee>> getEmployees({bool includeDeactivated = false}) async {
@@ -131,4 +165,49 @@ void main() {
     expect(find.byType(EmployeePasswordDialog), findsNothing);
     expect(find.byType(EmployeeDialog), findsOneWidget);
   });
+
+  testWidgets(
+    'creates without commission and distinguishes clearing from zero',
+    (tester) async {
+      final repository = await _openScreen(tester);
+      await tester.tap(find.byType(AddActionButton));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Логин *'),
+        'director',
+      );
+      await tester.ensureVisible(find.text('Добавить'));
+      await tester.tap(find.text('Добавить'));
+      await tester.pumpAndSettle();
+      expect(repository.created.single.commissionPercent, isNull);
+      expect(find.byType(EmployeeDialog), findsNothing);
+      expect(find.text('Без комиссии'), findsOneWidget);
+
+      await tester.tap(find.widgetWithText(AppBaseCard, 'manager'));
+      await tester.pumpAndSettle();
+      final rateField = find.widgetWithText(TextFormField, 'Комиссия');
+      await tester.ensureVisible(rateField);
+      await tester.enterText(rateField, '');
+      await tester.ensureVisible(find.text('Сохранить'));
+      await tester.tap(find.text('Сохранить'));
+      await tester.pumpAndSettle();
+      expect(repository.updated.single.toJson()['commissionPercent'], isNull);
+      expect(
+        repository.updated.single.toJson().containsKey('commissionPercent'),
+        isTrue,
+      );
+      expect(find.text('Без комиссии'), findsNWidgets(2));
+
+      await tester.tap(find.widgetWithText(AppBaseCard, 'manager'));
+      await tester.pumpAndSettle();
+      expect(tester.widget<TextFormField>(rateField).controller!.text, isEmpty);
+      await tester.ensureVisible(rateField);
+      await tester.enterText(rateField, '0');
+      await tester.ensureVisible(find.text('Сохранить'));
+      await tester.tap(find.text('Сохранить'));
+      await tester.pumpAndSettle();
+      expect(repository.updated.last.toJson()['commissionPercent'], 0);
+      expect(find.text('Комиссия: 0%'), findsOneWidget);
+    },
+  );
 }

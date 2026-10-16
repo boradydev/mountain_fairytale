@@ -142,7 +142,11 @@ class _CommissionsScreenState extends State<CommissionsScreen> {
     CommissionReport report,
   ) {
     if (report.employees.isEmpty) {
-      return const Center(child: Text('Сотрудников нет'));
+      return const Center(
+        child: Text(
+          'Нет сотрудников с комиссией или начислениями за этот месяц',
+        ),
+      );
     }
     return ListView.builder(
       itemCount: report.employees.length,
