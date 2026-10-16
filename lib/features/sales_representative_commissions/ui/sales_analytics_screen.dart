@@ -232,9 +232,10 @@ class _CommissionCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   commission.salesRepresentativeName,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
               ),

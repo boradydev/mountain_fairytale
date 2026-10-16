@@ -113,7 +113,7 @@ class _CommissionsScreenState extends State<CommissionsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(row.name, style: Theme.of(context).textTheme.titleMedium),
+              _CommissionName(row.name),
               if (!row.isActive) const CommissionInactiveLabel(),
               const SizedBox(height: 12),
               Wrap(
@@ -191,7 +191,7 @@ class _CommissionsScreenState extends State<CommissionsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(row.name, style: Theme.of(context).textTheme.titleMedium),
+              _CommissionName(row.name),
               if (!row.isActive) const CommissionInactiveLabel(),
               const SizedBox(height: 12),
               Wrap(
@@ -206,6 +206,23 @@ class _CommissionsScreenState extends State<CommissionsScreen> {
           ),
         );
       },
+    );
+  }
+}
+
+class _CommissionName extends StatelessWidget {
+  final String name;
+
+  const _CommissionName(this.name);
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Text(
+      name,
+      style: theme.textTheme.titleMedium?.copyWith(
+        color: theme.colorScheme.onSurface,
+      ),
     );
   }
 }
