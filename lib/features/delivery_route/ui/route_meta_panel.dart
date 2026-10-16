@@ -160,6 +160,7 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
 
           // Водитель
           AppDropdown<Driver>(
+            isLoading: provider.isLoadingDrivers,
             key: ValueKey('driver-$_driverSelectionVersion'),
             label: 'Водитель *',
             focusNode: _driverFocusNode,
@@ -203,12 +204,6 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
             Text(
               'В маршрутном листе: ${provider.driverName}. Выберите активного водителя для продолжения.',
             ),
-          SizedBox(
-            height: 4,
-            child: provider.isLoadingDrivers
-                ? const LinearProgressIndicator()
-                : null,
-          ),
           if (provider.driverError != null)
             Row(
               children: [
@@ -231,6 +226,7 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
 
           // Автомобиль
           AppDropdown<Car>(
+            isLoading: provider.isLoadingCars,
             key: ValueKey('car-$_carSelectionVersion'),
             label: 'Автомобиль *',
             focusNode: _carFocusNode,
@@ -269,12 +265,6 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
                 : () => _showCarDialog(context, car: provider.selectedCar),
           ),
 
-          SizedBox(
-            height: 4,
-            child: provider.isLoadingCars
-                ? const LinearProgressIndicator()
-                : null,
-          ),
           if (provider.carError != null)
             Row(
               children: [

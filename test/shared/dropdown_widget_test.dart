@@ -9,6 +9,7 @@ void main() {
       final formKey = GlobalKey<FormState>();
       String? value;
       var changes = 0;
+      var isLoading = false;
       late StateSetter update;
       await tester.pumpWidget(
         MaterialApp(
@@ -20,6 +21,7 @@ void main() {
                   update = setState;
                   return AppDropdown<String>(
                     label: 'Запись',
+                    isLoading: isLoading,
                     items: const ['Первая', 'Вторая'],
                     value: value,
                     onChanged: (_) => changes++,
@@ -33,6 +35,22 @@ void main() {
       );
       final field = find.byType(DropdownButtonFormField<String>);
       final originalState = tester.state<FormFieldState<String>>(field);
+      final dropdown = find.byType(AppDropdown<String>);
+      final initialRect = tester.getRect(dropdown);
+      final initialFieldRect = tester.getRect(field);
+      expect(find.byType(LinearProgressIndicator), findsNothing);
+      update(() => isLoading = true);
+      await tester.pump();
+      final progressRect = tester.getRect(find.byType(LinearProgressIndicator));
+      expect(progressRect.top - tester.getRect(field).bottom, 4);
+      expect(progressRect.height, 4);
+      expect(tester.getRect(dropdown), initialRect);
+      expect(tester.getRect(field), initialFieldRect);
+      expect(tester.state(field), same(originalState));
+      update(() => isLoading = false);
+      await tester.pumpAndSettle();
+      expect(find.byType(LinearProgressIndicator), findsNothing);
+      expect(tester.getRect(dropdown), initialRect);
       expect(formKey.currentState!.validate(), isFalse);
       await tester.pump();
       update(() => value = 'Первая');

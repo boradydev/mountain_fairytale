@@ -156,6 +156,7 @@ class _PaymentMethodSelectorState extends State<PaymentMethodSelector> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           AppDropdown<PaymentMethod>(
+            isLoading: _saving || provider.isLoadingPaymentMethods,
             key: ValueKey(
               'payment-$_selectionVersion-${provider.showInactivePaymentMethods}-${selectable?.id}-${selected?.name}-${selected?.isActive}',
             ),
@@ -191,12 +192,6 @@ class _PaymentMethodSelectorState extends State<PaymentMethodSelector> {
             onEdit: _busy || selected == null
                 ? null
                 : () => _showEditor(method: selected),
-          ),
-          SizedBox(
-            height: 4,
-            child: _saving || provider.isLoadingPaymentMethods
-                ? const LinearProgressIndicator()
-                : null,
           ),
           if (provider.paymentMethodLoadError != null || _error != null)
             Row(

@@ -153,6 +153,7 @@ class _AddTaskDialogState extends State<_AddTaskDialog> {
           canSubmit: _selected != null,
           children: [
             AppDropdown<Product>(
+              isLoading: provider.isLoadingProducts || _busy,
               key: ValueKey('product-$_selectionVersion'),
               label: 'Продукция / услуга',
               focusNode: _productFocusNode,
@@ -191,12 +192,6 @@ class _AddTaskDialogState extends State<_AddTaskDialog> {
               onEdit: _busy || _selected == null
                   ? null
                   : () => _showProductDialog(product: _selected),
-            ),
-            SizedBox(
-              height: 4,
-              child: provider.isLoadingProducts || _busy
-                  ? const LinearProgressIndicator()
-                  : null,
             ),
             if (provider.productLoadError != null)
               Row(

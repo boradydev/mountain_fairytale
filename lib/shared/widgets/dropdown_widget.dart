@@ -11,6 +11,9 @@ class AppDropdown<T> extends StatelessWidget {
 
   /// Отключает поле и кнопки, сохраняя их расположение.
   final bool enabled;
+
+  /// Показывает загрузку под полем; место под индикатор зарезервировано всегда.
+  final bool isLoading;
   final VoidCallback? onAdd;
   final VoidCallback? onEdit;
   final String? Function(T?)? validator;
@@ -42,6 +45,7 @@ class AppDropdown<T> extends StatelessWidget {
     required this.value,
     required this.onChanged,
     this.enabled = true,
+    this.isLoading = false,
     this.hint,
     this.itemLabelBuilder,
     this.onAdd,
@@ -130,6 +134,11 @@ class AppDropdown<T> extends StatelessWidget {
               }).toList(),
               onChanged: enabled ? onChanged : null,
             ),
+        const SizedBox(height: 4),
+        SizedBox(
+          height: 4,
+          child: isLoading ? const LinearProgressIndicator(minHeight: 4) : null,
+        ),
       ],
     );
   }

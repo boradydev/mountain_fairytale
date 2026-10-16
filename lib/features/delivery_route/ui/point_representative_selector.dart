@@ -151,6 +151,7 @@ class _PointRepresentativeSelectorState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         AppDropdown<ClientDirectoryEntry>(
+          isLoading: _loading || _busy,
           key: ValueKey('rep-$_version-${point.salesRepresentativeId}'),
           label: 'Торговый представитель',
           items: _items,
@@ -173,10 +174,6 @@ class _PointRepresentativeSelectorState
           onEdit: point.salesRepresentativeId == null
               ? null
               : () => _edit(id: point.salesRepresentativeId),
-        ),
-        SizedBox(
-          height: 4,
-          child: _loading || _busy ? const LinearProgressIndicator() : null,
         ),
         if (_error != null) ...[
           Text(
