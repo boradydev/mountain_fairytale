@@ -1,3 +1,4 @@
+import 'package:mountain_fairytale/shared/widgets/duplicate_check_status_widget.dart';
 import 'package:mountain_fairytale/features/sales_representatives/data/sales_representative_api_repo.dart';
 import 'package:mountain_fairytale/features/sales_representatives/ui/sales_rep_dialog.dart';
 import 'package:mountain_fairytale/features/payment_methods/data/payment_method_model.dart';
@@ -52,6 +53,10 @@ class ClientsFake implements ClientRepository {
   bool duplicateFailure = false;
   Client? duplicate;
   Completer<Client?>? duplicateGate;
+  Completer<List<ClientDirectoryEntry>>? salesRepGate;
+  Completer<List<ClientDirectoryEntry>>? paymentGate;
+  int salesRepLoads = 0;
+  int paymentLoads = 0;
   Completer<List<Client>>? listGate;
   Future<List<Client>> Function(String?, bool)? onSearch;
   int checks = 0;
@@ -61,13 +66,27 @@ class ClientsFake implements ClientRepository {
   @override
   Future<List<ClientDirectoryEntry>> getSalesRepresentatives({
     bool includeDeactivated = false,
-  }) async =>
-      salesRepRows.where((row) => includeDeactivated || row.isActive).toList();
+  }) async {
+    salesRepLoads++;
+    return salesRepGate == null
+        ? salesRepRows
+              .where((row) => includeDeactivated || row.isActive)
+              .toList()
+        : await salesRepGate!.future;
+  }
+
   @override
   Future<List<ClientDirectoryEntry>> getPaymentMethods({
     bool includeDeactivated = false,
-  }) async =>
-      paymentRows.where((row) => includeDeactivated || row.isActive).toList();
+  }) async {
+    paymentLoads++;
+    return paymentGate == null
+        ? paymentRows
+              .where((row) => includeDeactivated || row.isActive)
+              .toList()
+        : await paymentGate!.future;
+  }
+
   @override
   Future<Client?> checkDuplicate(
     String name,
@@ -226,6 +245,7 @@ Future<void> openDialog(
   WidgetTester tester,
   ClientsFake repo, {
   Client? client,
+  bool settle = true,
   SalesRepresentativeApiRepository? reps,
   OrderPointsProvider? orders,
 }) async {
@@ -264,7 +284,11 @@ Future<void> openDialog(
     ),
   );
   await tester.tap(find.text('Открыть'));
-  await tester.pumpAndSettle();
+  if (settle) {
+    await tester.pumpAndSettle();
+  } else {
+    await tester.pump(const Duration(milliseconds: 400));
+  }
 }
 
 Finder field(String label) => find.ancestor(
@@ -282,6 +306,91 @@ Future<void> fill(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets(
+    'directory loading stays inside client dropdowns without moving fields',
+    (tester) async {
+      final gate = Completer<List<ClientDirectoryEntry>>();
+      final repo = ClientsFake()..salesRepGate = gate;
+      await openDialog(tester, repo, settle: false);
+      await tester.pump();
+      final dropdowns = find.byType(AppDropdown<String>);
+      expect(dropdowns, findsNWidgets(2));
+      expect(find.byType(LinearProgressIndicator), findsOneWidget);
+      expect(
+        find.descendant(
+          of: dropdowns.at(0),
+          matching: find.byType(LinearProgressIndicator),
+        ),
+        findsOneWidget,
+      );
+      final originalRects = [
+        tester.getRect(dropdowns.at(0)),
+        tester.getRect(dropdowns.at(1)),
+      ];
+      gate.complete([]);
+      await tester.pumpAndSettle();
+      expect(find.byType(LinearProgressIndicator), findsNothing);
+      expect(tester.getRect(dropdowns.at(0)), originalRects[0]);
+      expect(tester.getRect(dropdowns.at(1)), originalRects[1]);
+      expect(repo.salesRepLoads, 1);
+      expect(repo.paymentLoads, 1);
+      final repsGate = Completer<List<ClientDirectoryEntry>>();
+      repo.salesRepGate = repsGate;
+      await tester.ensureVisible(dropdowns.at(0));
+      await tester.tap(
+        find.descendant(
+          of: dropdowns.at(0),
+          matching: find.byTooltip('Показать неактивные записи'),
+        ),
+      );
+      await tester.pump();
+      expect(
+        tester.widget<AppDropdown<String>>(dropdowns.at(0)).isLoading,
+        isTrue,
+      );
+      expect(
+        tester.widget<AppDropdown<String>>(dropdowns.at(1)).isLoading,
+        isFalse,
+      );
+      expect(
+        tester.widget<AppDropdown<String>>(dropdowns.at(1)).enabled,
+        isTrue,
+      );
+      expect(repo.salesRepLoads, 2);
+      expect(repo.paymentLoads, 1);
+      repsGate.complete([]);
+      await tester.pumpAndSettle();
+      final methodsGate = Completer<List<ClientDirectoryEntry>>();
+      repo.paymentGate = methodsGate;
+      await tester.ensureVisible(dropdowns.at(1));
+      await tester.tap(
+        find.descendant(
+          of: dropdowns.at(1),
+          matching: find.byTooltip('Показать неактивные записи'),
+        ),
+      );
+      await tester.pump();
+      expect(
+        tester.widget<AppDropdown<String>>(dropdowns.at(0)).isLoading,
+        isFalse,
+      );
+      expect(
+        tester.widget<AppDropdown<String>>(dropdowns.at(0)).enabled,
+        isTrue,
+      );
+      expect(
+        tester.widget<AppDropdown<String>>(dropdowns.at(1)).isLoading,
+        isTrue,
+      );
+      expect(repo.salesRepLoads, 2);
+      expect(repo.paymentLoads, 2);
+      methodsGate.complete([]);
+      await tester.pumpAndSettle();
+      expect(find.byType(LinearProgressIndicator), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets(
     'shared form style, zero threshold and three-field duplicate check',
     (tester) async {
@@ -392,6 +501,13 @@ void main() {
     await openDialog(tester, repo);
     await fill(tester);
     expect(repo.checks, greaterThanOrEqualTo(1));
+    expect(
+      find.descendant(
+        of: find.byType(DuplicateCheckStatusWidget),
+        matching: find.byType(CircularProgressIndicator),
+      ),
+      findsOneWidget,
+    );
     tester
             .widget<TextField>(
               find.descendant(
@@ -405,6 +521,7 @@ void main() {
     gate.complete(row(active: false));
     await tester.pumpAndSettle();
     expect(find.textContaining('Найден похожий клиент:'), findsNothing);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
   });
 
   test(

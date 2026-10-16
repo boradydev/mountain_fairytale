@@ -67,7 +67,7 @@ class _DuplicateCheckStatusWidgetState
     }
 
     // Делаем область кликабельной только в том случае, если найден дубликат
-    final isClickable = widget.hasDuplicate;
+    final isClickable = !widget.isChecking && widget.hasDuplicate;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -86,7 +86,16 @@ class _DuplicateCheckStatusWidgetState
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, color: contentColor),
+              SizedBox.square(
+                dimension: 24,
+                child: widget.isChecking
+                    ? CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: contentColor,
+                        semanticsLabel: 'Проверка на дубликаты',
+                      )
+                    : Icon(icon, color: contentColor),
+              ),
               const SizedBox(width: 8),
               Expanded(
                 // AnimatedSize сделает раскрытие текста плавным 🪄

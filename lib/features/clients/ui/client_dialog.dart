@@ -70,13 +70,22 @@ class _ClientDialogState extends State<ClientDialog> {
   final _focusNodes = List.generate(3, (_) => FocusNode());
   bool _busy = false;
   bool _checking = false;
-  bool _loadingDirectories = true;
+  bool _loadingSalesReps = true;
+  bool _loadingPayments = true;
+  int _salesRepLoadVersion = 0;
+  int _paymentLoadVersion = 0;
   bool _includeInactiveSalesReps = false;
   bool _includeInactivePayments = false;
   bool _editingDirectory = false;
   int _directoryVersion = 0;
   String? _error;
-  String? _directoryError;
+  String? _salesRepLoadError;
+  String? _paymentLoadError;
+  String? get _directoryError {
+    final errors = [_salesRepLoadError, _paymentLoadError].whereType<String>();
+    return errors.isEmpty ? null : errors.join('\n');
+  }
+
   String? _phoneError;
   String? _checkedInput;
   int _checkVersion = 0;
@@ -151,45 +160,75 @@ class _ClientDialogState extends State<ClientDialog> {
   }
 
   Future<void> _loadDirectories() async {
+    await Future.wait([
+      _loadDirectory(salesRep: true),
+      _loadDirectory(salesRep: false),
+    ]);
+  }
+
+  Future<void> _loadDirectory({required bool salesRep}) async {
     if (!mounted) return;
-    final version = ++_directoryVersion;
+    final version = salesRep ? ++_salesRepLoadVersion : ++_paymentLoadVersion;
+    bool isCurrent() =>
+        mounted &&
+        version == (salesRep ? _salesRepLoadVersion : _paymentLoadVersion);
     setState(() {
-      _loadingDirectories = true;
-      _directoryError = null;
+      if (salesRep) {
+        _loadingSalesReps = true;
+        _salesRepLoadError = null;
+      } else {
+        _loadingPayments = true;
+        _paymentLoadError = null;
+      }
     });
     try {
       final provider = context.read<ClientsProvider>();
-      final reps = await provider.getSalesRepresentatives(
-        includeDeactivated: _includeInactiveSalesReps,
-      );
-      final methods = await provider.getPaymentMethods(
-        includeDeactivated: _includeInactivePayments,
-      );
-      if (!mounted || version != _directoryVersion) return;
+      final rows = salesRep
+          ? await provider.getSalesRepresentatives(
+              includeDeactivated: _includeInactiveSalesReps,
+            )
+          : await provider.getPaymentMethods(
+              includeDeactivated: _includeInactivePayments,
+            );
+      if (!isCurrent()) return;
       setState(() {
-        _salesReps = _withCurrent(
-          reps,
-          _salesRepId,
-          _selectedEntry(_salesReps, _salesRepId)?.name ??
-              widget.client?.salesRepresentativeName,
-        );
-        _paymentMethods = _withCurrent(
-          methods,
-          _paymentMethodId,
-          _selectedEntry(_paymentMethods, _paymentMethodId)?.name ??
-              widget.client?.defaultPaymentMethodName,
-        );
+        if (salesRep) {
+          _salesReps = _withCurrent(
+            rows,
+            _salesRepId,
+            _selectedEntry(_salesReps, _salesRepId)?.name ??
+                widget.client?.salesRepresentativeName,
+          );
+        } else {
+          _paymentMethods = _withCurrent(
+            rows,
+            _paymentMethodId,
+            _selectedEntry(_paymentMethods, _paymentMethodId)?.name ??
+                widget.client?.defaultPaymentMethodName,
+          );
+        }
       });
     } catch (_) {
-      if (mounted && version == _directoryVersion) {
-        setState(
-          () => _directoryError =
-              'Не удалось загрузить справочники. Повторите попытку.',
-        );
+      if (isCurrent()) {
+        setState(() {
+          if (salesRep) {
+            _salesRepLoadError =
+                'Не удалось загрузить представителей. Повторите попытку.';
+          } else {
+            _paymentLoadError =
+                'Не удалось загрузить способы оплаты. Повторите попытку.';
+          }
+        });
       }
     } finally {
-      if (mounted && version == _directoryVersion) {
-        setState(() => _loadingDirectories = false);
+      if (isCurrent()) {
+        setState(() {
+          if (salesRep) {
+            _loadingSalesReps = false;
+          } else {
+            _loadingPayments = false;
+          }
+        });
       }
     }
   }
@@ -442,7 +481,7 @@ class _ClientDialogState extends State<ClientDialog> {
           ];
         });
       }
-      await _loadDirectories();
+      await _loadDirectory(salesRep: false);
       if (!mounted) return;
       setState(() => _editingDirectory = false);
       if (openAfter != null) await _showPaymentEditor(id: openAfter!.id);
@@ -490,7 +529,7 @@ class _ClientDialogState extends State<ClientDialog> {
           ];
         });
       }
-      await _loadDirectories();
+      await _loadDirectory(salesRep: true);
       if (!mounted) return;
       setState(() => _editingDirectory = false);
       if (openAfter != null) await _showSalesRepEditor(id: openAfter!.id);
@@ -550,7 +589,7 @@ class _ClientDialogState extends State<ClientDialog> {
           });
         }
       }
-      if (mounted) await _loadDirectories();
+      if (mounted) await _loadDirectory(salesRep: salesRep);
     } catch (_) {
       if (mounted) {
         setState(
@@ -573,6 +612,8 @@ class _ClientDialogState extends State<ClientDialog> {
     String? id,
     ValueChanged<String?> onChanged,
     IconData icon, {
+    required bool isLoading,
+    required bool hasLoadError,
     required bool includeInactive,
     required ValueChanged<bool> onIncludeInactiveChanged,
     required VoidCallback onAdd,
@@ -586,6 +627,7 @@ class _ClientDialogState extends State<ClientDialog> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: AppDropdown<String>(
+        isLoading: isLoading,
         key: ValueKey(
           '$label-$id-$includeInactive-${selected?.name}-${selected?.isActive}-$_directoryVersion',
         ),
@@ -593,11 +635,7 @@ class _ClientDialogState extends State<ClientDialog> {
         items: ['', ...visible.map((row) => row.id)],
         value: selectedVisible ? id ?? '' : null,
         hint: selected == null ? 'Не выбран' : '${selected.name} — Неактивен',
-        enabled:
-            !_busy &&
-            !_editingDirectory &&
-            !_loadingDirectories &&
-            _directoryError == null,
+        enabled: !_busy && !_editingDirectory && !isLoading && !hasLoadError,
         prefixIcon: icon,
         showInactiveToggle: true,
         includeInactive: includeInactive,
@@ -655,7 +693,6 @@ class _ClientDialogState extends State<ClientDialog> {
                   : () => _setActive(widget.client!, !widget.client!.isActive),
             ),
       children: [
-        if (_busy || _loadingDirectories) const LinearProgressIndicator(),
         if (widget.client != null && !widget.client!.isActive)
           const Text('Клиент деактивирован'),
         DuplicateCheckStatusWidget(
@@ -780,10 +817,12 @@ class _ClientDialogState extends State<ClientDialog> {
           _salesRepId,
           (id) => setState(() => _salesRepId = id),
           Icons.badge_outlined,
+          isLoading: _loadingSalesReps,
+          hasLoadError: _salesRepLoadError != null,
           includeInactive: _includeInactiveSalesReps,
           onIncludeInactiveChanged: (value) {
             setState(() => _includeInactiveSalesReps = value);
-            _loadDirectories();
+            _loadDirectory(salesRep: true);
           },
           onAdd: () => _showSalesRepEditor(),
           onEdit: _salesRepId == null
@@ -796,10 +835,12 @@ class _ClientDialogState extends State<ClientDialog> {
           _paymentMethodId,
           (id) => setState(() => _paymentMethodId = id),
           Icons.payments_outlined,
+          isLoading: _loadingPayments,
+          hasLoadError: _paymentLoadError != null,
           includeInactive: _includeInactivePayments,
           onIncludeInactiveChanged: (value) {
             setState(() => _includeInactivePayments = value);
-            _loadDirectories();
+            _loadDirectory(salesRep: false);
           },
           onAdd: () => _showPaymentEditor(),
           onEdit: _paymentMethodId == null
