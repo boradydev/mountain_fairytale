@@ -1,5 +1,4 @@
 import 'package:mountain_fairytale/features/commissions/ui/commission_widgets.dart';
-import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 import 'package:mountain_fairytale/features/commissions/data/commission_amount.dart';
 import 'package:mountain_fairytale/features/commissions/data/commission_models.dart';
 import 'package:mountain_fairytale/features/commissions/data/commissions_repo.dart';
@@ -219,20 +218,23 @@ void main() {
         await tester.tap(find.text('Комиссии'));
         await tester.pumpAndSettle();
         expect(commissionRepo.calls, 1);
-        await tester.tap(
-          find.widgetWithText(
-            AppSecondaryButton,
-            commissionPeriodLabel(commissions.month),
-          ),
+        final monthControl = find.byKey(
+          const ValueKey('commissions-month-control'),
         );
+        expect(
+          find.descendant(
+            of: monthControl,
+            matching: find.text(commissionPeriodLabel(commissions.month)),
+          ),
+          findsOneWidget,
+        );
+        await tester.tap(monthControl);
         await tester.pumpAndSettle();
         await tester.tap(find.text('Февраль'));
         await tester.tap(find.text('Выбрать'));
         await tester.pumpAndSettle();
         expect(commissions.month.month, 2);
-        await tester.tap(find.text('Обновить'));
-        await tester.pumpAndSettle();
-        expect(commissionRepo.calls, 3);
+        expect(commissionRepo.calls, 2);
 
         await tester.tap(find.byTooltip('Тёмная тема'));
         await tester.pumpAndSettle();
@@ -273,7 +275,7 @@ void main() {
           find.text('Февраль ${commissions.month.year}'),
           findsOneWidget,
         );
-        expect(commissionRepo.calls, 4);
+        expect(commissionRepo.calls, 3);
         if (isAdmin) {
           await tester.tap(find.widgetWithText(Tab, 'Сотрудники'));
           await tester.pumpAndSettle();
