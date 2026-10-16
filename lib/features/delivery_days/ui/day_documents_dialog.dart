@@ -220,31 +220,7 @@ class _DayDocumentsDialogState extends State<DayDocumentsDialog> {
                           ),
                         )
                       else
-                        for (final document in _provider.documents)
-                          ListTile(
-                            leading: Icon(
-                              document is DeliveryRouteSheet
-                                  ? Icons.local_shipping_outlined
-                                  : Icons.store_outlined,
-                            ),
-                            title: Text(
-                              '${document.title}${document.isActive ? '' : ' — Отменён'}',
-                            ),
-                            subtitle: document.createdAt == null
-                                ? null
-                                : Text(
-                                    'Создан: ${DateFormat.yMd(locale).add_Hm().format(document.createdAt!)}',
-                                  ),
-                            trailing: const Icon(Icons.chevron_right),
-                            onTap: _opening
-                                ? null
-                                : () => _open(
-                                    document is DeliveryRouteSheet
-                                        ? DeliveryType.delivery
-                                        : DeliveryType.pickup,
-                                    document,
-                                  ),
-                          ),
+                        ..._buildDocumentSections(locale),
                     ],
                   ),
                 ),
@@ -266,4 +242,124 @@ class _DayDocumentsDialogState extends State<DayDocumentsDialog> {
       );
     },
   );
+
+  List<Widget> _buildDocumentSections(String locale) {
+    final deliveries = _provider.documents
+        .where((document) => document is DeliveryRouteSheet)
+        .toList();
+    final pickups = _provider.documents
+        .where((document) => document is! DeliveryRouteSheet)
+        .toList();
+    final sections = <Widget>[];
+
+    if (deliveries.isNotEmpty) {
+      sections.addAll(
+        _buildDocumentSection(
+          title: 'Доставки',
+          documents: deliveries,
+          type: DeliveryType.delivery,
+          locale: locale,
+        ),
+      );
+    }
+    if (pickups.isNotEmpty) {
+      if (sections.isNotEmpty) sections.add(const Divider(height: 24));
+      sections.addAll(
+        _buildDocumentSection(
+          title: 'Самовывозы',
+          documents: pickups,
+          type: DeliveryType.pickup,
+          locale: locale,
+        ),
+      );
+    }
+    return sections;
+  }
+
+  List<Widget> _buildDocumentSection({
+    required String title,
+    required List<RouteDocument> documents,
+    required DeliveryType type,
+    required String locale,
+  }) {
+    final activeDocuments = documents
+        .where((document) => document.isActive)
+        .toList();
+    final cancelledDocuments = documents
+        .where((document) => !document.isActive)
+        .toList();
+    final colors = Theme.of(context).colorScheme;
+
+    return [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+        child: Text(
+          title,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            color: colors.primary,
+          ),
+        ),
+      ),
+      for (final document in activeDocuments)
+        _buildDocumentTile(document, type, locale),
+      if (cancelledDocuments.isNotEmpty) ...[
+        if (activeDocuments.isNotEmpty)
+          const Divider(height: 16, indent: 16, endIndent: 16),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+          child: Text(
+            'Отменённые',
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: colors.onSurfaceVariant,
+            ),
+          ),
+        ),
+        for (final document in cancelledDocuments)
+          _buildDocumentTile(document, type, locale),
+      ],
+    ];
+  }
+
+  Widget _buildDocumentTile(
+    RouteDocument document,
+    DeliveryType type,
+    String locale,
+  ) {
+    final colors = Theme.of(context).colorScheme;
+    final iconColor = document.isActive
+        ? colors.primary
+        : colors.onSurfaceVariant;
+    final subtitleLines = <Widget>[];
+
+    if (document is DeliveryRouteSheet) {
+      subtitleLines.add(Text('Автомобиль: ${document.carModelAndNumber}'));
+    }
+    if (document.createdAt != null) {
+      subtitleLines.add(
+        Text(
+          'Создан: ${DateFormat.yMd(locale).add_Hm().format(document.createdAt!)}',
+        ),
+      );
+    }
+
+    return ListTile(
+      leading: Icon(
+        type == DeliveryType.delivery
+            ? Icons.local_shipping_outlined
+            : Icons.store_outlined,
+        color: iconColor,
+      ),
+      title: Text(
+        '${document.title}${document.isActive ? '' : ' — Отменён'}',
+      ),
+      subtitle: subtitleLines.isEmpty
+          ? null
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: subtitleLines,
+            ),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: _opening ? null : () => _open(type, document),
+    );
+  }
 }
