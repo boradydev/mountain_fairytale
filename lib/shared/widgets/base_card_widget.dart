@@ -5,8 +5,14 @@ import 'package:flutter/material.dart';
 class AppBaseCard extends StatelessWidget {
   final Widget child;
   final VoidCallback? onTap;
+  final Color? backgroundColor;
 
-  const AppBaseCard({super.key, required this.child, this.onTap});
+  const AppBaseCard({
+    super.key,
+    required this.child,
+    this.onTap,
+    this.backgroundColor,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +28,7 @@ class AppBaseCard extends StatelessWidget {
           width: 1,
         ),
       ),
-      color: colorScheme.surfaceContainerLow,
+      color: backgroundColor ?? colorScheme.surfaceContainerHigh,
       clipBehavior: Clip.antiAlias,
       // Защищает InkWell от вылезания за углы
       child: InkWell(

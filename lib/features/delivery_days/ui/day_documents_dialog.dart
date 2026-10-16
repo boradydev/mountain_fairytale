@@ -8,6 +8,7 @@ import 'package:mountain_fairytale/features/delivery_days/ui/select_delivery_typ
 import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_sheet_model.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_screen.dart';
 import 'package:mountain_fairytale/features/pickup/ui/pickup_constructor_screen.dart';
+import 'package:mountain_fairytale/shared/widgets/base_card_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/labeled_checkbox_toggle.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 
@@ -342,24 +343,37 @@ class _DayDocumentsDialogState extends State<DayDocumentsDialog> {
       );
     }
 
-    return ListTile(
-      leading: Icon(
-        type == DeliveryType.delivery
-            ? Icons.local_shipping_outlined
-            : Icons.store_outlined,
-        color: iconColor,
-      ),
-      title: Text(
-        '${document.title}${document.isActive ? '' : ' — Отменён'}',
-      ),
-      subtitle: subtitleLines.isEmpty
-          ? null
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: subtitleLines,
-            ),
-      trailing: const Icon(Icons.chevron_right),
+    return AppBaseCard(
       onTap: _opening ? null : () => _open(type, document),
+      child: Row(
+        children: [
+          Icon(
+            type == DeliveryType.delivery
+                ? Icons.local_shipping_outlined
+                : Icons.store_outlined,
+            color: iconColor,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '${document.title}${document.isActive ? '' : ' — Отменён'}',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                if (subtitleLines.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  ...subtitleLines,
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Icon(Icons.chevron_right, color: colors.onSurfaceVariant),
+        ],
+      ),
     );
   }
 }

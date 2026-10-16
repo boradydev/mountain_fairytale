@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/shared/widgets/base_card_widget.dart';
 
 class DeliveryDayCard extends StatelessWidget {
   final String title;
@@ -22,51 +23,35 @@ class DeliveryDayCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Card(
-      elevation: 0,
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: colorScheme.outlineVariant.withAlpha(128),
-          width: 1,
-        ),
-      ),
-      color: backgroundColor ?? colorScheme.surfaceContainerLow,
-      clipBehavior: Clip.antiAlias,
-      // Чтобы InkWell не вылезал за скругления
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return AppBaseCard(
+      onTap: onTap,
+      backgroundColor: backgroundColor,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text.rich(
-                      titleSpan ?? TextSpan(text: title),
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
+              Expanded(
+                child: Text.rich(
+                  titleSpan ?? TextSpan(text: title),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
                   ),
-                  if (titleSuffix != null) ...[
-                    const SizedBox(width: 8),
-                    titleSuffix!,
-                  ],
-                ],
+                ),
               ),
-              const SizedBox(height: 8),
-              Divider(color: colorScheme.outlineVariant, height: 1),
-              const SizedBox(height: 8),
-              ...metrics,
+              if (titleSuffix != null) ...[
+                const SizedBox(width: 8),
+                titleSuffix!,
+              ],
             ],
           ),
-        ),
+          const SizedBox(height: 8),
+          Divider(color: colorScheme.outlineVariant, height: 1),
+          const SizedBox(height: 8),
+          ...metrics,
+        ],
       ),
     );
   }
