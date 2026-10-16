@@ -159,7 +159,12 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
                           ),
                         ),
                       ),
-                    if (p.documentBusy) const LinearProgressIndicator(),
+                    SizedBox(
+                      height: 4,
+                      child: p.documentBusy
+                          ? const LinearProgressIndicator(minHeight: 4)
+                          : null,
+                    ),
                     Expanded(
                       child: Form(
                         key: _formKey,
