@@ -37,9 +37,7 @@ class AppPrimaryButton extends StatelessWidget {
               top: 14,
               bottom: 16,
             ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
+            shape: const StadiumBorder(),
           ).copyWith(
             overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
               if (states.contains(WidgetState.pressed)) {
@@ -94,9 +92,7 @@ class AppSecondaryButton extends StatelessWidget {
           top: 14,
           bottom: 16,
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+        shape: const StadiumBorder(),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
