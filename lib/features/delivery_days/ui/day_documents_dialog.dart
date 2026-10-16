@@ -8,7 +8,7 @@ import 'package:mountain_fairytale/features/delivery_days/ui/select_delivery_typ
 import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_sheet_model.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_screen.dart';
 import 'package:mountain_fairytale/features/pickup/ui/pickup_constructor_screen.dart';
-import 'package:mountain_fairytale/shared/widgets/base_card_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/dialog_card_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/labeled_checkbox_toggle.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 
@@ -343,8 +343,9 @@ class _DayDocumentsDialogState extends State<DayDocumentsDialog> {
       );
     }
 
-    return AppBaseCard(
+    return AppDialogCard(
       onTap: _opening ? null : () => _open(type, document),
+      margin: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
           Icon(
