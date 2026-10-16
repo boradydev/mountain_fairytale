@@ -304,8 +304,6 @@ class _DayDocumentsDialogState extends State<DayDocumentsDialog> {
       for (final document in activeDocuments)
         _buildDocumentTile(document, type, locale),
       if (cancelledDocuments.isNotEmpty) ...[
-        if (activeDocuments.isNotEmpty)
-          const Divider(height: 16, indent: 16, endIndent: 16),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
           child: Text(
