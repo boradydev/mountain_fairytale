@@ -1,8 +1,59 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mountain_fairytale/shared/widgets/base_form_dialog_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 
 void main() {
+  testWidgets(
+    'text action remains usable and wraps on narrow screens',
+    (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 600);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      var deactivated = false;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: BaseFormDialog(
+            title: 'Редактирование',
+            submitButtonText: 'Сохранить',
+            submitButtonWidth: 160,
+            onSubmit: () {},
+            formKey: GlobalKey<FormState>(),
+            leadingAction: AppSecondaryButton(
+              text: 'Деактивировать',
+              destructive: true,
+              onPressed: () => deactivated = true,
+            ),
+            children: const [],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final action = find.text('Деактивировать');
+      final cancel = find.text('Отмена');
+      final save = find.text('Сохранить');
+      expect(
+        tester.getCenter(action).dy,
+        lessThanOrEqualTo(tester.getCenter(save).dy),
+      );
+      expect(tester.takeException(), isNull);
+
+      tester.view.physicalSize = const Size(400, 600);
+      await tester.pumpAndSettle();
+      expect(tester.getCenter(action).dy, lessThan(tester.getCenter(save).dy));
+      expect(
+        tester.getCenter(cancel).dy,
+        lessThanOrEqualTo(tester.getCenter(save).dy),
+      );
+      expect(tester.takeException(), isNull);
+      await tester.tap(action);
+      expect(deactivated, isTrue);
+    },
+  );
+
   for (final platform in [TargetPlatform.windows, TargetPlatform.android]) {
     testWidgets(
       'form reserves scrollbar space without resizing fields on $platform',

@@ -6,7 +6,6 @@ import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_
 import 'package:mountain_fairytale/shared/widgets/confirm_dialog.dart';
 import 'package:mountain_fairytale/shared/widgets/base_form_dialog_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/duplicate_check_status_widget.dart';
-import 'package:mountain_fairytale/shared/widgets/icon_button_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 import 'package:provider/provider.dart';
 
@@ -239,9 +238,8 @@ class _DriverDialogState extends State<DriverDialog> {
       isBusy: _busy,
       isLoading: _busy && !_checking,
       leadingAction: widget.isEditMode && widget.driver!.isActive
-          ? AppIconButton(
-              icon: Icons.archive_outlined,
-              tooltip: 'Деактивировать водителя',
+          ? AppSecondaryButton(
+              text: 'Деактивировать',
               destructive: true,
               onPressed: _busy ? null : _deactivate,
             )

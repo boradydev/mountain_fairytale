@@ -6,7 +6,6 @@ import 'package:mountain_fairytale/features/payment_methods/ui/payment_method_ac
 import 'package:mountain_fairytale/shared/widgets/base_form_dialog_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/confirm_dialog.dart';
 import 'package:mountain_fairytale/shared/widgets/duplicate_check_status_widget.dart';
-import 'package:mountain_fairytale/shared/widgets/icon_button_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 
 class PaymentMethodDialog extends StatefulWidget {
@@ -266,13 +265,10 @@ class _PaymentMethodDialogState extends State<PaymentMethodDialog> {
       isBusy: _busy,
       isLoading: _busy && !_checking,
       leadingAction: _isEditMode
-          ? AppIconButton(
-              icon: widget.paymentMethod!.isActive
-                  ? Icons.archive_outlined
-                  : Icons.check_circle_outline,
-              tooltip: widget.paymentMethod!.isActive
-                  ? 'Деактивировать способ оплаты'
-                  : 'Активировать способ оплаты',
+          ? AppSecondaryButton(
+              text: widget.paymentMethod!.isActive
+                  ? 'Деактивировать'
+                  : 'Активировать',
               destructive: widget.paymentMethod!.isActive,
               onPressed: _busy
                   ? null

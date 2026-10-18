@@ -601,14 +601,14 @@ void main() {
     (tester) async {
       final repo = ClientsFake();
       await openDialog(tester, repo, client: row());
-      await tester.tap(find.byTooltip('Деактивировать клиента'));
+      await tester.tap(find.text('Деактивировать').last);
       await tester.pumpAndSettle();
       await tester.tap(find.text('Отмена').last);
       await tester.pumpAndSettle();
       expect(repo.updated, isNull);
-      await tester.tap(find.byTooltip('Деактивировать клиента'));
+      await tester.tap(find.text('Деактивировать').last);
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Деактивировать'));
+      await tester.tap(find.text('Деактивировать').last);
       await tester.pumpAndSettle();
       expect(repo.updated!.toJson(), {'isActive': false});
       expect(find.byType(ClientDialog), findsNothing);

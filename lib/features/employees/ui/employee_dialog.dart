@@ -5,7 +5,6 @@ import 'package:mountain_fairytale/features/employees/ui/employee_password_dialo
 import 'package:mountain_fairytale/features/employees/ui/employees_provider.dart';
 import 'package:mountain_fairytale/shared/widgets/base_form_dialog_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/confirm_dialog.dart';
-import 'package:mountain_fairytale/shared/widgets/icon_button_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/duplicate_check_status_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 
@@ -306,13 +305,10 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
       isBusy: _busy,
       isLoading: _busy && !_checking,
       leadingAction: _isEditMode && !widget.employee!.isAdmin
-          ? AppIconButton(
-              icon: widget.employee!.isActive
-                  ? Icons.archive_outlined
-                  : Icons.check_circle_outline,
-              tooltip: widget.employee!.isActive
-                  ? 'Деактивировать сотрудника'
-                  : 'Активировать сотрудника',
+          ? AppSecondaryButton(
+              text: widget.employee!.isActive
+                  ? 'Деактивировать'
+                  : 'Активировать',
               destructive: widget.employee!.isActive,
               onPressed: _busy
                   ? null

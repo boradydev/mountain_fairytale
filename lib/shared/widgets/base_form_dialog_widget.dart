@@ -113,28 +113,37 @@ class _BaseFormDialogState extends State<BaseFormDialog> {
 
                 const SizedBox(height: 24),
 
-                Row(
+                OverflowBar(
+                  alignment: widget.leadingAction == null
+                      ? MainAxisAlignment.end
+                      : MainAxisAlignment.spaceBetween,
+                  spacing: 8,
+                  overflowSpacing: 8,
+                  overflowAlignment: OverflowBarAlignment.end,
                   children: [
                     ?widget.leadingAction,
-
-                    const Spacer(),
-
-                    AppSecondaryButton(
-                      onPressed: widget.isBusy
-                          ? null
-                          : () => Navigator.of(context).pop(),
-                      text: 'Отмена',
-                    ),
-                    const SizedBox(width: 8),
-                    SizedBox(
-                      width: widget.submitButtonWidth,
-                      child: AppPrimaryButton(
-                        onPressed: widget.isBusy || !widget.canSubmit
-                            ? null
-                            : widget.onSubmit,
-                        text: widget.submitButtonText,
-                        maxLines: 1,
-                      ),
+                    Wrap(
+                      alignment: WrapAlignment.end,
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        AppSecondaryButton(
+                          onPressed: widget.isBusy
+                              ? null
+                              : () => Navigator.of(context).pop(),
+                          text: 'Отмена',
+                        ),
+                        SizedBox(
+                          width: widget.submitButtonWidth,
+                          child: AppPrimaryButton(
+                            onPressed: widget.isBusy || !widget.canSubmit
+                                ? null
+                                : widget.onSubmit,
+                            text: widget.submitButtonText,
+                            maxLines: 1,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

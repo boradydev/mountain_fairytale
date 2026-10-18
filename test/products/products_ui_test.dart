@@ -274,9 +274,9 @@ void main() {
       );
       await tester.tap(find.byTooltip('Редактировать выбранный элемент'));
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Деактивировать товар'));
+      await tester.tap(find.text('Деактивировать').last);
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Деактивировать'));
+      await tester.tap(find.text('Деактивировать').last);
       await tester.pumpAndSettle();
       expect(repo.rows.first.isActive, isFalse);
       expect(

@@ -731,13 +731,8 @@ class _ClientDialogState extends State<ClientDialog> {
       isBusy: _busy || _editingDirectory,
       leadingAction: widget.client == null
           ? null
-          : AppIconButton(
-              icon: widget.client!.isActive
-                  ? Icons.archive_outlined
-                  : Icons.restore,
-              tooltip: widget.client!.isActive
-                  ? 'Деактивировать клиента'
-                  : 'Активировать клиента',
+          : AppSecondaryButton(
+              text: widget.client!.isActive ? 'Деактивировать' : 'Активировать',
               destructive: widget.client!.isActive,
               onPressed: _busy
                   ? null

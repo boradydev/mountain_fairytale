@@ -6,7 +6,6 @@ import 'package:mountain_fairytale/features/products/ui/product_activation_dialo
 import 'package:mountain_fairytale/shared/widgets/base_form_dialog_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/confirm_dialog.dart';
 import 'package:mountain_fairytale/shared/widgets/duplicate_check_status_widget.dart';
-import 'package:mountain_fairytale/shared/widgets/icon_button_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 
 class ProductDialog extends StatefulWidget {
@@ -277,13 +276,10 @@ class _ProductDialogState extends State<ProductDialog> {
       isBusy: _busy,
       isLoading: _busy && !_checking,
       leadingAction: _isEditMode
-          ? AppIconButton(
-              icon: widget.product!.isActive
-                  ? Icons.archive_outlined
-                  : Icons.check_circle_outline,
-              tooltip: widget.product!.isActive
-                  ? 'Деактивировать товар'
-                  : 'Активировать товар',
+          ? AppSecondaryButton(
+              text: widget.product!.isActive
+                  ? 'Деактивировать'
+                  : 'Активировать',
               destructive: widget.product!.isActive,
               onPressed: _busy
                   ? null

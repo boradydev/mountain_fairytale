@@ -292,9 +292,9 @@ void main() {
       await _open(tester, orders, clients);
       await tester.tap(find.byTooltip('Редактировать выбранный элемент'));
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Деактивировать способ оплаты'));
+      await tester.tap(find.text('Деактивировать').last);
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Деактивировать'));
+      await tester.tap(find.text('Деактивировать').last);
       await tester.pumpAndSettle();
       expect(orders.points.single.paymentMethodId, 'active');
       expect(orders.paymentMethods, isEmpty);

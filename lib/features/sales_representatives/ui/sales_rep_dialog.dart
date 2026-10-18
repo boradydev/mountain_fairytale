@@ -369,20 +369,20 @@ class _SalesRepDialogState extends State<SalesRepDialog> {
         isBusy: _busy,
         isLoading: _busy && !_isCheckingDuplicate,
         leadingAction: _isEditMode
-            ? AppIconButton(
-                icon: _apiMode
-                    ? (widget.apiSalesRep!.isActive
-                          ? Icons.archive_outlined
-                          : Icons.restore)
-                    : Icons.delete_outline,
-                tooltip: _apiMode
-                    ? (widget.apiSalesRep!.isActive
-                          ? 'Деактивировать представителя'
-                          : 'Активировать представителя')
-                    : 'Удалить представителя',
-                destructive: !_apiMode || widget.apiSalesRep!.isActive,
-                onPressed: _busy ? null : _deleteSalesRep,
-              )
+            ? (_apiMode
+                  ? AppSecondaryButton(
+                      text: widget.apiSalesRep!.isActive
+                          ? 'Деактивировать'
+                          : 'Активировать',
+                      destructive: widget.apiSalesRep!.isActive,
+                      onPressed: _busy ? null : _deleteSalesRep,
+                    )
+                  : AppIconButton(
+                      icon: Icons.delete_outline,
+                      tooltip: 'Удалить представителя',
+                      destructive: true,
+                      onPressed: _busy ? null : _deleteSalesRep,
+                    ))
             : null,
         children: [
           DuplicateCheckStatusWidget(

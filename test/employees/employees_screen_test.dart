@@ -117,7 +117,7 @@ void main() {
       tester.widget<EmployeeDialog>(find.byType(EmployeeDialog)).employee?.id,
       'inactive',
     );
-    expect(find.byTooltip('Активировать сотрудника'), findsOneWidget);
+    expect(find.text('Активировать'), findsOneWidget);
     await tester.ensureVisible(find.text('Отмена'));
     await tester.tap(find.text('Отмена'));
     await tester.pumpAndSettle();

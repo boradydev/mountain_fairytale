@@ -72,6 +72,7 @@ class AppSecondaryButton extends StatelessWidget {
   final int? maxLines;
   final VoidCallback? onPressed;
   final IconData? icon;
+  final bool destructive;
 
   const AppSecondaryButton({
     super.key,
@@ -79,6 +80,7 @@ class AppSecondaryButton extends StatelessWidget {
     this.maxLines,
     this.onPressed,
     this.icon,
+    this.destructive = false,
   });
 
   @override
@@ -88,10 +90,11 @@ class AppSecondaryButton extends StatelessWidget {
     return OutlinedButton(
       onPressed: onPressed,
       style: OutlinedButton.styleFrom(
-        foregroundColor: colorScheme.primary,
-        // Сделаем текст чуть спокойнее, чтобы не спорил с основной кнопкой
-        // Изменили outlineVariant на outline и увеличили толщину до 1.5 для десктопной четкости
-        side: BorderSide(color: colorScheme.outline, width: 1),
+        foregroundColor: destructive ? colorScheme.error : colorScheme.primary,
+        side: BorderSide(
+          color: destructive ? colorScheme.error : colorScheme.outline,
+          width: 1,
+        ),
         padding: const EdgeInsets.only(
           left: 20,
           right: 20,
