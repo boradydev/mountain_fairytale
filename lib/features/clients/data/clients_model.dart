@@ -12,6 +12,69 @@ String clientDateTime(DateTime value) => DateTime(
   value.microsecond,
 ).toIso8601String();
 
+class ClientOrderItem {
+  final String productId;
+  final String productName;
+  final int quantity;
+
+  const ClientOrderItem({
+    required this.productId,
+    required this.productName,
+    required this.quantity,
+  });
+
+  factory ClientOrderItem.fromJson(Map<String, dynamic> json) =>
+      ClientOrderItem(
+        productId: json['productId'] as String,
+        productName: json['productName'] as String,
+        quantity: (json['quantity'] as num).toInt(),
+      );
+
+  Map<String, dynamic> toJson() => {
+    'productId': productId,
+    'productName': productName,
+    'quantity': quantity,
+  };
+  String get description => '$productName × $quantity';
+}
+
+class ClientLastOrder {
+  final DateTime date;
+  final List<String> fulfillmentTypes;
+  final List<ClientOrderItem> items;
+
+  const ClientLastOrder({
+    required this.date,
+    required this.fulfillmentTypes,
+    required this.items,
+  });
+
+  factory ClientLastOrder.fromJson(Map<String, dynamic> json) =>
+      ClientLastOrder(
+        date: DateTime.parse(json['date'] as String),
+        fulfillmentTypes: (json['fulfillmentTypes'] as List).cast<String>(),
+        items: (json['items'] as List)
+            .map(
+              (item) => ClientOrderItem.fromJson(
+                Map<String, dynamic>.from(item as Map),
+              ),
+            )
+            .toList(),
+      );
+
+  String get fulfillmentLabel => fulfillmentTypes.length > 1
+      ? 'Доставка и самовывоз'
+      : fulfillmentTypes.contains('pickup')
+      ? 'Самовывоз'
+      : 'Доставка';
+
+  Map<String, dynamic> toJson() => {
+    'date': date.toIso8601String().substring(0, 10),
+    'fulfillmentTypes': fulfillmentTypes,
+    'items': items.map((item) => item.toJson()).toList(),
+  };
+}
+
 class Client {
   final String id;
   final String name;
@@ -20,6 +83,7 @@ class Client {
   final int sleepingThresholdDays;
   final DateTime? lastDeliveryDate;
   final int? lastDeliveryQuantity;
+  final ClientLastOrder? lastOrder;
   final DateTime? cooldownUntil;
   final String? salesRepresentativeId;
   final String? salesRepresentativeName;
@@ -37,6 +101,7 @@ class Client {
     required this.isActive,
     this.lastDeliveryDate,
     this.lastDeliveryQuantity,
+    this.lastOrder,
     this.cooldownUntil,
     this.salesRepresentativeId,
     this.salesRepresentativeName,
@@ -53,6 +118,11 @@ class Client {
         ? null
         : DateTime.parse(json['lastDeliveryDate'] as String),
     lastDeliveryQuantity: (json['lastDeliveryQuantity'] as num?)?.toInt(),
+    lastOrder: json['lastOrder'] == null
+        ? null
+        : ClientLastOrder.fromJson(
+            Map<String, dynamic>.from(json['lastOrder'] as Map),
+          ),
     cooldownUntil: json['cooldownUntil'] == null
         ? null
         : DateTime.parse(json['cooldownUntil'] as String),
@@ -73,6 +143,7 @@ class Client {
         ? null
         : clientDateTime(lastDeliveryDate!),
     'lastDeliveryQuantity': lastDeliveryQuantity,
+    'lastOrder': lastOrder?.toJson(),
     'cooldownUntil': cooldownUntil == null
         ? null
         : clientDateTime(cooldownUntil!),
@@ -83,6 +154,19 @@ class Client {
     'createdAt': clientDateTime(createdAt),
     'isActive': isActive,
   };
+
+  DateTime? get lastOrderDate => lastOrder?.date ?? lastDeliveryDate;
+
+  int? daysSinceLastOrder(DateTime now) {
+    final date = lastOrderDate;
+    if (date == null) return null;
+    // UTC date-only values avoid daylight-saving and time-of-day differences.
+    return DateTime.utc(
+      now.year,
+      now.month,
+      now.day,
+    ).difference(DateTime.utc(date.year, date.month, date.day)).inDays;
+  }
 }
 
 class ClientDirectoryEntry {

@@ -64,8 +64,8 @@ class ClientsProvider extends SafeChangeNotifier {
 
     // Вспомогательная функция для расчета коэффициента просрочки (K)
     double getUrgencyCoefficient(Client client) {
-      if (client.lastDeliveryDate == null) return 999.0;
-      final differenceDays = now.difference(client.lastDeliveryDate!).inDays;
+      if (client.lastOrderDate == null) return double.infinity;
+      final differenceDays = client.daysSinceLastOrder(now)!;
       return client.sleepingThresholdDays == 0
           ? double.infinity
           : differenceDays / client.sleepingThresholdDays;

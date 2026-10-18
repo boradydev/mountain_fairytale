@@ -1,9 +1,9 @@
 import 'package:mountain_fairytale/shared/widgets/app_notify.dart';
 import 'package:flutter/material.dart';
-import 'package:mountain_fairytale/core/utils/datetime_extensions.dart';
 import 'package:mountain_fairytale/features/clients/data/clients_model.dart';
 import 'package:mountain_fairytale/features/clients/ui/clients_provider.dart';
 import 'package:mountain_fairytale/features/clients/ui/client_dialog.dart';
+import 'package:mountain_fairytale/features/clients/ui/client_last_order.dart';
 import 'package:mountain_fairytale/shared/widgets/add_action_card.dart';
 import 'package:mountain_fairytale/shared/widgets/base_card_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/labeled_checkbox_toggle.dart';
@@ -281,12 +281,7 @@ class _ClientAttentionCard extends StatelessWidget {
                     ),
                     SizedBox(
                       width: wide ? space * 0.30 : width,
-                      child: _ClientCardField(
-                        label: 'Последняя доставка',
-                        value:
-                            client.lastDeliveryDate?.toFormattedString() ??
-                            'Никогда',
-                      ),
+                      child: ClientLastOrderView(client: client),
                     ),
                   ],
                 );
@@ -356,18 +351,18 @@ class _ClientStatusConfig {
       );
     }
 
-    // 2. Состояние: Доставок вообще никогда не было
-    if (client.lastDeliveryDate == null) {
+    // 2. У клиента ещё нет заказов ни с доставкой, ни с самовывозом.
+    if (client.lastOrderDate == null) {
       return _ClientStatusConfig(
         lineColor: Colors.red.shade700,
         badgeBgColor: Colors.red.shade50,
         badgeTextColor: Colors.red.shade900,
-        statusText: 'Доставок не было',
+        statusText: 'Заказов не было',
       );
     }
 
     // Вычисляем просрочку в днях и коэффициент K
-    final differenceDays = now.difference(client.lastDeliveryDate!).inDays;
+    final differenceDays = client.daysSinceLastOrder(now)!;
     final k = client.sleepingThresholdDays == 0
         ? double.infinity
         : differenceDays / client.sleepingThresholdDays;
@@ -378,7 +373,7 @@ class _ClientStatusConfig {
         lineColor: Colors.red.shade700,
         badgeBgColor: Colors.red.shade50,
         badgeTextColor: Colors.red.shade900,
-        statusText: 'Без доставки $differenceDays дн.',
+        statusText: 'Без заказов $differenceDays дн.',
       );
     }
 
@@ -388,7 +383,7 @@ class _ClientStatusConfig {
         lineColor: Colors.orange.shade700,
         badgeBgColor: Colors.orange.shade50,
         badgeTextColor: Colors.orange.shade900,
-        statusText: 'Без доставки $differenceDays дн.',
+        statusText: 'Без заказов $differenceDays дн.',
       );
     }
 
@@ -398,7 +393,7 @@ class _ClientStatusConfig {
         lineColor: Colors.amber.shade600,
         badgeBgColor: Colors.amber.shade50,
         badgeTextColor: Colors.amber.shade900,
-        statusText: 'Без доставки $differenceDays дн.',
+        statusText: 'Без заказов $differenceDays дн.',
       );
     }
 
@@ -407,7 +402,7 @@ class _ClientStatusConfig {
       lineColor: Colors.green,
       badgeBgColor: Color(0xFFE8F5E9), // Light green
       badgeTextColor: Color(0xFF1B5E20), // Dark green
-      statusText: 'Доставляем регулярно',
+      statusText: 'Заказывает регулярно',
     );
   }
 }
