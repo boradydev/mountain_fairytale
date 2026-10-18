@@ -113,8 +113,7 @@ class _CommissionsScreenState extends State<CommissionsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _CommissionName(row.name),
-              if (!row.isActive) const CommissionInactiveLabel(),
+              CommissionPersonHeader(name: row.name, isActive: row.isActive),
               const SizedBox(height: 12),
               Wrap(
                 spacing: 32,
@@ -156,8 +155,21 @@ class _CommissionsScreenState extends State<CommissionsScreen> {
           onTap: () => showDialog<void>(
             context: context,
             builder: (_) => AlertDialog(
-              title: Text(
-                '${row.name} · ${commissionPeriodLabel(provider.month)}',
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CommissionPersonHeader(
+                    name: row.name,
+                    isActive: row.isActive,
+                    nameStyle: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    commissionPeriodLabel(provider.month),
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
               ),
               content: SingleChildScrollView(
                 child: SizedBox(
@@ -195,8 +207,7 @@ class _CommissionsScreenState extends State<CommissionsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _CommissionName(row.name),
-              if (!row.isActive) const CommissionInactiveLabel(),
+              CommissionPersonHeader(name: row.name, isActive: row.isActive),
               const SizedBox(height: 12),
               Wrap(
                 spacing: 32,
@@ -210,23 +221,6 @@ class _CommissionsScreenState extends State<CommissionsScreen> {
           ),
         );
       },
-    );
-  }
-}
-
-class _CommissionName extends StatelessWidget {
-  final String name;
-
-  const _CommissionName(this.name);
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Text(
-      name,
-      style: theme.textTheme.titleMedium?.copyWith(
-        color: theme.colorScheme.onSurface,
-      ),
     );
   }
 }

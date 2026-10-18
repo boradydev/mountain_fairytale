@@ -149,13 +149,19 @@ class _RepresentativeCommissionDialogState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  representative?.name ?? 'Торговый представитель',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
+                if (representative != null)
+                  CommissionPersonHeader(
+                    name: representative.name,
+                    isActive: representative.isActive,
+                    nameStyle: Theme.of(context).textTheme.titleLarge,
+                  )
+                else
+                  Text(
+                    'Торговый представитель',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                const SizedBox(height: 4),
                 Text(commissionPeriodLabel(widget.month)),
-                if (representative != null && !representative.isActive)
-                  const CommissionInactiveLabel(),
                 if (_loading) const LinearProgressIndicator(),
                 if (_error != null)
                   Padding(
@@ -224,7 +230,9 @@ class _RepresentativeCommissionDialogState
                                   children: [
                                     Text(row.name),
                                     if (!row.isActive)
-                                      const CommissionInactiveLabel(),
+                                      const CommissionStatusLabel(
+                                        isActive: false,
+                                      ),
                                     if (!row.isCurrentlyAssigned)
                                       const Text(
                                         'Передан / снят',

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/core/theme_extensions.dart';
 
 import 'package:mountain_fairytale/features/commissions/data/commission_models.dart';
 
@@ -46,15 +47,62 @@ class CommissionRates extends StatelessWidget {
         );
 }
 
-class CommissionInactiveLabel extends StatelessWidget {
-  const CommissionInactiveLabel({super.key});
+class CommissionStatusLabel extends StatelessWidget {
+  final bool isActive;
+
+  const CommissionStatusLabel({super.key, required this.isActive});
+
   @override
-  Widget build(BuildContext context) => Text(
-    'Деактивирован',
-    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-      color: Theme.of(context).colorScheme.onSurfaceVariant,
-    ),
-  );
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final success = theme.extension<AppColorsExtension>();
+    final isDark = theme.brightness == Brightness.dark;
+    final foreground = isActive
+        ? success?.successColor ??
+              (isDark ? const Color(0xFF81C784) : const Color(0xFF1B5E20))
+        : colors.onSurfaceVariant;
+
+    return Text(
+      isActive ? 'Активен' : 'Деактивирован',
+      style: theme.textTheme.labelMedium?.copyWith(color: foreground),
+    );
+  }
+}
+
+class CommissionPersonHeader extends StatelessWidget {
+  final String name;
+  final bool isActive;
+  final TextStyle? nameStyle;
+
+  const CommissionPersonHeader({
+    super.key,
+    required this.name,
+    required this.isActive,
+    this.nameStyle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Text(
+            name,
+            style:
+                nameStyle ??
+                theme.textTheme.titleMedium?.copyWith(
+                  color: theme.colorScheme.onSurface,
+                ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        CommissionStatusLabel(isActive: isActive),
+      ],
+    );
+  }
 }
 
 const commissionMonths = [
