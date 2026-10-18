@@ -37,6 +37,7 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
   bool _canPop = false;
   bool _lastEditing = false;
   bool _leaving = false;
+  ({bool creating, bool editing})? _savePresentation;
   @override
   void initState() {
     super.initState();
@@ -46,26 +47,48 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
     });
   }
 
-  Future<void> _close() async {
-    if (_leaving || widget.provider.documentBusy) return;
-    _leaving = true;
+  Future<bool> _close({bool afterSave = false}) async {
+    if (_leaving ||
+        widget.provider.documentBusy ||
+        (_savePresentation != null && !afterSave)) {
+      return false;
+    }
+    setState(() => _leaving = true);
     final success = await widget.provider.closeDocument();
-    _leaving = false;
-    if (!mounted || !success) return;
+    if (!mounted) return false;
+    if (!success) {
+      setState(() => _leaving = false);
+      return false;
+    }
     setState(() => _canPop = true);
     await WidgetsBinding.instance.endOfFrame;
-    if (!mounted) return;
+    if (!mounted) return false;
     Navigator.of(context).pop(widget.provider.documentChanged);
+    return true;
   }
 
   Future<void> _save() async {
-    if (!widget.provider.canSave ||
+    if (_savePresentation != null ||
+        _leaving ||
+        !widget.provider.canSave ||
         !(_formKey.currentState?.validate() ?? false)) {
       return;
     }
-    if (await widget.save()) {
+    setState(
+      () => _savePresentation = (
+        creating: widget.provider.documentId == null,
+        editing: widget.provider.isEditing,
+      ),
+    );
+    var closed = false;
+    try {
+      if (!await widget.save() || !mounted) return;
       widget.onDocumentChanged?.call();
-      await _close();
+      closed = await _close(afterSave: true);
+    } finally {
+      // Keep the presentation through the reverse route animation on success.
+      // On failure, show the provider's real mode and allow recovery.
+      if (mounted && !closed) setState(() => _savePresentation = null);
     }
   }
 
@@ -89,169 +112,172 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
     listenable: widget.provider,
     builder: (context, _) {
       final p = widget.provider;
-      final creating = p.documentId == null;
+      final creating = _savePresentation?.creating ?? (p.documentId == null);
+      final editing = _savePresentation?.editing ?? p.isEditing;
+      final busy = p.documentBusy || _savePresentation != null || _leaving;
       final mode = creating
           ? 'создание'
-          : p.isEditing
+          : editing
           ? 'редактирование'
           : 'просмотр';
-      if (p.isEditing != _lastEditing) _formKey = GlobalKey<FormState>();
-      _lastEditing = p.isEditing;
+      if (editing != _lastEditing) _formKey = GlobalKey<FormState>();
+      _lastEditing = editing;
       return PopScope(
         canPop: _canPop,
         onPopInvokedWithResult: (didPop, result) {
           if (!didPop) _close();
         },
-        child: Scaffold(
-          appBar: AppBar(
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: p.documentBusy ? null : _close,
-            ),
-            title: Text('${widget.title} ($mode)'),
-            actions: [
-              if (widget.printDocument != null)
-                IconButton(
-                  icon: const Icon(Icons.print),
-                  tooltip: 'Печать документа',
-                  onPressed: _loading || p.documentBusy
-                      ? null
-                      : () async {
-                          if (!await widget.printDocument!() &&
-                              context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Не удалось напечатать документ.',
-                                ),
-                              ),
-                            );
-                          }
-                        },
-                ),
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Center(
-                  child: Text('Итого: ${p.grandTotal.toStringAsFixed(2)} ₽'),
-                ),
+        child: AbsorbPointer(
+          absorbing: _savePresentation != null || _leaving,
+          child: Scaffold(
+            appBar: AppBar(
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: busy ? null : _close,
               ),
-              const ThemeToggleButton(),
-            ],
-          ),
-          body: _loading
-              ? const Center(child: CircularProgressIndicator())
-              : Column(
-                  children: [
-                    if (!p.documentActive)
-                      const Padding(
-                        padding: EdgeInsets.all(12),
-                        child: Text(
-                          'Документ отменён. Для редактирования восстановите его.',
-                        ),
-                      ),
-                    if (p.documentError != null)
-                      Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Text(
-                          p.documentError!,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
+              title: Text('${widget.title} ($mode)'),
+              actions: [
+                if (widget.printDocument != null)
+                  IconButton(
+                    icon: const Icon(Icons.print),
+                    tooltip: 'Печать документа',
+                    onPressed: _loading || busy
+                        ? null
+                        : () async {
+                            if (!await widget.printDocument!() &&
+                                context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Не удалось напечатать документ.',
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                  ),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Center(
+                    child: Text('Итого: ${p.grandTotal.toStringAsFixed(2)} ₽'),
+                  ),
+                ),
+                const ThemeToggleButton(),
+              ],
+            ),
+            body: _loading
+                ? const Center(child: CircularProgressIndicator())
+                : Column(
+                    children: [
+                      if (!p.documentActive)
+                        const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: Text(
+                            'Документ отменён. Для редактирования восстановите его.',
                           ),
                         ),
+                      if (p.documentError != null)
+                        Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Text(
+                            p.documentError!,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
+                        ),
+                      SizedBox(
+                        height: 4,
+                        child: busy
+                            ? const LinearProgressIndicator(minHeight: 4)
+                            : null,
                       ),
-                    SizedBox(
-                      height: 4,
-                      child: p.documentBusy
-                          ? const LinearProgressIndicator(minHeight: 4)
-                          : null,
-                    ),
-                    Expanded(
-                      child: Form(
-                        key: _formKey,
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            SizedBox(
-                              width: 360,
-                              child: ExcludeFocus(
-                                excluding: !p.canEdit,
-                                child: AbsorbPointer(
-                                  absorbing: !p.canEdit,
-                                  child: Column(
-                                    children: [
-                                      widget.metaBuilder(_formKey),
-                                      const Divider(height: 1),
-                                      Expanded(
-                                        child: ClientSelectionPanel(
-                                          provider: p,
+                      Expanded(
+                        child: Form(
+                          key: _formKey,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              SizedBox(
+                                width: 360,
+                                child: ExcludeFocus(
+                                  excluding: !p.canEdit,
+                                  child: AbsorbPointer(
+                                    absorbing: !p.canEdit,
+                                    child: Column(
+                                      children: [
+                                        widget.metaBuilder(_formKey),
+                                        const Divider(height: 1),
+                                        Expanded(
+                                          child: ClientSelectionPanel(
+                                            provider: p,
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            const VerticalDivider(width: 1),
-                            Expanded(child: RoutePointsList(provider: p)),
-                          ],
+                              const VerticalDivider(width: 1),
+                              Expanded(child: RoutePointsList(provider: p)),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-          bottomNavigationBar: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 16,
-              runSpacing: 8,
-              children: [
-                SizedBox(
-                  width: 160,
-                  child: AppSecondaryButton(
-                    maxLines: 1,
-                    text: !creating && p.isEditing ? 'Отмена' : 'Закрыть',
-                    onPressed: _loading || p.documentBusy
-                        ? null
-                        : !creating && p.isEditing
-                        ? p.cancelEditing
-                        : _close,
+                    ],
                   ),
-                ),
-                SizedBox(
-                  width: 240,
-                  child: creating || p.isEditing
-                      ? AppPrimaryButton(
-                          maxLines: 1,
-                          text: 'Сохранить',
-                          onPressed: !_loading && p.canSave ? _save : null,
-                        )
-                      : p.documentActive
-                      ? AppPrimaryButton(
-                          maxLines: 1,
-                          text: 'Начать редактирование',
-                          onPressed: _loading || p.documentBusy
-                              ? null
-                              : p.beginEditing,
-                        )
-                      : null,
-                ),
-                // Keep the same horizontal slots in creation, view and edit.
-                SizedBox(
-                  width: 220,
-                  child: !creating && !p.isEditing
-                      ? AppSecondaryButton(
-                          maxLines: 1,
-                          text: p.documentActive
-                              ? 'Отменить документ'
-                              : 'Восстановить',
-                          onPressed: _loading || p.documentBusy
-                              ? null
-                              : _changeActive,
-                        )
-                      : null,
-                ),
-              ],
+            bottomNavigationBar: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 16,
+                runSpacing: 8,
+                children: [
+                  SizedBox(
+                    width: 160,
+                    child: AppSecondaryButton(
+                      maxLines: 1,
+                      text: !creating && editing ? 'Отмена' : 'Закрыть',
+                      onPressed: _loading || busy
+                          ? null
+                          : !creating && editing
+                          ? p.cancelEditing
+                          : _close,
+                    ),
+                  ),
+                  SizedBox(
+                    width: 240,
+                    child: creating || editing
+                        ? AppPrimaryButton(
+                            maxLines: 1,
+                            text: 'Сохранить',
+                            onPressed: !_loading && !busy && p.canSave
+                                ? _save
+                                : null,
+                          )
+                        : p.documentActive
+                        ? AppPrimaryButton(
+                            maxLines: 1,
+                            text: 'Начать редактирование',
+                            onPressed: _loading || busy ? null : p.beginEditing,
+                          )
+                        : null,
+                  ),
+                  // Keep the same horizontal slots in creation, view and edit.
+                  SizedBox(
+                    width: 220,
+                    child: !creating && !editing
+                        ? AppSecondaryButton(
+                            maxLines: 1,
+                            text: p.documentActive
+                                ? 'Отменить документ'
+                                : 'Восстановить',
+                            onPressed: _loading || busy ? null : _changeActive,
+                          )
+                        : null,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
