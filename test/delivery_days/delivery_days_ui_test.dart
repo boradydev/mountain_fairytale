@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/shared/widgets/labeled_checkbox_toggle.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:mountain_fairytale/features/delivery_days/ui/day_documents_dialog.dart';
@@ -7,6 +8,9 @@ import 'package:mountain_fairytale/features/delivery_days/ui/delivery_days_provi
 import 'package:mountain_fairytale/features/delivery_days/data/delivery_days_model.dart';
 import 'package:mountain_fairytale/features/delivery_days/data/delivery_days_product_model.dart';
 import 'package:mountain_fairytale/features/pickup/data/pickup_model.dart';
+import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_sheet_model.dart';
+import 'package:mountain_fairytale/features/delivery_route/data/route_point_model.dart';
+import 'package:mountain_fairytale/features/delivery_route/data/delivery_task_item_model.dart';
 import 'package:mountain_fairytale/l10n/app_localizations.dart';
 
 import 'delivery_days_provider_test.dart' show DaysRepository, day;
@@ -85,6 +89,91 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  testWidgets(
+    'cards identify driver and pickup creation with clients and total',
+    (
+      tester,
+    ) async {
+      final repo = DaysRepository()
+        ..days = [day(date)]
+        ..documents = [
+          DeliveryRouteSheet(
+            id: 'delivery',
+            date: date,
+            createdAt: DateTime(2026, 10, 17, 9, 42),
+            driverName: 'Иванов Иван',
+            carId: 'car',
+            carModelAndNumber: 'Газель А123ВС',
+            startMileage: 0,
+            points: [
+              for (final clientId in ['first', 'first', 'second'])
+                RoutePoint(
+                  clientId: clientId,
+                  clientName: clientId,
+                  address: '',
+                  phone: '',
+                  salesRepresentative: '',
+                  items: const [
+                    DeliveryTaskItem(
+                      productId: 'product',
+                      productName: 'Вода',
+                      quantity: 1,
+                      price: 411.50,
+                    ),
+                  ],
+                ),
+            ],
+          ),
+          PickupSheet(
+            id: 'pickup',
+            date: date,
+            createdAt: DateTime(2026, 10, 17, 10, 15),
+            points: [
+              for (final clientId in ['first', 'first', 'second'])
+                RoutePoint(
+                  clientId: clientId,
+                  clientName: clientId,
+                  address: '',
+                  phone: '',
+                  salesRepresentative: '',
+                  items: const [
+                    DeliveryTaskItem(
+                      productId: 'product',
+                      productName: 'Вода',
+                      quantity: 1,
+                      price: 411.50,
+                    ),
+                  ],
+                ),
+            ],
+          ),
+        ];
+      final provider = DeliveryDaysProvider(repo);
+      addTearDown(provider.dispose);
+      await provider.fetchDeliveryDays();
+      await showDays(tester, provider);
+      await tester.tap(find.textContaining('воскресенье'));
+      await tester.pumpAndSettle();
+      expect(find.text('Доставки'), findsOneWidget);
+      expect(find.text('Самовывозы'), findsOneWidget);
+      expect(find.text('Иванов Иван'), findsOneWidget);
+      expect(find.text('Газель А123ВС'), findsOneWidget);
+      expect(find.text('17.10.2026 09:42'), findsOneWidget);
+      expect(find.text('17.10.2026 10:15'), findsOneWidget);
+      expect(find.text('2'), findsNWidgets(2));
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is Text &&
+              widget.data?.replaceAll('\u00a0', ' ') == '1 234,50 ₽',
+        ),
+        findsNWidgets(2),
+      );
+      expect(find.text('Самовывоз'), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   for (final count in [0, 1, 3]) {
     testWidgets('card always opens day dialog for $count documents', (
       tester,
@@ -100,7 +189,6 @@ void main() {
       await p.fetchDeliveryDays();
       await showDays(tester, p);
       expect(find.textContaining('воскресенье'), findsOneWidget);
-      expect(find.text('Выходной'), findsOneWidget);
       expect(find.text('Документы доставки и самовывоза'), findsNothing);
       await tester.tap(find.textContaining('воскресенье'));
       await tester.pumpAndSettle();
@@ -113,7 +201,7 @@ void main() {
           findsOneWidget,
         );
       } else {
-        expect(find.text('Самовывоз'), findsNWidgets(count));
+        expect(find.text('Дата создания неизвестна'), findsNWidgets(count));
       }
       await tester.tap(find.text('Закрыть'));
       await tester.pumpAndSettle();
@@ -199,9 +287,9 @@ void main() {
       await tester.tap(find.text('Повторить'));
       await tester.pumpAndSettle();
       expect(find.text('На эту дату нет активных документов'), findsOneWidget);
-      await tester.tap(find.byType(Switch));
+      await tester.tap(find.byType(LabeledCheckboxToggle));
       await tester.pumpAndSettle();
-      expect(find.text('Самовывоз — Отменён'), findsOneWidget);
+      expect(find.text('Дата создания неизвестна — Отменён'), findsOneWidget);
       expect(repo.documentCalls.last, (date, true));
     },
   );
@@ -266,16 +354,21 @@ void main() {
       );
       await tester.tap(find.text('День'));
       await tester.pumpAndSettle();
-      await tester.tap(find.byType(Switch));
+      await tester.tap(find.byType(LabeledCheckboxToggle));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Самовывоз'));
+      await tester.tap(find.text('Дата создания неизвестна'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Перенести'));
       await tester.pumpAndSettle();
       expect(opens, 1);
       expect(find.byType(DayDocumentsDialog), findsOneWidget);
       expect(find.text('На эту дату нет документов'), findsOneWidget);
-      expect(tester.widget<Switch>(find.byType(Switch)).value, isTrue);
+      expect(
+        tester
+            .widget<LabeledCheckboxToggle>(find.byType(LabeledCheckboxToggle))
+            .value,
+        isTrue,
+      );
       expect(repo.documentCalls.last, (date, true));
       expect(p.days.single.plannedDate, date.add(const Duration(days: 1)));
       expect(repo.dayCalls.length, 2);

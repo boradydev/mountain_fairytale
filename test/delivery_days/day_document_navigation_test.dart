@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/shared/widgets/labeled_checkbox_toggle.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -147,7 +148,7 @@ void main() {
       expect(pickups.creates, 1);
       expect(pickups.sheet!.date, date);
       expect(find.byType(DayDocumentsDialog), findsOneWidget);
-      expect(find.text('Самовывоз'), findsOneWidget);
+      expect(find.text('13.10.2026 10:00'), findsOneWidget);
       expect(repo.documentCalls.length, 2);
       expect(repo.dayCalls.length, 1);
       expect(tester.takeException(), isNull);
@@ -160,9 +161,9 @@ void main() {
       repo.loadDocuments = (_, includeCancelled) async =>
           routes.sheet.isActive || includeCancelled ? [routes.sheet] : [];
       await showDay(tester);
-      await tester.tap(find.byType(Switch));
+      await tester.tap(find.byType(LabeledCheckboxToggle));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Доставка: Водитель'));
+      await tester.tap(find.text('Водитель'));
       await tester.pumpAndSettle();
       expect(routes.acquired, 0);
       await tester.tap(find.text('Отменить документ'));
@@ -182,7 +183,12 @@ void main() {
       await tester.tap(find.text('Закрыть'));
       await tester.pumpAndSettle();
       expect(find.byType(DayDocumentsDialog), findsOneWidget);
-      expect(tester.widget<Switch>(find.byType(Switch)).value, isTrue);
+      expect(
+        tester
+            .widget<LabeledCheckboxToggle>(find.byType(LabeledCheckboxToggle))
+            .value,
+        isTrue,
+      );
       expect(repo.dayCalls.length, 2);
       expect(tester.takeException(), isNull);
     },

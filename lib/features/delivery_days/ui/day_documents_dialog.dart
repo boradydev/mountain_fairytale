@@ -8,6 +8,7 @@ import 'package:mountain_fairytale/features/delivery_days/ui/select_delivery_typ
 import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_sheet_model.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_screen.dart';
 import 'package:mountain_fairytale/features/pickup/ui/pickup_constructor_screen.dart';
+import 'package:mountain_fairytale/features/pickup/data/pickup_model.dart';
 import 'package:mountain_fairytale/shared/widgets/dialog_card_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/labeled_checkbox_toggle.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
@@ -123,12 +124,16 @@ class _DayDocumentsDialogState extends State<DayDocumentsDialog> {
                   padding: const EdgeInsets.only(top: 8, bottom: 12),
                   child: Align(
                     alignment: Alignment.centerLeft,
-                    child: LabeledCheckboxToggle(
-                      label: 'Показывать отменённые',
-                      value: _provider.includeCancelled,
-                      onChanged: _opening
-                          ? null
-                          : _provider.setIncludeCancelled,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: LabeledCheckboxToggle(
+                        label: 'Показывать отменённые',
+                        value: _provider.includeCancelled,
+                        onChanged: _opening
+                            ? null
+                            : _provider.setIncludeCancelled,
+                      ),
                     ),
                   ),
                 ),
@@ -169,6 +174,8 @@ class _DayDocumentsDialogState extends State<DayDocumentsDialog> {
                 const Divider(height: 1),
                 Expanded(
                   child: ListView(
+                    // Keep the automatic desktop scrollbar clear of the cards.
+                    padding: const EdgeInsets.only(right: 16),
                     children: [
                       if (widget.daysProvider.hasError)
                         Padding(
@@ -246,7 +253,7 @@ class _DayDocumentsDialogState extends State<DayDocumentsDialog> {
 
   List<Widget> _buildDocumentSections(String locale) {
     final deliveries = _provider.documents
-        .where((document) => document is DeliveryRouteSheet)
+        .whereType<DeliveryRouteSheet>()
         .toList();
     final pickups = _provider.documents
         .where((document) => document is! DeliveryRouteSheet)
@@ -328,17 +335,37 @@ class _DayDocumentsDialogState extends State<DayDocumentsDialog> {
     final iconColor = document.isActive
         ? colors.primary
         : colors.onSurfaceVariant;
-    final subtitleLines = <Widget>[];
-
-    if (document is DeliveryRouteSheet) {
-      subtitleLines.add(Text('Автомобиль: ${document.carModelAndNumber}'));
+    final createdLabel = document.createdAt == null
+        ? 'Дата создания неизвестна'
+        : DateFormat.yMd(locale).add_Hm().format(document.createdAt!);
+    final details = <(String, String)>[
+      ('Создан:', '$createdLabel${document.isActive ? '' : ' — Отменён'}'),
+    ];
+    final points = switch (document) {
+      DeliveryRouteSheet() => document.points,
+      PickupSheet() => document.points,
+      _ => null,
+    };
+    if (points != null) {
+      final clientsCount = points.map((point) => point.clientId).toSet().length;
+      final amount =
+          NumberFormat.currency(
+            locale: locale,
+            symbol: '₽',
+            decimalDigits: 2,
+          ).format(
+            points.fold<int>(0, (sum, point) => sum + point.totalCents) / 100,
+          );
+      details.addAll([
+        ('Клиентов:', '$clientsCount'),
+        ('Сумма:', amount),
+      ]);
     }
-    if (document.createdAt != null) {
-      subtitleLines.add(
-        Text(
-          'Создан: ${DateFormat.yMd(locale).add_Hm().format(document.createdAt!)}',
-        ),
-      );
+    if (document is DeliveryRouteSheet) {
+      details.addAll([
+        ('Водитель:', document.driverName),
+        ('Автомобиль:', document.carModelAndNumber),
+      ]);
     }
 
     return AppDialogCard(
@@ -358,13 +385,42 @@ class _DayDocumentsDialogState extends State<DayDocumentsDialog> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  '${document.title}${document.isActive ? '' : ' — Отменён'}',
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-                if (subtitleLines.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  ...subtitleLines,
+                if (details.isNotEmpty) ...[
+                  Table(
+                    columnWidths: const {
+                      0: IntrinsicColumnWidth(),
+                      1: FlexColumnWidth(),
+                    },
+                    defaultVerticalAlignment: TableCellVerticalAlignment.top,
+                    children: [
+                      for (final (label, value) in details)
+                        TableRow(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                right: 12,
+                                bottom: 4,
+                              ),
+                              child: Text(
+                                label,
+                                style: label == 'Создан:'
+                                    ? Theme.of(context).textTheme.bodyLarge
+                                    : null,
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: Text(
+                                value,
+                                style: label == 'Создан:'
+                                    ? Theme.of(context).textTheme.bodyLarge
+                                    : null,
+                              ),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
                 ],
               ],
             ),

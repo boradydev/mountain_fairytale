@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/shared/widgets/dialog_card_widget.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -324,7 +325,7 @@ void main() {
         final routeId = route.documentId!;
         await tester.tap(find.byType(DeliveryDayItem).first);
         await settled(
-          () => find.text('Доставка: $marker').evaluate().isNotEmpty,
+          () => find.text(marker).evaluate().isNotEmpty,
         );
         expect(find.byType(DayDocumentsDialog), findsOneWidget);
 
@@ -376,7 +377,7 @@ void main() {
         final locksBeforeRead = transport.requests
             .where((r) => r.endsWith('/edit-lock'))
             .length;
-        await tap('Доставка: $marker');
+        await tap(marker);
         await settled(
           () => find.text('Начать редактирование').evaluate().isNotEmpty,
         );
@@ -393,12 +394,12 @@ void main() {
         await settled(
           () => find.byType(DayDocumentsDialog).evaluate().isNotEmpty,
         );
-        expect(find.text('Доставка: $marker'), findsNothing);
+        expect(find.text(marker), findsNothing);
         await tester.tap(find.byType(Switch));
         await settled(
-          () => find.text('Доставка: $marker — Отменён').evaluate().isNotEmpty,
+          () => find.text(marker).evaluate().isNotEmpty,
         );
-        await tap('Доставка: $marker — Отменён');
+        await tap(marker);
         await settled(() => find.text('Восстановить').evaluate().isNotEmpty);
         await confirmStatus('Восстановить');
         await settled(() => route.documentActive);
@@ -415,7 +416,7 @@ void main() {
         expect(days.days.first.totalAmount, 6.70);
         expect(tester.widget<Switch>(find.byType(Switch)).value, isTrue);
 
-        await tap('Доставка: $marker');
+        await tap(marker);
         await settled(
           () => find.text('Начать редактирование').evaluate().isNotEmpty,
         );
@@ -438,7 +439,14 @@ void main() {
         expect(days.days.first.totalAmount, 13.38);
         debugPrint('LIVE: explicit price refresh preserved historical name');
 
-        await tap('Самовывоз');
+        await tester.runAsync(
+          () => tester.tap(
+            find.ancestor(
+              of: find.byIcon(Icons.store_outlined),
+              matching: find.byType(AppDialogCard),
+            ),
+          ),
+        );
         await settled(
           () => find.text('Начать редактирование').evaluate().isNotEmpty,
         );
@@ -450,7 +458,13 @@ void main() {
         await settled(
           () => find.byType(DayDocumentsDialog).evaluate().isNotEmpty,
         );
-        expect(find.text('Самовывоз'), findsNothing);
+        expect(
+          find.ancestor(
+            of: find.byIcon(Icons.store_outlined),
+            matching: find.byType(AppDialogCard),
+          ),
+          findsNothing,
+        );
         expect(days.total, originalTotal + 5);
         expect(days.days.first.totalAmount, 10.70);
         final earliest = await network(
