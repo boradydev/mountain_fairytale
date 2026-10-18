@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 
-class BaseFormDialog extends StatelessWidget {
+class BaseFormDialog extends StatefulWidget {
   final String title;
   final String submitButtonText;
   final VoidCallback onSubmit;
@@ -35,6 +35,44 @@ class BaseFormDialog extends StatelessWidget {
   });
 
   @override
+  State<BaseFormDialog> createState() => _BaseFormDialogState();
+}
+
+class _BaseFormDialogState extends State<BaseFormDialog> {
+  final _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  Widget _scrollableForm(Widget child) {
+    final platform = Theme.of(context).platform;
+    final desktop =
+        platform == TargetPlatform.windows ||
+        platform == TargetPlatform.linux ||
+        platform == TargetPlatform.macOS;
+    final scrollView = SingleChildScrollView(
+      controller: _scrollController,
+      // Reserve the scrollbar lane even when the form fits vertically.
+      padding: const EdgeInsets.only(right: 16),
+      child: child,
+    );
+    return ScrollConfiguration(
+      behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+      child: desktop
+          ? Scrollbar(
+              controller: _scrollController,
+              thickness: 6,
+              radius: const Radius.circular(3),
+              child: scrollView,
+            )
+          : scrollView,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -44,16 +82,18 @@ class BaseFormDialog extends StatelessWidget {
       ),
       child: Container(
         width: 500,
-        padding: const EdgeInsets.all(24),
+        // Move 16 of the original right-hand 24 pixels inside the viewport.
+        // Field widths stay unchanged; the scrollbar sits outside the fields.
+        padding: const EdgeInsets.fromLTRB(24, 24, 8, 24),
         child: Form(
-          key: formKey,
-          child: SingleChildScrollView(
-            child: Column(
+          key: widget.formKey,
+          child: _scrollableForm(
+            Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  widget.title,
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -62,35 +102,37 @@ class BaseFormDialog extends StatelessWidget {
                 ),
                 SizedBox(
                   height: 16,
-                  child: isLoading
+                  child: widget.isLoading
                       ? const Center(
                           child: LinearProgressIndicator(minHeight: 4),
                         )
                       : null,
                 ),
 
-                ...children,
+                ...widget.children,
 
                 const SizedBox(height: 24),
 
                 Row(
                   children: [
-                    ?leadingAction,
+                    ?widget.leadingAction,
 
                     const Spacer(),
 
                     AppSecondaryButton(
-                      onPressed: isBusy
+                      onPressed: widget.isBusy
                           ? null
                           : () => Navigator.of(context).pop(),
                       text: 'Отмена',
                     ),
                     const SizedBox(width: 8),
                     SizedBox(
-                      width: submitButtonWidth,
+                      width: widget.submitButtonWidth,
                       child: AppPrimaryButton(
-                        onPressed: isBusy || !canSubmit ? null : onSubmit,
-                        text: submitButtonText,
+                        onPressed: widget.isBusy || !widget.canSubmit
+                            ? null
+                            : widget.onSubmit,
+                        text: widget.submitButtonText,
                         maxLines: 1,
                       ),
                     ),
