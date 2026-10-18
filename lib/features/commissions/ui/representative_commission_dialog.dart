@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/shared/widgets/active_status_label.dart';
 import 'package:mountain_fairytale/core/network/api_exception.dart';
 import 'package:mountain_fairytale/shared/widgets/app_notify.dart';
 import 'package:mountain_fairytale/shared/widgets/confirm_dialog.dart';
@@ -230,7 +231,7 @@ class _RepresentativeCommissionDialogState
                                   children: [
                                     Text(row.name),
                                     if (!row.isActive)
-                                      const CommissionStatusLabel(
+                                      const ActiveStatusLabel(
                                         isActive: false,
                                       ),
                                     if (!row.isCurrentlyAssigned)

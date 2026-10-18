@@ -3,6 +3,7 @@ import 'package:mountain_fairytale/features/employees/data/employee_model.dart';
 import 'package:mountain_fairytale/features/employees/ui/employee_dialog.dart';
 import 'package:mountain_fairytale/features/employees/ui/employees_provider.dart';
 import 'package:mountain_fairytale/shared/widgets/add_action_card.dart';
+import 'package:mountain_fairytale/shared/widgets/active_status_label.dart';
 import 'package:mountain_fairytale/shared/widgets/base_card_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/labeled_checkbox_toggle.dart';
 import 'package:mountain_fairytale/shared/widgets/list_section_header.dart';
@@ -160,13 +161,18 @@ class _EmployeeCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(employee.username, style: theme.textTheme.titleMedium),
-          const SizedBox(height: 4),
-          Text(
-            employee.isActive ? 'Активен' : 'Деактивирован',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  employee.username,
+                  style: theme.textTheme.titleMedium,
+                ),
+              ),
+              const SizedBox(width: 12),
+              ActiveStatusLabel(isActive: employee.isActive),
+            ],
           ),
           const SizedBox(height: 12),
           Divider(color: theme.colorScheme.outlineVariant, height: 1),
