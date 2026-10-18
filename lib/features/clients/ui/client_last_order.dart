@@ -59,6 +59,8 @@ class ClientLastOrderView extends StatelessWidget {
       message: 'Открыть полный состав последнего заказа',
       child: InkWell(
         borderRadius: BorderRadius.circular(4),
+        mouseCursor: SystemMouseCursors.click,
+        hoverColor: theme.colorScheme.onSurface.withAlpha(10),
         onTap: () => showDialog<void>(
           context: context,
           builder: (dialogContext) => AlertDialog(
@@ -91,7 +93,22 @@ class ClientLastOrderView extends StatelessWidget {
             ],
           ),
         ),
-        child: content,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 48),
+          child: Row(
+            children: [
+              Expanded(child: content),
+              const SizedBox(width: 8),
+              ExcludeSemantics(
+                child: Icon(
+                  Icons.chevron_right,
+                  size: 20,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
