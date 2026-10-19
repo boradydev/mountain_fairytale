@@ -1,3 +1,5 @@
+import 'package:mountain_fairytale/features/clients/data/location_repository.dart';
+
 const _omitted = Object();
 
 /// Keep server-local timestamps without timezone conversion.
@@ -80,6 +82,7 @@ class Client {
   final String name;
   final String phone;
   final String address;
+  final DeliveryAddress? deliveryAddress;
   final int sleepingThresholdDays;
   final DateTime? lastDeliveryDate;
   final int? lastDeliveryQuantity;
@@ -96,6 +99,7 @@ class Client {
     required this.name,
     required this.phone,
     required this.address,
+    this.deliveryAddress,
     required this.sleepingThresholdDays,
     required this.createdAt,
     required this.isActive,
@@ -113,6 +117,11 @@ class Client {
     name: json['name'] as String,
     phone: json['phone'] as String,
     address: json['address'] as String,
+    deliveryAddress: json['deliveryAddress'] == null
+        ? null
+        : DeliveryAddress.fromJson(
+            Map<String, dynamic>.from(json['deliveryAddress'] as Map),
+          ),
     sleepingThresholdDays: (json['sleepingThresholdDays'] as num).toInt(),
     lastDeliveryDate: json['lastDeliveryDate'] == null
         ? null
@@ -138,6 +147,7 @@ class Client {
     'name': name,
     'phone': phone,
     'address': address,
+    if (deliveryAddress != null) 'deliveryAddress': deliveryAddress!.toJson(),
     'sleepingThresholdDays': sleepingThresholdDays,
     'lastDeliveryDate': lastDeliveryDate == null
         ? null
@@ -180,6 +190,7 @@ class CreateClientRequest {
   final String name;
   final String phone;
   final String address;
+  final DeliveryAddress? deliveryAddress;
   final int sleepingThresholdDays;
   final DateTime? cooldownUntil;
   final String? salesRepresentativeId;
@@ -188,6 +199,7 @@ class CreateClientRequest {
     required this.name,
     required this.phone,
     required this.address,
+    this.deliveryAddress,
     required this.sleepingThresholdDays,
     this.cooldownUntil,
     this.salesRepresentativeId,
@@ -196,7 +208,7 @@ class CreateClientRequest {
   Map<String, dynamic> toJson() => {
     'name': name,
     'phone': phone,
-    'address': address,
+    if (deliveryAddress != null) 'deliveryAddress': deliveryAddress!.toJson(),
     'sleepingThresholdDays': sleepingThresholdDays,
     'cooldownUntil': cooldownUntil == null
         ? null
@@ -211,6 +223,7 @@ class UpdateClientRequest {
   final String? name;
   final String? phone;
   final String? address;
+  final DeliveryAddress? deliveryAddress;
   final int? sleepingThresholdDays;
   final Object? cooldownUntil;
   final Object? salesRepresentativeId;
@@ -220,6 +233,7 @@ class UpdateClientRequest {
     this.name,
     this.phone,
     this.address,
+    this.deliveryAddress,
     this.sleepingThresholdDays,
     this.cooldownUntil = _omitted,
     this.salesRepresentativeId = _omitted,
@@ -231,6 +245,7 @@ class UpdateClientRequest {
         name: changes['name'] as String?,
         phone: changes['phone'] as String?,
         address: changes['address'] as String?,
+        deliveryAddress: changes['deliveryAddress'] as DeliveryAddress?,
         sleepingThresholdDays: changes['sleepingThresholdDays'] as int?,
         cooldownUntil: changes.containsKey('cooldownUntil')
             ? changes['cooldownUntil']
@@ -245,7 +260,7 @@ class UpdateClientRequest {
   Map<String, dynamic> toJson() => {
     if (name != null) 'name': name,
     if (phone != null) 'phone': phone,
-    if (address != null) 'address': address,
+    if (deliveryAddress != null) 'deliveryAddress': deliveryAddress!.toJson(),
     if (sleepingThresholdDays != null)
       'sleepingThresholdDays': sleepingThresholdDays,
     if (!identical(cooldownUntil, _omitted))

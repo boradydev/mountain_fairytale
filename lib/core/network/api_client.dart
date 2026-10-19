@@ -62,7 +62,14 @@ class ApiClient {
           cancellation: cancellation,
         ),
         'GET' => _transport.get(path, headers: headers),
-        'POST' => _transport.post(path, headers: headers, body: body),
+        'POST' => _transport.post(
+          path,
+          headers: headers,
+          body: body,
+          timeout: path.endsWith('/geocode') || path.endsWith('/optimize-order')
+              ? const Duration(seconds: 40)
+              : null,
+        ),
         'PUT' => _transport.put(path, headers: headers, body: body),
         'PATCH' => _transport.patch(path, headers: headers, body: body),
         'DELETE' => _transport.delete(path, headers: headers),

@@ -153,6 +153,7 @@ class RecordingTransport extends HttpTransport {
     String path, {
     Map<String, String>? headers,
     Object? body,
+    Duration? timeout,
   }) => _record('POST', path, headers, body);
 
   @override

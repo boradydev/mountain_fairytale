@@ -1,3 +1,5 @@
+import 'package:mountain_fairytale/core/network/api_exception.dart';
+import 'package:mountain_fairytale/features/clients/data/location_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mountain_fairytale/features/cars/data/cars_model.dart';
 import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_sheet_model.dart';
@@ -10,6 +12,7 @@ import 'package:mountain_fairytale/features/delivery_route/ui/order_points_provi
 
 class RouteConstructorProvider extends OrderPointsProvider {
   // 1. Объявляем ТОЛЬКО свои собственные репозитории, которых нет в родителе
+  final LocationRepository? locationRepository;
   final CarRepository _carRepo;
   final DriverRepository _driverRepo;
   final DeliveryRouteRepository _routeRepo;
@@ -17,6 +20,7 @@ class RouteConstructorProvider extends OrderPointsProvider {
 
   // 2. Инициализируем всё в одно действие
   RouteConstructorProvider({
+    this.locationRepository,
     required this._carRepo,
     required this._driverRepo,
     required DeliveryRouteRepository routeRepo,
@@ -27,6 +31,108 @@ class RouteConstructorProvider extends OrderPointsProvider {
     required super.clientRepo,
   }) : _routeRepo = routeRepo,
        super(lockRepository: routeRepo);
+
+  @override
+  void initializeDocumentSession({
+    String? id,
+    DateTime? createdAt,
+    bool active = true,
+  }) {
+    _optimizationSession++;
+    optimizing = false;
+    _undoOrder = null;
+    _optimizedOrder = null;
+    optimizationMessage = null;
+    super.initializeDocumentSession(
+      id: id,
+      createdAt: createdAt,
+      active: active,
+    );
+  }
+
+  bool optimizing = false;
+  String? optimizationMessage;
+  bool optimizationFailed = false;
+  int _optimizationSession = 0;
+  int _orderRevision = 0;
+  String _lastOrder = '';
+  List<String>? _undoOrder;
+  String? _optimizedOrder;
+  String get _orderKey => points.map((p) => p.clientId).join('|');
+  bool get canUndoOptimization =>
+      canEdit &&
+      !optimizing &&
+      _undoOrder != null &&
+      _optimizedOrder == _orderKey;
+  @override
+  bool get canSave => super.canSave && !optimizing;
+  @override
+  void notifyListeners() {
+    final key = _orderKey;
+    if (key != _lastOrder) {
+      _lastOrder = key;
+      _orderRevision++;
+    }
+    super.notifyListeners();
+  }
+
+  Future<void> optimizeOrder() async {
+    if (!canEdit ||
+        optimizing ||
+        locationRepository == null ||
+        points.length < 2 ||
+        points.length > 30) {
+      return;
+    }
+    optimizing = true;
+    optimizationMessage = null;
+    optimizationFailed = false;
+    notifyListeners();
+    final revision = _orderRevision, session = _optimizationSession;
+    final originalIds = points.map((p) => p.clientId).toList();
+    try {
+      final result = await locationRepository!.optimize(originalIds);
+      if (session != _optimizationSession) return;
+      if (!canEdit || revision != _orderRevision) {
+        optimizationMessage =
+            'Список изменился во время расчёта. Запустите оптимизацию заново.';
+        optimizationFailed = true;
+        return;
+      }
+      final ids = (result['orderedClientIds'] as List).cast<String>();
+      if (ids.length != originalIds.length ||
+          ids.toSet().length != ids.length ||
+          !ids.toSet().containsAll(originalIds)) {
+        throw const FormatException('Incomplete optimization result');
+      }
+      final byId = {for (final p in points) p.clientId: p};
+      _undoOrder = originalIds;
+      points = ids.map((id) => byId[id]!).toList();
+      _optimizedOrder = _orderKey;
+      optimizationMessage =
+          'Предлагаемый порядок применён. Его можно изменить вручную.';
+    } catch (error) {
+      if (session == _optimizationSession) {
+        optimizationFailed = true;
+        optimizationMessage = error is ApiException ? error.message : 'Не удалось рассчитать порядок. Проверьте координаты клиентов и повторите попытку.';
+      }
+    } finally {
+      if (session == _optimizationSession) {
+        optimizing = false;
+        notifyListeners();
+      }
+    }
+  }
+
+  void undoOptimization() {
+    if (!canUndoOptimization) return;
+    final byId = {for (final p in points) p.clientId: p};
+    points = _undoOrder!.map((id) => byId[id]!).toList();
+    _undoOrder = null;
+    _optimizedOrder = null;
+    optimizationMessage = null;
+    notifyListeners();
+  }
 
   DeliveryRouteSheet? _savedSheet;
   Future<({double? mileage})?> Function(Car car, DeliveryRouteSheet sheet)?
@@ -273,6 +379,11 @@ class RouteConstructorProvider extends OrderPointsProvider {
   String? get currentRouteId => documentId;
 
   void resetForm() {
+    _optimizationSession++;
+    optimizing = false;
+    optimizationMessage = null;
+    _undoOrder = null;
+    _optimizedOrder = null;
     initializeDocumentSession();
     _savedSheet = null;
     _carChangeConfirmed = false;
@@ -403,6 +514,8 @@ class RouteConstructorProvider extends OrderPointsProvider {
       documentId = saved.id;
       documentCreatedAt = saved.createdAt;
       _savedSheet = saved;
+      _undoOrder = null;
+      _optimizedOrder = null;
       _carChangeConfirmed = false;
       _previousCarMileage = null;
       points = List.from(saved.points);

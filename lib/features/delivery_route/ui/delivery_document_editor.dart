@@ -1,3 +1,5 @@
+import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_provider.dart';
+import 'package:mountain_fairytale/features/delivery_route/ui/route_optimization_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/features/clients/ui/clients_selection_panel.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/order_points_provider.dart';
@@ -219,7 +221,17 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
                                 ),
                               ),
                               const VerticalDivider(width: 1),
-                              Expanded(child: RoutePointsList(provider: p)),
+                              Expanded(
+                                child: Column(
+                                  children: [
+                                    if (p is RouteConstructorProvider)
+                                      RouteOptimizationPanel(provider: p),
+                                    Expanded(
+                                      child: RoutePointsList(provider: p),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ],
                           ),
                         ),

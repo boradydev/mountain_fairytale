@@ -1,3 +1,7 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:mountain_fairytale/features/clients/data/location_repository.dart';
 import 'package:mountain_fairytale/shared/widgets/duplicate_check_status_widget.dart';
 import 'package:mountain_fairytale/features/sales_representatives/data/sales_representative_api_repo.dart';
 import 'package:mountain_fairytale/features/sales_representatives/ui/sales_rep_dialog.dart';
@@ -26,6 +30,34 @@ import 'package:mountain_fairytale/shared/widgets/base_form_dialog_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/dropdown_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 
+const testAddress = DeliveryAddress(
+  district: 'Шпаковский округ',
+  locality: 'Михайловск',
+  street: 'Локомотивная улица',
+  house: '147',
+  latitude: 45.1373445,
+  longitude: 41.9974531,
+);
+
+class FakeLocations implements LocationRepository {
+  @override
+  Future<List<LocationCandidate>> search(Map<String, String> a) async => [
+    LocationCandidate({
+      'formatted': 'Локомотивная улица 147, Михайловск',
+      'latitude': 45.1373445,
+      'longitude': 41.9974531,
+      'confidence': 1.0,
+      'exactHouse': true,
+    }),
+  ];
+  @override
+  Future<Uint8List> tile(int z, int x, int y) async => base64Decode(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/l9sAAAAASUVORK5CYII=',
+  );
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 Client row({
   String id = 'client-uuid',
   bool active = true,
@@ -36,6 +68,7 @@ Client row({
   name: 'Клиент',
   phone: '+79123456789',
   address: 'Адрес',
+  deliveryAddress: testAddress,
   sleepingThresholdDays: 0,
   createdAt: DateTime(2026),
   isActive: active,
@@ -259,6 +292,7 @@ Future<void> openDialog(
     MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: provider),
+        Provider<LocationRepository>.value(value: FakeLocations()),
         if (reps != null)
           Provider<SalesRepresentativeApiRepository>.value(value: reps),
       ],
@@ -299,11 +333,29 @@ Finder field(String label) => find.ancestor(
 );
 Future<void> fill(WidgetTester tester) async {
   await tester.enterText(field('Название организации / ФИО *'), 'Клиент');
-  await tester.enterText(field('Адрес доставки *'), 'Адрес');
+  await tester.enterText(field('Улица (с типом) *'), 'Локомотивная улица');
+  for (final entry in {
+    'Район / муниципальный или городской округ *': 'Шпаковский округ',
+    'Населённый пункт (с типом) *': 'Михайловск',
+    'Дом *': '147',
+  }.entries) {
+    await tester.ensureVisible(field(entry.key));
+    await tester.enterText(field(entry.key), entry.value);
+  }
+  await tester.ensureVisible(field('Номер телефона *'));
   await tester.enterText(field('Номер телефона *'), '9123456789');
   await tester.enterText(field('Порог засыпания (в днях) *'), '0');
   await tester.pump(const Duration(milliseconds: 600));
   await tester.pump();
+  final verify = find.text('Проверить адрес');
+  if (verify.evaluate().isNotEmpty) {
+    await tester.ensureVisible(verify);
+    await tester.tap(verify);
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.text('Подтвердить местоположение'));
+    await tester.pump(const Duration(milliseconds: 400));
+  }
 }
 
 void main() {
@@ -400,10 +452,11 @@ void main() {
       expect(find.byType(BaseFormDialog), findsOneWidget);
       expect(find.byType(AppPrimaryButton), findsOneWidget);
       await tester.enterText(field('Название организации / ФИО *'), 'Клиент');
-      await tester.enterText(field('Адрес доставки *'), 'Адрес');
+      await tester.enterText(field('Улица (с типом) *'), 'Локомотивная улица');
       await tester.pumpAndSettle();
       expect(repo.checks, 0);
       await fill(tester);
+      await tester.ensureVisible(find.text('Добавить'));
       await tester.tap(find.text('Добавить'));
       await tester.pumpAndSettle();
       expect(repo.checks, greaterThanOrEqualTo(1));
@@ -419,6 +472,7 @@ void main() {
     final repo = ClientsFake()..conflict = true;
     await openDialog(tester, repo);
     await fill(tester);
+    await tester.ensureVisible(find.text('Добавить'));
     await tester.tap(find.text('Добавить'));
     await tester.pumpAndSettle();
     expect(
@@ -440,6 +494,7 @@ void main() {
     final repo = ClientsFake()..duplicateFailure = true;
     await openDialog(tester, repo);
     await fill(tester);
+    await tester.ensureVisible(find.text('Добавить'));
     await tester.tap(find.text('Добавить'));
     await tester.pumpAndSettle();
     expect(repo.creates, 0);
@@ -448,6 +503,7 @@ void main() {
       findsOneWidget,
     );
     repo.duplicateFailure = false;
+    await tester.ensureVisible(find.text('Добавить'));
     await tester.tap(find.text('Добавить'));
     await tester.pumpAndSettle();
     expect(repo.creates, 1);
@@ -459,6 +515,7 @@ void main() {
       final repo = ClientsFake()..duplicate = row(active: false);
       await openDialog(tester, repo);
       await fill(tester);
+      await tester.ensureVisible(find.text('Добавить'));
       await tester.tap(find.text('Добавить'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
@@ -484,6 +541,7 @@ void main() {
         findsOneWidget,
       );
       expect(find.byType(AppDropdown<String>), findsNWidgets(2));
+      await tester.ensureVisible(find.text('ОК'));
       await tester.tap(find.text('ОК'));
       await tester.pumpAndSettle();
       expect(repo.updated, isNull);
@@ -588,6 +646,7 @@ void main() {
       expect(find.textContaining('Деактивирован'), findsOneWidget);
       await tester.tap(find.text('Клиент'));
       await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Отмена'));
       await tester.tap(find.text('Отмена'));
       await tester.pumpAndSettle();
       expect(orders.points, isEmpty);
@@ -628,11 +687,13 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Добавить клиента'), findsOneWidget);
       expect(find.text('Открыть клиента'), findsOneWidget);
+      await tester.ensureVisible(find.text('Открыть клиента'));
       await tester.tap(find.text('Открыть клиента'));
       await tester.pumpAndSettle();
       expect(find.byType(ClientDialog), findsOneWidget);
       expect(find.text('Редактирование клиента'), findsOneWidget);
       expect(repo.creates, 0);
+      await tester.ensureVisible(find.text('Отмена'));
       await tester.tap(find.text('Отмена'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Открыть'));
@@ -641,6 +702,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.textContaining('Найден похожий клиент:'));
       await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Добавить клиента'));
       await tester.tap(find.text('Добавить клиента'));
       await tester.pumpAndSettle();
       expect(repo.selected!.id, 'existing');
@@ -714,6 +776,7 @@ void main() {
       );
       expect(repo.creates, 0);
       await fill(tester);
+      await tester.ensureVisible(find.text('Добавить'));
       await tester.tap(find.text('Добавить'));
       await tester.pumpAndSettle();
       expect(repo.created!.salesRepresentativeId, 'new-rep');
@@ -736,6 +799,7 @@ void main() {
       expect(find.text('Добавить клиента'), findsNothing);
       expect(find.text('Активировать и добавить'), findsNothing);
       expect(find.text('Открыть клиента'), findsOneWidget);
+      await tester.ensureVisible(find.text('Открыть клиента'));
       await tester.tap(find.text('Открыть клиента'));
       await tester.pumpAndSettle();
       expect(find.text('Редактирование клиента'), findsOneWidget);

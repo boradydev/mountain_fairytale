@@ -1,3 +1,4 @@
+import 'package:mountain_fairytale/features/clients/data/location_repository.dart';
 import 'package:mountain_fairytale/features/commissions/data/commissions_repo.dart';
 import 'package:mountain_fairytale/features/commissions/ui/commissions_provider.dart';
 import 'package:mountain_fairytale/features/delivery_route/delivery_route_abcs.dart';
@@ -200,6 +201,7 @@ Future<void> main() async {
         driverRepo: driverRepository,
         productRepo: productRepository,
         routeRepo: routeRepository,
+        locationRepository: LocationRepository(apiClient),
         paymentMethodRepo: paymentMethodRepository,
         clientRepo: clientRepository,
         printService: routePrintService,
@@ -231,6 +233,9 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => LocaleProvider(prefs)),
 
         Provider<ApiClient>.value(value: apiClient),
+        Provider<LocationRepository>.value(
+          value: LocationRepository(apiClient),
+        ),
         ListenableProvider<AuthService>.value(
           value: authService,
         ),

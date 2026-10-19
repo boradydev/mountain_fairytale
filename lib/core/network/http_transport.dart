@@ -34,7 +34,14 @@ class HttpTransport {
     String path, {
     Map<String, String>? headers,
     Object? body,
-  }) => _send(method: 'POST', path: path, headers: headers, body: body);
+    Duration? timeout,
+  }) => _send(
+    method: 'POST',
+    path: path,
+    headers: headers,
+    body: body,
+    timeout: timeout,
+  );
 
   Future<HttpTransportResponse> getLongPolling(
     String path, {

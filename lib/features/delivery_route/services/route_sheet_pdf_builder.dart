@@ -20,6 +20,24 @@ class RouteSheetPdfBuilder {
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
         theme: theme,
+        footer: (_) => pw.Column(
+          children: [
+            pw.UrlLink(
+              destination: 'https://www.geoapify.com/',
+              child: pw.Text(
+                'Powered by Geoapify',
+                style: const pw.TextStyle(fontSize: 7),
+              ),
+            ),
+            pw.UrlLink(
+              destination: 'https://www.openstreetmap.org/copyright',
+              child: pw.Text(
+                '© OpenStreetMap contributors',
+                style: const pw.TextStyle(fontSize: 7),
+              ),
+            ),
+          ],
+        ),
         margin: const pw.EdgeInsets.all(28),
         build: (context) => [
           _buildHeader(sheet),
