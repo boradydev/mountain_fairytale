@@ -8,6 +8,10 @@ import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_s
 import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_provider.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/route_meta_panel.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/car_replacement_dialog.dart';
+import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_screen.dart';
+import 'package:mountain_fairytale/features/clients/ui/clients_provider.dart';
+import 'package:mountain_fairytale/shared/providers/theme_provider.dart';
+import 'package:mountain_fairytale/shared/widgets/dropdown_widget.dart';
 
 import 'constructors_test.dart'
     show Cars, Drivers, Routes, Products, PaymentDirectory, PrintService;
@@ -72,6 +76,65 @@ RouteConstructorProvider makeProvider(MileageRoutes routes) =>
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  testWidgets(
+    'recorded car can be replaced after entering and reentering editing',
+    (tester) async {
+      tester.view.physicalSize = const Size(1600, 1200);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final repo = MileageRoutes();
+      final p = makeProvider(repo);
+      final clients = ClientsProvider(Clients());
+      final theme = ThemeProvider(await SharedPreferences.getInstance());
+      addTearDown(p.dispose);
+      addTearDown(clients.dispose);
+      addTearDown(theme.dispose);
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider.value(value: p),
+            ChangeNotifierProvider.value(value: clients),
+            ChangeNotifierProvider.value(value: theme),
+          ],
+          child: const MaterialApp(
+            home: RouteConstructorScreen(existingRouteId: 'document'),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      for (var attempt = 0; attempt < 2; attempt++) {
+        await tester.tap(find.text('Начать редактирование'));
+        await tester.pumpAndSettle();
+        expect(p.canEdit, isTrue);
+        await tester.tap(
+          find.descendant(
+            of: find.byType(AppDropdown<Car>),
+            matching: find.byType(DropdownButtonFormField<Car>),
+          ),
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.textContaining('Фургон').last);
+        await tester.pumpAndSettle();
+        expect(find.text('Сменить автомобиль?'), findsOneWidget);
+        expect(p.selectedCar!.id, carA.id);
+        await tester.tap(find.text('Продолжить замену'));
+        await tester.pumpAndSettle();
+        expect(p.selectedCar!.id, carB.id);
+        expect(p.startMileage, 1500);
+        expect(p.endMileage, isNull);
+        expect(repo.saved, 0);
+        await tester.tap(find.text('Отмена'));
+        await tester.pumpAndSettle();
+        expect(p.selectedCar!.id, carA.id);
+        expect(p.endMileage, 200);
+      }
+      expect(tester.takeException(), isNull);
+      await p.closeDocument();
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
 
   test(
     'switching cars resets both readings and never remembers manual values',

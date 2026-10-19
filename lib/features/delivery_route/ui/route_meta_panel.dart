@@ -7,6 +7,7 @@ import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_
 import 'package:mountain_fairytale/features/cars/ui/car_dialog.dart';
 import 'package:mountain_fairytale/features/cars/ui/car_activation_dialog.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/car_replacement_dialog.dart';
+import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_sheet_model.dart';
 import 'package:mountain_fairytale/features/drivers/ui/driver_dialog.dart';
 import 'package:mountain_fairytale/features/drivers/ui/driver_activation_dialog.dart';
 import 'package:mountain_fairytale/shared/widgets/dropdown_widget.dart';
@@ -28,17 +29,30 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
   final _carFocusNode = FocusNode();
   RouteConstructorProvider? _provider;
 
+  Future<({double? mileage})?> _confirmCarReplacement(
+    Car car,
+    DeliveryRouteSheet sheet,
+  ) => showCarReplacementDialog(context, car, sheet);
+
+  void _releaseConfirmationHandler() {
+    // The keyed form can mount a new panel before disposing the old one.
+    // Only unregister this panel's handler, preserving its replacement.
+    if (_provider?.confirmCarReplacement == _confirmCarReplacement) {
+      _provider!.confirmCarReplacement = null;
+    }
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _releaseConfirmationHandler();
     _provider = context.read<RouteConstructorProvider>();
-    _provider!.confirmCarReplacement = (car, sheet) =>
-        showCarReplacementDialog(context, car, sheet);
+    _provider!.confirmCarReplacement = _confirmCarReplacement;
   }
 
   @override
   void dispose() {
-    _provider?.confirmCarReplacement = null;
+    _releaseConfirmationHandler();
     _driverFocusNode.dispose();
     _carFocusNode.dispose();
     super.dispose();

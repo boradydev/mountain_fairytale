@@ -132,7 +132,9 @@ class RouteConstructorProvider extends OrderPointsProvider {
 
   void _applyCar(Car car) {
     cars = cars.where((existing) => existing.id != car.id).toList();
-    if (car.isActive || showInactiveCars) cars.insert(0, car);
+    if (car.isActive || showInactiveCars || car.id == _savedSheet?.carId) {
+      cars.insert(0, car);
+    }
     if (selectedCar?.id == car.id) {
       if (car.isActive || car.id == _savedSheet?.carId) {
         selectedCar = car;
@@ -217,7 +219,11 @@ class RouteConstructorProvider extends OrderPointsProvider {
 
   void _applyDriver(Driver driver) {
     drivers = drivers.where((d) => d.id != driver.id).toList();
-    if (driver.isActive || showInactiveDrivers) drivers.insert(0, driver);
+    if (driver.isActive ||
+        showInactiveDrivers ||
+        driver.id == _savedSheet?.driverId) {
+      drivers.insert(0, driver);
+    }
     if (selectedDriver?.id == driver.id) {
       if (driver.isActive || driver.id == _savedSheet?.driverId) {
         selectedDriver = driver;
@@ -563,6 +569,10 @@ class RouteConstructorProvider extends OrderPointsProvider {
   }
 
   Future<void> _applySheet(DeliveryRouteSheet sheet) async {
+    // Resolve both resources before publishing the selection. Dropdown values
+    // must remain in their item lists throughout asynchronous loading.
+    final driver = await _driverRepo.getDriverById(sheet.driverId!);
+    final car = await _carRepo.getCarById(sheet.carId);
     _savedSheet = sheet;
     _carChangeConfirmed = false;
     _previousCarMileage = null;
@@ -576,8 +586,8 @@ class RouteConstructorProvider extends OrderPointsProvider {
     endMileage = sheet.endMileage;
     driverName = sheet.driverName;
     points = List.from(sheet.points);
-    selectedDriver = await _driverRepo.getDriverById(sheet.driverId!);
-    selectedCar = await _carRepo.getCarById(sheet.carId);
+    selectedDriver = driver;
+    selectedCar = car;
     drivers = [
       selectedDriver!,
       ...drivers.where((d) => d.id != selectedDriver!.id),

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mountain_fairytale/features/cars/cars_abcs.dart';
@@ -41,7 +43,11 @@ class Drivers implements DriverRepository {
     bool includeDeactivated = false,
   }) async => includeDeactivated ? [driver] : [];
   @override
-  Future<Driver> getDriverById(String id) async => driver;
+  Future<Driver> getDriverById(String id) async =>
+      Driver.fromJson(driver.toJson());
+  @override
+  Future<Driver> updateDriver(String id, UpdateDriverRequest request) async =>
+      Driver.fromJson(driver.toJson());
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
@@ -55,16 +61,25 @@ class Cars implements CarRepository {
     isActive: false,
   );
   int updates = 0;
+  Completer<Car>? loadGate;
+  Completer<void>? requested;
   @override
   Future<List<Car>> getAvailableCars({bool includeDeactivated = false}) async =>
       includeDeactivated ? [car] : [];
   @override
-  Future<Car> getCarById(String id) async => car;
+  Future<Car> getCarById(String id) async {
+    requested?.complete();
+    return loadGate == null ? car : await loadGate!.future;
+  }
+
   @override
   Future<Car> updateCar(String id, UpdateCarRequest request) async {
     updates++;
     return car;
   }
+
+  @override
+  Future<Car> deactivateCar(String id) async => car;
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -162,6 +177,56 @@ class Pickups implements PickupRepository {
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
+  test('assigned inactive resources stay in dropdowns after an update', () async {
+    final p = RouteConstructorProvider(
+      carRepo: Cars(),
+      driverRepo: Drivers(),
+      routeRepo: Routes(),
+      printService: PrintService(),
+      productRepo: Products(),
+      paymentMethodRepo: PaymentDirectory(),
+      clientRepo: Clients(),
+    );
+    addTearDown(p.dispose);
+    await p.loadExistingRouteById('document');
+    expect(p.showInactiveDrivers, isFalse);
+    expect(await p.deactivateDriver('driver'), isTrue);
+    expect(p.selectedDriver, isNotNull);
+    expect(p.drivers.where((d) => d == p.selectedDriver), hasLength(1));
+    expect(await p.deactivateCar('car'), isTrue);
+    expect(p.selectedCar, isNotNull);
+    expect(p.cars.where((c) => c == p.selectedCar), hasLength(1));
+  });
+
+  test(
+    'route refresh keeps dropdown selection valid while car is loading',
+    () async {
+      final cars = Cars();
+      final p = RouteConstructorProvider(
+        carRepo: cars,
+        driverRepo: Drivers(),
+        routeRepo: Routes(),
+        printService: PrintService(),
+        productRepo: Products(),
+        paymentMethodRepo: PaymentDirectory(),
+        clientRepo: Clients(),
+      );
+      addTearDown(p.dispose);
+      await p.loadExistingRouteById('document');
+      cars.loadGate = Completer<Car>();
+      cars.requested = Completer<void>();
+      final refresh = p.refreshForEditing();
+      await cars.requested!.future;
+      final matchesWhileLoading = p.drivers
+          .where((d) => d == p.selectedDriver)
+          .length;
+      cars.loadGate!.complete(cars.car);
+      await refresh;
+      expect(matchesWhileLoading, 1);
+      expect(p.drivers.where((d) => d == p.selectedDriver), hasLength(1));
+    },
+  );
+
   test('inactive assigned resources survive opening and unchanged PATCH; saving never updates car', () async {
     final routes = Routes();
     final cars = Cars();
