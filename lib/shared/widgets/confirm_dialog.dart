@@ -9,6 +9,7 @@ class ConfirmDialog extends StatelessWidget {
   final bool destructive;
   final Widget? details;
   final bool Function()? validate;
+  final double? maxWidth;
 
   const ConfirmDialog({
     super.key,
@@ -19,6 +20,7 @@ class ConfirmDialog extends StatelessWidget {
     this.destructive = false,
     this.details,
     this.validate,
+    this.maxWidth,
   });
 
   static Future<bool> show(
@@ -46,6 +48,9 @@ class ConfirmDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      constraints: maxWidth == null
+          ? null
+          : BoxConstraints(minWidth: 280, maxWidth: maxWidth!),
       title: Text(title),
       content: SingleChildScrollView(
         child: Column(
