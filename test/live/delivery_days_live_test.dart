@@ -301,7 +301,7 @@ void main() {
         await network(() async {
           route.setDate(target);
           route.selectExistingDriver(await drivers.getDriverById(fixture.$3));
-          route.selectExistingCar(await cars.getCarById(fixture.$4));
+          await route.selectExistingCar(await cars.getCarById(fixture.$4));
           route.addClientPoint(await clientsRepo.getClientById(fixture.$1));
           expect(
             await route.addCurrentProduct(

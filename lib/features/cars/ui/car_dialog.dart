@@ -307,10 +307,11 @@ class _CarDialogState extends State<CarDialog> {
                       text: 'Выбрать для маршрута',
                       onPressed: _busy
                           ? null
-                          : () {
-                              context
+                          : () async {
+                              await context
                                   .read<RouteConstructorProvider>()
                                   .selectExistingCar(_duplicateCar!);
+                              if (!context.mounted) return;
                               Navigator.of(context).pop();
                             },
                     ),
@@ -383,11 +384,8 @@ class _CarDialogState extends State<CarDialog> {
           validator: (value) {
             if (value != null && value.trim().isNotEmpty) {
               final mileage = formNumber(value);
-              if (mileage == null || mileage < 0) {
+              if (mileage == null || !mileage.isFinite || mileage < 0) {
                 return 'Введите корректный пробег';
-              }
-              if (_isEditMode && mileage < widget.car!.currentMileage) {
-                return 'Пробег не может быть меньше ${widget.car!.currentMileage}';
               }
             }
             return null;

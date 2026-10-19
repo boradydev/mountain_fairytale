@@ -7,6 +7,8 @@ class ConfirmDialog extends StatelessWidget {
   final String confirmText;
   final String cancelText;
   final bool destructive;
+  final Widget? details;
+  final bool Function()? validate;
 
   const ConfirmDialog({
     super.key,
@@ -15,6 +17,8 @@ class ConfirmDialog extends StatelessWidget {
     this.confirmText = 'Подтвердить',
     this.cancelText = 'Отмена',
     this.destructive = false,
+    this.details,
+    this.validate,
   });
 
   static Future<bool> show(
@@ -43,7 +47,19 @@ class ConfirmDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(title),
-      content: Text(content),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(content),
+            if (details != null) ...[
+              const SizedBox(height: 16),
+              details!,
+            ],
+          ],
+        ),
+      ),
       actions: [
         AppSecondaryButton(
           text: cancelText,
@@ -52,7 +68,9 @@ class ConfirmDialog extends StatelessWidget {
         AppPrimaryButton(
           text: confirmText,
           destructive: destructive,
-          onPressed: () => Navigator.of(context).pop(true),
+          onPressed: () {
+            if (validate?.call() ?? true) Navigator.of(context).pop(true);
+          },
         ),
       ],
     );

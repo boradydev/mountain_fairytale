@@ -29,6 +29,32 @@ class RouteConstructorProvider extends OrderPointsProvider {
        super(lockRepository: routeRepo);
 
   DeliveryRouteSheet? _savedSheet;
+  Future<({double? mileage})?> Function(Car car, DeliveryRouteSheet sheet)?
+  confirmCarReplacement;
+  bool _carChangeConfirmed = false;
+  double? _previousCarMileage;
+  int mileageRevision = 0;
+  int _selectionVersion = 0;
+
+  double? get distance {
+    final end = endMileage;
+    if (end == null ||
+        !end.isFinite ||
+        !startMileage.isFinite ||
+        startMileage < 0 ||
+        end < startMileage) {
+      return null;
+    }
+    return end - startMileage;
+  }
+
+  void useCurrentMileage() {
+    if (!canEdit || selectedCar == null) return;
+    _startMileage = selectedCar!.currentMileage;
+    mileageRevision++;
+    notifyListeners();
+  }
+
   bool get assignmentUnchanged =>
       _savedSheet != null &&
       selectedDate == _savedSheet!.date &&
@@ -124,8 +150,7 @@ class RouteConstructorProvider extends OrderPointsProvider {
         const UpdateCarRequest(isActive: true),
       );
       _applyCar(updated);
-      selectCar(updated);
-      return true;
+      return await selectCar(updated);
     } catch (_) {
       return false;
     }
@@ -225,14 +250,29 @@ class RouteConstructorProvider extends OrderPointsProvider {
   String driverName = '';
   Driver? selectedDriver;
   Car? selectedCar;
-  double startMileage = 0.0;
-  double? endMileage;
+  double _startMileage = 0.0;
+  double? _endMileage;
+  double get startMileage => _startMileage;
+  set startMileage(double value) {
+    _startMileage = value;
+    notifyListeners();
+  }
+
+  double? get endMileage => _endMileage;
+  set endMileage(double? value) {
+    _endMileage = value;
+    notifyListeners();
+  }
 
   String? get currentRouteId => documentId;
 
   void resetForm() {
     initializeDocumentSession();
     _savedSheet = null;
+    _carChangeConfirmed = false;
+    _previousCarMileage = null;
+    _selectionVersion++;
+    mileageRevision++;
     selectedDate = DateTime.now();
     driverName = '';
     selectedDriver = null;
@@ -274,20 +314,61 @@ class RouteConstructorProvider extends OrderPointsProvider {
     selectDriver(driver);
   }
 
-  void selectCar(Car? car) {
-    if (!canEdit) return;
-    if (car != null && !car.isActive) return;
-    if (car != null && selectedCar?.id != car.id) {
-      startMileage = car.currentMileage;
+  Future<bool> selectCar(Car? car) async {
+    if (!canEdit) return false;
+    if (car != null && !car.isActive) return false;
+    if (selectedCar?.id == car?.id) return true;
+    final version = ++_selectionVersion;
+    if (car != null) {
+      try {
+        car = await _carRepo.getCarById(car.id);
+      } catch (error) {
+        handleDocumentError(error);
+        return false;
+      }
+      if (version != _selectionVersion || !canEdit || !car.isActive) {
+        return false;
+      }
+    }
+    final saved = _savedSheet;
+    if (saved?.endMileage != null &&
+        car?.id != saved!.carId &&
+        !_carChangeConfirmed) {
+      final confirm = confirmCarReplacement;
+      if (confirm == null) return false;
+      try {
+        final previous = await _carRepo.getCarById(saved.carId);
+        if (version != _selectionVersion || !canEdit) return false;
+        final result = await confirm(previous, saved);
+        if (result == null || version != _selectionVersion || !canEdit) {
+          return false;
+        }
+        _carChangeConfirmed = true;
+        _previousCarMileage = result.mileage;
+      } catch (error) {
+        handleDocumentError(error);
+        return false;
+      }
+    }
+    if (car?.id == saved?.carId) {
+      _carChangeConfirmed = false;
+      _previousCarMileage = null;
+    }
+    _startMileage = car?.currentMileage ?? 0;
+    _endMileage = null;
+    mileageRevision++;
+    if (car != null) {
+      cars = [car, ...cars.where((existing) => existing.id != car!.id)];
     }
     selectedCar = car;
     notifyListeners();
+    return true;
   }
 
-  void selectExistingCar(Car car) {
+  Future<void> selectExistingCar(Car car) async {
     if (!car.isActive) return;
     _applyCar(car);
-    selectCar(car);
+    await selectCar(car);
   }
 
   void setDate(DateTime date) {
@@ -316,6 +397,8 @@ class RouteConstructorProvider extends OrderPointsProvider {
       documentId = saved.id;
       documentCreatedAt = saved.createdAt;
       _savedSheet = saved;
+      _carChangeConfirmed = false;
+      _previousCarMileage = null;
       points = List.from(saved.points);
       markDocumentSaved(created: creating);
       return true;
@@ -429,7 +512,7 @@ class RouteConstructorProvider extends OrderPointsProvider {
       final createdCar = await _carRepo.createCar(request);
 
       cars.insert(0, createdCar);
-      selectCar(createdCar);
+      await selectCar(createdCar);
       return createdCar;
     } catch (_) {
       return null;
@@ -458,7 +541,7 @@ class RouteConstructorProvider extends OrderPointsProvider {
       final updatedCar = await _carRepo.updateCar(id, request);
 
       _applyCar(updatedCar);
-      selectCar(updatedCar);
+      await selectCar(updatedCar);
       return true;
     } catch (_) {
       return false;
@@ -481,6 +564,10 @@ class RouteConstructorProvider extends OrderPointsProvider {
 
   Future<void> _applySheet(DeliveryRouteSheet sheet) async {
     _savedSheet = sheet;
+    _carChangeConfirmed = false;
+    _previousCarMileage = null;
+    _selectionVersion++;
+    mileageRevision++;
     documentId = sheet.id;
     documentCreatedAt = sheet.createdAt;
     documentActive = sheet.isActive;
@@ -553,6 +640,8 @@ class RouteConstructorProvider extends OrderPointsProvider {
           '${selectedCar!.model} (${formatCarNumber(selectedCar!.number)})',
       startMileage: startMileage,
       endMileage: endMileage,
+      carChangeConfirmed: _carChangeConfirmed,
+      previousCarMileage: _previousCarMileage,
       points: points,
     );
   }

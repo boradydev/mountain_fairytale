@@ -6,6 +6,7 @@ import 'package:mountain_fairytale/features/drivers/data/driver_model.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_provider.dart';
 import 'package:mountain_fairytale/features/cars/ui/car_dialog.dart';
 import 'package:mountain_fairytale/features/cars/ui/car_activation_dialog.dart';
+import 'package:mountain_fairytale/features/delivery_route/ui/car_replacement_dialog.dart';
 import 'package:mountain_fairytale/features/drivers/ui/driver_dialog.dart';
 import 'package:mountain_fairytale/features/drivers/ui/driver_activation_dialog.dart';
 import 'package:mountain_fairytale/shared/widgets/dropdown_widget.dart';
@@ -25,9 +26,19 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
   int _carSelectionVersion = 0;
   final _driverFocusNode = FocusNode();
   final _carFocusNode = FocusNode();
+  RouteConstructorProvider? _provider;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _provider = context.read<RouteConstructorProvider>();
+    _provider!.confirmCarReplacement = (car, sheet) =>
+        showCarReplacementDialog(context, car, sheet);
+  }
 
   @override
   void dispose() {
+    _provider?.confirmCarReplacement = null;
     _driverFocusNode.dispose();
     _carFocusNode.dispose();
     super.dispose();
@@ -71,7 +82,8 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
   Future<void> _selectCar(Car? car) async {
     final provider = context.read<RouteConstructorProvider>();
     if (car == null || car.isActive) {
-      provider.selectCar(car);
+      await provider.selectCar(car);
+      if (mounted) setState(() => _carSelectionVersion++);
       return;
     }
     final confirmed = await showCarActivationDialog(context, car);
@@ -227,7 +239,9 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
           // Автомобиль
           AppDropdown<Car>(
             isLoading: provider.isLoadingCars,
-            key: ValueKey('car-$_carSelectionVersion'),
+            key: ValueKey(
+              'car-$_carSelectionVersion-${provider.selectedCar?.id}',
+            ),
             label: 'Автомобиль *',
             focusNode: _carFocusNode,
             showEdit: true,
@@ -285,7 +299,7 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
 
           const SizedBox(height: 12),
           TextFormField(
-            key: ValueKey(provider.selectedCar?.id),
+            key: ValueKey('start-${provider.mileageRevision}'),
             decoration: const InputDecoration(
               labelText: 'Километраж выезда (км)',
               border: OutlineInputBorder(),
@@ -295,14 +309,18 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
             ),
             initialValue: provider.startMileage.toString(),
             onChanged: (value) {
-              provider.startMileage = double.tryParse(value) ?? 0.0;
+              provider.startMileage =
+                  double.tryParse(value.trim().replaceAll(',', '.')) ??
+                  double.nan;
             },
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
                 return 'Введите километраж выезда';
               }
 
-              final mileage = double.tryParse(value);
+              final mileage = double.tryParse(
+                value.trim().replaceAll(',', '.'),
+              );
 
               if (mileage == null || !mileage.isFinite) {
                 return 'Введите корректный километраж';
@@ -316,9 +334,20 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
             },
           ),
 
+          if (provider.selectedCar != null &&
+              provider.endMileage == null &&
+              provider.startMileage != provider.selectedCar!.currentMileage)
+            TextButton(
+              onPressed: provider.useCurrentMileage,
+              child: Text(
+                'Подставить текущий пробег: ${provider.selectedCar!.currentMileage} км',
+              ),
+            ),
+
           const SizedBox(height: 12),
 
           TextFormField(
+            key: ValueKey('end-${provider.mileageRevision}'),
             decoration: const InputDecoration(
               labelText: 'Километраж заезда (км)',
               hintText: 'Заполняется после возвращения',
@@ -331,7 +360,9 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
             onChanged: (value) {
               final text = value.trim();
 
-              provider.endMileage = text.isEmpty ? null : double.tryParse(text);
+              provider.endMileage = text.isEmpty
+                  ? null
+                  : double.tryParse(text.replaceAll(',', '.'));
             },
             validator: (value) {
               // Поле необязательное.
@@ -339,7 +370,9 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
                 return null;
               }
 
-              final mileage = double.tryParse(value);
+              final mileage = double.tryParse(
+                value.trim().replaceAll(',', '.'),
+              );
 
               if (mileage == null || !mileage.isFinite) {
                 return 'Введите корректный километраж';
@@ -349,12 +382,19 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
                 return 'Километраж не может быть отрицательным';
               }
 
-              if (mileage <= provider.startMileage) {
-                return 'Должен быть больше километража выезда';
+              if (mileage < provider.startMileage) {
+                return 'Не может быть меньше километража выезда';
               }
 
               return null;
             },
+          ),
+          const SizedBox(height: 12),
+          Text(
+            provider.distance == null
+                ? 'Пробег доставки ещё не указан'
+                : 'Пробег доставки: ${provider.distance} км',
+            style: const TextStyle(fontWeight: FontWeight.w600),
           ),
         ],
       ),

@@ -30,6 +30,13 @@ class DeliveryRouteSheet implements RouteDocument {
   final String carModelAndNumber;
   final double startMileage;
   final double? endMileage;
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  final bool carChangeConfirmed;
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  final double? previousCarMileage;
+
+  double? get distance =>
+      endMileage == null ? null : endMileage! - startMileage;
 
   final List<RoutePoint> points;
 
@@ -44,6 +51,9 @@ class DeliveryRouteSheet implements RouteDocument {
     'carId': carId,
     'startMileage': startMileage,
     'endMileage': endMileage,
+    if (id != null && carChangeConfirmed) 'carChangeConfirmed': true,
+    if (id != null && previousCarMileage != null)
+      'previousCarMileage': previousCarMileage,
     'points': points
         .map((point) => point.toRequestJson(creating: id == null))
         .toList(),
@@ -60,6 +70,8 @@ class DeliveryRouteSheet implements RouteDocument {
     required this.carModelAndNumber,
     required this.startMileage,
     this.endMileage,
+    this.carChangeConfirmed = false,
+    this.previousCarMileage,
     required this.points,
   });
 
