@@ -357,7 +357,7 @@ class RouteConstructorProvider extends OrderPointsProvider {
       }
     }
     if (car?.id == saved?.carId) {
-      _carChangeConfirmed = false;
+      // Keep acknowledgement for this edit session, but discard the correction.
       _previousCarMileage = null;
     }
     _startMileage = car?.currentMileage ?? 0;
@@ -650,7 +650,8 @@ class RouteConstructorProvider extends OrderPointsProvider {
           '${selectedCar!.model} (${formatCarNumber(selectedCar!.number)})',
       startMileage: startMileage,
       endMileage: endMileage,
-      carChangeConfirmed: _carChangeConfirmed,
+      carChangeConfirmed:
+          _carChangeConfirmed && selectedCar!.id != _savedSheet?.carId,
       previousCarMileage: _previousCarMileage,
       points: points,
     );

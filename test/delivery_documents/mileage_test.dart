@@ -200,7 +200,11 @@ void main() {
     addTearDown(p.dispose);
     await p.loadExistingRouteById('document');
     await p.beginEditing();
-    p.confirmCarReplacement = (_, _) async => (mileage: 90.0);
+    var confirmations = 0;
+    p.confirmCarReplacement = (_, _) async {
+      confirmations++;
+      return (mileage: 90.0);
+    };
     await p.selectCar(carB);
     await p.selectCar(carA);
     expect(p.startMileage, 800);
@@ -214,6 +218,14 @@ void main() {
       isFalse,
     );
     await p.selectCar(carB);
+    expect(confirmations, 1);
+    expect(p.startMileage, 1500);
+    expect(p.endMileage, isNull);
+    expect(p.currentRouteSheet!.toRequestJson()['carChangeConfirmed'], isTrue);
+    expect(
+      p.currentRouteSheet!.toRequestJson().containsKey('previousCarMileage'),
+      isFalse,
+    );
     await p.cancelEditing();
     expect(p.startMileage, 100);
     expect(p.endMileage, 200);
@@ -223,6 +235,28 @@ void main() {
       p.currentRouteSheet!.toRequestJson().containsKey('previousCarMileage'),
       isFalse,
     );
+    await p.beginEditing();
+    await p.selectCar(carB);
+    expect(confirmations, 2);
+    await p.closeDocument();
+  });
+
+  test('successful save resets car replacement acknowledgement', () async {
+    final p = makeProvider(MileageRoutes());
+    addTearDown(p.dispose);
+    await p.loadExistingRouteById('document');
+    await p.beginEditing();
+    var confirmations = 0;
+    p.confirmCarReplacement = (_, _) async {
+      confirmations++;
+      return (mileage: null);
+    };
+    await p.selectCar(carB);
+    p.endMileage = 1600;
+    expect(await p.saveRoute(), isTrue);
+    await p.selectCar(carA);
+    expect(confirmations, 2);
+    await p.closeDocument();
   });
 
   test(
