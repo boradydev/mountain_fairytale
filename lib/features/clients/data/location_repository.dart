@@ -60,8 +60,14 @@ class LocationCandidate {
 
 class LocationRepository {
   final ApiClient _client;
-  LocationRepository(this._client);
-  final Map<String, Future<Uint8List>> _tiles = {};
+  final DateTime Function() _now;
+  LocationRepository(this._client, {DateTime Function()? now})
+    : _now = now ?? DateTime.now;
+  final _tiles = <String, ({Uint8List png, DateTime loadedAt})>{};
+  final Map<String, Future<Uint8List>> _tileRequests = {};
+  int _tileBytes = 0;
+  static const _maxTileBytes = 16 * 1024 * 1024;
+  static const _tileLifetime = Duration(minutes: 5);
   Future<List<LocationCandidate>> search(Map<String, String> address) async {
     final r = await _client.post('/protected/clients/geocode', body: address);
     return ((r['data'] as Map)['candidates'] as List)
@@ -79,14 +85,28 @@ class LocationRepository {
 
   Future<Uint8List> tile(int z, int x, int y) {
     final path = '/protected/locations/tiles/$z/$x/$y';
-    if (_tiles.length > 160) _tiles.clear();
-    return _tiles.putIfAbsent(path, () async {
+    final cached = _tiles.remove(path);
+    if (cached != null) {
+      if (_now().difference(cached.loadedAt) < _tileLifetime) {
+        _tiles[path] = cached;
+        return Future.value(cached.png);
+      }
+      _tileBytes -= cached.png.length;
+    }
+    return _tileRequests.putIfAbsent(path, () async {
       try {
         final r = await _client.get(path);
-        return base64Decode((r['data'] as Map)['png'] as String);
-      } catch (_) {
-        _tiles.remove(path);
-        rethrow;
+        final png = base64Decode((r['data'] as Map)['png'] as String);
+        if (png.length <= _maxTileBytes) {
+          _tiles[path] = (png: png, loadedAt: _now());
+          _tileBytes += png.length;
+          while (_tileBytes > _maxTileBytes || _tiles.length > 256) {
+            _tileBytes -= _tiles.remove(_tiles.keys.first)!.png.length;
+          }
+        }
+        return png;
+      } finally {
+        _tileRequests.remove(path);
       }
     });
   }
