@@ -16,8 +16,13 @@ class DeliveryAddress {
     this.deliveryDetails = '',
     this.source = 'geoapify',
   });
-  String get formatted =>
-      'Ставропольский край, $district, $locality, $street, $house';
+  String get formatted => [
+    'Ставропольский край',
+    district,
+    locality,
+    street,
+    house,
+  ].where((part) => part.isNotEmpty).join(', ');
   Map<String, dynamic> toJson() => {
     'district': district,
     'locality': locality,

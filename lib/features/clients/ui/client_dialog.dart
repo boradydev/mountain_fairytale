@@ -85,13 +85,18 @@ class _ClientDialogState extends State<ClientDialog> {
     _deliveryAddress = null;
     _locationError = null;
     _locationFieldKey.currentState?.reset();
-    _address.text = 'Ставропольский край, ${_addressParts.values.join(', ')}';
+    _address.text = [
+      'Ставропольский край',
+      ..._addressParts.values.where((v) => v.isNotEmpty),
+    ].join(', ');
     if (mounted) setState(() {});
   }
 
   Future<void> _verifyAddress({bool manual = false}) async {
     if (_locating || _busy) return;
-    if (_addressParts.values.any((v) => v.isEmpty)) {
+    if (_addressParts.entries.any(
+      (e) => e.key != 'district' && e.value.isEmpty,
+    )) {
       _formKey.currentState?.validate();
       return;
     }
@@ -924,9 +929,11 @@ class _ClientDialogState extends State<ClientDialog> {
         ),
         _field(
           _district,
-          'Район / муниципальный или городской округ *',
+          'Район / муниципальный или городской округ',
           Icons.location_city,
           maxLength: 150,
+          validator: (_) => null,
+          hint: 'Необязательно; укажите для уточнения адреса',
         ),
         _field(
           _locality,

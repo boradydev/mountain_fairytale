@@ -331,11 +331,12 @@ Finder field(String label) => find.ancestor(
   ),
   matching: find.byType(TextFormField),
 );
-Future<void> fill(WidgetTester tester) async {
+Future<void> fill(WidgetTester tester, {bool withDistrict = true}) async {
   await tester.enterText(field('Название организации / ФИО *'), 'Клиент');
   await tester.enterText(field('Улица (с типом) *'), 'Локомотивная улица');
   for (final entry in {
-    'Район / муниципальный или городской округ *': 'Шпаковский округ',
+    if (withDistrict)
+      'Район / муниципальный или городской округ': 'Шпаковский округ',
     'Населённый пункт (с типом) *': 'Михайловск',
     'Дом *': '147',
   }.entries) {
@@ -359,6 +360,24 @@ Future<void> fill(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets(
+    'client creation accepts an empty district after location confirmation',
+    (tester) async {
+      final repo = ClientsFake();
+      await openDialog(tester, repo);
+      await fill(tester, withDistrict: false);
+      await tester.ensureVisible(find.text('Добавить'));
+      await tester.tap(find.text('Добавить'));
+      await tester.pumpAndSettle();
+      expect(repo.creates, 1);
+      expect(repo.created!.deliveryAddress!.district, '');
+      expect(
+        repo.created!.deliveryAddress!.formatted,
+        'Ставропольский край, Михайловск, Локомотивная улица, 147',
+      );
+    },
+  );
+
   testWidgets(
     'directory loading stays inside client dropdowns without moving fields',
     (tester) async {
