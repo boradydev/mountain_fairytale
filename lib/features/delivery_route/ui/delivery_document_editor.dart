@@ -138,7 +138,45 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
                 icon: const Icon(Icons.arrow_back),
                 onPressed: busy ? null : _close,
               ),
-              title: Text('${widget.title} ($mode)'),
+              centerTitle: true,
+              title: LayoutBuilder(
+                builder: (context, constraints) {
+                  final totalWidth = (constraints.maxWidth * 0.22).clamp(
+                    0.0,
+                    160.0,
+                  );
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      // Balance the total so the document title stays centered.
+                      SizedBox(width: totalWidth + 16),
+                      Flexible(
+                        child: Text(
+                          '${widget.title} ($mode)',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      SizedBox(
+                        width: totalWidth,
+                        child: Text(
+                          'Итого: ${p.grandTotal.toStringAsFixed(2)} ₽',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
               actions: [
                 if (p is RouteConstructorProvider)
                   AppIconButton(
@@ -168,10 +206,11 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
                             }
                           },
                   ),
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Center(
-                    child: Text('Итого: ${p.grandTotal.toStringAsFixed(2)} ₽'),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  child: SizedBox(
+                    height: 24,
+                    child: VerticalDivider(width: 1, thickness: 1),
                   ),
                 ),
                 const ThemeToggleButton(),
