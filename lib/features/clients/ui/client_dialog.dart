@@ -499,6 +499,7 @@ class _ClientDialogState extends State<ClientDialog> {
     String? hint,
     String? Function(String?)? validator,
     String? error,
+    Widget? suffixIcon,
     TextInputType? keyboardType,
     List<TextInputFormatter>? inputFormatters,
   }) => Padding(
@@ -516,6 +517,7 @@ class _ClientDialogState extends State<ClientDialog> {
         hintText: hint,
         border: const OutlineInputBorder(),
         prefixIcon: Icon(icon),
+        suffixIcon: suffixIcon,
       ),
       validator:
           validator ??
@@ -526,6 +528,116 @@ class _ClientDialogState extends State<ClientDialog> {
               : null,
     ),
   );
+
+  Widget _addressSection(BuildContext context) {
+    final theme = Theme.of(context);
+    final confirmed = _deliveryAddress != null;
+    final statusColor = confirmed
+        ? (theme.brightness == Brightness.dark
+              ? Colors.green.shade300
+              : Colors.green.shade700)
+        : theme.colorScheme.onSurfaceVariant;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Container(
+        key: const ValueKey('client-address-section'),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: Border.all(color: theme.colorScheme.outlineVariant),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Адрес доставки', style: theme.textTheme.titleSmall),
+            const SizedBox(height: 12),
+            AppSecondaryButton(
+              text: 'Заполнить через карту',
+              icon: Icons.map_outlined,
+              onPressed: _busy || _editingDirectory || _locating
+                  ? null
+                  : _verifyAddress,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Найдите и подтвердите место — адрес заполнится автоматически.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                const Expanded(child: Divider()),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Text(
+                    'или введите вручную',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                const Expanded(child: Divider()),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _field(
+              _address,
+              'Адрес *',
+              Icons.location_on_outlined,
+              maxLength: 500,
+              focus: _focusNodes[2],
+              suffixIcon: const Tooltip(
+                message:
+                    'Например: г. Михайловск, заезд Добрый, д. 17.\n'
+                    'Укажите населённый пункт, улицу и номер дома. '
+                    'Для неоднозначного адреса добавьте район или округ.\n'
+                    'Сохранить клиента можно без подтверждения на карте.',
+                triggerMode: TooltipTriggerMode.tap,
+                child: Padding(
+                  padding: EdgeInsets.all(12),
+                  child: Icon(Icons.info_outline, size: 20),
+                ),
+              ),
+            ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  confirmed
+                      ? Icons.check_circle_outline
+                      : Icons.edit_location_alt_outlined,
+                  size: 18,
+                  color: statusColor,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    confirmed
+                        ? 'Местоположение подтверждено'
+                        : _address.text.trim().isEmpty
+                        ? 'Адрес ещё не указан'
+                        : 'Адрес введён вручную',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: statusColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Для автоматического порядка доставок нужно подтвердить местоположение на карте.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   ClientDirectoryEntry? _selectedEntry(
     List<ClientDirectoryEntry> rows,
@@ -838,13 +950,7 @@ class _ClientDialogState extends State<ClientDialog> {
           maxLength: 120,
           focus: _focusNodes[0],
         ),
-        _field(
-          _address,
-          'Адрес *',
-          Icons.location_on_outlined,
-          maxLength: 500,
-          focus: _focusNodes[2],
-        ),
+        _addressSection(context),
         _field(
           _details,
           'Детали доставки',
@@ -852,17 +958,6 @@ class _ClientDialogState extends State<ClientDialog> {
           maxLength: 500,
           validator: (_) => null,
         ),
-        Text(
-          _deliveryAddress == null
-              ? 'Адрес не подтверждён'
-              : 'Местоположение подтверждено',
-        ),
-        const SizedBox(height: 8),
-        AppSecondaryButton(
-          text: 'Найти на карте',
-          onPressed: _busy || _locating ? null : _verifyAddress,
-        ),
-        const SizedBox(height: 16),
         _field(
           _phone,
           'Номер телефона *',

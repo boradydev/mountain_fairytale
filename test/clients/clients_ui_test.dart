@@ -341,8 +341,8 @@ Finder field(String label) => find.ancestor(
 );
 Future<void> fill(WidgetTester tester, {bool withDistrict = true}) async {
   await tester.enterText(field('Название организации / ФИО *'), 'Клиент');
-  await tester.ensureVisible(find.text('Найти на карте'));
-  await tester.tap(find.text('Найти на карте'));
+  await tester.ensureVisible(find.text('Заполнить через карту'));
+  await tester.tap(find.text('Заполнить через карту'));
   await tester.pumpAndSettle();
   for (final entry in {
     'Район / муниципальный или городской округ': withDistrict
@@ -399,7 +399,7 @@ void main() {
     await tester.enterText(field('Название организации / ФИО *'), 'Клиент');
     await tester.enterText(field('Адрес *'), 'Адрес введён вручную');
     await tester.enterText(field('Номер телефона *'), '9123456789');
-    await tester.tap(find.text('Найти на карте'));
+    await tester.tap(find.text('Заполнить через карту'));
     await tester.pumpAndSettle();
     for (final e in {
       'Населённый пункт (с типом) *': 'Михайловск',
@@ -431,7 +431,7 @@ void main() {
       await tester.enterText(field('Детали доставки'), 'Новые ворота');
       expect(find.text('Местоположение подтверждено'), findsOneWidget);
       await tester.enterText(field('Адрес *'), 'Другой адрес');
-      expect(find.text('Адрес не подтверждён'), findsOneWidget);
+      expect(find.text('Адрес введён вручную'), findsOneWidget);
       await tester.ensureVisible(find.text('Сохранить'));
       await tester.tap(find.text('Сохранить'));
       await tester.pumpAndSettle();
@@ -457,7 +457,7 @@ void main() {
       expect(repo.created!.deliveryAddress!.district, '');
       expect(
         repo.created!.deliveryAddress!.formatted,
-        'Ставропольский край, Михайловск, Локомотивная улица, 147',
+        'Михайловск, Локомотивная улица, 147',
       );
     },
   );

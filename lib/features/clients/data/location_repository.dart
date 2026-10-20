@@ -16,7 +16,6 @@ class DeliveryAddress {
     this.source = 'geoapify',
   });
   String get formatted => [
-    'Ставропольский край',
     district,
     locality,
     street,
