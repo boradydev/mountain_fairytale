@@ -119,6 +119,27 @@ class _LocationDialogState extends State<_LocationDialog> {
       ),
     ),
   );
+  Widget _pairedFields(
+    Widget first,
+    Widget second, {
+    int firstFlex = 1,
+    int secondFlex = 1,
+  }) => LayoutBuilder(
+    builder: (context, constraints) => constraints.maxWidth < 600
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [first, second],
+          )
+        : Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(flex: firstFlex, child: first),
+              const SizedBox(width: 12),
+              Expanded(flex: secondFlex, child: second),
+            ],
+          ),
+  );
+
   Widget _exampleHelp(String message) => Tooltip(
     message: message,
     triggerMode: TooltipTriggerMode.tap,
@@ -299,43 +320,48 @@ class _LocationDialogState extends State<_LocationDialog> {
                 Text(widget.address),
                 const SizedBox(height: 16),
               ],
-              _part(
-                _district,
-                'Район / муниципальный или городской округ',
-                150,
-                required: false,
-                example: 'Шпаковский муниципальный округ',
-                help:
-                    'Необязательно. Например: Шпаковский муниципальный округ. '
-                    'Укажите район или округ для уточнения неоднозначного адреса.',
+              _pairedFields(
+                _part(
+                  _locality,
+                  'Населённый пункт *',
+                  150,
+                  example: 'Михайловск',
+                  help:
+                      'Например: Михайловск, Ставрополь или Верхнерусское. '
+                      'Укажите название населённого пункта. Тип (город, село) можно не указывать.',
+                ),
+                _part(
+                  _district,
+                  'Район / округ (необязательно)',
+                  150,
+                  required: false,
+                  example: 'Шпаковский муниципальный округ',
+                  help:
+                      'Необязательно. Например: Шпаковский муниципальный округ. '
+                      'Укажите район или округ для уточнения неоднозначного адреса.',
+                ),
               ),
-              _part(
-                _locality,
-                'Населённый пункт *',
-                150,
-                example: 'Михайловск',
-                help:
-                    'Например: Михайловск, Ставрополь или Верхнерусское. '
-                    'Укажите название населённого пункта. Тип (город, село) можно не указывать.',
-              ),
-              _part(
-                _street,
-                'Улица *',
-                150,
-                example: 'Добрый заезд',
-                help:
-                    'Например: Добрый заезд, Ленина улица, Ростовский переулок или Желанный заезд. '
-                    'Сначала укажите название, затем тип: улица, переулок, заезд или проспект. '
-                    'Для заездов и переулков особенно важно указать тип после названия.',
-              ),
-              _part(
-                _house,
-                'Дом *',
-                40,
-                example: '17',
-                help:
-                    'Например: 17, 22/5 или 17Д. Квартиру и подсказки водителю '
-                    'укажите в поле «Детали доставки» в карточке клиента.',
+              _pairedFields(
+                _part(
+                  _street,
+                  'Улица *',
+                  150,
+                  example: 'Добрый заезд',
+                  help:
+                      'Например: Добрый заезд, Ленина улица, Ростовский переулок или Желанный заезд. '
+                      'Сначала укажите название, затем тип: улица, переулок, заезд или проспект. '
+                      'Для заездов и переулков особенно важно указать тип после названия.',
+                ),
+                _part(
+                  _house,
+                  'Дом *',
+                  40,
+                  example: '17',
+                  help:
+                      'Например: 17, 22/5 или 17Д. Квартиру и подсказки водителю '
+                      'укажите в поле «Детали доставки» в карточке клиента.',
+                ),
+                firstFlex: 3,
               ),
               const SizedBox(height: 4),
               AppSecondaryButton(
@@ -361,6 +387,102 @@ class _LocationDialogState extends State<_LocationDialog> {
                 'Проверьте дом и место подъезда. Можно выбрать место на карте или ввести координаты.',
               ),
               const SizedBox(height: 8),
+              ExpansionTile(
+                title: const Text('Ввести координаты'),
+                children: [
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _coordinatePair,
+                    onChanged: _fillCoordinatePair,
+                    decoration: InputDecoration(
+                      labelText: 'Координаты из карты',
+                      hintText: '43.948310, 42.663921',
+                      border: const OutlineInputBorder(),
+                      errorText: _coordinatePairError,
+                      errorMaxLines: 3,
+                      suffixIcon: _exampleHelp(
+                        'Вставьте скопированные координаты: сначала широта, затем долгота, '
+                        'через запятую. Например: 43.948310, 42.663921. '
+                        'Десятичный разделитель — точка.',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Вставьте координаты из Яндекс Карт или другого источника. '
+                    'Широта и долгота заполнятся автоматически. Затем нажмите «Показать координаты на карте».',
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _latitude,
+                          onChanged: (_) => _coordinateFieldChanged(),
+                          decoration: InputDecoration(
+                            labelText: 'Широта',
+                            hintText: '45.1373445',
+                            suffixIcon: _exampleHelp(
+                              'Например: 45.1373445. Можно использовать точку или запятую. После ввода примените координаты к карте.',
+                            ),
+                            border: const OutlineInputBorder(),
+                            errorText: _coordinateError,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _longitude,
+                          onChanged: (_) => _coordinateFieldChanged(),
+                          decoration: InputDecoration(
+                            labelText: 'Долгота',
+                            hintText: '41.9974531',
+                            suffixIcon: _exampleHelp(
+                              'Например: 41.9974531. Можно использовать точку или запятую. После ввода примените координаты к карте.',
+                            ),
+                            border: const OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  AppSecondaryButton(
+                    text: 'Показать координаты на карте',
+                    onPressed: () {
+                      if (_coordinatePair.text.trim().isNotEmpty) {
+                        _fillCoordinatePair(_coordinatePair.text);
+                        if (_coordinatePairError != null) return;
+                      }
+                      final lat = double.tryParse(
+                        _latitude.text.replaceAll(',', '.'),
+                      );
+                      final lon = double.tryParse(
+                        _longitude.text.replaceAll(',', '.'),
+                      );
+                      if (lat == null ||
+                          lon == null ||
+                          !lat.isFinite ||
+                          !lon.isFinite ||
+                          !_inBounds(lat, lon)) {
+                        setState(
+                          () => _coordinateError = 'Проверьте координаты',
+                        );
+                        return;
+                      }
+                      _select(lat, lon);
+                      setState(() {
+                        _centerLat = lat;
+                        _centerLon = lon;
+                        _zoom = 17;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              ),
+              const SizedBox(height: 12),
               const Text(
                 'Масштаб: колёсико мыши, жест двумя пальцами или кнопки +/−. Перетащите карту или метку к нужному въезду.',
               ),
@@ -531,101 +653,6 @@ class _LocationDialogState extends State<_LocationDialog> {
                 ),
               ),
               const GeoAttribution(),
-              ExpansionTile(
-                title: const Text('Ввести координаты'),
-                children: [
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _coordinatePair,
-                    onChanged: _fillCoordinatePair,
-                    decoration: InputDecoration(
-                      labelText: 'Координаты из карты',
-                      hintText: '43.948310, 42.663921',
-                      border: const OutlineInputBorder(),
-                      errorText: _coordinatePairError,
-                      errorMaxLines: 3,
-                      suffixIcon: _exampleHelp(
-                        'Вставьте скопированные координаты: сначала широта, затем долгота, '
-                        'через запятую. Например: 43.948310, 42.663921. '
-                        'Десятичный разделитель — точка.',
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Вставьте координаты из Яндекс Карт или другого источника. '
-                    'Широта и долгота заполнятся автоматически. Затем нажмите «Показать координаты на карте».',
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          controller: _latitude,
-                          onChanged: (_) => _coordinateFieldChanged(),
-                          decoration: InputDecoration(
-                            labelText: 'Широта',
-                            hintText: '45.1373445',
-                            suffixIcon: _exampleHelp(
-                              'Например: 45.1373445. Можно использовать точку или запятую. После ввода примените координаты к карте.',
-                            ),
-                            border: const OutlineInputBorder(),
-                            errorText: _coordinateError,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: TextFormField(
-                          controller: _longitude,
-                          onChanged: (_) => _coordinateFieldChanged(),
-                          decoration: InputDecoration(
-                            labelText: 'Долгота',
-                            hintText: '41.9974531',
-                            suffixIcon: _exampleHelp(
-                              'Например: 41.9974531. Можно использовать точку или запятую. После ввода примените координаты к карте.',
-                            ),
-                            border: const OutlineInputBorder(),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  AppSecondaryButton(
-                    text: 'Показать координаты на карте',
-                    onPressed: () {
-                      if (_coordinatePair.text.trim().isNotEmpty) {
-                        _fillCoordinatePair(_coordinatePair.text);
-                        if (_coordinatePairError != null) return;
-                      }
-                      final lat = double.tryParse(
-                        _latitude.text.replaceAll(',', '.'),
-                      );
-                      final lon = double.tryParse(
-                        _longitude.text.replaceAll(',', '.'),
-                      );
-                      if (lat == null ||
-                          lon == null ||
-                          !lat.isFinite ||
-                          !lon.isFinite ||
-                          !_inBounds(lat, lon)) {
-                        setState(
-                          () => _coordinateError = 'Проверьте координаты',
-                        );
-                        return;
-                      }
-                      _select(lat, lon);
-                      setState(() {
-                        _centerLat = lat;
-                        _centerLon = lon;
-                        _zoom = 17;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                ],
-              ),
             ],
           ),
         ),

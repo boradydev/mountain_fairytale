@@ -345,9 +345,7 @@ Future<void> fill(WidgetTester tester, {bool withDistrict = true}) async {
   await tester.tap(find.text('Заполнить через карту'));
   await tester.pumpAndSettle();
   for (final entry in {
-    'Район / муниципальный или городской округ': withDistrict
-        ? 'Шпаковский округ'
-        : '',
+    'Район / округ (необязательно)': withDistrict ? 'Шпаковский округ' : '',
     'Населённый пункт *': 'Михайловск',
     'Улица *': 'Локомотивная улица',
     'Дом *': '147',
