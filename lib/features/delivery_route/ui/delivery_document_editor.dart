@@ -1,5 +1,6 @@
 import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_provider.dart';
-import 'package:mountain_fairytale/features/delivery_route/ui/route_optimization_panel.dart';
+import 'package:mountain_fairytale/features/delivery_route/ui/route_optimization_dialog.dart';
+import 'package:mountain_fairytale/shared/widgets/icon_button_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/features/clients/ui/clients_selection_panel.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/order_points_provider.dart';
@@ -139,9 +140,18 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
               ),
               title: Text('${widget.title} ($mode)'),
               actions: [
+                if (p is RouteConstructorProvider)
+                  AppIconButton(
+                    icon: Icons.format_list_numbered,
+                    tooltip: 'Порядок доставок',
+                    onPressed: _loading || busy
+                        ? null
+                        : () =>
+                              showRouteOptimizationDialog(context, provider: p),
+                  ),
                 if (widget.printDocument != null)
-                  IconButton(
-                    icon: const Icon(Icons.print),
+                  AppIconButton(
+                    icon: Icons.print,
                     tooltip: 'Печать документа',
                     onPressed: _loading || busy
                         ? null
@@ -222,15 +232,7 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
                               ),
                               const VerticalDivider(width: 1),
                               Expanded(
-                                child: Column(
-                                  children: [
-                                    if (p is RouteConstructorProvider)
-                                      RouteOptimizationPanel(provider: p),
-                                    Expanded(
-                                      child: RoutePointsList(provider: p),
-                                    ),
-                                  ],
-                                ),
+                                child: RoutePointsList(provider: p),
                               ),
                             ],
                           ),
