@@ -119,6 +119,72 @@ class _LocationDialogState extends State<_LocationDialog> {
       ),
     ),
   );
+  Widget _searchStatus(BuildContext context) {
+    final theme = Theme.of(context);
+    final style = (theme.textTheme.bodyMedium ?? const TextStyle(fontSize: 14))
+        .copyWith(height: 1.3);
+    final color = _searchError != null
+        ? theme.colorScheme.error
+        : _searching || _candidates.isNotEmpty
+        ? theme.colorScheme.primary
+        : theme.colorScheme.onSurfaceVariant;
+    final text = _searching
+        ? 'Ищем адрес…'
+        : _searchError ??
+              (_candidates.isNotEmpty
+                  ? 'Найдено: ${_candidates.first.formatted}'
+                  : 'Результат поиска появится здесь.');
+    // Reserve two text lines at the current accessibility scale for every state.
+    final height = math.max(
+      56.0,
+      MediaQuery.textScalerOf(context).scale(style.fontSize ?? 14) * 1.3 * 2 +
+          16,
+    );
+    return SizedBox(
+      key: const ValueKey('location-search-status'),
+      height: height,
+      child: Semantics(
+        liveRegion: true,
+        child: Row(
+          children: [
+            SizedBox.square(
+              dimension: 24,
+              child: _searching
+                  ? CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: color,
+                      semanticsLabel: 'Поиск адреса',
+                    )
+                  : Icon(
+                      _searchError != null
+                          ? Icons.error_outline
+                          : _candidates.isNotEmpty
+                          ? Icons.location_on_outlined
+                          : Icons.info_outline,
+                      color: color,
+                      size: 22,
+                    ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Tooltip(
+                message: text,
+                triggerMode: TooltipTriggerMode.tap,
+                excludeFromSemantics: true,
+                child: Text(
+                  text,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: style.copyWith(color: color),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _pairedFields(
     Widget first,
     Widget second, {
@@ -365,24 +431,12 @@ class _LocationDialogState extends State<_LocationDialog> {
               ),
               const SizedBox(height: 4),
               AppSecondaryButton(
-                text: _searching ? 'Поиск…' : 'Найти адрес',
+                text: 'Найти адрес',
                 onPressed: _searching ? null : _search,
               ),
               const SizedBox(height: 16),
-              if (_searchError != null)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Text(
-                    _searchError!,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                ),
-              if (_candidates.isNotEmpty) ...[
-                Text('Найдено: ${_candidates.first.formatted}'),
-                const SizedBox(height: 8),
-              ],
+              _searchStatus(context),
+              const SizedBox(height: 8),
               const Text(
                 'Проверьте дом и место подъезда. Можно выбрать место на карте или ввести координаты.',
               ),
