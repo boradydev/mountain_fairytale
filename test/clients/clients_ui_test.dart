@@ -348,8 +348,8 @@ Future<void> fill(WidgetTester tester, {bool withDistrict = true}) async {
     'Район / муниципальный или городской округ': withDistrict
         ? 'Шпаковский округ'
         : '',
-    'Населённый пункт (с типом) *': 'Михайловск',
-    'Улица (с типом) *': 'Локомотивная улица',
+    'Населённый пункт *': 'Михайловск',
+    'Улица *': 'Локомотивная улица',
     'Дом *': '147',
   }.entries) {
     await tester.ensureVisible(field(entry.key));
@@ -374,7 +374,7 @@ void main() {
       final repo = ClientsFake();
       final geo = FakeLocations()..fail = true;
       await openDialog(tester, repo, locations: geo);
-      expect(field('Населённый пункт (с типом) *'), findsNothing);
+      expect(field('Населённый пункт *'), findsNothing);
       await tester.enterText(field('Название организации / ФИО *'), 'Клиент');
       await tester.enterText(field('Адрес *'), 'Михайловск, заезд Добрый 17');
       await tester.enterText(field('Детали доставки'), 'Вход со двора');
@@ -402,8 +402,8 @@ void main() {
     await tester.tap(find.text('Заполнить через карту'));
     await tester.pumpAndSettle();
     for (final e in {
-      'Населённый пункт (с типом) *': 'Михайловск',
-      'Улица (с типом) *': 'Некрасова',
+      'Населённый пункт *': 'Михайловск',
+      'Улица *': 'Некрасова',
       'Дом *': '22/5',
     }.entries) {
       await tester.ensureVisible(field(e.key));
