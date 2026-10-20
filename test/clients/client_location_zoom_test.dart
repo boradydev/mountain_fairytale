@@ -1,5 +1,7 @@
 import 'dart:typed_data';
 
+import 'package:mountain_fairytale/features/clients/data/location_repository.dart';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -25,7 +27,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
       final repo = TrackingMap();
-      ({double latitude, double longitude, bool manual})? selected;
+      DeliveryAddress? selected;
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -49,6 +51,8 @@ void main() {
       await tester.tap(find.text('Карта'));
       await tester.pumpAndSettle();
       final map = find.byKey(const ValueKey('client-location-map'));
+      await tester.ensureVisible(map);
+      await tester.pumpAndSettle();
       final focal = tester.getCenter(map) + const Offset(-150, 0);
       expect(repo.levels.last, 17);
       await tester.sendEventToBinding(
@@ -73,6 +77,7 @@ void main() {
       await second.up();
       await tester.pumpAndSettle();
       expect(repo.levels.last, greaterThan(17));
+      await tester.ensureVisible(find.byTooltip('Отдалить'));
       await tester.tap(find.byTooltip('Отдалить'));
       await tester.pumpAndSettle();
       expect(repo.levels.last, lessThan(19));

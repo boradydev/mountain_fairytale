@@ -40,16 +40,23 @@ const testAddress = DeliveryAddress(
 );
 
 class FakeLocations implements LocationRepository {
+  int searches = 0;
+  bool fail = false;
   @override
-  Future<List<LocationCandidate>> search(Map<String, String> a) async => [
-    LocationCandidate({
-      'formatted': 'Локомотивная улица 147, Михайловск',
-      'latitude': 45.1373445,
-      'longitude': 41.9974531,
-      'confidence': 1.0,
-      'exactHouse': true,
-    }),
-  ];
+  Future<List<LocationCandidate>> search(Map<String, String> a) async {
+    searches++;
+    if (fail) throw StateError('Provider unavailable');
+    return [
+      LocationCandidate({
+        'formatted': 'Локомотивная улица 147, Михайловск',
+        'latitude': 45.1373445,
+        'longitude': 41.9974531,
+        'confidence': 1.0,
+        'exactHouse': true,
+      }),
+    ];
+  }
+
   @override
   Future<Uint8List> tile(int z, int x, int y) async => base64Decode(
     'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/l9sAAAAASUVORK5CYII=',
@@ -281,6 +288,7 @@ Future<void> openDialog(
   bool settle = true,
   SalesRepresentativeApiRepository? reps,
   OrderPointsProvider? orders,
+  LocationRepository? locations,
 }) async {
   tester.view.physicalSize = const Size(1400, 1600);
   tester.view.devicePixelRatio = 1;
@@ -292,7 +300,7 @@ Future<void> openDialog(
     MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: provider),
-        Provider<LocationRepository>.value(value: FakeLocations()),
+        Provider<LocationRepository>.value(value: locations ?? FakeLocations()),
         if (reps != null)
           Provider<SalesRepresentativeApiRepository>.value(value: reps),
       ],
@@ -333,33 +341,109 @@ Finder field(String label) => find.ancestor(
 );
 Future<void> fill(WidgetTester tester, {bool withDistrict = true}) async {
   await tester.enterText(field('Название организации / ФИО *'), 'Клиент');
-  await tester.enterText(field('Улица (с типом) *'), 'Локомотивная улица');
+  await tester.ensureVisible(find.text('Найти на карте'));
+  await tester.tap(find.text('Найти на карте'));
+  await tester.pumpAndSettle();
   for (final entry in {
-    if (withDistrict)
-      'Район / муниципальный или городской округ': 'Шпаковский округ',
+    'Район / муниципальный или городской округ': withDistrict
+        ? 'Шпаковский округ'
+        : '',
     'Населённый пункт (с типом) *': 'Михайловск',
+    'Улица (с типом) *': 'Локомотивная улица',
     'Дом *': '147',
   }.entries) {
     await tester.ensureVisible(field(entry.key));
     await tester.enterText(field(entry.key), entry.value);
   }
+  await tester.ensureVisible(find.text('Найти адрес'));
+  await tester.tap(find.text('Найти адрес'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Подтвердить местоположение'));
+  await tester.pumpAndSettle();
   await tester.ensureVisible(field('Номер телефона *'));
   await tester.enterText(field('Номер телефона *'), '9123456789');
   await tester.enterText(field('Порог засыпания (в днях) *'), '0');
   await tester.pump(const Duration(milliseconds: 600));
   await tester.pump();
-  final verify = find.text('Проверить адрес');
-  if (verify.evaluate().isNotEmpty) {
-    await tester.ensureVisible(verify);
-    await tester.tap(verify);
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.tap(find.text('Подтвердить местоположение'));
-    await tester.pump(const Duration(milliseconds: 400));
-  }
 }
 
 void main() {
+  testWidgets(
+    'free address and delivery details save without any Geoapify request',
+    (tester) async {
+      final repo = ClientsFake();
+      final geo = FakeLocations()..fail = true;
+      await openDialog(tester, repo, locations: geo);
+      expect(field('Населённый пункт (с типом) *'), findsNothing);
+      await tester.enterText(field('Название организации / ФИО *'), 'Клиент');
+      await tester.enterText(field('Адрес *'), 'Михайловск, заезд Добрый 17');
+      await tester.enterText(field('Детали доставки'), 'Вход со двора');
+      await tester.enterText(field('Номер телефона *'), '9123456789');
+      await tester.ensureVisible(find.text('Добавить'));
+      await tester.tap(find.text('Добавить'));
+      await tester.pumpAndSettle();
+      expect(repo.creates, 1);
+      expect(repo.created!.deliveryAddress, isNull);
+      expect(repo.created!.deliveryDetails, 'Вход со двора');
+      expect(repo.created!.address, 'Михайловск, заезд Добрый 17');
+      expect(geo.searches, 0);
+    },
+  );
+
+  testWidgets('failed search and cancelling map preserve free address', (
+    tester,
+  ) async {
+    final repo = ClientsFake();
+    final geo = FakeLocations()..fail = true;
+    await openDialog(tester, repo, locations: geo);
+    await tester.enterText(field('Название организации / ФИО *'), 'Клиент');
+    await tester.enterText(field('Адрес *'), 'Адрес введён вручную');
+    await tester.enterText(field('Номер телефона *'), '9123456789');
+    await tester.tap(find.text('Найти на карте'));
+    await tester.pumpAndSettle();
+    for (final e in {
+      'Населённый пункт (с типом) *': 'Михайловск',
+      'Улица (с типом) *': 'Некрасова',
+      'Дом *': '22/5',
+    }.entries) {
+      await tester.ensureVisible(field(e.key));
+      await tester.enterText(field(e.key), e.value);
+    }
+    await tester.ensureVisible(find.text('Найти адрес'));
+    await tester.tap(find.text('Найти адрес'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Поиск недоступен'), findsOneWidget);
+    await tester.tap(find.text('Отмена').last);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Добавить'));
+    await tester.tap(find.text('Добавить'));
+    await tester.pumpAndSettle();
+    expect(repo.created!.address, 'Адрес введён вручную');
+    expect(repo.created!.deliveryAddress, isNull);
+    expect(geo.searches, 1);
+  });
+
+  testWidgets(
+    'editing text clears coordinates while delivery details preserve them',
+    (tester) async {
+      final repo = ClientsFake();
+      await openDialog(tester, repo, client: row());
+      await tester.enterText(field('Детали доставки'), 'Новые ворота');
+      expect(find.text('Местоположение подтверждено'), findsOneWidget);
+      await tester.enterText(field('Адрес *'), 'Другой адрес');
+      expect(find.text('Адрес не подтверждён'), findsOneWidget);
+      await tester.ensureVisible(find.text('Сохранить'));
+      await tester.tap(find.text('Сохранить'));
+      await tester.pumpAndSettle();
+      expect(repo.updated!.toJson()['deliveryAddress'], isNull);
+      expect(repo.updated!.toJson(), containsPair('address', 'Другой адрес'));
+      expect(
+        repo.updated!.toJson(),
+        containsPair('deliveryDetails', 'Новые ворота'),
+      );
+    },
+  );
+
   testWidgets(
     'client creation accepts an empty district after location confirmation',
     (tester) async {
@@ -471,7 +555,7 @@ void main() {
       expect(find.byType(BaseFormDialog), findsOneWidget);
       expect(find.byType(AppPrimaryButton), findsOneWidget);
       await tester.enterText(field('Название организации / ФИО *'), 'Клиент');
-      await tester.enterText(field('Улица (с типом) *'), 'Локомотивная улица');
+      await tester.enterText(field('Адрес *'), testAddress.formatted);
       await tester.pumpAndSettle();
       expect(repo.checks, 0);
       await fill(tester);

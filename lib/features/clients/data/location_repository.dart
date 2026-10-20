@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'package:mountain_fairytale/core/network/api_client.dart';
 
 class DeliveryAddress {
-  final String district, locality, street, house, deliveryDetails, source;
+  final String district, locality, street, house, source;
   final double latitude, longitude;
   const DeliveryAddress({
     required this.district,
@@ -13,7 +13,6 @@ class DeliveryAddress {
     required this.house,
     required this.latitude,
     required this.longitude,
-    this.deliveryDetails = '',
     this.source = 'geoapify',
   });
   String get formatted => [
@@ -32,7 +31,6 @@ class DeliveryAddress {
     'longitude': longitude,
     'confirmed': true,
     'source': source,
-    'deliveryDetails': deliveryDetails,
   };
   factory DeliveryAddress.fromJson(Map<String, dynamic> j) => DeliveryAddress(
     district: j['district'] as String,
@@ -41,7 +39,6 @@ class DeliveryAddress {
     house: j['house'] as String,
     latitude: (j['latitude'] as num).toDouble(),
     longitude: (j['longitude'] as num).toDouble(),
-    deliveryDetails: j['deliveryDetails'] as String? ?? '',
     source: j['source'] as String? ?? 'geoapify',
   );
 }

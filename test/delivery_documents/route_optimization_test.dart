@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mountain_fairytale/core/network/api_exception.dart';
 import 'package:mountain_fairytale/features/clients/data/location_repository.dart';
 import 'package:mountain_fairytale/features/delivery_route/data/route_point_model.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_provider.dart';
@@ -44,6 +45,22 @@ void main() {
     p.notifyListeners();
   });
   tearDown(() => p.dispose());
+  test('missing coordinates message names clients and leaves manual reorder available', () async {
+    final future = p.optimizeOrder();
+    geo.gate.completeError(
+      const ApiException(
+        statusCode: 422,
+        message:
+            'Не подтверждено местоположение: Первый клиент, Второй клиент.',
+      ),
+    );
+    await future;
+    expect(p.optimizationMessage, contains('Первый клиент, Второй клиент'));
+    expect(p.optimizationFailed, isTrue);
+    expect(p.points, [point, second]);
+    p.reorderPoints(0, 2);
+    expect(p.points.first, second);
+  });
   test('reordering and undo preserve point identity and goods', () async {
     final future = p.optimizeOrder();
     expect(p.canSave, isFalse);

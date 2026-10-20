@@ -83,6 +83,7 @@ class Client {
   final String phone;
   final String address;
   final DeliveryAddress? deliveryAddress;
+  final String deliveryDetails;
   final int sleepingThresholdDays;
   final DateTime? lastDeliveryDate;
   final int? lastDeliveryQuantity;
@@ -100,6 +101,7 @@ class Client {
     required this.phone,
     required this.address,
     this.deliveryAddress,
+    this.deliveryDetails = '',
     required this.sleepingThresholdDays,
     required this.createdAt,
     required this.isActive,
@@ -117,6 +119,7 @@ class Client {
     name: json['name'] as String,
     phone: json['phone'] as String,
     address: json['address'] as String,
+    deliveryDetails: json['deliveryDetails'] as String? ?? '',
     deliveryAddress: json['deliveryAddress'] == null
         ? null
         : DeliveryAddress.fromJson(
@@ -147,6 +150,7 @@ class Client {
     'name': name,
     'phone': phone,
     'address': address,
+    'deliveryDetails': deliveryDetails,
     if (deliveryAddress != null) 'deliveryAddress': deliveryAddress!.toJson(),
     'sleepingThresholdDays': sleepingThresholdDays,
     'lastDeliveryDate': lastDeliveryDate == null
@@ -191,6 +195,7 @@ class CreateClientRequest {
   final String phone;
   final String address;
   final DeliveryAddress? deliveryAddress;
+  final String deliveryDetails;
   final int sleepingThresholdDays;
   final DateTime? cooldownUntil;
   final String? salesRepresentativeId;
@@ -200,6 +205,7 @@ class CreateClientRequest {
     required this.phone,
     required this.address,
     this.deliveryAddress,
+    this.deliveryDetails = '',
     required this.sleepingThresholdDays,
     this.cooldownUntil,
     this.salesRepresentativeId,
@@ -208,6 +214,8 @@ class CreateClientRequest {
   Map<String, dynamic> toJson() => {
     'name': name,
     'phone': phone,
+    'address': address,
+    'deliveryDetails': deliveryDetails,
     if (deliveryAddress != null) 'deliveryAddress': deliveryAddress!.toJson(),
     'sleepingThresholdDays': sleepingThresholdDays,
     'cooldownUntil': cooldownUntil == null
@@ -223,7 +231,8 @@ class UpdateClientRequest {
   final String? name;
   final String? phone;
   final String? address;
-  final DeliveryAddress? deliveryAddress;
+  final Object? deliveryAddress;
+  final String? deliveryDetails;
   final int? sleepingThresholdDays;
   final Object? cooldownUntil;
   final Object? salesRepresentativeId;
@@ -233,7 +242,8 @@ class UpdateClientRequest {
     this.name,
     this.phone,
     this.address,
-    this.deliveryAddress,
+    this.deliveryAddress = _omitted,
+    this.deliveryDetails,
     this.sleepingThresholdDays,
     this.cooldownUntil = _omitted,
     this.salesRepresentativeId = _omitted,
@@ -245,7 +255,10 @@ class UpdateClientRequest {
         name: changes['name'] as String?,
         phone: changes['phone'] as String?,
         address: changes['address'] as String?,
-        deliveryAddress: changes['deliveryAddress'] as DeliveryAddress?,
+        deliveryAddress: changes.containsKey('deliveryAddress')
+            ? changes['deliveryAddress']
+            : _omitted,
+        deliveryDetails: changes['deliveryDetails'] as String?,
         sleepingThresholdDays: changes['sleepingThresholdDays'] as int?,
         cooldownUntil: changes.containsKey('cooldownUntil')
             ? changes['cooldownUntil']
@@ -260,7 +273,10 @@ class UpdateClientRequest {
   Map<String, dynamic> toJson() => {
     if (name != null) 'name': name,
     if (phone != null) 'phone': phone,
-    if (deliveryAddress != null) 'deliveryAddress': deliveryAddress!.toJson(),
+    if (address != null) 'address': address,
+    if (deliveryDetails != null) 'deliveryDetails': deliveryDetails,
+    if (!identical(deliveryAddress, _omitted))
+      'deliveryAddress': (deliveryAddress as DeliveryAddress?)?.toJson(),
     if (sleepingThresholdDays != null)
       'sleepingThresholdDays': sleepingThresholdDays,
     if (!identical(cooldownUntil, _omitted))

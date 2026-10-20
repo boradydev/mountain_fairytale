@@ -526,9 +526,8 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
                   city: point.city,
                   address: [
                     client.address,
-                    if ((client.deliveryAddress?.deliveryDetails ?? '')
-                        .isNotEmpty)
-                      client.deliveryAddress!.deliveryDetails,
+                    if (client.deliveryDetails.isNotEmpty)
+                      client.deliveryDetails,
                   ].join(' — '),
                   phone: client.phone,
                   paymentMethodId: client.defaultPaymentMethodId,
@@ -556,8 +555,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
         salesRepresentativeId: client.salesRepresentativeId,
         address: [
           client.address,
-          if ((client.deliveryAddress?.deliveryDetails ?? '').isNotEmpty)
-            client.deliveryAddress!.deliveryDetails,
+          if (client.deliveryDetails.isNotEmpty) client.deliveryDetails,
         ].join(' — '),
         phone: client.phone,
         paymentMethodId: client.defaultPaymentMethodId,

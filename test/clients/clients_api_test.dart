@@ -136,6 +136,8 @@ void main() {
     expect(transport.requests.single.body, {
       'name': 'Магазин',
       'phone': '123',
+      'address': 'Москва',
+      'deliveryDetails': '',
       'deliveryAddress': address.toJson(),
       'sleepingThresholdDays': 0,
       'cooldownUntil': null,

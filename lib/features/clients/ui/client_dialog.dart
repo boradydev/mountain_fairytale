@@ -1,5 +1,3 @@
-import 'package:mountain_fairytale/shared/widgets/geo_attribution.dart';
-import 'package:mountain_fairytale/core/network/api_exception.dart';
 import 'package:mountain_fairytale/features/clients/data/location_repository.dart';
 import 'package:mountain_fairytale/features/clients/ui/client_location_dialog.dart';
 import 'package:mountain_fairytale/core/state/form_editing.dart';
@@ -66,88 +64,25 @@ class ClientDialog extends StatefulWidget {
 
 class _ClientDialogState extends State<ClientDialog> {
   final _formKey = GlobalKey<FormState>();
-  final _locationFieldKey = GlobalKey<FormFieldState<bool>>();
-  late final TextEditingController _district,
-      _locality,
-      _street,
-      _house,
-      _details;
+  late final TextEditingController _details;
   DeliveryAddress? _deliveryAddress;
   bool _locating = false;
-  String? _locationError;
-  Map<String, String> get _addressParts => {
-    'district': _district.text.trim(),
-    'locality': _locality.text.trim(),
-    'street': _street.text.trim(),
-    'house': _house.text.trim(),
-  };
-  void _addressChanged() {
-    _deliveryAddress = null;
-    _locationError = null;
-    _locationFieldKey.currentState?.reset();
-    _address.text = [
-      'Ставропольский край',
-      ..._addressParts.values.where((v) => v.isNotEmpty),
-    ].join(', ');
-    if (mounted) setState(() {});
-  }
-
-  Future<void> _verifyAddress({bool manual = false}) async {
+  bool _settingAddress = false;
+  Future<void> _verifyAddress() async {
     if (_locating || _busy) return;
-    if (_addressParts.entries.any(
-      (e) => e.key != 'district' && e.value.isEmpty,
-    )) {
-      _formKey.currentState?.validate();
-      return;
-    }
-    final snapshot = Map<String, String>.of(_addressParts);
-    setState(() {
-      _locating = true;
-      _locationError = null;
-    });
+    setState(() => _locating = true);
     try {
-      final repository = context.read<LocationRepository>();
-      final candidates = manual || _deliveryAddress != null
-          ? <LocationCandidate>[]
-          : await repository.search(snapshot);
-      if (!mounted ||
-          snapshot.entries.any((e) => _addressParts[e.key] != e.value)) {
-        return;
-      }
       final selected = await showClientLocationDialog(
         context,
-        repository: repository,
+        repository: context.read<LocationRepository>(),
         address: _address.text,
-        candidates: candidates,
         existing: _deliveryAddress,
       );
-      if (!mounted ||
-          selected == null ||
-          snapshot.entries.any((e) => _addressParts[e.key] != e.value)) {
-        return;
-      }
-      setState(() {
-        _deliveryAddress = DeliveryAddress(
-          district: snapshot['district']!,
-          locality: snapshot['locality']!,
-          street: snapshot['street']!,
-          house: snapshot['house']!,
-          latitude: selected.latitude,
-          longitude: selected.longitude,
-          source: selected.manual ? 'manual' : 'geoapify',
-          deliveryDetails: _details.text.trim(),
-        );
-      });
-      _locationFieldKey.currentState?.didChange(true);
-      _locationFieldKey.currentState?.validate();
-    } catch (error) {
-      if (mounted) {
-        setState(
-          () => _locationError = error is ApiException
-              ? error.message
-              : 'Не удалось проверить адрес. Повторите попытку.',
-        );
-      }
+      if (!mounted || selected == null) return;
+      _settingAddress = true;
+      _address.text = selected.formatted;
+      _settingAddress = false;
+      setState(() => _deliveryAddress = selected);
     } finally {
       if (mounted) setState(() => _locating = false);
     }
@@ -200,6 +135,7 @@ class _ClientDialogState extends State<ClientDialog> {
     'phone': RussianPhoneInputFormatter.toApiPhone(_phone.text),
     'address': _address.text.trim(),
     'deliveryAddress': _deliveryAddress,
+    'deliveryDetails': _details.text.trim(),
     'sleepingThresholdDays':
         int.tryParse(_threshold.text.trim()) ?? _threshold.text.trim(),
     'cooldownUntil': _cooldownDate,
@@ -230,31 +166,12 @@ class _ClientDialogState extends State<ClientDialog> {
     );
     _address = TextEditingController(text: client?.address ?? '');
     _deliveryAddress = client?.deliveryAddress;
-    _district = TextEditingController(text: _deliveryAddress?.district ?? '');
-    _locality = TextEditingController(text: _deliveryAddress?.locality ?? '');
-    _street = TextEditingController(text: _deliveryAddress?.street ?? '');
-    _house = TextEditingController(text: _deliveryAddress?.house ?? '');
-    _details = TextEditingController(
-      text: _deliveryAddress?.deliveryDetails ?? '',
-    );
-    for (final c in [_district, _locality, _street, _house]) {
-      c.addListener(_addressChanged);
-    }
-    _details.addListener(() {
-      final a = _deliveryAddress;
-      if (a != null) {
-        _deliveryAddress = DeliveryAddress(
-          district: a.district,
-          locality: a.locality,
-          street: a.street,
-          house: a.house,
-          latitude: a.latitude,
-          longitude: a.longitude,
-          source: a.source,
-          deliveryDetails: _details.text.trim(),
-        );
+    _details = TextEditingController(text: client?.deliveryDetails ?? '');
+    _details.addListener(_refreshForm);
+    _address.addListener(() {
+      if (!_settingAddress && _deliveryAddress != null) {
+        setState(() => _deliveryAddress = null);
       }
-      _refreshForm();
     });
     _threshold = TextEditingController(
       text: client?.sleepingThresholdDays.toString() ?? '7',
@@ -464,10 +381,6 @@ class _ClientDialogState extends State<ClientDialog> {
       return;
     }
     if (!_formKey.currentState!.validate()) return;
-    if (_deliveryAddress == null) {
-      setState(() => _locationError = 'Проверьте и подтвердите местоположение');
-      return;
-    }
     final provider = context.read<ClientsProvider>();
     setState(() {
       _busy = true;
@@ -496,6 +409,7 @@ class _ClientDialogState extends State<ClientDialog> {
               phone: RussianPhoneInputFormatter.toApiPhone(_phone.text),
               address: _address.text.trim(),
               deliveryAddress: _deliveryAddress,
+              deliveryDetails: _details.text.trim(),
               thresholdDays: int.parse(_threshold.text.trim()),
               salesRepId: _salesRepId,
               paymentMethodId: _paymentMethodId,
@@ -506,6 +420,7 @@ class _ClientDialogState extends State<ClientDialog> {
               phone: RussianPhoneInputFormatter.toApiPhone(_phone.text),
               address: _address.text.trim(),
               deliveryAddress: _deliveryAddress,
+              deliveryDetails: _details.text.trim(),
               thresholdDays: int.parse(_threshold.text.trim()),
               salesRepId: _salesRepId,
               paymentMethodId: _paymentMethodId,
@@ -565,10 +480,6 @@ class _ClientDialogState extends State<ClientDialog> {
       _address,
       _threshold,
       _cooldown,
-      _district,
-      _locality,
-      _street,
-      _house,
       _details,
     ]) {
       controller.dispose();
@@ -928,26 +839,12 @@ class _ClientDialogState extends State<ClientDialog> {
           focus: _focusNodes[0],
         ),
         _field(
-          _district,
-          'Район / муниципальный или городской округ',
-          Icons.location_city,
-          maxLength: 150,
-          validator: (_) => null,
-          hint: 'Необязательно; укажите для уточнения адреса',
+          _address,
+          'Адрес *',
+          Icons.location_on_outlined,
+          maxLength: 500,
+          focus: _focusNodes[2],
         ),
-        _field(
-          _locality,
-          'Населённый пункт (с типом) *',
-          Icons.location_city,
-          maxLength: 150,
-        ),
-        _field(
-          _street,
-          'Улица (с типом) *',
-          Icons.signpost_outlined,
-          maxLength: 150,
-        ),
-        _field(_house, 'Дом *', Icons.home_outlined, maxLength: 40),
         _field(
           _details,
           'Детали доставки',
@@ -955,44 +852,16 @@ class _ClientDialogState extends State<ClientDialog> {
           maxLength: 500,
           validator: (_) => null,
         ),
-        FormField<bool>(
-          key: _locationFieldKey,
-          validator: (_) => _deliveryAddress == null
-              ? 'Подтвердите местоположение клиента'
-              : null,
-          builder: (field) => InputDecorator(
-            decoration: InputDecoration(
-              border: const OutlineInputBorder(),
-              errorText: _locationError ?? field.errorText,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _deliveryAddress == null
-                      ? 'Местоположение не подтверждено'
-                      : 'Местоположение подтверждено',
-                ),
-                const SizedBox(height: 8),
-                AppSecondaryButton(
-                  text: _locating
-                      ? 'Проверка…'
-                      : _deliveryAddress == null
-                      ? 'Проверить адрес'
-                      : 'Изменить местоположение',
-                  onPressed: _busy || _locating ? null : () => _verifyAddress(),
-                ),
-              ],
-            ),
-          ),
+        Text(
+          _deliveryAddress == null
+              ? 'Адрес не подтверждён'
+              : 'Местоположение подтверждено',
         ),
-        TextButton(
-          onPressed: _busy || _locating
-              ? null
-              : () => _verifyAddress(manual: true),
-          child: const Text('Указать место вручную'),
+        const SizedBox(height: 8),
+        AppSecondaryButton(
+          text: 'Найти на карте',
+          onPressed: _busy || _locating ? null : _verifyAddress,
         ),
-        const GeoAttribution(),
         const SizedBox(height: 16),
         _field(
           _phone,
