@@ -48,14 +48,20 @@ void main() {
   test('missing coordinates message names clients and leaves manual reorder available', () async {
     final future = p.optimizeOrder();
     geo.gate.completeError(
-      const ApiException(
+      ApiException.fromResponse(
         statusCode: 422,
-        message:
-            'Не подтверждено местоположение: Первый клиент, Второй клиент.',
+        body:
+            '{"detail":"Some clients have no confirmed location.",'
+            '"clients":[{"clientId":"client","name":"Первый клиент"},'
+            '{"clientId":"second","name":"Второй клиент"}]}',
       ),
     );
     await future;
     expect(p.optimizationMessage, contains('Первый клиент, Второй клиент'));
+    expect(
+      p.optimizationMessage,
+      isNot(contains('Some clients have no confirmed location.')),
+    );
     expect(p.optimizationFailed, isTrue);
     expect(p.points, [point, second]);
     p.reorderPoints(0, 2);

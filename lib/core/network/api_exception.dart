@@ -4,11 +4,13 @@ class ApiException implements Exception {
   final int statusCode;
   final String message;
   final String? ownerName;
+  final Map<String, dynamic> data;
 
   const ApiException({
     required this.statusCode,
     required this.message,
     this.ownerName,
+    this.data = const {},
   });
 
   factory ApiException.fromResponse({
@@ -17,9 +19,11 @@ class ApiException implements Exception {
   }) {
     String message = 'Ошибка запроса к серверу.';
     String? ownerName;
+    Map<String, dynamic> data = const {};
     try {
       final decoded = jsonDecode(body);
       if (decoded is Map<String, dynamic>) {
+        data = decoded;
         ownerName = decoded['ownerName'] as String?;
         final detail = decoded['detail'];
         if (detail is String) {
@@ -39,6 +43,7 @@ class ApiException implements Exception {
       statusCode: statusCode,
       message: message,
       ownerName: ownerName,
+      data: data,
     );
   }
 

@@ -114,7 +114,23 @@ class RouteConstructorProvider extends OrderPointsProvider {
     } catch (error) {
       if (session == _optimizationSession) {
         optimizationFailed = true;
-        optimizationMessage = error is ApiException ? error.message : 'Не удалось рассчитать порядок. Проверьте координаты клиентов и повторите попытку.';
+        if (error is ApiException) {
+          final clients = error.data['clients'];
+          final names = clients is List
+              ? clients
+                    .whereType<Map<String, dynamic>>()
+                    .map((client) => client['name'])
+                    .whereType<String>()
+                    .where((name) => name.trim().isNotEmpty)
+                    .toList()
+              : <String>[];
+          optimizationMessage = error.statusCode == 422 && names.isNotEmpty
+              ? 'Невозможно оптимизировать порядок. Не подтверждено местоположение: '
+                    '${names.join(', ')}. Можно изменить порядок вручную.'
+              : error.message;
+        } else {
+          optimizationMessage = 'Не удалось рассчитать порядок. Проверьте координаты клиентов и повторите попытку.';
+        }
       }
     } finally {
       if (session == _optimizationSession) {
