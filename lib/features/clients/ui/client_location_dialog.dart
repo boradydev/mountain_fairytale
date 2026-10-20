@@ -83,7 +83,11 @@ class _LocationDialogState extends State<_LocationDialog> {
     } catch (error) {
       if (mounted) {
         setState(
-          () => _searchError = error is ApiException ? error.message : 'Поиск недоступен. Можно указать координаты вручную или сохранить клиента без подтверждения.',
+          () => _searchError = switch (error) {
+            ApiException(statusCode: 503) => 'Сервис поиска адресов временно недоступен. Попробуйте позже или укажите координаты вручную.',
+            ApiException(:final message) => message,
+            _ => 'Поиск недоступен. Можно указать координаты вручную или сохранить клиента без подтверждения.',
+          },
         );
       }
     } finally {

@@ -90,16 +90,31 @@ void main() {
       await tester.pump(const Duration(milliseconds: 200));
       checkPosition();
       geo.pending.completeError(
-        ApiException(
+        const ApiException(
           statusCode: 503,
-          message: List.filled(
-            10,
-            'Поиск временно недоступен. Можно указать координаты вручную.',
-          ).join('\n'),
+          message: 'Geolocation service is unavailable.',
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.textContaining('Поиск временно недоступен.'), findsOneWidget);
+      expect(
+        find.textContaining('Сервис поиска адресов временно недоступен.'),
+        findsOneWidget,
+      );
+      expect(find.text('Geolocation service is unavailable.'), findsNothing);
+      checkPosition();
+
+      geo.pending = Completer();
+      await tester.tap(find.text('Найти адрес'));
+      await tester.pump();
+      final fallback = List.filled(
+        10,
+        'Unexpected provider response.',
+      ).join('\n');
+      geo.pending.completeError(
+        ApiException(statusCode: 502, message: fallback),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text(fallback), findsOneWidget);
       checkPosition();
 
       geo.pending = Completer();
