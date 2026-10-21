@@ -11,12 +11,29 @@ import 'package:mountain_fairytale/features/delivery_route/ui/points_dialogs.dar
 import 'package:mountain_fairytale/features/delivery_route/ui/task_item_row.dart';
 import 'package:provider/provider.dart';
 
+/// Expansion belongs to the open document, independently of form/widget rebuilds.
+class RoutePointsViewState {
+  final _expandedClientIds = <String>{};
+
+  bool isExpanded(String clientId) => _expandedClientIds.contains(clientId);
+
+  void setExpanded(String clientId, bool expanded) {
+    if (expanded) {
+      _expandedClientIds.add(clientId);
+    } else {
+      _expandedClientIds.remove(clientId);
+    }
+  }
+}
+
 class RoutePointsList extends StatefulWidget {
   final OrderPointsProvider provider;
+  final RoutePointsViewState? viewState;
 
   const RoutePointsList({
     super.key,
     required this.provider,
+    this.viewState,
   });
 
   @override
@@ -25,6 +42,7 @@ class RoutePointsList extends StatefulWidget {
 
 class _RoutePointsListState extends State<RoutePointsList> {
   final ScrollController _scrollController = ScrollController();
+  final _localViewState = RoutePointsViewState();
 
   int _lastPointsCount = 0;
   bool _initialized = false;
@@ -38,6 +56,7 @@ class _RoutePointsListState extends State<RoutePointsList> {
   @override
   Widget build(BuildContext context) {
     final provider = widget.provider;
+    final viewState = widget.viewState ?? _localViewState;
     final colorScheme = Theme.of(context).colorScheme;
     final clientsProvider = context.read<ClientsProvider>();
 
@@ -124,6 +143,9 @@ class _RoutePointsListState extends State<RoutePointsList> {
                     collapsedBackgroundColor: Colors.transparent,
                     // ====================================
                     key: ValueKey('route-point-${point.clientId}'),
+                    initiallyExpanded: viewState.isExpanded(point.clientId),
+                    onExpansionChanged: (expanded) =>
+                        viewState.setExpanded(point.clientId, expanded),
                     tilePadding: const EdgeInsets.symmetric(
                       horizontal: 20,
                       vertical: 8,

@@ -36,6 +36,8 @@ class DeliveryDocumentEditor extends StatefulWidget {
 }
 
 class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
+  // Survives form rebuilds on mode changes, but ends with this editor session.
+  final _pointViewState = RoutePointsViewState();
   GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _loading = true;
   bool _canPop = false;
@@ -284,7 +286,10 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
                               ),
                               const VerticalDivider(width: 1),
                               Expanded(
-                                child: RoutePointsList(provider: p),
+                                child: RoutePointsList(
+                                  provider: p,
+                                  viewState: _pointViewState,
+                                ),
                               ),
                             ],
                           ),
