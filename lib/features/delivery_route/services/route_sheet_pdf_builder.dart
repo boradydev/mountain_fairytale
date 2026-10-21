@@ -20,23 +20,12 @@ class RouteSheetPdfBuilder {
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
         theme: theme,
-        footer: (_) => pw.Column(
-          children: [
-            pw.UrlLink(
-              destination: 'https://www.geoapify.com/',
-              child: pw.Text(
-                'Powered by Geoapify',
-                style: const pw.TextStyle(fontSize: 7),
-              ),
-            ),
-            pw.UrlLink(
-              destination: 'https://www.openstreetmap.org/copyright',
-              child: pw.Text(
-                '© OpenStreetMap contributors',
-                style: const pw.TextStyle(fontSize: 7),
-              ),
-            ),
-          ],
+        footer: (context) => pw.Align(
+          alignment: pw.Alignment.centerRight,
+          child: pw.Text(
+            'Страница ${context.pageNumber} из ${context.pagesCount}',
+            style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700),
+          ),
         ),
         margin: const pw.EdgeInsets.all(28),
         build: (context) => [
@@ -45,10 +34,6 @@ class RouteSheetPdfBuilder {
           _buildRouteInfo(sheet),
           pw.SizedBox(height: 20),
           _buildPointsTable(sheet),
-          pw.SizedBox(height: 18),
-          _buildTotal(sheet),
-          pw.SizedBox(height: 30),
-          _buildSignatures(),
         ],
       ),
     );
@@ -102,6 +87,8 @@ class RouteSheetPdfBuilder {
                 ? '________________'
                 : '${_formatNumber(sheet.endMileage!)} км',
           ),
+          pw.Divider(color: PdfColors.grey600, height: 16, thickness: 0.6),
+          _buildTotal(sheet),
         ],
       ),
     );
@@ -300,16 +287,6 @@ class RouteSheetPdfBuilder {
           '${sheet.grandTotal.toStringAsFixed(2)} ₽',
           style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
         ),
-      ],
-    );
-  }
-
-  pw.Widget _buildSignatures() {
-    return pw.Row(
-      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-      children: [
-        pw.Text('Водитель: __________________________'),
-        pw.Text('Ответственный: ______________________'),
       ],
     );
   }
