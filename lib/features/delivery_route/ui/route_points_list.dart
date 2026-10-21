@@ -11,9 +11,10 @@ import 'package:mountain_fairytale/features/delivery_route/ui/points_dialogs.dar
 import 'package:mountain_fairytale/features/delivery_route/ui/task_item_row.dart';
 import 'package:provider/provider.dart';
 
-/// Expansion belongs to the open document, independently of form/widget rebuilds.
+/// Expansion and scrolling belong to the open document, across form rebuilds.
 class RoutePointsViewState {
   final _expandedClientIds = <String>{};
+  double scrollOffset = 0;
 
   bool isExpanded(String clientId) => _expandedClientIds.contains(clientId);
 
@@ -41,11 +42,27 @@ class RoutePointsList extends StatefulWidget {
 }
 
 class _RoutePointsListState extends State<RoutePointsList> {
-  final ScrollController _scrollController = ScrollController();
+  late final ScrollController _scrollController;
   final _localViewState = RoutePointsViewState();
+  RoutePointsViewState get _viewState => widget.viewState ?? _localViewState;
 
   int _lastPointsCount = 0;
   bool _initialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController(
+      initialScrollOffset: _viewState.scrollOffset,
+      keepScrollOffset: false,
+    )..addListener(_rememberScrollOffset);
+  }
+
+  void _rememberScrollOffset() {
+    if (_scrollController.hasClients) {
+      _viewState.scrollOffset = _scrollController.offset;
+    }
+  }
 
   @override
   void dispose() {
@@ -56,7 +73,7 @@ class _RoutePointsListState extends State<RoutePointsList> {
   @override
   Widget build(BuildContext context) {
     final provider = widget.provider;
-    final viewState = widget.viewState ?? _localViewState;
+    final viewState = _viewState;
     final colorScheme = Theme.of(context).colorScheme;
     final clientsProvider = context.read<ClientsProvider>();
 
@@ -213,7 +230,7 @@ class _RoutePointsListState extends State<RoutePointsList> {
                       },
                     ),
                     leading: !provider.canEdit
-                        ? const SizedBox(width: 24)
+                        ? const SizedBox(width: 24, height: 40)
                         : ReorderableDragStartListener(
                             index: index,
                             enabled: provider.canEdit,
@@ -248,8 +265,12 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                         .bodyMedium,
                                   ),
                                 ),
-                                if (provider.canEdit)
-                                  AppIconButton(
+                                Visibility(
+                                  visible: provider.canEdit,
+                                  maintainSize: true,
+                                  maintainAnimation: true,
+                                  maintainState: true,
+                                  child: AppIconButton(
                                     icon: Icons.delete_outline,
                                     tooltip: 'Удалить точку',
                                     destructive: true,
@@ -257,30 +278,24 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                         ? () => provider.removePoint(index)
                                         : null,
                                   ),
+                                ),
                               ],
                             ),
                             const SizedBox(height: 16),
                             LayoutBuilder(
                               builder: (context, constraints) {
-                                final payment = !provider.canEdit
-                                    ? Text(
-                                        'Способ оплаты: ${point.paymentMethod ?? 'Не указан'}',
-                                      )
-                                    : PaymentMethodSelector(
-                                        provider: provider,
-                                        clientsProvider: clientsProvider,
-                                        clientId: point.clientId,
-                                        selectedId: point.paymentMethodId,
-                                        selectedName: point.paymentMethod,
-                                      );
-                                final representative = !provider.canEdit
-                                    ? Text(
-                                        'Торговый представитель: ${point.salesRepresentative}',
-                                      )
-                                    : PointRepresentativeSelector(
-                                        provider: provider,
-                                        point: point,
-                                      );
+                                final payment = PaymentMethodSelector(
+                                  provider: provider,
+                                  clientsProvider: clientsProvider,
+                                  clientId: point.clientId,
+                                  selectedId: point.paymentMethodId,
+                                  selectedName: point.paymentMethod,
+                                );
+                                final representative =
+                                    PointRepresentativeSelector(
+                                      provider: provider,
+                                      point: point,
+                                    );
                                 if (constraints.maxWidth < 600) {
                                   return Column(
                                     crossAxisAlignment:
@@ -302,13 +317,11 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                 );
                               },
                             ),
-                            if (provider.canEdit) ...[
-                              const SizedBox(height: 8),
-                              Text(
-                                'Изменения оплаты и представителя сохраняются в карточке клиента.',
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                            ],
+                            const SizedBox(height: 8),
+                            Text(
+                              'Изменения оплаты и представителя сохраняются в карточке клиента.',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
                             const SizedBox(height: 24),
 
                             Row(
@@ -504,16 +517,22 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                     ),
                                     child: LayoutBuilder(
                                       builder: (context, constraints) {
-                                        final add = AppSecondaryButton(
-                                          icon: Icons.add,
-                                          text: 'Добавить позицию',
-                                          onPressed: provider.canEdit
-                                              ? () => TaskDialogs.showAddTask(
-                                                  context,
-                                                  provider,
-                                                  index,
-                                                )
-                                              : null,
+                                        final add = Visibility(
+                                          visible: provider.canEdit,
+                                          maintainSize: true,
+                                          maintainAnimation: true,
+                                          maintainState: true,
+                                          child: AppSecondaryButton(
+                                            icon: Icons.add,
+                                            text: 'Добавить позицию',
+                                            onPressed: provider.canEdit
+                                                ? () => TaskDialogs.showAddTask(
+                                                    context,
+                                                    provider,
+                                                    index,
+                                                  )
+                                                : null,
+                                          ),
                                         );
                                         final total = Text(
                                           'Итого: ${point.totalAmount.toStringAsFixed(2)} ₽',
@@ -523,12 +542,6 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                             color: colorScheme.onSurface,
                                           ),
                                         );
-                                        if (!provider.canEdit) {
-                                          return Align(
-                                            alignment: Alignment.centerRight,
-                                            child: total,
-                                          );
-                                        }
                                         if (constraints.maxWidth < 420) {
                                           return Column(
                                             crossAxisAlignment:

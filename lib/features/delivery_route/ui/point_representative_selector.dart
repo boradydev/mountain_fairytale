@@ -32,14 +32,29 @@ class _PointRepresentativeSelectorState
   bool _includeInactive = false;
   String? _error;
   int _version = 0;
+  late bool _wasEditable;
 
   @override
   void initState() {
     super.initState();
-    _load();
+    _wasEditable = widget.provider.canEdit;
+    if (_wasEditable) {
+      _load();
+    } else {
+      _loading = false;
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant PointRepresentativeSelector oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final editable = widget.provider.canEdit;
+    if (editable && !_wasEditable) _load();
+    _wasEditable = editable;
   }
 
   Future<void> _load() async {
+    if (!widget.provider.canEdit) return;
     setState(() {
       _loading = true;
       _error = null;
@@ -151,12 +166,14 @@ class _PointRepresentativeSelectorState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         AppDropdown<ClientDirectoryEntry>(
-          isLoading: _loading || _busy,
+          isLoading: widget.provider.canEdit && (_loading || _busy),
           key: ValueKey('rep-$_version-${point.salesRepresentativeId}'),
           label: 'Торговый представитель',
           items: _items,
           value: selected,
-          hint: point.salesRepresentative,
+          hint: point.salesRepresentative.trim().isEmpty
+              ? 'Не указан'
+              : point.salesRepresentative,
           enabled: !_busy && !_loading && widget.provider.canEdit,
           showAdd: true,
           showEdit: true,
@@ -175,7 +192,7 @@ class _PointRepresentativeSelectorState
               ? null
               : () => _edit(id: point.salesRepresentativeId),
         ),
-        if (_error != null) ...[
+        if (widget.provider.canEdit && _error != null) ...[
           Text(
             _error!,
             style: TextStyle(color: Theme.of(context).colorScheme.error),

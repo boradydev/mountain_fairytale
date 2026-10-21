@@ -10,19 +10,25 @@ import 'package:mountain_fairytale/features/delivery_route/ui/point_representati
 import 'package:mountain_fairytale/features/delivery_route/ui/order_points_provider.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 import 'package:mountain_fairytale/features/payment_methods/payment_method_abcs.dart';
+import 'package:mountain_fairytale/features/payment_methods/data/payment_method_model.dart';
+import 'package:mountain_fairytale/shared/widgets/dropdown_widget.dart';
+import 'package:mountain_fairytale/features/delivery_route/ui/task_item_row.dart';
 
 import 'document_provider_test.dart'
     show Orders, Catalog, Locks, Clients, point;
 
 class RepresentativeClients extends Clients {
+  int representativeLoads = 0;
   UpdateClientRequest? request;
   bool fail = false;
   @override
   Future<List<ClientDirectoryEntry>> getSalesRepresentatives({
     bool includeDeactivated = false,
-  }) async => [
-    const ClientDirectoryEntry('rep', 'Иванов Алексей'),
-  ];
+  }) async {
+    representativeLoads++;
+    return [const ClientDirectoryEntry('rep', 'Иванов Алексей')];
+  }
+
   @override
   Future<Client> updateClient(String id, UpdateClientRequest request) async {
     if (fail) throw StateError('offline');
@@ -103,13 +109,15 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Телефон: 123'), findsOneWidget);
       expect(
-        find.widgetWithText(AppSecondaryButton, 'Добавить позицию'),
+        find
+            .widgetWithText(AppSecondaryButton, 'Добавить позицию')
+            .hitTestable(),
         findsNothing,
       );
       expect(find.byTooltip('Увеличить количество'), findsNothing);
       expect(find.byTooltip('Действия с позицией'), findsNothing);
       expect(find.byType(ReorderableDragStartListener), findsNothing);
-      expect(find.byTooltip('Удалить точку'), findsNothing);
+      expect(find.byTooltip('Удалить точку').hitTestable(), findsNothing);
       orders.isEditing = true;
       orders.notifyListeners();
       await tester.pumpAndSettle();
@@ -133,6 +141,106 @@ void main() {
       );
       expect(minus.onPressed, isNull);
       expect(tester.takeException(), isNull);
+    });
+  }
+
+  for (final width in [360.0, 1200.0]) {
+    testWidgets('view and edit keep identical point geometry at width $width', (
+      tester,
+    ) async {
+      tester.view.physicalSize = Size(width, 1600);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final repo = RepresentativeClients();
+      final orders = RepresentativeOrders(repo)
+        ..isEditing = false
+        ..points = [
+          RoutePoint.fromJson({
+            ...point.toJson(),
+            'salesRepresentativeId': 'rep',
+            'salesRepresentativeName': 'Иванов Алексей',
+            'defaultPaymentMethodId': 'cash',
+            'defaultPaymentMethodName': 'Наличные',
+          }),
+        ];
+      final payment = PaymentMethod(
+        id: 'cash',
+        name: 'Наличные',
+        createdAt: DateTime(2026),
+        isActive: true,
+      );
+      orders.paymentMethods = [payment];
+      orders.paymentMethodsById[payment.id] = payment;
+      final clients = ClientsProvider(repo);
+      addTearDown(orders.dispose);
+      addTearDown(clients.dispose);
+      await tester.pumpWidget(
+        ChangeNotifierProvider.value(
+          value: clients,
+          child: MaterialApp(
+            home: Scaffold(
+              body: ListenableBuilder(
+                listenable: orders,
+                builder: (_, _) => RoutePointsList(provider: orders),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Клиент'));
+      await tester.pumpAndSettle();
+      final paymentField = find.byType(AppDropdown<PaymentMethod>);
+      final repField = find.byType(AppDropdown<ClientDirectoryEntry>);
+      expect(
+        tester.widget<AppDropdown<PaymentMethod>>(paymentField).enabled,
+        isFalse,
+      );
+      expect(
+        tester.widget<AppDropdown<ClientDirectoryEntry>>(repField).enabled,
+        isFalse,
+      );
+      expect(repo.representativeLoads, 0);
+      expect(find.text('Наличные'), findsOneWidget);
+      expect(find.text('Иванов Алексей'), findsOneWidget);
+      final anchors = [
+        find.byKey(const ValueKey('route-point-client')),
+        find.text('Телефон: 123'),
+        paymentField,
+        repField,
+        find.text('Задание для водителя'),
+        find.byType(TaskItemRow),
+        find.text('Товар'),
+        find.text('Итого: 2.01 ₽'),
+      ];
+      final rects = anchors.map(tester.getRect).toList();
+      for (final editing in [true, false]) {
+        orders.isEditing = editing;
+        orders.notifyListeners();
+        await tester.pumpAndSettle();
+        expect(
+          tester.widget<AppDropdown<PaymentMethod>>(paymentField).enabled,
+          editing,
+        );
+        expect(
+          tester.widget<AppDropdown<ClientDirectoryEntry>>(repField).enabled,
+          editing,
+        );
+        for (var i = 0; i < anchors.length; i++) {
+          expect(
+            tester.getRect(anchors[i]),
+            rects[i],
+            reason: 'anchor $i, editing=$editing',
+          );
+        }
+        expect(
+          find.text('Добавить позицию').hitTestable(),
+          editing ? findsOneWidget : findsNothing,
+        );
+        expect(tester.takeException(), isNull);
+      }
+      expect(repo.representativeLoads, 1);
+      expect(repo.request, isNull);
     });
   }
 

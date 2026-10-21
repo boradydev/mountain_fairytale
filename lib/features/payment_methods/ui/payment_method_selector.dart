@@ -33,23 +33,28 @@ class _PaymentMethodSelectorState extends State<PaymentMethodSelector> {
   bool _saving = false;
   int _selectionVersion = 0;
   String? _error;
+  late bool _wasEditable;
 
   @override
   void initState() {
     super.initState();
+    _wasEditable = widget.provider.canEdit;
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadSelected());
   }
 
   @override
   void didUpdateWidget(covariant PaymentMethodSelector oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.selectedId != widget.selectedId) {
+    final editable = widget.provider.canEdit;
+    if (oldWidget.selectedId != widget.selectedId ||
+        (editable && !_wasEditable)) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _loadSelected());
     }
+    _wasEditable = editable;
   }
 
   Future<void> _loadSelected() async {
-    if (!mounted) return;
+    if (!mounted || !widget.provider.canEdit) return;
     final id = widget.selectedId;
     if (id == null || widget.provider.paymentMethodsById.containsKey(id)) {
       return;
@@ -64,7 +69,7 @@ class _PaymentMethodSelectorState extends State<PaymentMethodSelector> {
   }
 
   Future<void> _select(PaymentMethod? method) async {
-    if (_busy || method == null) return;
+    if (_busy || method == null || !widget.provider.canEdit) return;
     setState(() {
       _busy = true;
       _error = null;
@@ -107,6 +112,7 @@ class _PaymentMethodSelectorState extends State<PaymentMethodSelector> {
   }
 
   Future<void> _showEditor({PaymentMethod? method}) async {
+    if (!widget.provider.canEdit) return;
     PaymentMethod? openAfter;
     final result = await showDialog<PaymentMethod>(
       context: context,
@@ -156,13 +162,15 @@ class _PaymentMethodSelectorState extends State<PaymentMethodSelector> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           AppDropdown<PaymentMethod>(
-            isLoading: _saving || provider.isLoadingPaymentMethods,
+            isLoading:
+                provider.canEdit &&
+                (_saving || provider.isLoadingPaymentMethods),
             key: ValueKey(
               'payment-$_selectionVersion-${provider.showInactivePaymentMethods}-${selectable?.id}-${selected?.name}-${selected?.isActive}',
             ),
             label: 'Форма оплаты *',
             focusNode: _focusNode,
-            enabled: !_busy,
+            enabled: !_busy && provider.canEdit,
             items: items,
             value: selectable,
             hint: currentLabel ?? 'Выберите форму оплаты',
@@ -193,7 +201,8 @@ class _PaymentMethodSelectorState extends State<PaymentMethodSelector> {
                 ? null
                 : () => _showEditor(method: selected),
           ),
-          if (provider.paymentMethodLoadError != null || _error != null)
+          if (provider.canEdit &&
+              (provider.paymentMethodLoadError != null || _error != null))
             Row(
               children: [
                 Expanded(

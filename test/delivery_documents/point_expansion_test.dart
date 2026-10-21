@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mountain_fairytale/features/clients/ui/clients_provider.dart';
+import 'package:mountain_fairytale/features/clients/data/clients_model.dart';
 import 'package:mountain_fairytale/features/delivery_route/data/route_point_model.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/delivery_document_editor.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_provider.dart';
@@ -13,10 +14,17 @@ import 'constructors_test.dart'
 import 'document_provider_test.dart' show Clients, point;
 import 'route_optimization_test.dart' show OptimizationFake;
 
+class _PointClients extends Clients {
+  @override
+  Future<List<ClientDirectoryEntry>> getSalesRepresentatives({
+    bool includeDeactivated = false,
+  }) async => [];
+}
+
 class _Editor {
   final geo = OptimizationFake();
   final routes = Routes();
-  final clients = ClientsProvider(Clients());
+  final clients = ClientsProvider(_PointClients());
   late final provider = RouteConstructorProvider(
     carRepo: Cars(),
     driverRepo: Drivers(),
@@ -108,7 +116,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Телефон: phone-0'), findsOneWidget);
 
-      final scroll = editor.controller(tester);
+      var scroll = editor.controller(tester);
       scroll.jumpTo(scroll.position.maxScrollExtent);
       await tester.pumpAndSettle();
       scroll.jumpTo(scroll.position.maxScrollExtent);
@@ -117,6 +125,15 @@ void main() {
       await tester.ensureVisible(find.text('Клиент 29'));
       await tester.tap(find.text('Клиент 29'));
       await tester.pumpAndSettle();
+      final offset = scroll.offset;
+      await tester.tap(find.text('Редактировать'));
+      await tester.pumpAndSettle();
+      scroll = editor.controller(tester);
+      expect(scroll.offset, closeTo(offset, 0.01));
+      await tester.tap(find.text('Отмена'));
+      await tester.pumpAndSettle();
+      scroll = editor.controller(tester);
+      expect(scroll.offset, closeTo(offset, 0.01));
       scroll.jumpTo(0);
       await tester.pumpAndSettle();
       expect(find.text('Телефон: phone-0'), findsOneWidget);
@@ -127,6 +144,14 @@ void main() {
       await tester.pumpAndSettle();
       scroll.jumpTo(0);
       await tester.pumpAndSettle();
+      expect(find.text('Телефон: phone-0'), findsNothing);
+      scroll.jumpTo(scroll.position.maxScrollExtent);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Закрыть'));
+      await tester.pumpAndSettle();
+      await editor.open(tester);
+      expect(editor.controller(tester).offset, 0);
+      expect(find.text('Клиент 0'), findsOneWidget);
       expect(find.text('Телефон: phone-0'), findsNothing);
       await tester.tap(find.text('Закрыть'));
       await tester.pumpAndSettle();

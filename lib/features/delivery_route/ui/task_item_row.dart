@@ -70,8 +70,11 @@ class _TaskItemRowState extends State<TaskItemRow> {
 
   Widget _quantity() => SizedBox(
     width: 156,
+    height: 48,
     child: !widget.enabled
-        ? Text('${widget.item.quantity}', textAlign: TextAlign.center)
+        ? Center(
+            child: Text('${widget.item.quantity}', textAlign: TextAlign.center),
+          )
         : Row(
             children: [
               AppIconButton(
@@ -139,6 +142,7 @@ class _TaskItemRowState extends State<TaskItemRow> {
     );
     final actions = SizedBox(
       width: 48,
+      height: 48,
       child: !widget.enabled
           ? null
           : PopupMenuButton<String>(
