@@ -5,6 +5,7 @@ import 'package:mountain_fairytale/features/clients/clients_abcs.dart';
 import 'package:mountain_fairytale/features/clients/data/clients_model.dart';
 import 'package:mountain_fairytale/features/clients/ui/clients_provider.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/route_points_list.dart';
+import 'package:mountain_fairytale/features/delivery_route/data/route_point_model.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/point_representative_selector.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/order_points_provider.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
@@ -85,6 +86,19 @@ void main() {
       expect(find.text('2.01 ₽'), findsOneWidget);
       expect(find.textContaining('1 позиция'), findsOneWidget);
       expect(find.text('Товар'), findsNothing);
+      final amountPosition = tester.getTopLeft(find.text('2.01 ₽'));
+      for (final payment in ['Нал', 'Безналичная оплата по расчётному счёту']) {
+        orders.points = [
+          RoutePoint.fromJson({
+            ...point.toJson(),
+            'defaultPaymentMethodName': payment,
+          }),
+        ];
+        orders.notifyListeners();
+        await tester.pumpAndSettle();
+        expect(tester.getTopLeft(find.text('2.01 ₽')), amountPosition);
+        expect(find.textContaining(payment), findsOneWidget);
+      }
       await tester.tap(find.text('Клиент'));
       await tester.pumpAndSettle();
       expect(find.text('Телефон: 123'), findsOneWidget);
