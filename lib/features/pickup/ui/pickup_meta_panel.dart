@@ -39,15 +39,17 @@ class _PickupMetaPanelState extends State<PickupMetaPanel> {
           TextButton.icon(
             icon: const Icon(Icons.calendar_today),
             label: Text('Дата: ${provider.selectedDate.toFormattedString()}'),
-            onPressed: () async {
-              final picked = await showDatePicker(
-                context: context,
-                initialDate: provider.selectedDate,
-                firstDate: DateTime(1900),
-                lastDate: DateTime(2200),
-              );
-              if (picked != null) provider.setDate(picked);
-            },
+            onPressed: !provider.canEdit
+                ? null
+                : () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: provider.selectedDate,
+                      firstDate: DateTime(1900),
+                      lastDate: DateTime(2200),
+                    );
+                    if (picked != null) provider.setDate(picked);
+                  },
           ),
           const SizedBox(height: 12),
         ],

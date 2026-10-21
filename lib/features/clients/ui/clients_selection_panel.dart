@@ -82,6 +82,7 @@ class _ClientSelectionPanelState extends State<ClientSelectionPanel> {
   }
 
   Future<void> _showClientEditor({Client? client}) async {
+    if (!widget.provider.canEdit) return;
     final saved = await showClientDialog(
       context,
       client: client,
@@ -97,7 +98,7 @@ class _ClientSelectionPanelState extends State<ClientSelectionPanel> {
   }
 
   Future<void> _selectClient(Client client) async {
-    if (_busy) return;
+    if (_busy || !widget.provider.canEdit) return;
     setState(() {
       _selectedClient = client;
       _busy = true;
@@ -150,7 +151,7 @@ class _ClientSelectionPanelState extends State<ClientSelectionPanel> {
             label: 'Клиент *',
             items: filteredClients,
             value: _selectedClient,
-            enabled: !_busy,
+            enabled: provider.canEdit && !_busy,
             showInactiveToggle: true,
             includeInactive: _includeInactive,
             onIncludeInactiveChanged: (value) {
@@ -169,7 +170,7 @@ class _ClientSelectionPanelState extends State<ClientSelectionPanel> {
             },
             field: TextField(
               controller: _clientSearchController,
-              enabled: !_busy,
+              enabled: provider.canEdit && !_busy,
               onChanged: (_) => _scheduleSearch(),
               decoration: InputDecoration(
                 hintText: 'Имя, адрес или телефон',
@@ -181,10 +182,12 @@ class _ClientSelectionPanelState extends State<ClientSelectionPanel> {
                     : AppIconButton(
                         icon: Icons.clear,
                         tooltip: 'Очистить поиск',
-                        onPressed: () {
-                          _clientSearchController.clear();
-                          _scheduleSearch();
-                        },
+                        onPressed: !provider.canEdit || _busy
+                            ? null
+                            : () {
+                                _clientSearchController.clear();
+                                _scheduleSearch();
+                              },
                       ),
               ),
             ),
@@ -208,6 +211,7 @@ class _ClientSelectionPanelState extends State<ClientSelectionPanel> {
                 );
 
                 return ListTile(
+                  enabled: provider.canEdit && !_busy,
                   // ИСПРАВЛЕНО: Убираем боковые отступы ListTile, чтобы выровнять по границам TextField
                   contentPadding: EdgeInsets.zero,
                   selected: _selectedClient?.id == client.id,
@@ -235,9 +239,13 @@ class _ClientSelectionPanelState extends State<ClientSelectionPanel> {
                       ? const Icon(Icons.archive_outlined)
                       : isAlreadyAdded
                       ? const Icon(Icons.check_circle, color: Colors.grey)
-                      : const Icon(Icons.add_circle, color: Colors.green),
+                      : provider.canEdit
+                      ? const Icon(Icons.add_circle, color: Colors.green)
+                      : null,
                   dense: true,
-                  onTap: _busy ? null : () => _selectClient(client),
+                  onTap: _busy || !provider.canEdit
+                      ? null
+                      : () => _selectClient(client),
                 );
               },
             ),

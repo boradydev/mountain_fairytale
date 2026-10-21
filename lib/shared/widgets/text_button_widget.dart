@@ -6,6 +6,7 @@ class AppPrimaryButton extends StatelessWidget {
   final int? maxLines;
   final VoidCallback? onPressed;
   final bool destructive;
+  final IconData? icon;
 
   const AppPrimaryButton({
     super.key,
@@ -13,6 +14,7 @@ class AppPrimaryButton extends StatelessWidget {
     this.maxLines,
     this.onPressed,
     this.destructive = false,
+    this.icon,
   });
 
   @override
@@ -53,17 +55,28 @@ class AppPrimaryButton extends StatelessWidget {
               return null;
             }),
           ),
-      child: Text(
-        text,
-        maxLines: maxLines,
-        overflow: maxLines == null ? null : TextOverflow.ellipsis,
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
+      child: icon == null
+          ? _label()
+          : Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 18),
+                const SizedBox(width: 8),
+                Flexible(child: _label()),
+              ],
+            ),
     );
   }
+
+  Widget _label() => Text(
+    text,
+    maxLines: maxLines,
+    overflow: maxLines == null ? null : TextOverflow.ellipsis,
+    style: const TextStyle(
+      fontSize: 14,
+      fontWeight: FontWeight.w600,
+    ),
+  );
 }
 
 /// Кнопка в окантовке (Outlined) для второстепенного/альтернативного действия (например, "Отмена", "Назад").

@@ -190,22 +190,26 @@ class _RoutePointsListState extends State<RoutePointsList> {
                         );
                       },
                     ),
-                    leading: ReorderableDragStartListener(
-                      index: index,
-                      enabled: provider.canEdit,
-                      child: MouseRegion(
-                        cursor: provider.canEdit
-                            ? SystemMouseCursors.grab
-                            : SystemMouseCursors.basic,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Icon(
-                            Icons.drag_indicator,
-                            color: colorScheme.onSurfaceVariant,
+                    leading: !provider.canEdit
+                        ? const SizedBox(width: 24)
+                        : ReorderableDragStartListener(
+                            index: index,
+                            enabled: provider.canEdit,
+                            child: MouseRegion(
+                              cursor: provider.canEdit
+                                  ? SystemMouseCursors.grab
+                                  : SystemMouseCursors.basic,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                ),
+                                child: Icon(
+                                  Icons.drag_indicator,
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                    ),
                     children: [
                       Padding(
                         padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
@@ -222,14 +226,15 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                         .bodyMedium,
                                   ),
                                 ),
-                                AppIconButton(
-                                  icon: Icons.delete_outline,
-                                  tooltip: 'Удалить точку',
-                                  destructive: true,
-                                  onPressed: provider.canEdit
-                                      ? () => provider.removePoint(index)
-                                      : null,
-                                ),
+                                if (provider.canEdit)
+                                  AppIconButton(
+                                    icon: Icons.delete_outline,
+                                    tooltip: 'Удалить точку',
+                                    destructive: true,
+                                    onPressed: provider.canEdit
+                                        ? () => provider.removePoint(index)
+                                        : null,
+                                  ),
                               ],
                             ),
                             const SizedBox(height: 16),
@@ -496,6 +501,12 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                             color: colorScheme.onSurface,
                                           ),
                                         );
+                                        if (!provider.canEdit) {
+                                          return Align(
+                                            alignment: Alignment.centerRight,
+                                            child: total,
+                                          );
+                                        }
                                         if (constraints.maxWidth < 420) {
                                           return Column(
                                             crossAxisAlignment:

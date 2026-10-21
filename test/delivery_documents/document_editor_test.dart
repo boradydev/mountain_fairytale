@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mountain_fairytale/features/clients/ui/clients_provider.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/delivery_document_editor.dart';
+import 'package:mountain_fairytale/features/delivery_route/ui/document_mode_banner.dart';
 import 'package:mountain_fairytale/shared/providers/theme_provider.dart';
 
 import 'document_provider_test.dart' show Orders, Catalog, Locks, Clients;
@@ -63,23 +64,64 @@ void main() {
     await tester.tap(find.text('Открыть документ'));
     await tester.pumpAndSettle();
     expect(find.text('Самовывоз (просмотр)'), findsOneWidget);
+    expect(find.text('Только просмотр'), findsOneWidget);
+    expect(
+      find.text('Чтобы изменить документ, начните редактирование.'),
+      findsOneWidget,
+    );
     expect(
       find.textContaining('Просмотр. Начните редактирование'),
       findsNothing,
     );
     expect(locks.acquired, 0);
-    expect(find.text('Начать редактирование'), findsOneWidget);
+    expect(find.text('Редактировать'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(DocumentModeBanner),
+        matching: find.text('Редактировать'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      tester
+          .widget<TextField>(find.widgetWithIcon(TextField, Icons.search))
+          .enabled,
+      isFalse,
+    );
     expect(find.text('Сохранить'), findsNothing);
-    await tester.tap(find.text('Начать редактирование'));
+    await tester.tap(find.text('Редактировать'));
     await tester.pumpAndSettle();
     expect(find.text('Самовывоз (редактирование)'), findsOneWidget);
+    expect(find.text('Редактирование'), findsOneWidget);
+    expect(find.text('Только просмотр'), findsNothing);
     expect(locks.acquired, 1);
+    expect(
+      tester
+          .widget<TextField>(find.widgetWithIcon(TextField, Icons.search))
+          .enabled,
+      isTrue,
+    );
     expect(find.text('Сохранить'), findsOneWidget);
     locks.failRenew = true;
     await provider.renewDocumentLock();
     await tester.pumpAndSettle();
     expect(find.text('Сохранить'), findsNothing);
     expect(find.textContaining('Блокировка потеряна'), findsOneWidget);
+    expect(find.text('Только просмотр'), findsOneWidget);
+    expect(
+      tester
+          .widget<TextField>(find.widgetWithIcon(TextField, Icons.search))
+          .enabled,
+      isFalse,
+    );
+    provider.documentActive = false;
+    provider.notifyListeners();
+    await tester.pumpAndSettle();
+    expect(find.text('Редактировать'), findsNothing);
+    expect(
+      find.text('Документ отменён. Для редактирования восстановите его.'),
+      findsOneWidget,
+    );
     await tester.tap(find.text('Закрыть'));
     await tester.pumpAndSettle();
     expect(find.text('Открыть документ'), findsOneWidget);
@@ -145,6 +187,8 @@ void main() {
       await tester.tap(find.text('Открыть документ'));
       await tester.pumpAndSettle();
       expect(find.text('Маршрутный лист (создание)'), findsOneWidget);
+      expect(find.text('Новый маршрутный лист'), findsOneWidget);
+      final bannerRect = tester.getRect(find.byType(DocumentModeBanner));
       final creationCloseRect = tester.getRect(
         find.widgetWithText(AppSecondaryButton, 'Закрыть'),
       );
@@ -158,20 +202,22 @@ void main() {
       final close = find.widgetWithText(AppSecondaryButton, 'Закрыть');
       final edit = find.widgetWithText(
         AppPrimaryButton,
-        'Начать редактирование',
+        'Редактировать',
       );
       final closeRect = tester.getRect(close);
       final editRect = tester.getRect(edit);
       expect(closeRect, creationCloseRect);
-      expect(editRect, creationSaveRect);
+      expect(tester.getRect(find.byType(DocumentModeBanner)), bannerRect);
+      expect(editRect.bottom, lessThanOrEqualTo(bannerRect.bottom));
       final cancelDocumentRect = tester.getRect(
         find.widgetWithText(AppSecondaryButton, 'Отменить документ'),
       );
       expect(closeRect.center.dx, lessThan(editRect.center.dx));
-      expect(editRect.center.dx, lessThan(cancelDocumentRect.center.dx));
+      expect(closeRect.center.dx, lessThan(cancelDocumentRect.center.dx));
       await tester.tap(edit);
       await tester.pumpAndSettle();
       expect(find.text('Маршрутный лист (редактирование)'), findsOneWidget);
+      expect(tester.getRect(find.byType(DocumentModeBanner)), bannerRect);
       expect(find.text('Закрыть'), findsNothing);
       expect(find.text('Отменить документ'), findsNothing);
       expect(
@@ -180,7 +226,7 @@ void main() {
       );
       expect(
         tester.getRect(find.widgetWithText(AppPrimaryButton, 'Сохранить')),
-        editRect,
+        creationSaveRect,
       );
       await tester.enterText(
         find.byType(TextFormField),

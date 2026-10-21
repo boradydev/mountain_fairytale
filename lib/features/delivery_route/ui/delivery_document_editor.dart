@@ -1,5 +1,6 @@
 import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_provider.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/route_optimization_dialog.dart';
+import 'package:mountain_fairytale/features/delivery_route/ui/document_mode_banner.dart';
 import 'package:mountain_fairytale/shared/widgets/icon_button_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/features/clients/ui/clients_selection_panel.dart';
@@ -220,13 +221,15 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
                 ? const Center(child: CircularProgressIndicator())
                 : Column(
                     children: [
-                      if (!p.documentActive)
-                        const Padding(
-                          padding: EdgeInsets.all(12),
-                          child: Text(
-                            'Документ отменён. Для редактирования восстановите его.',
-                          ),
-                        ),
+                      DocumentModeBanner(
+                        creating: creating,
+                        editing: editing,
+                        active: p.documentActive,
+                        creationTitle: widget.title == 'Самовывоз'
+                            ? 'Новый самовывоз'
+                            : 'Новый маршрутный лист',
+                        onEdit: _loading || busy ? null : p.beginEditing,
+                      ),
                       if (p.documentError != null)
                         Padding(
                           padding: const EdgeInsets.all(12),
@@ -251,21 +254,31 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
                             children: [
                               SizedBox(
                                 width: 360,
-                                child: ExcludeFocus(
-                                  excluding: !p.canEdit,
-                                  child: AbsorbPointer(
-                                    absorbing: !p.canEdit,
-                                    child: Column(
-                                      children: [
-                                        widget.metaBuilder(_formKey),
-                                        const Divider(height: 1),
-                                        Expanded(
-                                          child: ClientSelectionPanel(
-                                            provider: p,
-                                          ),
+                                child: LayoutBuilder(
+                                  builder: (context, constraints) => Column(
+                                    children: [
+                                      ConstrainedBox(
+                                        constraints: BoxConstraints(
+                                          // Leave room for client search in short windows.
+                                          maxHeight:
+                                              (constraints.maxHeight - 220)
+                                                  .clamp(
+                                                    0.0,
+                                                    constraints.maxHeight,
+                                                  ),
                                         ),
-                                      ],
-                                    ),
+                                        child: SingleChildScrollView(
+                                          primary: false,
+                                          child: widget.metaBuilder(_formKey),
+                                        ),
+                                      ),
+                                      const Divider(height: 1),
+                                      Expanded(
+                                        child: ClientSelectionPanel(
+                                          provider: p,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
@@ -307,12 +320,6 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
                             onPressed: !_loading && !busy && p.canSave
                                 ? _save
                                 : null,
-                          )
-                        : p.documentActive
-                        ? AppPrimaryButton(
-                            maxLines: 1,
-                            text: 'Начать редактирование',
-                            onPressed: _loading || busy ? null : p.beginEditing,
                           )
                         : null,
                   ),

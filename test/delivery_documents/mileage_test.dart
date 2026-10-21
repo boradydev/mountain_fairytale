@@ -78,9 +78,9 @@ void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   testWidgets(
-    'recorded car can be replaced after entering and reentering editing',
+    'recorded car can be replaced after reentering editing in a compact window',
     (tester) async {
-      tester.view.physicalSize = const Size(1600, 1200);
+      tester.view.physicalSize = const Size(1280, 800);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
@@ -105,9 +105,44 @@ void main() {
       );
       await tester.pumpAndSettle();
       for (var attempt = 0; attempt < 2; attempt++) {
-        await tester.tap(find.text('Начать редактирование'));
+        expect(find.text('Только просмотр'), findsOneWidget);
+        expect(
+          tester
+              .widget<AppDropdown<Car>>(find.byType(AppDropdown<Car>))
+              .enabled,
+          isFalse,
+        );
+        expect(
+          tester
+              .widget<AppDropdown<Driver>>(find.byType(AppDropdown<Driver>))
+              .enabled,
+          isFalse,
+        );
+        expect(
+          tester
+              .widget<TextFormField>(
+                find.byKey(ValueKey('start-${p.mileageRevision}')),
+              )
+              .enabled,
+          isFalse,
+        );
+        await tester.tap(find.text('Редактировать'));
         await tester.pumpAndSettle();
         expect(p.canEdit, isTrue);
+        expect(
+          tester
+              .widget<AppDropdown<Car>>(find.byType(AppDropdown<Car>))
+              .enabled,
+          isTrue,
+        );
+        expect(
+          tester
+              .widget<TextFormField>(
+                find.byKey(ValueKey('start-${p.mileageRevision}')),
+              )
+              .enabled,
+          isTrue,
+        );
         await tester.tap(
           find.descendant(
             of: find.byType(AppDropdown<Car>),

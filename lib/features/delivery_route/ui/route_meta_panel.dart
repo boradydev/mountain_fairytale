@@ -172,20 +172,23 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
           TextButton.icon(
             icon: const Icon(Icons.calendar_today),
             label: Text('Дата: ${provider.selectedDate.toFormattedString()}'),
-            onPressed: () async {
-              final picked = await showDatePicker(
-                context: context,
-                initialDate: provider.selectedDate,
-                firstDate: DateTime(1900),
-                lastDate: DateTime(2200),
-              );
-              if (picked != null) provider.setDate(picked);
-            },
+            onPressed: !provider.canEdit
+                ? null
+                : () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: provider.selectedDate,
+                      firstDate: DateTime(1900),
+                      lastDate: DateTime(2200),
+                    );
+                    if (picked != null) provider.setDate(picked);
+                  },
           ),
           const SizedBox(height: 12),
 
           // Водитель
           AppDropdown<Driver>(
+            enabled: provider.canEdit,
             isLoading: provider.isLoadingDrivers,
             key: ValueKey('driver-$_driverSelectionVersion'),
             label: 'Водитель *',
@@ -252,6 +255,7 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
 
           // Автомобиль
           AppDropdown<Car>(
+            enabled: provider.canEdit,
             isLoading: provider.isLoadingCars,
             key: ValueKey(
               'car-$_carSelectionVersion-${provider.selectedCar?.id}',
@@ -313,6 +317,7 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
 
           const SizedBox(height: 12),
           TextFormField(
+            enabled: provider.canEdit,
             key: ValueKey('start-${provider.mileageRevision}'),
             decoration: const InputDecoration(
               labelText: 'Километраж выезда (км)',
@@ -352,7 +357,7 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
               provider.endMileage == null &&
               provider.startMileage != provider.selectedCar!.currentMileage)
             TextButton(
-              onPressed: provider.useCurrentMileage,
+              onPressed: provider.canEdit ? provider.useCurrentMileage : null,
               child: Text(
                 'Подставить текущий пробег: ${provider.selectedCar!.currentMileage} км',
               ),
@@ -361,6 +366,7 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
           const SizedBox(height: 12),
 
           TextFormField(
+            enabled: provider.canEdit,
             key: ValueKey('end-${provider.mileageRevision}'),
             decoration: const InputDecoration(
               labelText: 'Километраж заезда (км)',

@@ -107,7 +107,7 @@ Future<_Session> _open(
   await tester.tap(find.text('Открыть'));
   await tester.pumpAndSettle();
   if (editing) {
-    await tester.tap(find.text('Начать редактирование'));
+    await tester.tap(find.text('Редактировать'));
     await tester.pumpAndSettle();
   }
   return session;
@@ -150,7 +150,7 @@ void main() {
             await tester.pump(const Duration(milliseconds: 16));
             expect(find.text('$title ($mode)'), findsOneWidget);
             expect(find.text('$title (просмотр)'), findsNothing);
-            expect(find.text('Начать редактирование'), findsNothing);
+            expect(find.text('Редактировать'), findsNothing);
             expect(tester.state<FormState>(find.byType(Form)), same(form));
             expect(find.text('Введённые данные'), findsOneWidget);
           }
@@ -164,7 +164,7 @@ void main() {
               findsNothing,
             );
             expect(
-              find.text('Начать редактирование', skipOffstage: false),
+              find.text('Редактировать', skipOffstage: false),
               findsNothing,
             );
           }
@@ -218,7 +218,7 @@ void main() {
         find.textContaining('Не удалось освободить блокировку'),
         findsOneWidget,
       );
-      expect(find.text('Начать редактирование'), findsOneWidget);
+      expect(find.text('Редактировать'), findsOneWidget);
       expect(session.saves, 1);
       expect(session.changes, 1);
       session.locks.failRelease = false;

@@ -70,54 +70,56 @@ class _TaskItemRowState extends State<TaskItemRow> {
 
   Widget _quantity() => SizedBox(
     width: 156,
-    child: Row(
-      children: [
-        AppIconButton(
-          icon: Icons.remove,
-          tooltip: 'Уменьшить количество',
-          onPressed: widget.enabled && widget.item.quantity > 1
-              ? () => _step(-1)
-              : null,
-        ),
-        Expanded(
-          child: TextFormField(
-            controller: _controller,
-            focusNode: _focusNode,
-            enabled: widget.enabled,
-            validator: (text) =>
-                (int.tryParse(text ?? '') ?? 0) > 0 ? null : 'Больше 0',
-            keyboardType: TextInputType.number,
-            textAlign: TextAlign.center,
-            onChanged: (text) {
-              final value = int.tryParse(text);
-              setState(
-                () => _quantityError = value == null || value < 1
-                    ? 'Больше 0'
+    child: !widget.enabled
+        ? Text('${widget.item.quantity}', textAlign: TextAlign.center)
+        : Row(
+            children: [
+              AppIconButton(
+                icon: Icons.remove,
+                tooltip: 'Уменьшить количество',
+                onPressed: widget.enabled && widget.item.quantity > 1
+                    ? () => _step(-1)
                     : null,
-              );
-              if (widget.enabled && value != null && value > 0) {
-                widget.onQuantityChanged(value);
-              }
-            },
-            onFieldSubmitted: (_) => _focusNode.unfocus(),
-            decoration: InputDecoration(
-              isDense: true,
-              errorText: _quantityError,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 4,
-                vertical: 10,
               ),
-              border: const OutlineInputBorder(),
-            ),
+              Expanded(
+                child: TextFormField(
+                  controller: _controller,
+                  focusNode: _focusNode,
+                  enabled: widget.enabled,
+                  validator: (text) =>
+                      (int.tryParse(text ?? '') ?? 0) > 0 ? null : 'Больше 0',
+                  keyboardType: TextInputType.number,
+                  textAlign: TextAlign.center,
+                  onChanged: (text) {
+                    final value = int.tryParse(text);
+                    setState(
+                      () => _quantityError = value == null || value < 1
+                          ? 'Больше 0'
+                          : null,
+                    );
+                    if (widget.enabled && value != null && value > 0) {
+                      widget.onQuantityChanged(value);
+                    }
+                  },
+                  onFieldSubmitted: (_) => _focusNode.unfocus(),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    errorText: _quantityError,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 10,
+                    ),
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+              ),
+              AppIconButton(
+                icon: Icons.add,
+                tooltip: 'Увеличить количество',
+                onPressed: widget.enabled ? () => _step(1) : null,
+              ),
+            ],
           ),
-        ),
-        AppIconButton(
-          icon: Icons.add,
-          tooltip: 'Увеличить количество',
-          onPressed: widget.enabled ? () => _step(1) : null,
-        ),
-      ],
-    ),
   );
 
   @override
@@ -137,22 +139,27 @@ class _TaskItemRowState extends State<TaskItemRow> {
     );
     final actions = SizedBox(
       width: 48,
-      child: PopupMenuButton<String>(
-        tooltip: 'Действия с позицией',
-        enabled: widget.enabled,
-        onSelected: (value) {
-          if (value == 'delete') widget.onDelete();
-          if (value == 'price') widget.onRefreshPrice?.call();
-        },
-        itemBuilder: (_) => [
-          if (widget.onRefreshPrice != null)
-            const PopupMenuItem(
-              value: 'price',
-              child: Text('Обновить цену из каталога'),
+      child: !widget.enabled
+          ? null
+          : PopupMenuButton<String>(
+              tooltip: 'Действия с позицией',
+              enabled: widget.enabled,
+              onSelected: (value) {
+                if (value == 'delete') widget.onDelete();
+                if (value == 'price') widget.onRefreshPrice?.call();
+              },
+              itemBuilder: (_) => [
+                if (widget.onRefreshPrice != null)
+                  const PopupMenuItem(
+                    value: 'price',
+                    child: Text('Обновить цену из каталога'),
+                  ),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Text('Удалить позицию'),
+                ),
+              ],
             ),
-          const PopupMenuItem(value: 'delete', child: Text('Удалить позицию')),
-        ],
-      ),
     );
     return LayoutBuilder(
       builder: (context, constraints) {

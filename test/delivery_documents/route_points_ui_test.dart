@@ -104,11 +104,17 @@ void main() {
       expect(find.text('Телефон: 123'), findsOneWidget);
       expect(
         find.widgetWithText(AppSecondaryButton, 'Добавить позицию'),
-        findsOneWidget,
+        findsNothing,
       );
+      expect(find.byTooltip('Увеличить количество'), findsNothing);
+      expect(find.byTooltip('Действия с позицией'), findsNothing);
+      expect(find.byType(ReorderableDragStartListener), findsNothing);
+      expect(find.byTooltip('Удалить точку'), findsNothing);
       orders.isEditing = true;
       orders.notifyListeners();
       await tester.pumpAndSettle();
+      expect(find.text('Добавить позицию'), findsOneWidget);
+      expect(find.byType(ReorderableDragStartListener), findsOneWidget);
       await tester.ensureVisible(find.byTooltip('Увеличить количество'));
       await tester.tap(find.byTooltip('Увеличить количество'));
       await tester.pump();
