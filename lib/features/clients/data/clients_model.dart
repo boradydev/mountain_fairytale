@@ -1,3 +1,5 @@
+import 'package:mountain_fairytale/features/clients/data/location_repository.dart';
+
 const _omitted = Object();
 
 /// Keep server-local timestamps without timezone conversion.
@@ -80,6 +82,8 @@ class Client {
   final String name;
   final String phone;
   final String address;
+  final DeliveryAddress? deliveryAddress;
+  final String deliveryDetails;
   final int sleepingThresholdDays;
   final DateTime? lastDeliveryDate;
   final int? lastDeliveryQuantity;
@@ -96,6 +100,8 @@ class Client {
     required this.name,
     required this.phone,
     required this.address,
+    this.deliveryAddress,
+    this.deliveryDetails = '',
     required this.sleepingThresholdDays,
     required this.createdAt,
     required this.isActive,
@@ -113,6 +119,12 @@ class Client {
     name: json['name'] as String,
     phone: json['phone'] as String,
     address: json['address'] as String,
+    deliveryDetails: json['deliveryDetails'] as String? ?? '',
+    deliveryAddress: json['deliveryAddress'] == null
+        ? null
+        : DeliveryAddress.fromJson(
+            Map<String, dynamic>.from(json['deliveryAddress'] as Map),
+          ),
     sleepingThresholdDays: (json['sleepingThresholdDays'] as num).toInt(),
     lastDeliveryDate: json['lastDeliveryDate'] == null
         ? null
@@ -138,6 +150,8 @@ class Client {
     'name': name,
     'phone': phone,
     'address': address,
+    'deliveryDetails': deliveryDetails,
+    if (deliveryAddress != null) 'deliveryAddress': deliveryAddress!.toJson(),
     'sleepingThresholdDays': sleepingThresholdDays,
     'lastDeliveryDate': lastDeliveryDate == null
         ? null
@@ -180,6 +194,8 @@ class CreateClientRequest {
   final String name;
   final String phone;
   final String address;
+  final DeliveryAddress? deliveryAddress;
+  final String deliveryDetails;
   final int sleepingThresholdDays;
   final DateTime? cooldownUntil;
   final String? salesRepresentativeId;
@@ -188,6 +204,8 @@ class CreateClientRequest {
     required this.name,
     required this.phone,
     required this.address,
+    this.deliveryAddress,
+    this.deliveryDetails = '',
     required this.sleepingThresholdDays,
     this.cooldownUntil,
     this.salesRepresentativeId,
@@ -197,6 +215,8 @@ class CreateClientRequest {
     'name': name,
     'phone': phone,
     'address': address,
+    'deliveryDetails': deliveryDetails,
+    if (deliveryAddress != null) 'deliveryAddress': deliveryAddress!.toJson(),
     'sleepingThresholdDays': sleepingThresholdDays,
     'cooldownUntil': cooldownUntil == null
         ? null
@@ -211,6 +231,8 @@ class UpdateClientRequest {
   final String? name;
   final String? phone;
   final String? address;
+  final Object? deliveryAddress;
+  final String? deliveryDetails;
   final int? sleepingThresholdDays;
   final Object? cooldownUntil;
   final Object? salesRepresentativeId;
@@ -220,6 +242,8 @@ class UpdateClientRequest {
     this.name,
     this.phone,
     this.address,
+    this.deliveryAddress = _omitted,
+    this.deliveryDetails,
     this.sleepingThresholdDays,
     this.cooldownUntil = _omitted,
     this.salesRepresentativeId = _omitted,
@@ -231,6 +255,10 @@ class UpdateClientRequest {
         name: changes['name'] as String?,
         phone: changes['phone'] as String?,
         address: changes['address'] as String?,
+        deliveryAddress: changes.containsKey('deliveryAddress')
+            ? changes['deliveryAddress']
+            : _omitted,
+        deliveryDetails: changes['deliveryDetails'] as String?,
         sleepingThresholdDays: changes['sleepingThresholdDays'] as int?,
         cooldownUntil: changes.containsKey('cooldownUntil')
             ? changes['cooldownUntil']
@@ -246,6 +274,9 @@ class UpdateClientRequest {
     if (name != null) 'name': name,
     if (phone != null) 'phone': phone,
     if (address != null) 'address': address,
+    if (deliveryDetails != null) 'deliveryDetails': deliveryDetails,
+    if (!identical(deliveryAddress, _omitted))
+      'deliveryAddress': (deliveryAddress as DeliveryAddress?)?.toJson(),
     if (sleepingThresholdDays != null)
       'sleepingThresholdDays': sleepingThresholdDays,
     if (!identical(cooldownUntil, _omitted))

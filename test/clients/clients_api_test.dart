@@ -1,3 +1,5 @@
+import 'package:mountain_fairytale/features/clients/data/location_repository.dart';
+
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -11,6 +13,14 @@ import 'package:mountain_fairytale/features/clients/data/clients_repo.dart';
 
 import '../auth/auth_fakes.dart';
 
+const address = DeliveryAddress(
+  district: 'Шпаковский округ',
+  locality: 'Михайловск',
+  street: 'Локомотивная улица',
+  house: '147',
+  latitude: 45.1373445,
+  longitude: 41.9974531,
+);
 const clientId = '019a1111-1111-7111-8111-111111111111';
 final clientJson = <String, dynamic>{
   'clientId': clientId,
@@ -116,6 +126,7 @@ void main() {
         name: 'Магазин',
         phone: '123',
         address: 'Москва',
+        deliveryAddress: address,
         sleepingThresholdDays: 0,
       ),
     );
@@ -126,6 +137,8 @@ void main() {
       'name': 'Магазин',
       'phone': '123',
       'address': 'Москва',
+      'deliveryDetails': '',
+      'deliveryAddress': address.toJson(),
       'sleepingThresholdDays': 0,
       'cooldownUntil': null,
       'salesRepresentativeId': null,

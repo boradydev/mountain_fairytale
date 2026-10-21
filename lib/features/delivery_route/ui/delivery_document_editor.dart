@@ -1,3 +1,6 @@
+import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_provider.dart';
+import 'package:mountain_fairytale/features/delivery_route/ui/route_optimization_dialog.dart';
+import 'package:mountain_fairytale/shared/widgets/icon_button_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/features/clients/ui/clients_selection_panel.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/order_points_provider.dart';
@@ -135,11 +138,58 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
                 icon: const Icon(Icons.arrow_back),
                 onPressed: busy ? null : _close,
               ),
-              title: Text('${widget.title} ($mode)'),
+              centerTitle: true,
+              title: LayoutBuilder(
+                builder: (context, constraints) {
+                  final totalWidth = (constraints.maxWidth * 0.22).clamp(
+                    0.0,
+                    160.0,
+                  );
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      // Balance the total so the document title stays centered.
+                      SizedBox(width: totalWidth + 16),
+                      Flexible(
+                        child: Text(
+                          '${widget.title} ($mode)',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      SizedBox(
+                        width: totalWidth,
+                        child: Text(
+                          'Итого: ${p.grandTotal.toStringAsFixed(2)} ₽',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
               actions: [
+                if (p is RouteConstructorProvider)
+                  AppIconButton(
+                    icon: Icons.format_list_numbered,
+                    tooltip: 'Порядок доставок',
+                    onPressed: _loading || busy
+                        ? null
+                        : () =>
+                              showRouteOptimizationDialog(context, provider: p),
+                  ),
                 if (widget.printDocument != null)
-                  IconButton(
-                    icon: const Icon(Icons.print),
+                  AppIconButton(
+                    icon: Icons.print,
                     tooltip: 'Печать документа',
                     onPressed: _loading || busy
                         ? null
@@ -156,10 +206,11 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
                             }
                           },
                   ),
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Center(
-                    child: Text('Итого: ${p.grandTotal.toStringAsFixed(2)} ₽'),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  child: SizedBox(
+                    height: 24,
+                    child: VerticalDivider(width: 1, thickness: 1),
                   ),
                 ),
                 const ThemeToggleButton(),
@@ -219,7 +270,9 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
                                 ),
                               ),
                               const VerticalDivider(width: 1),
-                              Expanded(child: RoutePointsList(provider: p)),
+                              Expanded(
+                                child: RoutePointsList(provider: p),
+                              ),
                             ],
                           ),
                         ),

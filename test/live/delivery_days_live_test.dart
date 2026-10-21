@@ -56,6 +56,7 @@ class LiveTransport extends HttpTransport {
     String path, {
     Map<String, String>? headers,
     Object? body,
+    Duration? timeout,
   }) async {
     requests.add('POST $path');
     final response = await super.post(path, headers: headers, body: body);

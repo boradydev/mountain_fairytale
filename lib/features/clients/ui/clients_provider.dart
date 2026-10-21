@@ -1,3 +1,4 @@
+import 'package:mountain_fairytale/features/clients/data/location_repository.dart';
 import 'package:mountain_fairytale/core/network/api_exception.dart';
 import 'package:mountain_fairytale/core/state/safe_change_notifier.dart';
 import 'package:mountain_fairytale/features/clients/data/clients_model.dart';
@@ -230,6 +231,8 @@ class ClientsProvider extends SafeChangeNotifier {
     required String name,
     required String phone,
     required String address,
+    DeliveryAddress? deliveryAddress,
+    String deliveryDetails = '',
     required int thresholdDays,
     String? salesRepId,
     String? paymentMethodId,
@@ -244,6 +247,8 @@ class ClientsProvider extends SafeChangeNotifier {
         name: name,
         phone: phone,
         address: address,
+        deliveryAddress: deliveryAddress,
+        deliveryDetails: deliveryDetails,
         sleepingThresholdDays: thresholdDays,
         salesRepresentativeId: salesRepId,
         defaultPaymentMethodId: paymentMethodId,
@@ -273,6 +278,8 @@ class ClientsProvider extends SafeChangeNotifier {
     required String name,
     required String phone,
     required String address,
+    DeliveryAddress? deliveryAddress,
+    String deliveryDetails = '',
     required int thresholdDays,
     String? salesRepId,
     String? paymentMethodId,
@@ -288,6 +295,8 @@ class ClientsProvider extends SafeChangeNotifier {
             name: name,
             phone: phone,
             address: address,
+            deliveryAddress: deliveryAddress,
+            deliveryDetails: deliveryDetails,
             sleepingThresholdDays: thresholdDays,
             salesRepresentativeId: salesRepId,
 

@@ -524,7 +524,11 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
                   clientId: point.clientId,
                   clientName: client.name,
                   city: point.city,
-                  address: client.address,
+                  address: [
+                    client.address,
+                    if (client.deliveryDetails.isNotEmpty)
+                      client.deliveryDetails,
+                  ].join(' — '),
                   phone: client.phone,
                   paymentMethodId: client.defaultPaymentMethodId,
                   paymentMethod: client.defaultPaymentMethodName,
@@ -549,7 +553,10 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
         clientName: client.name,
         city: '',
         salesRepresentativeId: client.salesRepresentativeId,
-        address: client.address,
+        address: [
+          client.address,
+          if (client.deliveryDetails.isNotEmpty) client.deliveryDetails,
+        ].join(' — '),
         phone: client.phone,
         paymentMethodId: client.defaultPaymentMethodId,
         paymentMethod:

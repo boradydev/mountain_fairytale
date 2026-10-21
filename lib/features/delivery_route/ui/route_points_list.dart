@@ -185,7 +185,7 @@ class _RoutePointsListState extends State<RoutePointsList> {
                           children: [
                             Expanded(child: details),
                             const SizedBox(width: 20),
-                            Flexible(child: summary),
+                            Expanded(child: summary),
                           ],
                         );
                       },

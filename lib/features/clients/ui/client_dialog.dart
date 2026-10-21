@@ -1,3 +1,5 @@
+import 'package:mountain_fairytale/features/clients/data/location_repository.dart';
+import 'package:mountain_fairytale/features/clients/ui/client_location_dialog.dart';
 import 'package:mountain_fairytale/core/state/form_editing.dart';
 import 'package:flutter/services.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/order_points_provider.dart';
@@ -62,6 +64,30 @@ class ClientDialog extends StatefulWidget {
 
 class _ClientDialogState extends State<ClientDialog> {
   final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _details;
+  DeliveryAddress? _deliveryAddress;
+  bool _locating = false;
+  bool _settingAddress = false;
+  Future<void> _verifyAddress() async {
+    if (_locating || _busy) return;
+    setState(() => _locating = true);
+    try {
+      final selected = await showClientLocationDialog(
+        context,
+        repository: context.read<LocationRepository>(),
+        address: _address.text,
+        existing: _deliveryAddress,
+      );
+      if (!mounted || selected == null) return;
+      _settingAddress = true;
+      _address.text = selected.formatted;
+      _settingAddress = false;
+      setState(() => _deliveryAddress = selected);
+    } finally {
+      if (mounted) setState(() => _locating = false);
+    }
+  }
+
   late final TextEditingController _name;
   late final TextEditingController _phone;
   late final TextEditingController _address;
@@ -108,6 +134,8 @@ class _ClientDialogState extends State<ClientDialog> {
     'name': _name.text.trim(),
     'phone': RussianPhoneInputFormatter.toApiPhone(_phone.text),
     'address': _address.text.trim(),
+    'deliveryAddress': _deliveryAddress,
+    'deliveryDetails': _details.text.trim(),
     'sleepingThresholdDays':
         int.tryParse(_threshold.text.trim()) ?? _threshold.text.trim(),
     'cooldownUntil': _cooldownDate,
@@ -137,6 +165,14 @@ class _ClientDialogState extends State<ClientDialog> {
       text: RussianPhoneInputFormatter.format(client?.phone ?? ''),
     );
     _address = TextEditingController(text: client?.address ?? '');
+    _deliveryAddress = client?.deliveryAddress;
+    _details = TextEditingController(text: client?.deliveryDetails ?? '');
+    _details.addListener(_refreshForm);
+    _address.addListener(() {
+      if (!_settingAddress && _deliveryAddress != null) {
+        setState(() => _deliveryAddress = null);
+      }
+    });
     _threshold = TextEditingController(
       text: client?.sleepingThresholdDays.toString() ?? '7',
     );
@@ -339,7 +375,7 @@ class _ClientDialogState extends State<ClientDialog> {
   }
 
   Future<void> _save() async {
-    if (_busy || _editingDirectory) return;
+    if (_busy || _editingDirectory || _locating) return;
     if (widget.isEditMode && _changes.isEmpty) {
       Navigator.of(context).pop(widget.client);
       return;
@@ -372,6 +408,8 @@ class _ClientDialogState extends State<ClientDialog> {
               name: _name.text.trim(),
               phone: RussianPhoneInputFormatter.toApiPhone(_phone.text),
               address: _address.text.trim(),
+              deliveryAddress: _deliveryAddress,
+              deliveryDetails: _details.text.trim(),
               thresholdDays: int.parse(_threshold.text.trim()),
               salesRepId: _salesRepId,
               paymentMethodId: _paymentMethodId,
@@ -381,6 +419,8 @@ class _ClientDialogState extends State<ClientDialog> {
               name: _name.text.trim(),
               phone: RussianPhoneInputFormatter.toApiPhone(_phone.text),
               address: _address.text.trim(),
+              deliveryAddress: _deliveryAddress,
+              deliveryDetails: _details.text.trim(),
               thresholdDays: int.parse(_threshold.text.trim()),
               salesRepId: _salesRepId,
               paymentMethodId: _paymentMethodId,
@@ -434,7 +474,14 @@ class _ClientDialogState extends State<ClientDialog> {
     _duplicateCheck.dispose();
     _checkVersion++;
     _directoryVersion++;
-    for (final controller in [_name, _phone, _address, _threshold, _cooldown]) {
+    for (final controller in [
+      _name,
+      _phone,
+      _address,
+      _threshold,
+      _cooldown,
+      _details,
+    ]) {
       controller.dispose();
     }
     for (final focus in _focusNodes) {
@@ -452,6 +499,7 @@ class _ClientDialogState extends State<ClientDialog> {
     String? hint,
     String? Function(String?)? validator,
     String? error,
+    Widget? suffixIcon,
     TextInputType? keyboardType,
     List<TextInputFormatter>? inputFormatters,
   }) => Padding(
@@ -469,6 +517,7 @@ class _ClientDialogState extends State<ClientDialog> {
         hintText: hint,
         border: const OutlineInputBorder(),
         prefixIcon: Icon(icon),
+        suffixIcon: suffixIcon,
       ),
       validator:
           validator ??
@@ -479,6 +528,116 @@ class _ClientDialogState extends State<ClientDialog> {
               : null,
     ),
   );
+
+  Widget _addressSection(BuildContext context) {
+    final theme = Theme.of(context);
+    final confirmed = _deliveryAddress != null;
+    final statusColor = confirmed
+        ? (theme.brightness == Brightness.dark
+              ? Colors.green.shade300
+              : Colors.green.shade700)
+        : theme.colorScheme.onSurfaceVariant;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Container(
+        key: const ValueKey('client-address-section'),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: Border.all(color: theme.colorScheme.outlineVariant),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Адрес доставки', style: theme.textTheme.titleSmall),
+            const SizedBox(height: 12),
+            AppSecondaryButton(
+              text: 'Заполнить через карту',
+              icon: Icons.map_outlined,
+              onPressed: _busy || _editingDirectory || _locating
+                  ? null
+                  : _verifyAddress,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Найдите и подтвердите место — адрес заполнится автоматически.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                const Expanded(child: Divider()),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Text(
+                    'или введите вручную',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                const Expanded(child: Divider()),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _field(
+              _address,
+              'Адрес *',
+              Icons.location_on_outlined,
+              maxLength: 500,
+              focus: _focusNodes[2],
+              suffixIcon: const Tooltip(
+                message:
+                    'Например: Михайловск, Добрый заезд, д. 17.\n'
+                    'Укажите населённый пункт, улицу и номер дома. '
+                    'Для неоднозначного адреса добавьте район или округ.\n'
+                    'Сохранить клиента можно без подтверждения на карте.',
+                triggerMode: TooltipTriggerMode.tap,
+                child: Padding(
+                  padding: EdgeInsets.all(12),
+                  child: Icon(Icons.info_outline, size: 20),
+                ),
+              ),
+            ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  confirmed
+                      ? Icons.check_circle_outline
+                      : Icons.edit_location_alt_outlined,
+                  size: 18,
+                  color: statusColor,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    confirmed
+                        ? 'Местоположение подтверждено'
+                        : _address.text.trim().isEmpty
+                        ? 'Адрес ещё не указан'
+                        : 'Адрес введён вручную',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: statusColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Для автоматического порядка доставок нужно подтвердить местоположение на карте.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   ClientDirectoryEntry? _selectedEntry(
     List<ClientDirectoryEntry> rows,
@@ -491,7 +650,7 @@ class _ClientDialogState extends State<ClientDialog> {
   }
 
   Future<void> _showPaymentEditor({String? id}) async {
-    if (_busy || _editingDirectory) return;
+    if (_busy || _editingDirectory || _locating) return;
     setState(() => _editingDirectory = true);
     try {
       final provider =
@@ -545,7 +704,7 @@ class _ClientDialogState extends State<ClientDialog> {
   }
 
   Future<void> _showSalesRepEditor({String? id}) async {
-    if (_busy || _editingDirectory) return;
+    if (_busy || _editingDirectory || _locating) return;
     setState(() => _editingDirectory = true);
     try {
       final repository = context.read<SalesRepresentativeApiRepository>();
@@ -596,7 +755,7 @@ class _ClientDialogState extends State<ClientDialog> {
     ClientDirectoryEntry entry,
     bool salesRep,
   ) async {
-    if (_busy || _editingDirectory) return;
+    if (_busy || _editingDirectory || _locating) return;
     setState(() => _editingDirectory = true);
     try {
       final confirmed = await ConfirmDialog.show(
@@ -791,12 +950,13 @@ class _ClientDialogState extends State<ClientDialog> {
           maxLength: 120,
           focus: _focusNodes[0],
         ),
+        _addressSection(context),
         _field(
-          _address,
-          'Адрес доставки *',
-          Icons.location_on_outlined,
+          _details,
+          'Детали доставки',
+          Icons.notes,
           maxLength: 500,
-          focus: _focusNodes[2],
+          validator: (_) => null,
         ),
         _field(
           _phone,

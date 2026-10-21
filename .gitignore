@@ -52,3 +52,9 @@ app.*.map.json
 readme_clone.md
 devtools_options.yaml
 analysis_options.yaml
+# Local verification logs.
+tmp_client_ui_results.txt
+tmp_analysis_results.txt
+tmp_build_results.txt
+tmp_build_release_results.txt
+tmp_final_tests.txt

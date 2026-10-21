@@ -52,6 +52,7 @@ dependencies:
   # UI Components
   cupertino_icons: ^1.0.8
 
+  url_launcher: ^6.3.2
   http: ^1.5.0
   flutter_secure_storage: ^9.2.4
 
