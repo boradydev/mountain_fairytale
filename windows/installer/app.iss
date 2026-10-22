@@ -55,7 +55,7 @@ Name: "{userdesktop}\Mountain Fairytale"; Filename: "{app}\mountain_fairytale.ex
 
 [Run]
 Filename: "{app}\mountain_fairytale.exe"; Description: "Запустить Mountain Fairytale"; Flags: nowait postinstall skipifsilent
-Filename: "{app}\mountain_fairytale.exe"; Flags: nowait runifsilent; Check: IsUpdate
+Filename: "{app}\mountain_fairytale.exe"; Flags: nowait skipifnotsilent; Check: IsUpdate
 
 [Code]
 function IsUpdate(): Boolean;

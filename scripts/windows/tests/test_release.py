@@ -1,5 +1,6 @@
 import base64
 import hashlib
+import json
 from pathlib import Path
 import sys
 import tempfile
@@ -43,6 +44,29 @@ class ReleaseTests(unittest.TestCase):
     def test_incomplete_artifact_cannot_be_published(self):
         with self.assertRaisesRegex(ValueError, 'incomplete'):
             validate_artifact({}, 'v1.0.0', 'a' * 40, Path('tool'), Path('.'), 'key')
+
+    def test_publisher_checks_signature_and_rejects_modified_payload(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = Path(tmp)
+            installer = directory / 'MountainFairytale-1.2.3-windows-x64-Setup.exe'
+            installer.write_bytes(b'test executable')
+            xml, metadata = make_feeds('1.2.3', 42, base64.b64encode(bytes(64)).decode(),
+                                       installer, 'Notes', 'a' * 40)
+            files = {installer.name: installer.read_bytes(), 'appcast.xml': xml,
+                     'update.json': json.dumps(metadata).encode()}
+            files['SHA256SUMS'] = ''.join(f'{hashlib.sha256(data).hexdigest()}  {name}\n'
+                                         for name, data in files.items()).encode()
+            with patch('publish_release.subprocess.run') as verify:
+                verify.return_value.returncode = 0
+                self.assertEqual(validate_artifact(files, 'v1.2.3', 'a' * 40,
+                    Path('tool'), directory, 'public'), metadata)
+                self.assertEqual(verify.call_count, 1)
+                verify.return_value.returncode = 1
+                with self.assertRaisesRegex(ValueError, 'signature invalid'):
+                    validate_artifact(files, 'v1.2.3', 'a' * 40, Path('tool'), directory, 'wrong-key')
+            files[installer.name] += b'tampered'
+            with self.assertRaisesRegex(ValueError, 'checksum mismatch'):
+                validate_artifact(files, 'v1.2.3', 'a' * 40, Path('tool'), directory, 'public')
 
     def test_redirect_does_not_leak_token(self):
         request = urllib.request.Request('https://api.github.com/artifact', headers={'Authorization': 'Bearer secret'})
