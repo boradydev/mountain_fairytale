@@ -6,8 +6,10 @@ import 'package:http/http.dart' as http;
 import 'package:mountain_fairytale/features/app_updates/data/update_release.dart';
 
 class UpdateService {
-  static const releaseBase =
-      'https://github.com/boradydev/mountain_fairytale/releases/latest/download';
+  static const appcastUrl = String.fromEnvironment(
+    'UPDATE_FEED_URL',
+    defaultValue: 'https://github.com/boradydev/mountain_fairytale/releases/latest/download/appcast.xml',
+  );
   static const publicKey = String.fromEnvironment('UPDATE_PUBLIC_KEY');
   static const channel = MethodChannel('mountain_fairytale/updates');
   final http.Client _client;
@@ -19,12 +21,12 @@ class UpdateService {
 
   Future<void> initialize() => channel.invokeMethod<void>('initialize', {
     'publicKey': publicKey,
-    'feed': '$releaseBase/appcast.xml',
+    'feed': appcastUrl,
   });
 
   Future<UpdateRelease?> latest() async {
     final response = await _client
-        .get(Uri.parse('$releaseBase/update.json'))
+        .get(Uri.parse(appcastUrl).resolve('update.json'))
         .timeout(const Duration(seconds: 15));
     if (response.statusCode == 404) return null; // First release not published.
     if (response.statusCode != 200 || response.bodyBytes.length > 64000) {

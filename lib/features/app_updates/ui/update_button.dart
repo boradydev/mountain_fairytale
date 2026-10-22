@@ -80,8 +80,9 @@ class UpdateButton extends StatelessWidget {
         // Authentication/navigation can change while a download is in flight.
         // Never close an app after losing the modal work barrier. Setup also
         // refuses to touch files while the application's mutex is present.
-        if (!navigator.mounted || !barrier.isActive || !barrier.isCurrent)
+        if (!navigator.mounted || !barrier.isActive || !barrier.isCurrent) {
           return;
+        }
         closing = true;
         // No logout: refresh tokens and preferences remain in the user profile.
         await windowManager.destroy();

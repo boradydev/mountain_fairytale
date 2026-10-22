@@ -50,7 +50,13 @@ UpdateBridge::UpdateBridge(HWND window, flutter::BinaryMessenger* messenger) {
           }
           const auto& public_key = std::get<std::string>(key->second);
           const auto& feed_url = std::get<std::string>(feed->second);
-          if (feed_url.rfind("https://github.com/boradydev/mountain_fairytale/", 0) != 0 ||
+          bool allowed_feed = feed_url ==
+              "https://github.com/boradydev/mountain_fairytale/releases/latest/download/appcast.xml";
+#if defined(_DEBUG)
+          // Private acceptance feed, compiled out of Profile/Release builds.
+          allowed_feed = allowed_feed || feed_url.rfind("http://127.0.0.1:", 0) == 0;
+#endif
+          if (!allowed_feed ||
               !win_sparkle_set_eddsa_public_key(public_key.c_str())) {
             result->Error("configuration", "Invalid public key or feed");
             return;
