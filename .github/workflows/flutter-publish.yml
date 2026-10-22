@@ -1,0 +1,41 @@
+name: Publish Flutter release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_tag:
+        description: 'Prepared version tag, for example v1.0.0'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: flutter-production-release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/master'
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: master
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify prepared artifacts and publish the complete release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          UPDATE_PUBLIC_KEY: ${{ vars.UPDATE_PUBLIC_KEY }}
+          RELEASE_TAG: ${{ inputs.version_tag }}
+        shell: pwsh
+        run: |
+          . ./scripts/windows/tools.ps1
+          $sdk = Get-ReleaseTools
+          python scripts/windows/publish_release.py --tag $env:RELEASE_TAG --tool "$sdk/bin/winsparkle-tool.exe"
+          if ($LASTEXITCODE -ne 0) { throw 'Release publication failed' }

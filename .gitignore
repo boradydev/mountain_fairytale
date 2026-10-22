@@ -58,3 +58,7 @@ tmp_analysis_results.txt
 tmp_build_results.txt
 tmp_build_release_results.txt
 tmp_final_tests.txt
+
+# Local release tooling, keys and acceptance builds.
+/tmp/
+*.private.key

@@ -155,6 +155,10 @@ void main() {
     WidgetTester tester,
     RouteConstructorProvider provider,
   ) async {
+    tester.view.physicalSize = const Size(1000, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
       ChangeNotifierProvider.value(
         value: provider,

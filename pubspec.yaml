@@ -12,7 +12,7 @@ publish_to: 'none'
 #   - Financials: Commission/reward calculation for Sales Reps & Managers
 #   - Analytics: Customer churn detection & retention ("sleeping" clients)
 # TECH STACK:
-#   - TARGET FLUTTER VERSION: Flutter 3.13.x (Dart 3.1.x compatible)
+#   - TARGET FLUTTER VERSION: Flutter 3.47.4 (Dart 3.13.3)
 #   - TARGET PLATFORMS: Windows Desktop (Primary erp-style app)
 #   - STATE MANAGEMENT: Provider (^6.1.5)
 #   - CODE GENERATION: Active (build_runner, json_serializable)

@@ -317,6 +317,7 @@ void main() {
         expect(find.text('ОК'), findsOneWidget);
         expect(f.checks(kind), 0);
         expect(f.patch(kind), isNull);
+        await tester.ensureVisible(find.text('ОК'));
         await tester.tap(find.text('ОК'));
         await tester.pumpAndSettle();
         expect(find.text('ОК'), findsNothing);
@@ -329,6 +330,7 @@ void main() {
       final f = await _open(tester, kind);
       await tester.enterText(_field(data.$1), data.$3);
       await tester.pump();
+      await tester.ensureVisible(find.text('Сохранить'));
       await tester.tap(find.text('Сохранить'));
       await tester.pumpAndSettle();
       expect(f.patch(kind), {data.$4: data.$5});
