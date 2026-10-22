@@ -101,7 +101,7 @@ void main() {
         );
         final semantics = tester.ensureSemantics();
         await pumpRows(tester, [event], brightness: brightness);
-        expect(find.text('manager → Вода талая'), findsOneWidget);
+        expect(find.text('manager → Товар: Вода талая'), findsOneWidget);
         expect(find.text('Базовая цена'), findsNothing);
         expect(find.byType(Card), findsNothing);
         final header = find.byKey(const ValueKey('audit-header-create'));
@@ -113,7 +113,7 @@ void main() {
               ? Colors.green.shade400
               : Colors.green.shade700,
         );
-        expect(find.byTooltip('Создание'), findsOneWidget);
+        expect(find.byTooltip('Создание'), findsNWidgets(2));
         expect(
           tester
               .getSemantics(header)
@@ -161,7 +161,7 @@ void main() {
         },
       ),
     ]);
-    expect(find.text('Система → admin'), findsOneWidget);
+    expect(find.text('Система → Сотрудник: admin'), findsOneWidget);
     expect(find.text('admin — вошёл в систему'), findsOneWidget);
     expect(
       find.descendant(
@@ -172,10 +172,10 @@ void main() {
     );
     expect(find.byIcon(Icons.delete_outline), findsNothing);
     expect(
-      tester.widget<Icon>(find.byIcon(Icons.power_settings_new)).color,
+      tester.widget<Icon>(find.byIcon(Icons.toggle_off_outlined)).color,
       AppTheme.createTheme(Brightness.light).colorScheme.error,
     );
-    expect(find.byTooltip('Деактивация'), findsOneWidget);
+    expect(find.byTooltip('Деактивация'), findsNWidgets(2));
   });
 
   testWidgets(
@@ -220,7 +220,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(
-        find.text('manager → Маршрутный лист · 15.10.2026'),
+        find.text('manager → Маршрутный лист: 15.10.2026'),
         findsOneWidget,
       );
       await tester.tap(find.byKey(const ValueKey('audit-header-save')));
@@ -229,6 +229,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(AuditOperationRow), findsOneWidget);
       expect(find.text('Связанные изменения'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('audit-related-item')));
+      await tester.pumpAndSettle();
       expect(find.text('Количество'), findsOneWidget);
       expect(find.text('Начальный пробег'), findsOneWidget);
       expect(tester.takeException(), isNull);
@@ -267,8 +269,8 @@ void main() {
         width: 320,
         scale: 1.8,
       );
-      expect(find.byTooltip('manager → $name'), findsOneWidget);
-      final text = tester.widget<Text>(find.text('manager → $name'));
+      expect(find.byTooltip('manager → Товар: $name'), findsOneWidget);
+      final text = tester.widget<Text>(find.text('manager → Товар: $name'));
       expect(text.maxLines, 1);
       expect(text.overflow, TextOverflow.ellipsis);
       await tester.tap(find.byKey(const ValueKey('audit-header-long')));

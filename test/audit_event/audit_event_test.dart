@@ -209,15 +209,17 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('manager → Вода'), findsOneWidget);
+      expect(find.text('manager → Товар: Вода'), findsOneWidget);
       expect(find.byType(Card), findsNothing);
       expect(find.text('Базовая цена'), findsNothing);
       await tester.tap(find.byKey(const ValueKey('audit-header-save')));
       await tester.pumpAndSettle();
       expect(find.text('Связанные изменения'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('audit-related-1')));
+      await tester.pumpAndSettle();
       expect(find.text('Базовая цена'), findsNWidgets(2));
       expect(find.text('unknownField'), findsNWidgets(2));
-      expect(find.byTooltip('Обновить журнал'), findsOneWidget);
+      expect(find.byTooltip('Фильтры: Все действия · Все даты'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );

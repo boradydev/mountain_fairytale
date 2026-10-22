@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/features/app_updates/ui/update_button.dart';
 import 'package:mountain_fairytale/features/auth/ui/auth_provider.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/theme_toggle_button.dart';
@@ -61,7 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Авторизация'),
-        actions: const [ThemeToggleButton()],
+        actions: const [UpdateButton(), ThemeToggleButton()],
       ),
       body: Center(
         child: SingleChildScrollView(

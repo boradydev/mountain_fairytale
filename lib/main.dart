@@ -8,6 +8,10 @@ import 'package:mountain_fairytale/features/sales_representatives/data/sales_rep
 import 'dart:async';
 import 'dart:io';
 
+import 'package:mountain_fairytale/features/app_updates/update_service.dart';
+import 'package:mountain_fairytale/features/app_updates/ui/update_provider.dart';
+import 'package:mountain_fairytale/features/app_updates/ui/update_button.dart';
+
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/features/dashboard/data/dashboard_updates_repo.dart';
 import 'package:mountain_fairytale/core/utils/scaffold_messenger_key.dart';
@@ -228,6 +232,16 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider(
+          lazy: false,
+          create: (_) {
+            final updates = UpdateProvider(UpdateService());
+            WidgetsBinding.instance.addPostFrameCallback(
+              (_) => updates.start(),
+            );
+            return updates;
+          },
+        ),
         // Системные настройки (Тема и Локализация)
         ChangeNotifierProvider(create: (_) => ThemeProvider(prefs)),
         ChangeNotifierProvider(create: (_) => LocaleProvider(prefs)),
@@ -327,6 +341,7 @@ class _AuthGateState extends State<_AuthGate> {
 
       case AuthStatus.serverUnavailable:
         return Scaffold(
+          appBar: AppBar(actions: const [UpdateButton()]),
           body: Center(
             child: Padding(
               padding: const EdgeInsets.all(24),

@@ -1,58 +1,88 @@
-name: Flutter Windows Build
+name: Flutter Windows CI
 
 on:
   push:
-    branches:
-      - deploy # Сборка и создание релиза сработают, когда код попадет в main
+    branches: [master]
+    tags: ['v*']
   pull_request:
-    branches:
-      - deploy # Сборка запустится для проверки, когда вы ОТКРОЕТЕ Pull Request в ветку main
+    branches: [master]
 
 permissions:
-  contents: write # Дает право скрипту создавать релизы и загружать туда файлы
+  contents: read
 
+concurrency:
+  group: flutter-ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
-    runs-on: windows-latest # Запускаем на чистой Windows-машине от GitHub
-
+    runs-on: windows-2025
     steps:
-      # 1. Скачиваем код репозитория
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      # 2. Устанавливаем Flutter
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+      - uses: actions/checkout@v4
         with:
-          channel: 'stable'
+          fetch-depth: 0
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.4'
+          channel: stable
           cache: true
-
-      # 3. Включаем поддержку Windows-сборок во Flutter
-      - name: Enable Windows build
-        run: flutter config --enable-windows-desktop
-
-      # 4. Получаем зависимости проекта
-      - name: Install dependencies
-        run: flutter pub get
-
-      # 5. Собираем релизную версию для Windows
-      - name: Build Windows App
-        run: flutter build windows --release
-
-      # 6. Упаковываем готовую папку с приложением в один ZIP-архив
-      # (Flutter собирает .exe + сопутствующие .dll файлы, их нужно переносить вместе)
-      - name: Archive production artifacts
-        run: Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath build\windows\app-windows-release.zip
-
-      # 7. Публикуем архив в GitHub Releases
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+      - uses: actions/setup-python@v5
         with:
-          tag_name: v0.1.${{ github.run_number }}
-          name: Release v0.1.${{ github.run_number }}
-          draft: false
-          prerelease: false
-          files: build/windows/app-windows-release.zip # Загружаем готовый ZIP-архив
+          python-version: '3.12'
+      - name: Resolve version and validate release tag
+        shell: pwsh
+        run: |
+          $arguments = @('--build', '${{ github.run_number }}')
+          if ('${{ github.ref_type }}' -eq 'tag') {
+            git merge-base --is-ancestor HEAD origin/master
+            if ($LASTEXITCODE -ne 0) { throw 'Release tag must point to a commit on master' }
+            $arguments += @('--validate-tag', '${{ github.ref_name }}')
+          }
+          $version = python scripts/windows/prepare_release.py @arguments
+          if ($LASTEXITCODE -ne 0) { throw 'Invalid version' }
+          "APP_VERSION=$version" >> $env:GITHUB_ENV
+      - run: flutter pub get --enforce-lockfile
+      - name: Analyze application and tests
+        run: flutter analyze lib test --no-pub --no-fatal-infos --no-fatal-warnings
+      - name: Unit and widget tests
+        run: flutter test --exclude-tags live_api
+      - name: Release tooling tests
+        run: python -m unittest discover -s scripts/windows/tests -v
+      - name: Validate configuration for release builds
+        if: github.ref_type == 'tag'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UPDATE_PUBLIC_KEY: ${{ vars.UPDATE_PUBLIC_KEY }}
+          API_BASE_URL: ${{ vars.API_BASE_URL }}
+        shell: pwsh
+        run: |
+          if (!$env:UPDATE_PUBLIC_KEY) { throw 'Set UPDATE_PUBLIC_KEY in Actions Variables first' }
+          if (!$env:API_BASE_URL) { throw 'Set API_BASE_URL in Actions Variables first' }
+      - name: Build Windows application
+        env:
+          UPDATE_PUBLIC_KEY: ${{ vars.UPDATE_PUBLIC_KEY }}
+          API_BASE_URL: ${{ vars.API_BASE_URL }}
+        shell: pwsh
+        run: |
+          $api = if ($env:API_BASE_URL) { $env:API_BASE_URL } else { 'http://localhost:8000' }
+          flutter build windows --release --build-name "$env:APP_VERSION" --build-number '${{ github.run_number }}' "--dart-define=UPDATE_PUBLIC_KEY=$env:UPDATE_PUBLIC_KEY" "--dart-define=API_BASE_URL=$api"
+          if ($LASTEXITCODE -ne 0) { throw 'Flutter build failed' }
+      - name: Build per-user installer
+        shell: pwsh
+        run: scripts/windows/package.ps1 -Version $env:APP_VERSION -BuildNumber '${{ github.run_number }}'
+      - name: Sign release and prepare feeds
+        if: github.ref_type == 'tag'
+        env:
+          UPDATE_PUBLIC_KEY: ${{ vars.UPDATE_PUBLIC_KEY }}
+          UPDATE_PRIVATE_KEY: ${{ secrets.UPDATE_PRIVATE_KEY }}
+        shell: pwsh
+        run: |
+          . ./scripts/windows/tools.ps1
+          $sdk = Get-ReleaseTools
+          python scripts/windows/prepare_release.py --validate-tag '${{ github.ref_name }}' --build '${{ github.run_number }}' --directory build/windows/release --tool "$sdk/bin/winsparkle-tool.exe" --commit '${{ github.sha }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Release signing failed' }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-${{ github.ref_type == 'tag' && 'release' || 'preview' }}-${{ github.ref_type == 'tag' && github.ref_name || github.run_number }}
+          path: build/windows/release/*
+          retention-days: 30
+          if-no-files-found: error
