@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mountain_fairytale/features/app_updates/ui/update_button.dart';
+import 'package:mountain_fairytale/app/application_menu_button.dart';
 import 'package:mountain_fairytale/features/auth/ui/auth_provider.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/theme_toggle_button.dart';
@@ -62,7 +62,10 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Авторизация'),
-        actions: const [UpdateButton(), ThemeToggleButton()],
+        actions: const [
+          ApplicationMenuButton(),
+          ThemeToggleButton(),
+        ],
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -91,6 +94,45 @@ class _LoginScreenState extends State<LoginScreen> {
                   const Text('Загрузка пользователей…'),
                   const SizedBox(height: 16),
                 ],
+                if (!auth.isLoadingUsers && auth.usersError != null) ...[
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: MaterialBanner(
+                      backgroundColor: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHigh,
+                      leading: Icon(
+                        Icons.cloud_off_outlined,
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                      content: Text(auth.usersError!),
+                      contentTextStyle: Theme.of(context).textTheme.bodyMedium
+                          ?.copyWith(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface,
+                          ),
+                      forceActionsBelow: true,
+                      actions: [
+                        TextButton(
+                          onPressed: auth.loadUsers,
+                          child: const Text('Повторить'),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ] else if (!auth.isLoadingUsers && users.isEmpty) ...[
+                  const Text(
+                    'Нет активных пользователей. Обратитесь к администратору.',
+                    textAlign: TextAlign.center,
+                  ),
+                  TextButton(
+                    onPressed: auth.loadUsers,
+                    child: const Text('Обновить список'),
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 DropdownButtonFormField<String>(
                   key: ValueKey(selected),
                   initialValue: selected,
@@ -116,30 +158,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           });
                         },
                 ),
-                if (!auth.isLoadingUsers && auth.usersError != null) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    auth.usersError!,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: auth.loadUsers,
-                    child: const Text('Повторить'),
-                  ),
-                ] else if (!auth.isLoadingUsers && users.isEmpty) ...[
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Нет активных пользователей. Обратитесь к администратору.',
-                    textAlign: TextAlign.center,
-                  ),
-                  TextButton(
-                    onPressed: auth.loadUsers,
-                    child: const Text('Обновить список'),
-                  ),
-                ],
                 const SizedBox(height: 16),
                 TextField(
                   controller: _passwordController,

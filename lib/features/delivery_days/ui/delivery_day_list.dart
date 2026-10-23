@@ -102,14 +102,6 @@ class DeliveryDaysListView extends StatelessWidget {
                       'Документов пока нет.',
                       textAlign: TextAlign.center,
                     ),
-                  )
-                else if (provider.hasMore && !provider.isLoadingMore)
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: AppSecondaryButton(
-                      text: 'Загрузить ещё',
-                      onPressed: provider.fetchDeliveryDays,
-                    ),
                   ),
               ],
             ),

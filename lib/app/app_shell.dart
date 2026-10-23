@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mountain_fairytale/features/app_updates/ui/update_button.dart';
+import 'package:mountain_fairytale/app/application_menu_button.dart';
 import 'package:mountain_fairytale/features/audit_event/ui/audit_event_screen.dart';
 import 'package:mountain_fairytale/features/auth/ui/auth_provider.dart';
 import 'package:mountain_fairytale/features/dashboard/ui/dashboard_screen.dart';
@@ -92,7 +92,7 @@ class _AppShellState extends State<AppShell> {
             ],
           ),
           actions: const [
-            UpdateButton(),
+            ApplicationMenuButton(),
             AccountMenuButton(),
             ThemeToggleButton(),
             SizedBox(width: 12),

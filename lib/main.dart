@@ -8,9 +8,12 @@ import 'package:mountain_fairytale/features/sales_representatives/data/sales_rep
 import 'dart:async';
 import 'dart:io';
 
+import 'package:mountain_fairytale/features/app_settings/data/server_settings_repository.dart';
+import 'package:mountain_fairytale/features/app_settings/ui/server_settings_provider.dart';
+import 'package:mountain_fairytale/app/application_menu_button.dart';
+
 import 'package:mountain_fairytale/features/app_updates/update_service.dart';
 import 'package:mountain_fairytale/features/app_updates/ui/update_provider.dart';
-import 'package:mountain_fairytale/features/app_updates/ui/update_button.dart';
 
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/features/dashboard/data/dashboard_updates_repo.dart';
@@ -111,13 +114,32 @@ Future<void> main() async {
 
     windowManager.addListener(WindowSettingsService());
   }
-  final routePrintService = WindowsRoutePrintService(RouteSheetPdfBuilder());
-  final httpTransport = HttpTransport(
-    baseUrl: const String.fromEnvironment(
-      'API_BASE_URL',
-      defaultValue: 'http://localhost:8000',
+  final serverSettings = ServerSettingsProvider(
+    ServerSettingsRepository(
+      prefs,
+      defaultUrl: const String.fromEnvironment(
+        'API_BASE_URL',
+        defaultValue: 'http://localhost:8000',
+      ),
     ),
   );
+  runApp(
+    AnimatedBuilder(
+      animation: serverSettings,
+      builder: (_, _) => KeyedSubtree(
+        key: ValueKey(serverSettings.url),
+        child: _configuredApplication(prefs, serverSettings),
+      ),
+    ),
+  );
+}
+
+Widget _configuredApplication(
+  SharedPreferences prefs,
+  ServerSettingsProvider serverSettings,
+) {
+  final routePrintService = WindowsRoutePrintService(RouteSheetPdfBuilder());
+  final httpTransport = HttpTransport(baseUrl: serverSettings.url);
 
   final tokenStorage = SecureTokenStorage();
 
@@ -229,38 +251,48 @@ Future<void> main() async {
     ),
   ];
 
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(
-          lazy: false,
-          create: (_) {
-            final updates = UpdateProvider(UpdateService());
-            WidgetsBinding.instance.addPostFrameCallback(
-              (_) => updates.start(),
-            );
-            return updates;
-          },
-        ),
-        // Системные настройки (Тема и Локализация)
-        ChangeNotifierProvider(create: (_) => ThemeProvider(prefs)),
-        ChangeNotifierProvider(create: (_) => LocaleProvider(prefs)),
+  return MultiProvider(
+    providers: [
+      ChangeNotifierProvider<ServerSettingsProvider>.value(
+        value: serverSettings,
+      ),
+      Provider<HttpTransport>(
+        lazy: false,
+        create: (_) => httpTransport,
+        dispose: (_, transport) => transport.close(),
+      ),
+      ChangeNotifierProvider<AuthServiceImpl>(
+        lazy: false,
+        create: (_) => authService,
+      ),
+      ChangeNotifierProvider(
+        lazy: false,
+        create: (_) {
+          final updates = UpdateProvider(UpdateService());
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) => updates.start(),
+          );
+          return updates;
+        },
+      ),
+      // Системные настройки (Тема и Локализация)
+      ChangeNotifierProvider(create: (_) => ThemeProvider(prefs)),
+      ChangeNotifierProvider(create: (_) => LocaleProvider(prefs)),
 
-        Provider<ApiClient>.value(value: apiClient),
-        Provider<LocationRepository>.value(
-          value: LocationRepository(apiClient),
+      Provider<ApiClient>.value(value: apiClient),
+      Provider<LocationRepository>.value(
+        value: LocationRepository(apiClient),
+      ),
+      ListenableProvider<AuthService>.value(
+        value: authService,
+      ),
+      ChangeNotifierProvider(
+        create: (_) => AuthProvider(
+          authService: authService,
         ),
-        ListenableProvider<AuthService>.value(
-          value: authService,
-        ),
-        ChangeNotifierProvider(
-          create: (_) => AuthProvider(
-            authService: authService,
-          ),
-        ),
-      ],
-      child: MyApp(sessionProviders: sessionProviders),
-    ),
+      ),
+    ],
+    child: MyApp(sessionProviders: sessionProviders),
   );
 }
 
@@ -341,7 +373,9 @@ class _AuthGateState extends State<_AuthGate> {
 
       case AuthStatus.serverUnavailable:
         return Scaffold(
-          appBar: AppBar(actions: const [UpdateButton()]),
+          appBar: AppBar(
+            actions: const [ApplicationMenuButton()],
+          ),
           body: Center(
             child: Padding(
               padding: const EdgeInsets.all(24),
