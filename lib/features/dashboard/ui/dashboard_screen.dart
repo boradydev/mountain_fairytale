@@ -29,6 +29,8 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen>
   bool _running = false;
   bool _resync = true;
   bool _initialLoadStarted = false;
+  bool _initialLoadComplete = false;
+  bool _scrollCheckScheduled = false;
   bool get _canWatch => mounted && _visible && _appActive;
   @override
   void initState() {
@@ -66,20 +68,34 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen>
   void _watchingChanged() {
     _request?.cancel();
     _wakeRetry();
-    if (!_canWatch) return;
+    if (!mounted || !_visible) return;
     _resync = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_canWatch) return;
-      if (_updatesRepository == null) {
-        if (!_initialLoadStarted) {
-          _initialLoadStarted = true;
-          context.read<DeliveryDaysProvider>().fetchDeliveryDays();
-          context.read<ClientsProvider>().fetchClients();
-        }
-      } else if (!_running) {
+      if (!mounted || !_visible) return;
+      if (!_initialLoadStarted) {
+        _initialLoadStarted = true;
+        unawaited(_loadInitialData());
+      } else if (_canWatch &&
+          _initialLoadComplete &&
+          _updatesRepository != null &&
+          !_running) {
         unawaited(_watchUpdates());
       }
     });
+  }
+
+  Future<void> _loadInitialData() async {
+    // Loading the screen must not depend on a successful notification request.
+    // These regular requests also expose failures through the list retry UI.
+    final days = context.read<DeliveryDaysProvider>();
+    final clients = context.read<ClientsProvider>();
+    await Future.wait([days.fetchDeliveryDays(), clients.fetchClients()]);
+    if (!mounted) return;
+    _initialLoadComplete = true;
+    _scheduleScrollCheck();
+    if (_canWatch && _updatesRepository != null && !_running) {
+      unawaited(_watchUpdates());
+    }
   }
 
   Future<void> _watchUpdates() async {
@@ -136,12 +152,40 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen>
   }
 
   void _onScroll() {
-    if (_scrollController.hasClients &&
+    if (!mounted || !_visible) return;
+    final days = context.read<DeliveryDaysProvider>();
+    if (days.status == DeliveryStatus.success &&
+        days.hasMore &&
+        !days.hasError &&
+        !days.isLoadingMore &&
+        _scrollController.hasClients &&
         _scrollController.position.pixels >=
             _scrollController.position.maxScrollExtent - 200) {
-      context.read<DeliveryDaysProvider>().fetchDeliveryDays();
+      unawaited(days.fetchDeliveryDays());
     }
   }
+
+  void _scheduleScrollCheck() {
+    if (_scrollCheckScheduled) return;
+    _scrollCheckScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollCheckScheduled = false;
+      _onScroll();
+    });
+  }
+
+  Widget _daysList(double headerHeight) =>
+      NotificationListener<ScrollMetricsNotification>(
+        onNotification: (_) {
+          // Also fill a large viewport when seven days do not yet make it scrollable.
+          _scheduleScrollCheck();
+          return false;
+        },
+        child: DeliveryDaysListView(
+          scrollController: _scrollController,
+          headerHeight: headerHeight,
+        ),
+      );
 
   @override
   void dispose() {
@@ -166,10 +210,7 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen>
         return Column(
           children: [
             Expanded(
-              child: DeliveryDaysListView(
-                scrollController: _scrollController,
-                headerHeight: headerHeight,
-              ),
+              child: _daysList(headerHeight),
             ),
             const Divider(height: 1),
             Expanded(
@@ -185,10 +226,7 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen>
         children: [
           SizedBox(
             width: (constraints.maxWidth * 0.38).clamp(360.0, 500.0),
-            child: DeliveryDaysListView(
-              scrollController: _scrollController,
-              headerHeight: headerHeight,
-            ),
+            child: _daysList(headerHeight),
           ),
           const VerticalDivider(width: 1),
           Expanded(
