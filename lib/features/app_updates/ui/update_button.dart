@@ -11,7 +11,7 @@ import 'package:mountain_fairytale/features/app_updates/ui/update_provider.dart'
 class UpdateButton extends StatelessWidget {
   const UpdateButton({super.key});
 
-  Future<void> _open(BuildContext context, UpdateProvider updates) async {
+  static Future<void> open(BuildContext context, UpdateProvider updates) async {
     final navigator = Navigator.of(context, rootNavigator: true);
     // Never replace an editor, modal form or an outstanding navigation route.
     if (navigator.canPop()) return;
@@ -117,7 +117,7 @@ class UpdateButton extends StatelessWidget {
         tooltip: updates.available == null
             ? 'Проверить обновления'
             : 'Доступна версия ${updates.available!.version}',
-        onPressed: updates.checking ? null : () => _open(context, updates),
+        onPressed: updates.checking ? null : () => open(context, updates),
       ),
     );
   }

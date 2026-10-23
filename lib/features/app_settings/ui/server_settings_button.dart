@@ -10,7 +10,7 @@ import 'package:mountain_fairytale/shared/widgets/icon_button_widget.dart';
 class ServerSettingsButton extends StatelessWidget {
   const ServerSettingsButton({super.key});
 
-  Future<void> _open(
+  static Future<void> open(
     BuildContext context,
     ServerSettingsProvider settings,
   ) async {
@@ -20,7 +20,10 @@ class ServerSettingsButton extends StatelessWidget {
     final auth = context.read<AuthService>();
     final url = await showDialog<String>(
       context: context,
-      builder: (_) => ServerSettingsDialog(settings: settings),
+      builder: (_) => ServerSettingsDialog(
+        settings: settings,
+        initiallyEditable: !auth.isAuthenticated,
+      ),
     );
     if (url == null || !context.mounted) return;
     try {
@@ -43,7 +46,7 @@ class ServerSettingsButton extends StatelessWidget {
     return AppIconButton(
       icon: Icons.settings_outlined,
       tooltip: 'Настройки приложения',
-      onPressed: () => _open(context, settings),
+      onPressed: () => open(context, settings),
     );
   }
 }

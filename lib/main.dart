@@ -10,11 +10,10 @@ import 'dart:io';
 
 import 'package:mountain_fairytale/features/app_settings/data/server_settings_repository.dart';
 import 'package:mountain_fairytale/features/app_settings/ui/server_settings_provider.dart';
-import 'package:mountain_fairytale/features/app_settings/ui/server_settings_button.dart';
+import 'package:mountain_fairytale/app/application_menu_button.dart';
 
 import 'package:mountain_fairytale/features/app_updates/update_service.dart';
 import 'package:mountain_fairytale/features/app_updates/ui/update_provider.dart';
-import 'package:mountain_fairytale/features/app_updates/ui/update_button.dart';
 
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/features/dashboard/data/dashboard_updates_repo.dart';
@@ -375,7 +374,7 @@ class _AuthGateState extends State<_AuthGate> {
       case AuthStatus.serverUnavailable:
         return Scaffold(
           appBar: AppBar(
-            actions: const [ServerSettingsButton(), UpdateButton()],
+            actions: const [ApplicationMenuButton()],
           ),
           body: Center(
             child: Padding(

@@ -6,7 +6,12 @@ import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 
 class ServerSettingsDialog extends StatefulWidget {
   final ServerSettingsProvider settings;
-  const ServerSettingsDialog({super.key, required this.settings});
+  final bool initiallyEditable;
+  const ServerSettingsDialog({
+    super.key,
+    required this.settings,
+    this.initiallyEditable = true,
+  });
 
   @override
   State<ServerSettingsDialog> createState() => _ServerSettingsDialogState();
@@ -19,6 +24,7 @@ class _ServerSettingsDialogState extends State<ServerSettingsDialog> {
   bool _checking = false;
   ServerConnectionResult? _result;
   String? _checkedUrl;
+  late bool _editing = widget.initiallyEditable;
 
   @override
   void dispose() {
@@ -71,7 +77,9 @@ class _ServerSettingsDialogState extends State<ServerSettingsDialog> {
         context,
         title: 'Сменить сервер?',
         content: 'При смене сервера потребуется войти заново. Загруженные данные и несохранённые изменения текущей сессии будут сброшены.',
-        confirmText: 'Сменить сервер',
+        confirmText: widget.initiallyEditable
+            ? 'Сменить сервер'
+            : 'Сменить сервер и выйти',
       );
       if (mounted && confirmed) Navigator.of(context).pop(url);
     } finally {
@@ -86,7 +94,7 @@ class _ServerSettingsDialogState extends State<ServerSettingsDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Настройки приложения'),
+    title: const Text('Настройки подключения'),
     content: SizedBox(
       width: 480,
       child: SingleChildScrollView(
@@ -99,6 +107,7 @@ class _ServerSettingsDialogState extends State<ServerSettingsDialog> {
               TextFormField(
                 controller: _controller,
                 enabled: !_busy,
+                readOnly: !_editing,
                 validator: _validate,
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 decoration: const InputDecoration(
@@ -116,18 +125,19 @@ class _ServerSettingsDialogState extends State<ServerSettingsDialog> {
                 }),
               ),
               const SizedBox(height: 12),
-              AppSecondaryButton(
-                text: 'Вернуть адрес по умолчанию',
-                onPressed: _busy
-                    ? null
-                    : () {
-                        setState(() {
-                          _controller.text = widget.settings.defaultUrl;
-                          _result = null;
-                          _checkedUrl = null;
-                        });
-                      },
-              ),
+              if (_editing)
+                AppSecondaryButton(
+                  text: 'Вернуть адрес по умолчанию',
+                  onPressed: _busy
+                      ? null
+                      : () {
+                          setState(() {
+                            _controller.text = widget.settings.defaultUrl;
+                            _result = null;
+                            _checkedUrl = null;
+                          });
+                        },
+                ),
               const SizedBox(height: 16),
               if (_checking) const LinearProgressIndicator(),
               if (_result != null) ...[
@@ -156,12 +166,20 @@ class _ServerSettingsDialogState extends State<ServerSettingsDialog> {
         onPressed: _busy ? null : _check,
       ),
       AppSecondaryButton(
-        text: 'Отмена',
+        text: _editing ? 'Отмена' : 'Закрыть',
         onPressed: _busy ? null : () => Navigator.of(context).pop(),
       ),
       AppPrimaryButton(
-        text: 'Сохранить',
-        onPressed: _busy ? null : () => _check(save: true),
+        text: _editing ? 'Сохранить' : 'Сменить сервер и выйти…',
+        onPressed: _busy
+            ? null
+            : () {
+                if (_editing) {
+                  _check(save: true);
+                } else {
+                  setState(() => _editing = true);
+                }
+              },
       ),
     ],
   );
