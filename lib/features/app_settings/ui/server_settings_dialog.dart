@@ -106,7 +106,7 @@ class _ServerSettingsDialogState extends State<ServerSettingsDialog> {
             children: [
               TextFormField(
                 controller: _controller,
-                enabled: !_busy,
+                enabled: _editing && !_busy,
                 readOnly: !_editing,
                 validator: _validate,
                 autovalidateMode: AutovalidateMode.onUserInteraction,

@@ -101,6 +101,10 @@ void main() {
         true,
       );
       expect(find.text('Вернуть адрес по умолчанию'), findsNothing);
+      expect(
+        tester.widget<TextFormField>(find.byType(TextFormField)).enabled,
+        false,
+      );
       await tester.tap(find.text('Сменить сервер и выйти…'));
       await tester.pumpAndSettle();
       expect(
@@ -108,6 +112,10 @@ void main() {
         false,
       );
       expect(auth.isAuthenticated, true);
+      expect(
+        tester.widget<TextFormField>(find.byType(TextFormField)).enabled,
+        true,
+      );
       await tester.tap(find.text('Отмена'));
       await tester.pumpAndSettle();
       expect(auth.isAuthenticated, true);
