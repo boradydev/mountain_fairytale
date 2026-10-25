@@ -1,4 +1,5 @@
 import 'package:mountain_fairytale/features/delivery_route/services/route_sheet_pdf_builder.dart';
+import 'package:mountain_fairytale/core/monitoring/monitoring_service.dart';
 import 'package:mountain_fairytale/shared/widgets/pdf_route_preview_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -46,7 +47,8 @@ class RouteConstructorScreen extends StatelessWidget {
             builder: (_) => PdfRoutePreviewDialog(pdfBytes: pdf),
           );
           return true;
-        } catch (_) {
+        } catch (error, stack) {
+          reportUnexpected(error, stack, 'pdf_build');
           return false;
         }
       },

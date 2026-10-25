@@ -67,6 +67,8 @@ import 'package:provider/single_child_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
 
+import 'package:mountain_fairytale/core/monitoring/monitoring_service.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -123,6 +125,9 @@ Future<void> main() async {
       ),
     ),
   );
+  final monitoring = MonitoringService();
+  serverSettings.addListener(() => monitoring.changeServer(serverSettings.url));
+  monitoring.changeServer(serverSettings.url);
   runApp(
     AnimatedBuilder(
       animation: serverSettings,
