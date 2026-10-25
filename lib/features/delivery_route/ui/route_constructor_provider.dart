@@ -1,4 +1,5 @@
 import 'package:mountain_fairytale/core/network/api_exception.dart';
+import 'package:mountain_fairytale/core/monitoring/monitoring_service.dart';
 import 'package:mountain_fairytale/features/clients/data/location_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mountain_fairytale/features/cars/data/cars_model.dart';
@@ -796,7 +797,8 @@ class RouteConstructorProvider extends OrderPointsProvider {
     try {
       await _printService.printRouteSheet(sheet);
       return true;
-    } catch (_) {
+    } catch (error, stack) {
+      reportUnexpected(error, stack, 'pdf_print');
       return false;
     }
   }

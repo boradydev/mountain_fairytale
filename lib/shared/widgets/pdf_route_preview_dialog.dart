@@ -1,5 +1,7 @@
 import 'dart:typed_data';
 
+import 'package:mountain_fairytale/core/monitoring/monitoring_service.dart';
+
 import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
@@ -264,7 +266,8 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
       await Printing.layoutPdf(
         onLayout: (_) async => pdfBytes,
       );
-    } catch (e) {
+    } catch (error, stack) {
+      reportUnexpected(error, stack, 'pdf_print');
       if (!mounted) {
         return;
       }

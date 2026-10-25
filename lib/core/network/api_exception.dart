@@ -4,18 +4,21 @@ class ApiException implements Exception {
   final int statusCode;
   final String message;
   final String? ownerName;
+  final String? requestId;
   final Map<String, dynamic> data;
 
   const ApiException({
     required this.statusCode,
     required this.message,
     this.ownerName,
+    this.requestId,
     this.data = const {},
   });
 
   factory ApiException.fromResponse({
     required int statusCode,
     required String body,
+    String? requestId,
   }) {
     String message = 'Ошибка запроса к серверу.';
     String? ownerName;
@@ -40,6 +43,7 @@ class ApiException implements Exception {
       // A proxy may return HTML instead of the API error envelope.
     }
     return ApiException(
+      requestId: requestId,
       statusCode: statusCode,
       message: message,
       ownerName: ownerName,

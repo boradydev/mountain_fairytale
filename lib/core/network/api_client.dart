@@ -1,4 +1,7 @@
 import 'dart:convert';
+import 'dart:async';
+
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'package:mountain_fairytale/features/auth/auth_abcs.dart';
 import 'package:mountain_fairytale/core/network/api_exception.dart';
@@ -79,6 +82,7 @@ class ApiClient {
         throw ApiException.fromResponse(
           statusCode: response.statusCode,
           body: response.body,
+          requestId: response.requestId,
         );
       }
       return response;
@@ -86,11 +90,27 @@ class ApiClient {
   }
 
   Map<String, dynamic> _decodeJson(HttpTransportResponse response) {
-    final decoded = jsonDecode(response.body);
-    if (decoded is! Map<String, dynamic>) {
-      throw const FormatException('Expected StdResponse JSON object.');
+    try {
+      final decoded = jsonDecode(response.body);
+      if (decoded is! Map<String, dynamic>) {
+        throw const FormatException('Expected StdResponse JSON object.');
+      }
+      return decoded;
+    } catch (error, stack) {
+      unawaited(
+        Sentry.captureException(
+          error,
+          stackTrace: stack,
+          withScope: (scope) {
+            scope.setTag('operation', 'response_decode');
+            if (response.requestId != null) {
+              scope.setTag('request_id', response.requestId!);
+            }
+          },
+        ),
+      );
+      rethrow;
     }
-    return decoded;
   }
 
   List<dynamic> _decodeJsonList(HttpTransportResponse response) {

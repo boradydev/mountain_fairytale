@@ -113,6 +113,7 @@ class HttpTransport {
       return HttpTransportResponse(
         statusCode: response.statusCode,
         body: responseBody,
+        requestId: response.headers.value('X-Request-ID'),
       );
     }
 
@@ -136,6 +137,11 @@ class HttpTransport {
 class HttpTransportResponse {
   final int statusCode;
   final String body;
+  final String? requestId;
 
-  const HttpTransportResponse({required this.statusCode, required this.body});
+  const HttpTransportResponse({
+    required this.statusCode,
+    required this.body,
+    this.requestId,
+  });
 }
