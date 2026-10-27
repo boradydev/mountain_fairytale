@@ -52,7 +52,7 @@ Map<String, dynamic> reportJson() => {
       'commissionRateBreakdown': [rate('1.25', '150.10', '1.87625')],
     },
   ],
-  'summary': {'unassignedTurnover': '50.00'},
+  'summary': {'unassignedTurnover': '50.00', 'employeeTurnover': '75.00'},
 };
 Map<String, dynamic> detailsJson(bool assigned) => {
   ...representative(assigned: assigned),

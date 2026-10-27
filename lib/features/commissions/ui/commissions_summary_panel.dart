@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/features/commissions/data/commission_amount.dart';
 import 'package:mountain_fairytale/features/commissions/data/commission_models.dart';
 import 'package:mountain_fairytale/features/commissions/ui/commissions_provider.dart';
+import 'package:mountain_fairytale/features/commissions/ui/commission_metric_help.dart';
 
 class CommissionsSummaryPanel extends StatelessWidget {
   final CommissionReport report;
@@ -115,11 +116,11 @@ class CommissionsSummaryPanel extends StatelessWidget {
                           _SummaryValue(
                             mode == CommissionMode.representatives
                                 ? 'Оборот представителей'
-                                : 'Общая база сотрудников',
+                                : 'Оборот сотрудников',
                             formatCommissionCents(
                               mode == CommissionMode.representatives
                                   ? report.representedTurnover
-                                  : report.totalTurnover,
+                                  : report.employeeTurnover.cents,
                             ),
                           ),
                         ], detailColumns),
@@ -150,12 +151,13 @@ class _SummaryValue extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Tooltip(
-          message: label,
-          child: Text(
+    return Tooltip(
+      message: commissionMetricHelp(label),
+      constraints: const BoxConstraints(maxWidth: 360),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -163,33 +165,33 @@ class _SummaryValue extends StatelessWidget {
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
-        ),
-        const SizedBox(height: 6),
-        SizedBox(
-          width: double.infinity,
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(
-              value,
-              maxLines: 1,
-              style:
-                  (prominent
-                          ? theme.textTheme.headlineSmall
-                          : theme.textTheme.titleMedium)
-                      ?.copyWith(
-                        fontWeight: prominent
-                            ? FontWeight.w600
-                            : FontWeight.w500,
-                        color: accent
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.onSurface,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
+          const SizedBox(height: 6),
+          SizedBox(
+            width: double.infinity,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                value,
+                maxLines: 1,
+                style:
+                    (prominent
+                            ? theme.textTheme.headlineSmall
+                            : theme.textTheme.titleMedium)
+                        ?.copyWith(
+                          fontWeight: prominent
+                              ? FontWeight.w600
+                              : FontWeight.w500,
+                          color: accent
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.onSurface,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

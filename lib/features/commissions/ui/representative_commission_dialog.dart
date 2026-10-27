@@ -185,7 +185,7 @@ class _RepresentativeCommissionDialogState
                     runSpacing: 12,
                     children: [
                       CommissionMetric(
-                        'Оборот',
+                        'Оборотная база',
                         formatCommissionCents(details.turnoverCents),
                       ),
                       CommissionMetric(
@@ -260,7 +260,7 @@ class _RepresentativeCommissionDialogState
                                             '${row.ordersCount}',
                                           ),
                                           CommissionMetric(
-                                            'Оборот',
+                                            'Оборотная база',
                                             row.turnover.formatted,
                                           ),
                                           CommissionMetric(

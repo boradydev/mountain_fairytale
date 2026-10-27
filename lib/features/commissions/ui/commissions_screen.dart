@@ -124,7 +124,7 @@ class _CommissionsScreenState extends State<CommissionsScreen> {
                     '${row.assignedClientsCount}',
                   ),
                   CommissionMetric('Заказов', '${row.ordersCount}'),
-                  CommissionMetric('Оборот', row.turnover.formatted),
+                  CommissionMetric('Оборотная база', row.turnover.formatted),
                   CommissionMetric('К выплате', row.payable.formatted),
                 ],
               ),
