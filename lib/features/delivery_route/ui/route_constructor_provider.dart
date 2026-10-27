@@ -38,6 +38,7 @@ class RouteConstructorProvider extends OrderPointsProvider {
     String? id,
     DateTime? createdAt,
     bool active = true,
+    int revision = 1,
   }) {
     _optimizationSession++;
     optimizing = false;
@@ -48,6 +49,7 @@ class RouteConstructorProvider extends OrderPointsProvider {
       id: id,
       createdAt: createdAt,
       active: active,
+      revision: revision,
     );
   }
 
@@ -527,7 +529,9 @@ class RouteConstructorProvider extends OrderPointsProvider {
     documentError = null;
     notifyListeners();
     try {
+      prepareDocumentSave();
       final saved = await _routeRepo.saveRouteSheet(sheet);
+      documentRevision = saved.revision;
       documentId = saved.id;
       documentCreatedAt = saved.createdAt;
       _savedSheet = saved;
@@ -709,6 +713,7 @@ class RouteConstructorProvider extends OrderPointsProvider {
     _selectionVersion++;
     mileageRevision++;
     documentId = sheet.id;
+    documentRevision = sheet.revision;
     documentCreatedAt = sheet.createdAt;
     documentActive = sheet.isActive;
     selectedDate = sheet.date;
@@ -749,6 +754,24 @@ class RouteConstructorProvider extends OrderPointsProvider {
     await _applySheet(await _routeRepo.getRouteSheetById(documentId!));
   }
 
+  @override
+  Future<RouteDocument?> readRecoveryDocument() =>
+      _routeRepo.getRouteSheetById(documentId!);
+
+  @override
+  Future<RouteDocument?> findPendingCreation(String requestId) async {
+    try {
+      return await _routeRepo.findCreatedRoute(requestId);
+    } on ApiException catch (error) {
+      if (error.statusCode == 404) return null;
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> applyRecoveryDocument(RouteDocument document) =>
+      _applySheet(document as DeliveryRouteSheet);
+
   Future<List<DeliveryRouteSheet>> getRouteSheetsByDate(DateTime date) async =>
       (await _routeRepo.getRouteSheets())
           .where(
@@ -769,6 +792,8 @@ class RouteConstructorProvider extends OrderPointsProvider {
 
     return DeliveryRouteSheet(
       id: currentRouteId,
+      revision: documentRevision,
+      saveOperationId: saveOperationId,
       createdAt: documentCreatedAt,
       isActive: documentActive,
       // Применится существующий ID или null при создании нового

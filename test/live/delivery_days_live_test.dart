@@ -543,9 +543,11 @@ void main() {
             final document = data(await api.get(path));
             if (document['isActive'] == false) await api.post('$path/restore');
             await api.post('$path/edit-lock');
+            final current = data(await api.get(path));
             await api.patch(
               path,
               body: {
+                'expectedRevision': current['revision'],
                 'plannedDate': originalFirst!.toIso8601String().substring(
                   0,
                   10,

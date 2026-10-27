@@ -1,6 +1,9 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:math';
 
 import 'package:mountain_fairytale/features/delivery_route/data/delivery_document_api.dart';
+import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_sheet_model.dart';
 import 'package:mountain_fairytale/core/state/safe_change_notifier.dart';
 import 'package:mountain_fairytale/core/network/api_exception.dart';
 import 'package:flutter/material.dart';
@@ -41,6 +44,31 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
   String? documentError;
   String? lockOwner;
   bool documentChanged = false;
+  int documentRevision = 1;
+  bool connectionInterrupted = false;
+  bool reconnecting = false;
+  bool _saveUnconfirmed = false;
+  String? _pendingOperationId;
+  Timer? _connectionTimer;
+  Future<bool>? _reconnectRequest;
+  bool _checkingConnection = false;
+  String? _discardReason;
+  String get saveOperationId => _pendingOperationId ??= _newOperationId();
+
+  void prepareDocumentSave() {
+    saveOperationId;
+    _saveUnconfirmed = true;
+  }
+
+  static String _newOperationId() {
+    final random = Random.secure();
+    final bytes = List.generate(16, (_) => random.nextInt(256));
+    bytes[6] = (bytes[6] & 15) | 64;
+    bytes[8] = (bytes[8] & 63) | 128;
+    final hex = bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+    return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20)}';
+  }
+
   bool _draftStarted = false;
   bool _hasLock = false;
   bool _closing = false;
@@ -50,15 +78,28 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
   Future<void>? _renewRequest;
   Future<bool>? _acquireRequest;
   bool get canEdit =>
-      isEditing && documentActive && !documentBusy && !_closed && !_closing;
+      isEditing &&
+      documentActive &&
+      !documentBusy &&
+      !connectionInterrupted &&
+      !_closed &&
+      !_closing;
   bool get canSave => canEdit && !isLoadingDirectories;
   void initializeDocumentSession({
     String? id,
     DateTime? createdAt,
     bool active = true,
+    int revision = 1,
   }) {
     _sessionVersion++;
     _renewTimer?.cancel();
+    _connectionTimer?.cancel();
+    documentRevision = revision;
+    connectionInterrupted = false;
+    reconnecting = false;
+    _saveUnconfirmed = false;
+    _pendingOperationId = null;
+    _discardReason = null;
     documentId = id;
     documentCreatedAt = createdAt;
     documentActive = active;
@@ -73,7 +114,19 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     documentChanged = false;
   }
 
+  void startConnectionWatch() {
+    if (_closed || _connectionTimer?.isActive == true) return;
+    _connectionTimer = Timer.periodic(
+      const Duration(seconds: 5),
+      (_) => _checkConnection(),
+    );
+  }
+
+  void stopConnectionWatch() => _connectionTimer?.cancel();
+
   void markDocumentSaved({required bool created}) {
+    _saveUnconfirmed = false;
+    _pendingOperationId = null;
     documentChanged = true;
     if (created) {
       isEditing = false;
@@ -82,6 +135,173 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
   }
 
   Future<void> refreshForEditing() async {}
+  Future<RouteDocument?> readRecoveryDocument() async => null;
+  Future<RouteDocument?> findPendingCreation(String requestId) async => null;
+  Future<void> applyRecoveryDocument(RouteDocument document) async {}
+
+  bool _connectionFailure(Object error) =>
+      error is SocketException ||
+      error is HttpException ||
+      error is TimeoutException ||
+      (error is ApiException && error.statusCode >= 500);
+
+  void _pauseConnection() {
+    connectionInterrupted = true;
+    _renewTimer?.cancel();
+    notifyListeners();
+  }
+
+  Future<void> _checkConnection() async {
+    if (_closed ||
+        _closing ||
+        documentBusy ||
+        _checkingConnection ||
+        lockRepository == null) {
+      return;
+    }
+    if (connectionInterrupted) {
+      await retryConnection();
+      return;
+    }
+    if (!isEditing) return;
+    final version = _sessionVersion;
+    _checkingConnection = true;
+    try {
+      await lockRepository!.checkConnection();
+    } catch (error) {
+      if (version == _sessionVersion &&
+          !_closed &&
+          !_closing &&
+          _connectionFailure(error)) {
+        _pauseConnection();
+      }
+    } finally {
+      _checkingConnection = false;
+    }
+  }
+
+  void _startHeartbeat() {
+    _renewTimer?.cancel();
+    _renewTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => renewDocumentLock(),
+    );
+  }
+
+  Future<bool> retryConnection() {
+    if (_reconnectRequest != null) return _reconnectRequest!;
+    final request = _retryConnection();
+    _reconnectRequest = request;
+    return request.whenComplete(() => _reconnectRequest = null);
+  }
+
+  Future<bool> _retryConnection() async {
+    if (!connectionInterrupted || _closed || _closing || documentBusy) {
+      return false;
+    }
+    final version = _sessionVersion;
+    final id = documentId;
+    reconnecting = true;
+    notifyListeners();
+    try {
+      await lockRepository!.checkConnection();
+      if (version != _sessionVersion || _closed || _closing) return false;
+      if (id == null) {
+        final created = _saveUnconfirmed && _pendingOperationId != null
+            ? await findPendingCreation(_pendingOperationId!)
+            : null;
+        if (version != _sessionVersion || _closed || _closing) return false;
+        if (created != null) {
+          await applyRecoveryDocument(created);
+          isEditing = false;
+          _draftStarted = false;
+          documentChanged = true;
+          documentError = 'Сервер подтвердил сохранение документа. Показаны сохранённые данные.';
+          _saveUnconfirmed = false;
+          _pendingOperationId = null;
+        }
+        connectionInterrupted = false;
+        return true;
+      }
+      try {
+        final owner = await lockRepository!.acquireEditLock(id);
+        if (version != _sessionVersion || _closed || _closing) {
+          await _releaseQuietly(id);
+          return false;
+        }
+        lockOwner = owner;
+        _hasLock = true;
+      } on ApiException catch (error) {
+        if (!{403, 409, 423}.contains(error.statusCode)) rethrow;
+        _hasLock = false;
+        _discardReason = error.statusCode == 423
+            ? 'Редактирование прекращено: документ редактирует ${error.ownerName ?? 'другой сотрудник'}. Несохранённые изменения отменены.'
+            : 'Редактирование прекращено: документ больше недоступен для изменений. Показаны сохранённые данные.';
+      }
+      if (version != _sessionVersion || _closed || _closing) return false;
+      final current = await readRecoveryDocument();
+      if (version != _sessionVersion || _closed || _closing) return false;
+      final saved =
+          _saveUnconfirmed &&
+          current != null &&
+          current.lastOperationId == _pendingOperationId;
+      final changed =
+          current != null &&
+          (current.revision != documentRevision || !current.isActive);
+      if (_discardReason != null || changed || saved) {
+        if (current != null) {
+          await applyRecoveryDocument(current);
+        } else {
+          await refreshForEditing();
+        }
+        if (_hasLock) {
+          try {
+            await lockRepository!.releaseEditLock(id);
+          } on ApiException catch (error) {
+            if (!{403, 409}.contains(error.statusCode)) rethrow;
+          }
+        }
+        _hasLock = false;
+        _draftStarted = false;
+        isEditing = false;
+        documentError =
+            _discardReason ??
+            (saved
+                ? 'Сервер подтвердил сохранение документа. Показаны сохранённые данные.'
+                : 'Документ изменился за время отсутствия связи. Несохранённые изменения отменены. Показаны актуальные данные.');
+        documentChanged = true;
+        _discardReason = null;
+        _pendingOperationId = null;
+        _saveUnconfirmed = false;
+      } else {
+        _startHeartbeat();
+        documentError = null;
+      }
+      connectionInterrupted = false;
+      return true;
+    } catch (error) {
+      if (version == _sessionVersion && !_closed) {
+        if (error is ApiException &&
+            error.statusCode == 404 &&
+            documentId != null) {
+          points = [];
+          isEditing = false;
+          _draftStarted = false;
+          _hasLock = false;
+          connectionInterrupted = false;
+          documentError =
+              'Документ больше не найден. Редактирование прекращено.';
+        }
+      }
+      return false;
+    } finally {
+      if (version == _sessionVersion) {
+        reconnecting = false;
+        notifyListeners();
+      }
+    }
+  }
+
   Future<bool> beginEditing() {
     if (_acquireRequest != null) {
       return _acquireRequest!;
@@ -92,6 +312,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
   }
 
   Future<bool> _beginEditing() async {
+    if (connectionInterrupted) return retryConnection();
     final id = documentId;
     final version = _sessionVersion;
     if (id == null || !documentActive || documentBusy || _closed || _closing) {
@@ -116,11 +337,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       }
       isEditing = true;
       _draftStarted = true;
-      _renewTimer?.cancel();
-      _renewTimer = Timer.periodic(
-        const Duration(seconds: 30),
-        (_) => renewDocumentLock(),
-      );
+      _startHeartbeat();
       return true;
     } catch (error) {
       isEditing = false;
@@ -144,7 +361,14 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
   Future<void> _renewDocumentLock() async {
     final id = documentId;
     final version = _sessionVersion;
-    if (id == null || !isEditing || _closed || _closing || documentBusy) return;
+    if (id == null ||
+        !isEditing ||
+        connectionInterrupted ||
+        _closed ||
+        _closing ||
+        documentBusy) {
+      return;
+    }
     try {
       final owner = await lockRepository!.renewEditLock(id);
       if (version == _sessionVersion && !_closed && !_closing) {
@@ -152,10 +376,17 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       }
     } catch (error) {
       if (version != _sessionVersion || _closed || _closing) return;
-      isEditing = false;
-      _renewTimer?.cancel();
-      documentError =
-          'Блокировка потеряна. Получите её повторно перед сохранением. ${documentFailure(error)}';
+      if (_connectionFailure(error) ||
+          (error is ApiException &&
+              {403, 409, 423}.contains(error.statusCode))) {
+        if (error is ApiException && error.statusCode == 423) {
+          _discardReason =
+              'Редактирование прекращено: документ редактирует ${error.ownerName ?? 'другой сотрудник'}. Несохранённые изменения отменены.';
+        }
+        _pauseConnection();
+      } else {
+        documentError = documentFailure(error);
+      }
       notifyListeners();
     }
   }
@@ -194,6 +425,10 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       documentError = null;
       return true;
     } catch (error) {
+      if (_connectionFailure(error)) {
+        _discardReason = 'Редактирование отменено. Показаны сохранённые данные.';
+        _pauseConnection();
+      }
       documentError =
           'Не удалось отменить редактирование. Повторите попытку. ${documentFailure(error)}';
       return false;
@@ -204,6 +439,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
   }
 
   Future<bool> closeDocument() async {
+    if (connectionInterrupted) return false;
     if (_closed) {
       return true;
     }
@@ -225,13 +461,18 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
         documentError =
             'Не удалось освободить блокировку. Повторите закрытие. ${documentFailure(error)}';
         _closing = false;
-        isEditing = false;
+        if (_connectionFailure(error)) {
+          _pauseConnection();
+        } else {
+          isEditing = false;
+        }
         notifyListeners();
         return false;
       }
     }
     _sessionVersion++;
     _closed = true;
+    _connectionTimer?.cancel();
     _hasLock = false;
     _closing = false;
     isEditing = false;
@@ -240,6 +481,21 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
   }
 
   void handleDocumentError(Object error) {
+    if (_connectionFailure(error) && isEditing) {
+      _pauseConnection();
+      return;
+    }
+    if (error is ApiException &&
+        {403, 409, 423}.contains(error.statusCode) &&
+        isEditing) {
+      if (error.data['code'] == 'document_revision_conflict') {
+        _discardReason = 'Документ изменён другим сотрудником. Несохранённые изменения отменены.';
+      }
+      _pauseConnection();
+      return;
+    }
+    _saveUnconfirmed = false;
+    _pendingOperationId = null;
     documentError = documentFailure(error);
     if (error is ApiException && {403, 409, 423}.contains(error.statusCode)) {
       isEditing = false;
@@ -268,10 +524,21 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
 
   @override
   void dispose() {
+    if (_hasLock && documentId != null) unawaited(_releaseQuietly(documentId!));
+    _connectionTimer?.cancel();
     _renewTimer?.cancel();
     _closed = true;
     _sessionVersion++;
     super.dispose();
+  }
+
+  Future<void> _releaseQuietly(String id) async {
+    try {
+      await lockRepository?.releaseEditLock(id);
+    } catch (_) {
+      // Server ownership checks prevent releasing another employee's lock.
+      // If offline, the lease expires without extending it.
+    }
   }
 
   List<Product> products = [];

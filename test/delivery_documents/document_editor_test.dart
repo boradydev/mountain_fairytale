@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -105,15 +106,26 @@ void main() {
     locks.failRenew = true;
     await provider.renewDocumentLock();
     await tester.pumpAndSettle();
-    expect(find.text('Сохранить'), findsNothing);
-    expect(find.textContaining('Блокировка потеряна'), findsOneWidget);
-    expect(find.text('Только просмотр'), findsOneWidget);
+    expect(find.text('Нет связи с сервером'), findsOneWidget);
+    expect(find.text('Повторить подключение'), findsOneWidget);
+    expect(provider.isEditing, isTrue);
+    expect(provider.canSave, isFalse);
+    await tester.tapAt(const Offset(10, 10));
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    expect(find.text('Нет связи с сервером'), findsOneWidget);
     expect(
       tester
           .widget<TextField>(find.widgetWithIcon(TextField, Icons.search))
           .enabled,
       isFalse,
     );
+    locks.failRenew = false;
+    await tester.tap(find.text('Повторить подключение'));
+    await tester.pumpAndSettle();
+    expect(find.text('Нет связи с сервером'), findsNothing);
+    expect(provider.canSave, isTrue);
+    await provider.cancelEditing();
     provider.documentActive = false;
     provider.notifyListeners();
     await tester.pumpAndSettle();

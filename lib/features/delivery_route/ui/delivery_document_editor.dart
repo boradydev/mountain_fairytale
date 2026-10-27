@@ -9,6 +9,7 @@ import 'package:mountain_fairytale/features/delivery_route/ui/route_points_list.
 import 'package:mountain_fairytale/shared/widgets/confirm_dialog.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/theme_toggle_button.dart';
+import 'package:mountain_fairytale/features/delivery_route/ui/document_connection_dialog.dart';
 
 /// Shared document lifecycle for delivery and pickup constructors.
 class DeliveryDocumentEditor extends StatefulWidget {
@@ -44,6 +45,50 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
   bool _lastEditing = false;
   bool _leaving = false;
   ({bool creating, bool editing})? _savePresentation;
+  BuildContext? _connectionDialogContext;
+  bool _connectionDialogShowing = false;
+
+  void _syncConnectionDialog() {
+    if (widget.provider.connectionInterrupted && !_connectionDialogShowing) {
+      _connectionDialogShowing = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted || !widget.provider.connectionInterrupted) {
+          _connectionDialogShowing = false;
+          return;
+        }
+        await showDialog<void>(
+          context: context,
+          barrierDismissible: false,
+          builder: (dialogContext) {
+            _connectionDialogContext = dialogContext;
+            return DocumentConnectionDialog(provider: widget.provider);
+          },
+        );
+        _connectionDialogContext = null;
+        _connectionDialogShowing = false;
+      });
+    } else if (!widget.provider.connectionInterrupted &&
+        _connectionDialogContext != null) {
+      final dialogContext = _connectionDialogContext!;
+      _connectionDialogContext = null;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (dialogContext.mounted) Navigator.of(dialogContext).pop();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.provider.stopConnectionWatch();
+    final dialogContext = _connectionDialogContext;
+    if (dialogContext != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (dialogContext.mounted) Navigator.of(dialogContext).pop();
+      });
+    }
+    super.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -118,6 +163,8 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
     listenable: widget.provider,
     builder: (context, _) {
       final p = widget.provider;
+      p.startConnectionWatch();
+      _syncConnectionDialog();
       final creating = _savePresentation?.creating ?? (p.documentId == null);
       final editing = _savePresentation?.editing ?? p.isEditing;
       final busy = p.documentBusy || _savePresentation != null || _leaving;

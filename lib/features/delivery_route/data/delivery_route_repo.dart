@@ -5,6 +5,8 @@ class DeliveryRouteRepositoryImpl implements DeliveryRouteRepository {
   final DeliveryRouteDataSource dataSource;
   DeliveryRouteRepositoryImpl(this.dataSource);
   @override
+  Future<void> checkConnection() => dataSource.checkConnection();
+  @override
   Future<List<DeliveryRouteSheet>> getRouteSheets({
     bool includeCancelled = false,
   }) async =>
@@ -14,6 +16,9 @@ class DeliveryRouteRepositoryImpl implements DeliveryRouteRepository {
   @override
   Future<DeliveryRouteSheet> getRouteSheetById(String id) async =>
       DeliveryRouteSheet.fromJson(await dataSource.getById(id));
+  @override
+  Future<DeliveryRouteSheet> findCreatedRoute(String requestId) async =>
+      DeliveryRouteSheet.fromJson(await dataSource.findCreated(requestId));
   @override
   Future<DeliveryRouteSheet> saveRouteSheet(DeliveryRouteSheet sheet) async {
     final request = sheet.toRequestJson();
