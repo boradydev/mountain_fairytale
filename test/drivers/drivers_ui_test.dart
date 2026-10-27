@@ -179,6 +179,52 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  testWidgets('inactive driver can be reactivated from its edit dialog', (
+    tester,
+  ) async {
+    final repo = _Drivers();
+    final provider = _makeProvider(repo)
+      ..drivers = [active, inactive]
+      ..selectedDriver = inactive;
+    addTearDown(provider.dispose);
+    await panel(tester, provider);
+    await tester.tap(
+      find.widgetWithIcon(IconButton, Icons.edit_outlined).first,
+    );
+    await tester.pumpAndSettle();
+    final activate = find.widgetWithText(OutlinedButton, 'Активировать');
+    await tester.ensureVisible(activate);
+    await tester.tap(activate);
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.widgetWithText(FilledButton, 'Активировать и выбрать'),
+    );
+    await tester.pumpAndSettle();
+    expect(repo.patches, 1);
+    expect(repo.rows.firstWhere((d) => d.id == inactive.id).isActive, isTrue);
+    expect(provider.selectedDriver!.id, inactive.id);
+    expect(provider.selectedDriver!.isActive, isTrue);
+    expect(find.byType(DriverDialog), findsNothing);
+  });
+
+  testWidgets('inactive driver uses disabled text color in document view', (
+    tester,
+  ) async {
+    final provider = _makeProvider(_Drivers())
+      ..initializeDocumentSession(id: 'saved-route')
+      ..drivers = [inactive]
+      ..selectedDriver = inactive;
+    addTearDown(provider.dispose);
+    await panel(tester, provider);
+    final label = find.text('${inactive.name} — Неактивен');
+    final text = tester.widget<Text>(label.first);
+    expect(
+      text.style!.color,
+      Theme.of(tester.element(label.first)).disabledColor,
+    );
+    expect(provider.selectedDriver!.id, inactive.id);
+  });
+
   testWidgets(
     'submit shows only duplicate spinner during check and fixed dialog progress during save',
     (tester) async {

@@ -157,6 +157,7 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<RouteConstructorProvider>();
+    final disabledTextColor = Theme.of(context).disabledColor;
 
     return Container(
       width: double.infinity,
@@ -208,7 +209,9 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
             itemBuilder: (driver) => Text(
               driver.isActive ? driver.name : '${driver.name} — Неактивен',
               overflow: TextOverflow.ellipsis,
-              style: driver.isActive
+              style: !provider.canEdit
+                  ? TextStyle(color: disabledTextColor)
+                  : driver.isActive
                   ? null
                   : TextStyle(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
