@@ -135,11 +135,31 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
     try {
       if (!await widget.save() || !mounted) return;
       widget.onDocumentChanged?.call();
-      closed = await _close(afterSave: true);
+      if (_savePresentation!.creating) {
+        closed = await _close(afterSave: true);
+      } else {
+        await widget.provider.finishEditingAfterSave();
+      }
     } finally {
       // Keep the presentation through the reverse route animation on success.
       // On failure, show the provider's real mode and allow recovery.
       if (mounted && !closed) setState(() => _savePresentation = null);
+    }
+  }
+
+  Future<void> _back() async {
+    final p = widget.provider;
+    if (_loading ||
+        _leaving ||
+        _savePresentation != null ||
+        p.documentBusy ||
+        p.connectionInterrupted) {
+      return;
+    }
+    if (p.documentId != null && p.isEditing) {
+      await p.cancelEditing();
+    } else {
+      await _close();
     }
   }
 
@@ -178,7 +198,7 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
       return PopScope(
         canPop: _canPop,
         onPopInvokedWithResult: (didPop, result) {
-          if (!didPop) _close();
+          if (!didPop) _back();
         },
         child: AbsorbPointer(
           absorbing: _savePresentation != null || _leaving,
@@ -186,7 +206,7 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
             appBar: AppBar(
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back),
-                onPressed: busy ? null : _close,
+                onPressed: busy || _loading ? null : _back,
               ),
               centerTitle: true,
               title: LayoutBuilder(

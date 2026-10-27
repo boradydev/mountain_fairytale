@@ -45,6 +45,7 @@ class Catalog implements ProductRepository {
 class Locks implements DocumentLockRepository {
   Object? connectionError;
   Object? acquireError;
+  Object? releaseError;
   @override
   Future<void> checkConnection() async {
     if (connectionError != null) throw connectionError!;
@@ -72,6 +73,7 @@ class Locks implements DocumentLockRepository {
   @override
   Future<void> releaseEditLock(String id) async {
     released++;
+    if (releaseError != null) throw releaseError!;
     if (failRelease) throw StateError('Offline');
   }
 }

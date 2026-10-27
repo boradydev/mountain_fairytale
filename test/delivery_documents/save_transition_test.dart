@@ -13,7 +13,9 @@ import 'document_provider_test.dart' show Orders, Catalog, Locks, Clients;
 
 class _DelayedCloseOrders extends Orders {
   final closeGate = Completer<void>();
+  final finishGate = Completer<void>();
   int closes = 0;
+  int finishes = 0;
   _DelayedCloseOrders(Locks locks) : super(Catalog(), locks);
 
   @override
@@ -21,6 +23,13 @@ class _DelayedCloseOrders extends Orders {
     closes++;
     await closeGate.future;
     return super.closeDocument();
+  }
+
+  @override
+  Future<bool> finishEditingAfterSave() async {
+    finishes++;
+    await finishGate.future;
+    return super.finishEditingAfterSave();
   }
 }
 
@@ -117,7 +126,7 @@ void main() {
   for (final title in ['Самовывоз', 'Маршрутный лист']) {
     for (final editing in [false, true]) {
       testWidgets(
-        '$title save preserves ${editing ? 'editing' : 'creation'} through close animation',
+        '$title save ${editing ? 'returns to view after finishing editing' : 'preserves creation through close animation'}',
         (tester) async {
           final session = await _open(tester, title, editing: editing);
           final mode = editing ? 'редактирование' : 'создание';
@@ -156,6 +165,30 @@ void main() {
           }
           expect(session.changes, 1);
           expect(session.provider.documentId, isNotNull);
+          if (editing) {
+            expect(session.provider.closes, 0);
+            session.provider.finishGate.complete();
+            await tester.pumpAndSettle();
+            expect(find.text('$title (просмотр)'), findsOneWidget);
+            expect(find.text('Редактировать'), findsOneWidget);
+            expect(session.result, isNull);
+            expect(session.locks.released, 1);
+            expect(session.provider.finishes, 1);
+            await tester.tap(find.text('Редактировать'));
+            await tester.pumpAndSettle();
+            expect(find.text('$title (редактирование)'), findsOneWidget);
+            await tester.tap(find.text('Отмена'));
+            await tester.pumpAndSettle();
+            expect(find.text('$title (просмотр)'), findsOneWidget);
+            session.provider.closeGate.complete();
+            await tester.tap(find.text('Закрыть'));
+            await tester.pumpAndSettle();
+            expect(find.byType(DeliveryDocumentEditor), findsNothing);
+            expect(session.result, isTrue);
+            expect(session.saves, 1);
+            expect(session.locks.released, 2);
+            return;
+          }
           session.provider.closeGate.complete();
           for (var frame = 0; frame < 30; frame++) {
             await tester.pump(const Duration(milliseconds: 16));
@@ -204,6 +237,56 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  for (final title in ['Самовывоз', 'Маршрутный лист']) {
+    for (final systemBack in [false, true]) {
+      testWidgets(
+        '$title ${systemBack ? 'system back' : 'appbar back'} cancels edits before closing view',
+        (tester) async {
+          final session = await _open(tester, title, editing: true);
+          await tester.enterText(
+            find.byType(TextFormField),
+            'Несохранённая правка',
+          );
+          Future<void> back() async {
+            if (systemBack) {
+              await tester.binding.handlePopRoute();
+            } else {
+              await tester.tap(find.byIcon(Icons.arrow_back));
+            }
+            await tester.pumpAndSettle();
+          }
+
+          await back();
+          expect(find.text('$title (просмотр)'), findsOneWidget);
+          expect(find.text('Несохранённая правка'), findsNothing);
+          expect(session.provider.closes, 0);
+          expect(session.saves, 0);
+          expect(session.locks.released, 1);
+          expect(session.result, isNull);
+          session.provider.closeGate.complete();
+          await back();
+          expect(find.byType(DeliveryDocumentEditor), findsNothing);
+          expect(session.result, isFalse);
+          expect(session.locks.released, 1);
+          expect(tester.takeException(), isNull);
+        },
+      );
+    }
+    testWidgets('$title back from a new draft closes without saving', (
+      tester,
+    ) async {
+      final session = await _open(tester, title);
+      await tester.enterText(find.byType(TextFormField), 'Новая заготовка');
+      session.provider.closeGate.complete();
+      await tester.tap(find.byIcon(Icons.arrow_back));
+      await tester.pumpAndSettle();
+      expect(find.byType(DeliveryDocumentEditor), findsNothing);
+      expect(session.provider.documentId, isNull);
+      expect(session.saves, 0);
+      expect(session.locks.released, 0);
+    });
+  }
+
   testWidgets(
     'failed release after save restores real mode and allows closing without another save',
     (tester) async {
@@ -211,11 +294,14 @@ void main() {
       session.locks.failRelease = true;
       await tester.tap(find.text('Сохранить'));
       session.saveGate.complete(true);
+      session.provider.finishGate.complete();
       session.provider.closeGate.complete();
       await tester.pumpAndSettle();
       expect(find.text('Самовывоз (просмотр)'), findsOneWidget);
       expect(
-        find.textContaining('Не удалось освободить блокировку'),
+        find.textContaining(
+          'Изменения сохранены, но не удалось завершить редактирование',
+        ),
         findsOneWidget,
       );
       expect(find.text('Редактировать'), findsOneWidget);

@@ -66,6 +66,29 @@ void main() {
     },
   );
 
+  test(
+    'connection loss while finishing a successful save recovers to saved view',
+    () async {
+      await edit();
+      provider.documentRevision = 2;
+      provider.markDocumentSaved(created: false);
+      provider.recoveryDocument = snapshot(revision: 2, quantity: 3);
+      locks.releaseError = const SocketException('offline');
+      expect(await provider.finishEditingAfterSave(), isFalse);
+      expect(provider.connectionInterrupted, isTrue);
+      expect(provider.canSave, isFalse);
+      locks.releaseError = null;
+      expect(await provider.retryConnection(), isTrue);
+      expect(provider.isEditing, isFalse);
+      expect(provider.points.single.items.single.quantity, 3);
+      expect(provider.documentError, contains('Изменения сохранены'));
+      expect(
+        provider.documentError,
+        isNot(contains('Редактирование отменено')),
+      );
+    },
+  );
+
   test('expired own lock is reacquired without losing draft', () async {
     await edit();
     locks.failRenew = true;

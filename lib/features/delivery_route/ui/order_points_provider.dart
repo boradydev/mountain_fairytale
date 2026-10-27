@@ -391,7 +391,11 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     }
   }
 
-  Future<bool> cancelEditing() async {
+  Future<bool> cancelEditing() => _finishEditing(afterSave: false);
+
+  Future<bool> finishEditingAfterSave() => _finishEditing(afterSave: true);
+
+  Future<bool> _finishEditing({required bool afterSave}) async {
     if (documentId == null ||
         !isEditing ||
         documentBusy ||
@@ -426,11 +430,19 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       return true;
     } catch (error) {
       if (_connectionFailure(error)) {
-        _discardReason = 'Редактирование отменено. Показаны сохранённые данные.';
+        _discardReason = afterSave
+            ? 'Изменения сохранены. Показаны сохранённые данные.'
+            : 'Редактирование отменено. Показаны сохранённые данные.';
         _pauseConnection();
+      } else if (afterSave) {
+        // The write already succeeded; do not offer another Save for it.
+        isEditing = false;
+        _draftStarted = false;
+        _renewTimer?.cancel();
       }
-      documentError =
-          'Не удалось отменить редактирование. Повторите попытку. ${documentFailure(error)}';
+      documentError = afterSave
+          ? 'Изменения сохранены, но не удалось завершить редактирование. Повторите закрытие. ${documentFailure(error)}'
+          : 'Не удалось отменить редактирование. Повторите попытку. ${documentFailure(error)}';
       return false;
     } finally {
       documentBusy = false;
