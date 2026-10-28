@@ -170,7 +170,9 @@ class RouteSheetPdfBuilder {
                       ),
                       const pw.TextSpan(text: 'Форма оплаты: '),
                       pw.TextSpan(
-                        text: point.paymentMethod,
+                        text: point.paymentMethod?.trim().isNotEmpty == true
+                            ? point.paymentMethod!
+                            : 'Не указана',
                         style: pw.TextStyle(
                           fontWeight: pw.FontWeight.bold,
                         ), // ДЕЛАЕМ ЖИРНЫМ
@@ -198,6 +200,7 @@ class RouteSheetPdfBuilder {
       border: const pw.TableBorder(
         verticalInside: pw.BorderSide(color: PdfColors.grey400, width: 0.4),
         horizontalInside: pw.BorderSide(color: PdfColors.grey400, width: 0.4),
+        bottom: pw.BorderSide(color: PdfColors.grey400, width: 0.4),
       ),
       columnWidths: const {
         0: pw.FixedColumnWidth(20), // # продукта
