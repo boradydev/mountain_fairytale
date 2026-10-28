@@ -11,6 +11,8 @@ import 'dart:io';
 import 'package:mountain_fairytale/features/app_settings/data/server_settings_repository.dart';
 import 'package:mountain_fairytale/features/app_settings/ui/server_settings_provider.dart';
 import 'package:mountain_fairytale/app/application_menu_button.dart';
+import 'package:mountain_fairytale/features/app_compatibility/ui/app_compatibility_provider.dart';
+import 'package:mountain_fairytale/features/app_compatibility/ui/app_compatibility_screen.dart';
 
 import 'package:mountain_fairytale/features/app_updates/update_service.dart';
 import 'package:mountain_fairytale/features/app_updates/ui/update_provider.dart';
@@ -168,7 +170,6 @@ Widget _configuredApplication(
   final apiClient = ApiClient(
     transport: httpTransport,
     authService: authService,
-    userAgent: 'MountainFairytale/1.0 Windows',
   );
 
   final routeRepository = DeliveryRouteRepositoryImpl(
@@ -288,6 +289,18 @@ Widget _configuredApplication(
         create: (_) => httpTransport,
         dispose: (_, transport) => transport.close(),
       ),
+      ChangeNotifierProvider(
+        lazy: false,
+        create: (_) {
+          final compatibility = AppCompatibilityProvider(
+            transport: httpTransport,
+          );
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) => compatibility.check(),
+          );
+          return compatibility;
+        },
+      ),
       ChangeNotifierProvider<AuthServiceImpl>(
         lazy: false,
         create: (_) => authService,
@@ -334,7 +347,10 @@ class MyApp extends StatelessWidget {
     final localeProvider = context.watch<LocaleProvider>();
 
     final auth = context.watch<AuthProvider>();
+    final compatibility = context.watch<AppCompatibilityProvider>();
     final app = MaterialApp(
+      // Replacing the Navigator discards open forms and modal routes on refusal.
+      key: ValueKey(compatibility.workEpoch),
       onGenerateTitle: (context) {
         final title = AppLocalizations.of(context)!.appTitle;
         windowManager.setTitle(title);
@@ -353,9 +369,11 @@ class MyApp extends StatelessWidget {
 
       scaffoldMessengerKey: scaffoldMessengerKey,
 
-      home: const _AuthGate(),
+      home: compatibility.compatible
+          ? const _AuthGate()
+          : const AppCompatibilityScreen(),
     );
-    if (!auth.isAuthenticated) return app;
+    if (!auth.isAuthenticated || !compatibility.compatible) return app;
     return MultiProvider(
       key: ValueKey(auth.sessionVersion),
       providers: sessionProviders,
