@@ -13,9 +13,15 @@ import 'package:provider/provider.dart';
 
 class CarDialog extends StatefulWidget {
   final Car? car;
+  final bool directoryMode;
   final ValueChanged<Car>? onOpenCar;
 
-  const CarDialog({super.key, this.car, this.onOpenCar});
+  const CarDialog({
+    super.key,
+    this.car,
+    this.onOpenCar,
+    this.directoryMode = false,
+  });
 
   @override
   State<CarDialog> createState() => _CarDialogState();
@@ -209,7 +215,11 @@ class _CarDialogState extends State<CarDialog> {
   }
 
   Future<void> _activateDuplicate(Car car) async {
-    final confirmed = await showCarActivationDialog(context, car);
+    final confirmed = await showCarActivationDialog(
+      context,
+      car,
+      selectAfterActivation: !widget.directoryMode,
+    );
     if (!confirmed || !mounted) return;
     final success = await context
         .read<RouteConstructorProvider>()
@@ -278,11 +288,15 @@ class _CarDialogState extends State<CarDialog> {
       onSubmit: _save,
       isBusy: _busy,
       isLoading: _busy && !_isCheckingDuplicate,
-      leadingAction: _isEditMode && widget.car!.isActive
+      leadingAction: _isEditMode
           ? AppSecondaryButton(
-              text: 'Деактивировать',
-              destructive: true,
-              onPressed: _busy ? null : _deactivateCar,
+              text: widget.car!.isActive ? 'Деактивировать' : 'Активировать',
+              destructive: widget.car!.isActive,
+              onPressed: _busy
+                  ? null
+                  : widget.car!.isActive
+                  ? _deactivateCar
+                  : () => _activateDuplicate(widget.car!),
             )
           : null,
       children: [
@@ -303,18 +317,19 @@ class _CarDialogState extends State<CarDialog> {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    AppPrimaryButton(
-                      text: 'Выбрать для маршрута',
-                      onPressed: _busy
-                          ? null
-                          : () async {
-                              await context
-                                  .read<RouteConstructorProvider>()
-                                  .selectExistingCar(_duplicateCar!);
-                              if (!context.mounted) return;
-                              Navigator.of(context).pop();
-                            },
-                    ),
+                    if (!widget.directoryMode)
+                      AppPrimaryButton(
+                        text: 'Выбрать для маршрута',
+                        onPressed: _busy
+                            ? null
+                            : () async {
+                                await context
+                                    .read<RouteConstructorProvider>()
+                                    .selectExistingCar(_duplicateCar!);
+                                if (!context.mounted) return;
+                                Navigator.of(context).pop();
+                              },
+                      ),
                     AppSecondaryButton(
                       text: 'Открыть существующий автомобиль',
                       onPressed: _busy
@@ -329,7 +344,9 @@ class _CarDialogState extends State<CarDialog> {
           Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: AppPrimaryButton(
-              text: 'Активировать и выбрать',
+              text: widget.directoryMode
+                  ? 'Активировать'
+                  : 'Активировать и выбрать',
               onPressed: _busy
                   ? null
                   : () => _activateDuplicate(_duplicateCar!),

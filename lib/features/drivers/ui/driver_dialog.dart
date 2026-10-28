@@ -11,8 +11,14 @@ import 'package:provider/provider.dart';
 
 class DriverDialog extends StatefulWidget {
   final Driver? driver;
+  final bool directoryMode;
   final ValueChanged<Driver>? onOpenDriver;
-  const DriverDialog({super.key, this.driver, this.onOpenDriver});
+  const DriverDialog({
+    super.key,
+    this.driver,
+    this.onOpenDriver,
+    this.directoryMode = false,
+  });
   bool get isEditMode => driver != null;
   @override
   State<DriverDialog> createState() => _DriverDialogState();
@@ -175,7 +181,11 @@ class _DriverDialogState extends State<DriverDialog> {
 
   Future<void> _confirmAndActivate(Driver driver) async {
     final provider = context.read<RouteConstructorProvider>();
-    final confirmed = await showDriverActivationDialog(context, driver);
+    final confirmed = await showDriverActivationDialog(
+      context,
+      driver,
+      selectAfterActivation: !widget.directoryMode,
+    );
     if (!confirmed || !mounted) return;
     setState(() => _busy = true);
     final success = await provider.activateAndSelectDriver(driver);
@@ -272,17 +282,18 @@ class _DriverDialogState extends State<DriverDialog> {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    AppPrimaryButton(
-                      text: 'Выбрать для маршрута',
-                      onPressed: _busy
-                          ? null
-                          : () {
-                              context
-                                  .read<RouteConstructorProvider>()
-                                  .selectExistingDriver(_duplicate!);
-                              Navigator.of(context).pop();
-                            },
-                    ),
+                    if (!widget.directoryMode)
+                      AppPrimaryButton(
+                        text: 'Выбрать для маршрута',
+                        onPressed: _busy
+                            ? null
+                            : () {
+                                context
+                                    .read<RouteConstructorProvider>()
+                                    .selectExistingDriver(_duplicate!);
+                                Navigator.of(context).pop();
+                              },
+                      ),
                     AppSecondaryButton(
                       text: 'Открыть существующего водителя',
                       onPressed: _busy || widget.onOpenDriver == null

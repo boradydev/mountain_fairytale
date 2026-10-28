@@ -10,12 +10,14 @@ import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 
 class ProductDialog extends StatefulWidget {
   final OrderPointsProvider provider;
+  final bool directoryMode;
   final Product? product;
   final ValueChanged<Product>? onOpenProduct;
 
   const ProductDialog({
     super.key,
     required this.provider,
+    this.directoryMode = false,
     this.product,
     this.onOpenProduct,
   });
@@ -196,7 +198,11 @@ class _ProductDialogState extends State<ProductDialog> {
   }
 
   Future<void> _activate(Product product) async {
-    final confirmed = await showProductActivationDialog(context, product);
+    final confirmed = await showProductActivationDialog(
+      context,
+      product,
+      selectAfterActivation: !widget.directoryMode,
+    );
     if (!confirmed || !mounted) return;
     final activated = await widget.provider.activateProduct(product);
     if (!mounted) return;
@@ -307,20 +313,23 @@ class _ProductDialogState extends State<ProductDialog> {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    AppPrimaryButton(
-                      text: _duplicate!.isActive
-                          ? 'Выбрать для задания'
-                          : 'Активировать и выбрать',
-                      onPressed: _busy
-                          ? null
-                          : () {
-                              if (_duplicate!.isActive) {
-                                Navigator.of(context).pop(_duplicate);
-                              } else {
-                                _activateFromForm(_duplicate!);
-                              }
-                            },
-                    ),
+                    if (!widget.directoryMode || !_duplicate!.isActive)
+                      AppPrimaryButton(
+                        text: _duplicate!.isActive
+                            ? 'Выбрать для задания'
+                            : widget.directoryMode
+                            ? 'Активировать'
+                            : 'Активировать и выбрать',
+                        onPressed: _busy
+                            ? null
+                            : () {
+                                if (_duplicate!.isActive) {
+                                  Navigator.of(context).pop(_duplicate);
+                                } else {
+                                  _activateFromForm(_duplicate!);
+                                }
+                              },
+                      ),
                     AppSecondaryButton(
                       text: 'Открыть существующий товар',
                       onPressed: _busy || widget.onOpenProduct == null

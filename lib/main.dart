@@ -16,6 +16,7 @@ import 'package:mountain_fairytale/features/app_updates/update_service.dart';
 import 'package:mountain_fairytale/features/app_updates/ui/update_provider.dart';
 
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/features/directories/ui/directories_provider.dart';
 import 'package:mountain_fairytale/features/dashboard/data/dashboard_updates_repo.dart';
 import 'package:mountain_fairytale/core/utils/scaffold_messenger_key.dart';
 import 'package:mountain_fairytale/features/auth/auth_abcs.dart';
@@ -199,6 +200,24 @@ Widget _configuredApplication(
   // Передаем созданные синглтоны репозиториев в UI-провайдеры управления стейтом
   // ===========================================================================
   final sessionProviders = <SingleChildWidget>[
+    ChangeNotifierProvider(
+      create: (_) => DirectoriesProvider(
+        products: productRepository,
+        drivers: driverRepository,
+        cars: carRepository,
+        paymentMethods: paymentMethodRepository,
+        representatives: SalesRepresentativeApiRepository(apiClient),
+        createEditor: () => RouteConstructorProvider(
+          carRepo: carRepository,
+          driverRepo: driverRepository,
+          productRepo: productRepository,
+          routeRepo: routeRepository,
+          paymentMethodRepo: paymentMethodRepository,
+          clientRepo: clientRepository,
+          printService: routePrintService,
+        ),
+      ),
+    ),
     Provider<DeliveryRouteRepository>.value(value: routeRepository),
     Provider<PickupRepository>.value(value: pickupRepository),
     Provider<SalesRepresentativeApiRepository>(

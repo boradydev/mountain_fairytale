@@ -28,6 +28,27 @@ class SalesRepresentativeApiRepository {
   final ApiClient client;
   SalesRepresentativeApiRepository(this.client);
   static const _path = '/protected/sales-representatives';
+  Future<List<ApiSalesRepresentative>> getAll({
+    bool includeDeactivated = false,
+  }) async {
+    final response = await client.get(
+      Uri(
+        path: _path,
+        queryParameters: {
+          'include_deactivated': '$includeDeactivated',
+        },
+      ).toString(),
+    );
+    final data = response['data'] as Map;
+    return (data['salesRepresentatives'] as List)
+        .map(
+          (row) => ApiSalesRepresentative.fromJson(
+            Map<String, dynamic>.from(row as Map),
+          ),
+        )
+        .toList();
+  }
+
   ApiSalesRepresentative _record(Map<String, dynamic> response) =>
       ApiSalesRepresentative.fromJson(
         Map<String, dynamic>.from(response['data'] as Map),

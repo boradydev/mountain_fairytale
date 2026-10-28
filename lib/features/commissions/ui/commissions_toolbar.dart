@@ -54,17 +54,14 @@ class CommissionsToolbar extends StatelessWidget {
                 ),
               );
               final filter = SizedBox(
-                width: 300 * scale,
                 height: controlHeight,
-                child: Center(
-                  child: LabeledCheckboxToggle(
-                    label: 'Деактивированные',
-                    value: provider.includeDeactivated,
-                    onChanged: provider.setIncludeDeactivated,
-                    tooltip: provider.mode == CommissionMode.representatives
-                        ? 'Показать всех представителей, включая деактивированных без клиентов и начислений'
-                        : 'Показать деактивированных сотрудников со ставкой, даже без начислений',
-                  ),
+                child: LabeledCheckboxToggle(
+                  label: 'Деактивированные',
+                  value: provider.includeDeactivated,
+                  onChanged: provider.setIncludeDeactivated,
+                  tooltip: provider.mode == CommissionMode.representatives
+                      ? 'Показать всех представителей, включая деактивированных без клиентов и начислений'
+                      : 'Показать деактивированных сотрудников со ставкой, даже без начислений',
                 ),
               );
 
@@ -128,7 +125,15 @@ class CommissionsToolbar extends StatelessWidget {
                 runSpacing: 8,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 alignment: WrapAlignment.spaceBetween,
-                children: [selector, filter, monthControl],
+                children: [
+                  Wrap(
+                    spacing: 16 * scale,
+                    runSpacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [selector, filter],
+                  ),
+                  monthControl,
+                ],
               );
 
               return Column(

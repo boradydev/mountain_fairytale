@@ -4,10 +4,15 @@ import 'package:mountain_fairytale/shared/widgets/confirm_dialog.dart';
 
 Future<bool> showProductActivationDialog(
   BuildContext context,
-  Product product,
-) => ConfirmDialog.show(
+  Product product, {
+  bool selectAfterActivation = true,
+}) => ConfirmDialog.show(
   context,
   title: 'Товар неактивен',
-  content: 'Активировать «${product.name}» и выбрать для задания?',
-  confirmText: 'Активировать и выбрать',
+  content: selectAfterActivation
+      ? 'Активировать «${product.name}» и выбрать для задания?'
+      : 'Активировать «${product.name}»?',
+  confirmText: selectAfterActivation
+      ? 'Активировать и выбрать'
+      : 'Активировать',
 );

@@ -5,6 +5,7 @@ import 'package:mountain_fairytale/features/auth/ui/auth_provider.dart';
 import 'package:mountain_fairytale/features/dashboard/ui/dashboard_screen.dart';
 import 'package:mountain_fairytale/features/employees/ui/employees_screen.dart';
 import 'package:mountain_fairytale/features/commissions/ui/commissions_screen.dart';
+import 'package:mountain_fairytale/features/directories/ui/directories_screen.dart';
 import 'package:mountain_fairytale/shared/widgets/account_menu_button.dart';
 import 'package:mountain_fairytale/shared/widgets/theme_toggle_button.dart';
 import 'package:provider/provider.dart';
@@ -25,6 +26,7 @@ class _AppShellState extends State<AppShell> {
   static const _screens = <Widget>[
     DeliveryDaysScreen(),
     CommissionsScreen(),
+    DirectoriesScreen(),
     AuditLogScreen(),
     EmployeesScreen(),
   ];
@@ -37,7 +39,7 @@ class _AppShellState extends State<AppShell> {
     );
     final sectionCount = isAdmin ? _screens.length : _screens.length - 1;
     if (!isAdmin) {
-      _visitedSections.remove(3);
+      _visitedSections.remove(4);
       if (_selectedIndex >= sectionCount) _selectedIndex = 0;
     }
 
@@ -87,6 +89,7 @@ class _AppShellState extends State<AppShell> {
             tabs: [
               const Tab(text: 'Дашборд'),
               const Tab(text: 'Комиссии'),
+              const Tab(text: 'Справочники'),
               const Tab(text: 'Журнал событий'),
               if (isAdmin) const Tab(text: 'Сотрудники'),
             ],
