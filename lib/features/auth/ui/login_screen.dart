@@ -7,7 +7,18 @@ import 'package:mountain_fairytale/shared/widgets/icon_button_widget.dart';
 import 'package:provider/provider.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final bool connectionReady;
+  final bool connecting;
+  final String? connectionError;
+  final Future<void> Function()? onRetryConnection;
+
+  const LoginScreen({
+    super.key,
+    this.connectionReady = true,
+    this.connecting = false,
+    this.connectionError,
+    this.onRetryConnection,
+  });
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -22,8 +33,22 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
+    _loadUsersWhenReady();
+  }
+
+  @override
+  void didUpdateWidget(covariant LoginScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!oldWidget.connectionReady && widget.connectionReady) {
+      _loadUsersWhenReady();
+    }
+  }
+
+  void _loadUsersWhenReady() {
     Future.microtask(() {
-      if (mounted) context.read<AuthProvider>().loadUsers();
+      if (mounted && widget.connectionReady) {
+        context.read<AuthProvider>().loadUsers();
+      }
     });
   }
 
@@ -37,7 +62,8 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _login() async {
     final auth = context.read<AuthProvider>();
     final username = _selectedUsername;
-    if (auth.isLoading ||
+    if (!widget.connectionReady ||
+        auth.isLoading ||
         auth.isLoadingUsers ||
         username == null ||
         !auth.users.any((user) => user.username == username)) {
@@ -61,12 +87,15 @@ class _LoginScreenState extends State<LoginScreen> {
         ? _selectedUsername
         : null;
     final canLogin =
+        widget.connectionReady &&
         !auth.isLoading &&
         !auth.isLoadingUsers &&
         auth.usersError == null &&
         selected != null;
+    final usersError = widget.connectionError ?? auth.usersError;
+    final passwordError = widget.connectionError == null ? auth.error : null;
     final passwordHelp =
-        auth.error ?? 'Если пароль не установлен, оставьте поле пустым';
+        passwordError ?? 'Если пароль не установлен, оставьте поле пустым';
     final helperFontSize =
         Theme.of(context).textTheme.bodySmall?.fontSize ?? 12;
 
@@ -99,13 +128,19 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 8),
                 const Text('Войдите в Mountain Fairytale'),
                 const SizedBox(height: 32),
-                if (auth.isLoadingUsers) ...[
+                if (widget.connecting || auth.isLoadingUsers) ...[
                   const LinearProgressIndicator(),
                   const SizedBox(height: 12),
-                  const Text('Загрузка пользователей…'),
+                  Text(
+                    widget.connecting
+                        ? 'Подключение к серверу…'
+                        : 'Загрузка пользователей…',
+                  ),
                   const SizedBox(height: 16),
                 ],
-                if (!auth.isLoadingUsers && auth.usersError != null) ...[
+                if (!widget.connecting &&
+                    !auth.isLoadingUsers &&
+                    usersError != null) ...[
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: MaterialBanner(
@@ -116,7 +151,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         Icons.cloud_off_outlined,
                         color: Theme.of(context).colorScheme.error,
                       ),
-                      content: Text(auth.usersError!),
+                      content: Text(usersError),
                       contentTextStyle: Theme.of(context).textTheme.bodyMedium
                           ?.copyWith(
                             color: Theme.of(context).colorScheme.onSurface,
@@ -124,14 +159,17 @@ class _LoginScreenState extends State<LoginScreen> {
                       forceActionsBelow: true,
                       actions: [
                         TextButton(
-                          onPressed: auth.loadUsers,
+                          onPressed: widget.onRetryConnection ?? auth.loadUsers,
                           child: const Text('Повторить'),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 24),
-                ] else if (!auth.isLoadingUsers && users.isEmpty) ...[
+                ] else if (widget.connectionReady &&
+                    !widget.connecting &&
+                    !auth.isLoadingUsers &&
+                    users.isEmpty) ...[
                   const Text(
                     'Нет активных пользователей. Обратитесь к администратору.',
                     textAlign: TextAlign.center,
@@ -158,7 +196,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       )
                       .toList(),
-                  onChanged: auth.isLoading || auth.isLoadingUsers
+                  onChanged:
+                      !widget.connectionReady ||
+                          auth.isLoading ||
+                          auth.isLoadingUsers
                       ? null
                       : (value) {
                           auth.clearLoginError();
@@ -173,7 +214,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 TextField(
                   controller: _passwordController,
                   focusNode: _passwordFocus,
-                  enabled: !auth.isLoading,
+                  enabled: widget.connectionReady && !auth.isLoading,
                   obscureText: _obscurePassword,
                   maxLength: 50,
                   onChanged: (_) => auth.clearLoginError(),
@@ -214,7 +255,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
                                   height: 1.4,
-                                  color: auth.error == null
+                                  color: passwordError == null
                                       ? Theme.of(context)
                                             .colorScheme
                                             .onSurfaceVariant

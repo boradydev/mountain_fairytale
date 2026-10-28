@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:mountain_fairytale/core/network/api_exception.dart';
@@ -105,6 +107,7 @@ class AppCompatibilityProvider extends ChangeNotifier {
     checking = true;
     final revision = _responseRevision;
     final wasRequired = status == CompatibilityStatus.updateRequired;
+    final wasCompatible = compatible;
     error = null;
     notifyListeners();
     try {
@@ -135,9 +138,17 @@ class AppCompatibilityProvider extends ChangeNotifier {
     } catch (exception) {
       if (_disposed || revision != _responseRevision) return;
       error = authErrorMessage(exception);
+      final unavailable =
+          exception is SocketException ||
+          exception is TimeoutException ||
+          exception is HttpException ||
+          exception is HandshakeException ||
+          (exception is ApiException && exception.statusCode >= 500);
       _setStatus(
         wasRequired
             ? CompatibilityStatus.updateRequired
+            : wasCompatible && unavailable
+            ? CompatibilityStatus.compatible
             : CompatibilityStatus.error,
       );
     } finally {

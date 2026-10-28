@@ -10,7 +10,6 @@ import 'dart:io';
 
 import 'package:mountain_fairytale/features/app_settings/data/server_settings_repository.dart';
 import 'package:mountain_fairytale/features/app_settings/ui/server_settings_provider.dart';
-import 'package:mountain_fairytale/app/application_menu_button.dart';
 import 'package:mountain_fairytale/features/app_compatibility/ui/app_compatibility_provider.dart';
 import 'package:mountain_fairytale/features/app_compatibility/ui/app_compatibility_screen.dart';
 
@@ -369,9 +368,18 @@ class MyApp extends StatelessWidget {
 
       scaffoldMessengerKey: scaffoldMessengerKey,
 
-      home: compatibility.compatible
-          ? const _AuthGate()
-          : const AppCompatibilityScreen(),
+      home: switch (compatibility.status) {
+        CompatibilityStatus.updateRequired => const AppCompatibilityScreen(),
+        CompatibilityStatus.compatible => const _AuthGate(),
+        _ => LoginScreen(
+          connectionReady: false,
+          connecting:
+              compatibility.checking ||
+              compatibility.status == CompatibilityStatus.checking,
+          connectionError: compatibility.error,
+          onRetryConnection: compatibility.check,
+        ),
+      },
     );
     if (!auth.isAuthenticated || !compatibility.compatible) return app;
     return MultiProvider(
@@ -407,45 +415,19 @@ class _AuthGateState extends State<_AuthGate> {
 
     switch (auth.status) {
       case AuthStatus.initializing:
-        return const Scaffold(
-          body: Center(
-            child: CircularProgressIndicator(),
-          ),
+        return const LoginScreen(
+          connectionReady: false,
+          connecting: true,
         );
 
       case AuthStatus.unauthenticated:
         return const LoginScreen();
 
       case AuthStatus.serverUnavailable:
-        return Scaffold(
-          appBar: AppBar(
-            actions: const [ApplicationMenuButton()],
-          ),
-          body: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.cloud_off, size: 48),
-                  const SizedBox(height: 16),
-                  Text(
-                    auth.error ?? 'Не удалось восстановить вход.',
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  FilledButton(
-                    onPressed: auth.restoreSession,
-                    child: const Text('Повторить'),
-                  ),
-                  TextButton(
-                    onPressed: auth.logout,
-                    child: const Text('Выйти'),
-                  ),
-                ],
-              ),
-            ),
-          ),
+        return LoginScreen(
+          key: const ValueKey('session-unavailable'),
+          connectionError: auth.error ?? 'Не удалось восстановить вход.',
+          onRetryConnection: auth.restoreSession,
         );
 
       case AuthStatus.authenticated:
