@@ -27,7 +27,6 @@ class TaskItemRow extends StatefulWidget {
 class _TaskItemRowState extends State<TaskItemRow> {
   late final TextEditingController _controller;
   final FocusNode _focusNode = FocusNode();
-  String? _quantityError;
 
   @override
   void initState() {
@@ -37,9 +36,16 @@ class _TaskItemRowState extends State<TaskItemRow> {
   }
 
   void _onFocusChanged() {
-    if (!_focusNode.hasFocus) {
-      _controller.text = widget.item.quantity.toString();
-      setState(() => _quantityError = null);
+    if (!_focusNode.hasFocus) _restoreQuantity();
+  }
+
+  void _restoreQuantity() {
+    final text = widget.item.quantity.toString();
+    if (_controller.text != text) {
+      _controller.value = TextEditingValue(
+        text: text,
+        selection: TextSelection.collapsed(offset: text.length),
+      );
     }
   }
 
@@ -47,8 +53,12 @@ class _TaskItemRowState extends State<TaskItemRow> {
   void didUpdateWidget(covariant TaskItemRow oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (!_focusNode.hasFocus || !widget.enabled) {
-      _controller.text = widget.item.quantity.toString();
-      _quantityError = null;
+      // Updating a controller here can notify the ancestor Form during build.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && (!_focusNode.hasFocus || !widget.enabled)) {
+          _restoreQuantity();
+        }
+      });
     }
   }
 
@@ -64,7 +74,6 @@ class _TaskItemRowState extends State<TaskItemRow> {
     final value = widget.item.quantity + delta;
     if (!widget.enabled || value < 1) return;
     _controller.text = value.toString();
-    setState(() => _quantityError = null);
     widget.onQuantityChanged(value);
   }
 
@@ -90,16 +99,13 @@ class _TaskItemRowState extends State<TaskItemRow> {
                   focusNode: _focusNode,
                   enabled: widget.enabled,
                   validator: (text) =>
-                      (int.tryParse(text ?? '') ?? 0) > 0 ? null : 'Больше 0',
+                      (int.tryParse(text ?? '') ?? 0) > 0 ? null : '',
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                  errorBuilder: (_, _) => const SizedBox.shrink(),
                   keyboardType: TextInputType.number,
                   textAlign: TextAlign.center,
                   onChanged: (text) {
                     final value = int.tryParse(text);
-                    setState(
-                      () => _quantityError = value == null || value < 1
-                          ? 'Больше 0'
-                          : null,
-                    );
                     if (widget.enabled && value != null && value > 0) {
                       widget.onQuantityChanged(value);
                     }
@@ -107,7 +113,6 @@ class _TaskItemRowState extends State<TaskItemRow> {
                   onFieldSubmitted: (_) => _focusNode.unfocus(),
                   decoration: InputDecoration(
                     isDense: true,
-                    errorText: _quantityError,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 4,
                       vertical: 10,

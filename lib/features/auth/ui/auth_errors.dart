@@ -24,7 +24,7 @@ String authErrorMessage(Object error, {bool loggingIn = false}) {
     return switch (error.statusCode) {
       401 =>
         loggingIn
-            ? 'Неверный пользователь или пароль.'
+            ? 'Неверный пароль.'
             : 'Сессия завершена. Войдите снова.',
       403 => 'Недостаточно прав для выполнения действия.',
       422 => 'Проверьте введённые данные.',

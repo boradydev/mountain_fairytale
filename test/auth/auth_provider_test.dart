@@ -109,7 +109,7 @@ void main() {
         isFalse,
       );
       expect(provider.status, AuthStatus.unauthenticated);
-      expect(provider.error, 'Неверный пользователь или пароль.');
+      expect(provider.error, 'Неверный пароль.');
       expect(provider.currentUser, isNull);
     },
   );

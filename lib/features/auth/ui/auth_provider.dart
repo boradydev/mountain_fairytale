@@ -43,6 +43,14 @@ class AuthProvider extends ChangeNotifier {
   String? get usersError => _usersError;
   List<AuthUserModel> get users => _users;
 
+  void clearLoginError() {
+    if (_error == null || _isLoading || _status != AuthStatus.unauthenticated) {
+      return;
+    }
+    _error = null;
+    _notify();
+  }
+
   void _onSessionChanged() {
     if (_authService.isAuthenticated) {
       _status = AuthStatus.authenticated;
