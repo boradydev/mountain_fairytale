@@ -15,6 +15,7 @@ import 'package:mountain_fairytale/features/audit_event/ui/audit_event_screen.da
 import 'package:provider/provider.dart';
 
 import '../auth/auth_fakes.dart' show MemoryTokenStorage;
+import 'client_build.dart';
 
 class _RealHttp extends HttpOverrides {}
 
@@ -25,6 +26,7 @@ void main() {
     final transport = HttpTransport(
       baseUrl: Platform.environment['LIVE_API_URL'] ?? 'http://127.0.0.1:8000',
       client: _RealHttp().createHttpClient(null),
+      clientBuild: liveClientBuild(),
     );
     final auth = AuthServiceImpl(
       repository: AuthRepositoryImpl(

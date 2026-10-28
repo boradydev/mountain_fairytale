@@ -15,7 +15,7 @@ class ApiClient {
   ApiClient({
     required this._transport,
     required this._authService,
-    required this.userAgent,
+    this.userAgent = 'MountainFairytale Windows',
   });
 
   Future<Map<String, dynamic>> get(String path) async =>

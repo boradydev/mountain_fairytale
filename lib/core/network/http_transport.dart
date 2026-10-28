@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:mountain_fairytale/core/network/client_build_info.dart';
+
 class HttpRequestCancellation {
   bool _cancelled = false;
   void Function()? _abort;
@@ -16,11 +18,15 @@ class HttpTransport {
   final String baseUrl;
   final HttpClient _client;
   final Duration requestTimeout;
+  ClientBuildInfo? clientBuild;
+  void Function(String path)? beforeRequest;
+  void Function(HttpTransportResponse response)? onResponse;
 
   HttpTransport({
     required this.baseUrl,
     HttpClient? client,
     this.requestTimeout = const Duration(seconds: 15),
+    this.clientBuild,
   }) : _client = client ?? HttpClient() {
     _client.connectionTimeout = requestTimeout;
   }
@@ -86,6 +92,7 @@ class HttpTransport {
     cancellation?._abort = () =>
         request?.abort(const HttpException('Request cancelled'));
     Future<HttpTransportResponse> perform() async {
+      beforeRequest?.call(path);
       if (cancellation?.isCancelled ?? false) {
         throw const HttpException('Request cancelled');
       }
@@ -104,17 +111,28 @@ class HttpTransport {
       opened.headers.set(HttpHeaders.acceptHeader, 'application/json');
       opened.headers.set(
         HttpHeaders.userAgentHeader,
-        'MountainFairytale/1.0 Windows',
+        'MountainFairytale Windows',
       );
       headers?.forEach(opened.headers.set);
+      final build = clientBuild;
+      if (build != null) {
+        opened.headers.set('X-Client-Version', build.version);
+        opened.headers.set('X-Client-Build', build.build);
+        opened.headers.set(
+          HttpHeaders.userAgentHeader,
+          'MountainFairytale/${build.version}+${build.build} Windows',
+        );
+      }
       if (body != null) opened.write(jsonEncode(body));
       final response = await opened.close();
       final responseBody = await utf8.decoder.bind(response).join();
-      return HttpTransportResponse(
+      final result = HttpTransportResponse(
         statusCode: response.statusCode,
         body: responseBody,
         requestId: response.headers.value('X-Request-ID'),
       );
+      onResponse?.call(result);
+      return result;
     }
 
     return perform()

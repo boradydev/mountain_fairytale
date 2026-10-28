@@ -42,13 +42,18 @@ import 'package:mountain_fairytale/shared/providers/theme_provider.dart';
 import 'package:mountain_fairytale/shared/widgets/confirm_dialog.dart';
 
 import '../auth/auth_fakes.dart' show MemoryTokenStorage;
+import 'client_build.dart';
 
 // This opt-in suite never resets the database or starts/restarts the server.
 class _RealHttp extends HttpOverrides {}
 
 class LiveTransport extends HttpTransport {
   LiveTransport(String url)
-    : super(baseUrl: url, client: _RealHttp().createHttpClient(null));
+    : super(
+        baseUrl: url,
+        client: _RealHttp().createHttpClient(null),
+        clientBuild: liveClientBuild(),
+      );
   final requests = <String>[];
   final createdDocuments = <String>[];
   @override

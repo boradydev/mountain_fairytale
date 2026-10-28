@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:mountain_fairytale/features/app_settings/ui/server_settings_button.dart';
+import 'package:mountain_fairytale/features/app_compatibility/ui/app_compatibility_provider.dart';
 import 'package:mountain_fairytale/features/app_settings/ui/server_settings_provider.dart';
 import 'package:mountain_fairytale/features/app_updates/ui/update_button.dart';
 import 'package:mountain_fairytale/features/app_updates/ui/update_provider.dart';
@@ -15,9 +16,22 @@ class ApplicationMenuButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = context.watch<ServerSettingsProvider?>();
     final updates = context.watch<UpdateProvider?>();
+    final compatibility = context.watch<AppCompatibilityProvider?>();
     if (settings == null && updates == null) return const SizedBox.shrink();
     return MenuAnchor(
       menuChildren: [
+        if (compatibility?.installed != null)
+          MenuItemButton(
+            child: Text(
+              'Приложение: ${compatibility!.installed!.version}+${compatibility.installed!.build}',
+            ),
+          ),
+        if (compatibility?.backendVersion != null)
+          MenuItemButton(
+            child: Text(
+              'Сервер: ${compatibility!.backendVersion}; требуется приложение ≥ ${compatibility.minimumVersion}',
+            ),
+          ),
         if (settings != null)
           MenuItemButton(
             leadingIcon: const Icon(Icons.dns_outlined),

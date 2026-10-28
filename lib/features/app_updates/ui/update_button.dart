@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:mountain_fairytale/features/app_compatibility/ui/app_compatibility_provider.dart';
 
 import 'package:mountain_fairytale/shared/widgets/confirm_dialog.dart';
 import 'package:mountain_fairytale/shared/widgets/icon_button_widget.dart';
@@ -40,12 +41,16 @@ class UpdateButton extends StatelessWidget {
       );
       return;
     }
+    final required =
+        context.read<AppCompatibilityProvider?>()?.status ==
+        CompatibilityStatus.updateRequired;
     final confirmed = await ConfirmDialog.show(
       context,
       title: 'Обновление ${release.version}',
       content:
           '${release.description}\n\n'
-          'Сохраните работу и закройте другие экземпляры приложения. '
+          '${required ? 'Несохранённые данные форм сброшены. ' : 'Сохраните работу. '}'
+          'Закройте другие экземпляры приложения. '
           'После загрузки и подтверждения установки приложение закроется. '
           'Настройки и авторизация сохранятся.',
       confirmText: 'Обновить',
