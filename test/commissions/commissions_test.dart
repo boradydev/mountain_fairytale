@@ -264,6 +264,19 @@ void main() {
       expect(find.text('5%'), findsOneWidget);
       await tester.tap(find.text('Передать клиентов'));
       await tester.pumpAndSettle();
+      expect(
+        tester
+            .getSize(
+              find
+                  .descendant(
+                    of: find.byType(AlertDialog),
+                    matching: find.byType(Material),
+                  )
+                  .first,
+            )
+            .height,
+        lessThan(350),
+      );
       await tester.tap(find.byType(DropdownButtonFormField<String>));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Новый представитель').last);

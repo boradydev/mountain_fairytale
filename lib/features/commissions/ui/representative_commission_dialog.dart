@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:mountain_fairytale/features/sales_representatives/data/sales_representative_api_repo.dart';
+import 'package:mountain_fairytale/features/sales_representatives/ui/sales_rep_dialog.dart';
 import 'package:mountain_fairytale/shared/widgets/active_status_label.dart';
 import 'package:mountain_fairytale/core/network/api_exception.dart';
 import 'package:mountain_fairytale/shared/widgets/app_notify.dart';
@@ -34,6 +37,7 @@ class _RepresentativeCommissionDialogState
   bool _loading = true;
   bool _busy = false;
   bool _changed = false;
+  bool? _active;
   String? _error;
   String _search = '';
   @override
@@ -53,7 +57,10 @@ class _RepresentativeCommissionDialogState
         widget.month,
       );
       if (!mounted) return;
-      setState(() => _details = details);
+      setState(() {
+        _details = details;
+        _active = details.representative.isActive;
+      });
     } catch (_) {
       if (mounted) {
         setState(() => _error = 'Не удалось загрузить клиентов и начисления.');
@@ -123,6 +130,40 @@ class _RepresentativeCommissionDialogState
     );
   }
 
+  Future<void> _changeActivity() async {
+    final representative = _details?.representative;
+    if (_busy || _loading || representative == null) return;
+    final active = !(_active ?? representative.isActive);
+    setState(() => _busy = true);
+    try {
+      final confirmed = await confirmSalesRepresentativeActivity(
+        context,
+        name: representative.name,
+        active: active,
+      );
+      if (!mounted || !confirmed) return;
+      setState(() => _error = null);
+      final saved = await context
+          .read<SalesRepresentativeApiRepository>()
+          .update(representative.id, {'isActive': active});
+      if (!mounted) return;
+      setState(() {
+        _active = saved.isActive;
+        _changed = true;
+      });
+      await _load();
+    } catch (_) {
+      if (mounted) {
+        setState(
+          () => _error =
+              'Не удалось изменить активность представителя. Повторите запрос.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final details = _details;
@@ -153,7 +194,7 @@ class _RepresentativeCommissionDialogState
                 if (representative != null)
                   CommissionPersonHeader(
                     name: representative.name,
-                    isActive: representative.isActive,
+                    isActive: _active ?? representative.isActive,
                     nameStyle: Theme.of(context).textTheme.titleLarge,
                   )
                 else
@@ -284,26 +325,42 @@ class _RepresentativeCommissionDialogState
                         ),
                 ),
                 const SizedBox(height: 16),
-                Wrap(
-                  alignment: WrapAlignment.end,
-                  spacing: 12,
-                  runSpacing: 8,
+                OverflowBar(
+                  alignment: MainAxisAlignment.spaceBetween,
+                  overflowAlignment: OverflowBarAlignment.start,
+                  spacing: 24,
+                  overflowSpacing: 12,
                   children: [
-                    AppSecondaryButton(
-                      text: 'Закрыть',
-                      onPressed: _busy
-                          ? null
-                          : () => Navigator.pop(context, _changed),
-                    ),
-                    AppSecondaryButton(
-                      text: 'Снять представителя',
-                      onPressed: canAssign ? () => _assign(null, '') : null,
-                    ),
-                    AppPrimaryButton(
-                      text: 'Передать клиентов',
-                      onPressed: canAssign && widget.targets.isNotEmpty
-                          ? _chooseTarget
-                          : null,
+                    if (representative != null)
+                      AppSecondaryButton(
+                        text: (_active ?? representative.isActive)
+                            ? 'Деактивировать'
+                            : 'Активировать',
+                        destructive: _active ?? representative.isActive,
+                        onPressed: _busy || _loading ? null : _changeActivity,
+                      ),
+                    Wrap(
+                      alignment: WrapAlignment.end,
+                      spacing: 12,
+                      runSpacing: 8,
+                      children: [
+                        AppSecondaryButton(
+                          text: 'Закрыть',
+                          onPressed: _busy
+                              ? null
+                              : () => Navigator.pop(context, _changed),
+                        ),
+                        AppSecondaryButton(
+                          text: 'Снять представителя',
+                          onPressed: canAssign ? () => _assign(null, '') : null,
+                        ),
+                        AppPrimaryButton(
+                          text: 'Передать клиентов',
+                          onPressed: canAssign && widget.targets.isNotEmpty
+                              ? _chooseTarget
+                              : null,
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -328,15 +385,17 @@ class _TargetDialogState extends State<_TargetDialog> {
   @override
   Widget build(BuildContext context) => AlertDialog(
     title: const Text('Передать клиентов'),
-    content: SizedBox(
-      width: 440,
-      child: AppDropdown<String>(
-        label: 'Торговый представитель',
-        items: widget.targets.map((row) => row.id).toList(),
-        value: _selected,
-        itemLabelBuilder: (id) =>
-            widget.targets.firstWhere((row) => row.id == id).name,
-        onChanged: (value) => setState(() => _selected = value),
+    content: SingleChildScrollView(
+      child: SizedBox(
+        width: 440,
+        child: AppDropdown<String>(
+          label: 'Торговый представитель',
+          items: widget.targets.map((row) => row.id).toList(),
+          value: _selected,
+          itemLabelBuilder: (id) =>
+              widget.targets.firstWhere((row) => row.id == id).name,
+          onChanged: (value) => setState(() => _selected = value),
+        ),
       ),
     ),
     actions: [

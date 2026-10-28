@@ -12,6 +12,21 @@ import 'package:mountain_fairytale/shared/widgets/duplicate_check_status_widget.
 import 'package:mountain_fairytale/shared/widgets/icon_button_widget.dart';
 import 'package:provider/provider.dart';
 
+Future<bool> confirmSalesRepresentativeActivity(
+  BuildContext context, {
+  required String name,
+  required bool active,
+}) => ConfirmDialog.show(
+  context,
+  title: active
+      ? 'Активировать представителя?'
+      : 'Деактивировать представителя?',
+  content:
+      '«$name». Закрепления клиентов и исторические начисления сохранятся.',
+  confirmText: active ? 'Активировать' : 'Деактивировать',
+  destructive: !active,
+);
+
 class SalesRepDialog extends StatefulWidget {
   final SalesRepresentative? salesRep;
   final ApiSalesRepresentative? apiSalesRep;
@@ -309,14 +324,10 @@ class _SalesRepDialogState extends State<SalesRepDialog> {
   Future<void> _setApiActive(ApiSalesRepresentative rep) async {
     if (_busy) return;
     final active = !rep.isActive;
-    final confirmed = await ConfirmDialog.show(
+    final confirmed = await confirmSalesRepresentativeActivity(
       context,
-      title: active
-          ? 'Активировать представителя?'
-          : 'Деактивировать представителя?',
-      content: '«${rep.name}». Запись и история сохранятся.',
-      confirmText: active ? 'Активировать' : 'Деактивировать',
-      destructive: !active,
+      name: rep.name,
+      active: active,
     );
     if (!confirmed || !mounted) return;
     setState(() {
