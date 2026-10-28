@@ -87,33 +87,42 @@ class _BaseFormDialogState extends State<BaseFormDialog> {
         padding: const EdgeInsets.fromLTRB(24, 24, 8, 24),
         child: Form(
           key: widget.formKey,
-          child: _scrollableForm(
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.title,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.onSurface,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.title,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+              SizedBox(
+                height: 16,
+                child: widget.isLoading
+                    ? const Center(
+                        child: LinearProgressIndicator(minHeight: 4),
+                      )
+                    : null,
+              ),
+
+              Flexible(
+                child: _scrollableForm(
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: widget.children,
                   ),
                 ),
-                SizedBox(
-                  height: 16,
-                  child: widget.isLoading
-                      ? const Center(
-                          child: LinearProgressIndicator(minHeight: 4),
-                        )
-                      : null,
-                ),
+              ),
 
-                ...widget.children,
+              const SizedBox(height: 24),
 
-                const SizedBox(height: 24),
-
-                OverflowBar(
+              Padding(
+                padding: const EdgeInsets.only(right: 16),
+                child: OverflowBar(
                   alignment: widget.leadingAction == null
                       ? MainAxisAlignment.end
                       : MainAxisAlignment.spaceBetween,
@@ -147,8 +156,8 @@ class _BaseFormDialogState extends State<BaseFormDialog> {
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

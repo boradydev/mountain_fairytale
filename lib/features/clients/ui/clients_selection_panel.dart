@@ -92,41 +92,51 @@ class _ClientSelectionPanelState extends State<ClientSelectionPanel> {
     if (saved != null) {
       setState(() => _selectedClient = saved);
       widget.provider.syncClientPoint(saved);
-      if (saved.isActive) widget.provider.addClientPoint(saved);
+      if (client == null && saved.isActive) {
+        widget.provider.addClientPoint(saved);
+      }
     }
     await _search();
   }
 
-  Future<void> _selectClient(Client client) async {
+  void _selectClient(Client client) {
     if (_busy || !widget.provider.canEdit) return;
+    setState(() => _selectedClient = client);
+  }
+
+  void _addClient(Client client) {
+    if (_busy || !widget.provider.canEdit || !client.isActive) return;
+    if (widget.provider.points.any((point) => point.clientId == client.id)) {
+      return;
+    }
+    setState(() => _selectedClient = client);
+    widget.provider.addClientPoint(client);
+  }
+
+  Future<void> _activateClient(Client client) async {
+    if (_busy || !widget.provider.canEdit || client.isActive) return;
     setState(() {
       _selectedClient = client;
       _busy = true;
     });
     try {
-      var selected = client;
-      if (!client.isActive) {
-        final confirmed = await ConfirmDialog.show(
-          context,
-          title: 'Активировать и добавить клиента?',
-          content:
-              '«${client.name}» снова станет доступен для новых маршрутов.',
-          confirmText: 'Активировать и добавить',
-        );
-        if (!confirmed || !mounted) return;
-        final provider = context.read<ClientsProvider>();
-        final activated = await provider.setClientActive(client.id, true);
-        if (!mounted) return;
-        if (!activated) {
-          setState(() => _searchError = provider.errorMessage);
-          return;
-        }
-        selected = provider.lastSavedClient!;
-        await _search();
-      }
+      final confirmed = await ConfirmDialog.show(
+        context,
+        title: 'Активировать клиента?',
+        content:
+            '«${client.name}» снова станет доступен для новых маршрутов и самовывозов. После активации его можно будет добавить в документ отдельной кнопкой.',
+        confirmText: 'Активировать',
+      );
+      if (!confirmed || !mounted) return;
+      final provider = context.read<ClientsProvider>();
+      final activated = await provider.setClientActive(client.id, true);
       if (!mounted) return;
-      setState(() => _selectedClient = selected);
-      widget.provider.addClientPoint(selected);
+      if (!activated) {
+        setState(() => _searchError = provider.errorMessage);
+        return;
+      }
+      setState(() => _selectedClient = provider.lastSavedClient!);
+      await _search();
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -213,7 +223,12 @@ class _ClientSelectionPanelState extends State<ClientSelectionPanel> {
                 return ListTile(
                   enabled: provider.canEdit && !_busy,
                   // ИСПРАВЛЕНО: Убираем боковые отступы ListTile, чтобы выровнять по границам TextField
-                  contentPadding: EdgeInsets.zero,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  selectedTileColor: colorScheme.secondaryContainer,
+                  selectedColor: colorScheme.onSecondaryContainer,
                   selected: _selectedClient?.id == client.id,
                   title: Text(
                     client.name,
@@ -235,12 +250,28 @@ class _ClientSelectionPanelState extends State<ClientSelectionPanel> {
                           : null,
                     ),
                   ),
-                  trailing: !client.isActive
-                      ? const Icon(Icons.archive_outlined)
-                      : isAlreadyAdded
-                      ? const Icon(Icons.check_circle, color: Colors.grey)
+                  trailing: isAlreadyAdded
+                      ? const AppIconButton(
+                          icon: Icons.check_circle,
+                          tooltip: 'Клиент уже добавлен',
+                          color: Colors.grey,
+                          onPressed: null,
+                        )
                       : provider.canEdit
-                      ? const Icon(Icons.add_circle, color: Colors.green)
+                      ? AppIconButton(
+                          icon: client.isActive
+                              ? Icons.add_circle
+                              : Icons.unarchive_outlined,
+                          color: Colors.green,
+                          tooltip: client.isActive
+                              ? 'Добавить клиента в документ'
+                              : 'Активировать клиента',
+                          onPressed: _busy
+                              ? null
+                              : () => client.isActive
+                                    ? _addClient(client)
+                                    : _activateClient(client),
+                        )
                       : null,
                   dense: true,
                   onTap: _busy || !provider.canEdit

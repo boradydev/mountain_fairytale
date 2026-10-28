@@ -125,4 +125,61 @@ void main() {
       },
     );
   }
+
+  for (final brightness in Brightness.values) {
+    testWidgets('long form keeps actions visible in $brightness', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(420, 600);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      var saves = 0;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(
+            brightness: brightness,
+            platform: TargetPlatform.windows,
+          ),
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: TextScaler.linear(1.3)),
+            child: child!,
+          ),
+          home: BaseFormDialog(
+            title: 'Редактирование клиента',
+            submitButtonText: 'Сохранить',
+            submitButtonWidth: 160,
+            formKey: GlobalKey<FormState>(),
+            onSubmit: () => saves++,
+            leadingAction: AppSecondaryButton(
+              text: 'Деактивировать',
+              onPressed: () {},
+            ),
+            children: [
+              for (var i = 0; i < 20; i++)
+                TextFormField(
+                  decoration: InputDecoration(labelText: 'Поле $i'),
+                ),
+            ],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final save = find.text('Сохранить');
+      final initial = tester.getRect(save);
+      expect(save.hitTestable(), findsOneWidget);
+      expect(find.text('Отмена').hitTestable(), findsOneWidget);
+      expect(find.text('Деактивировать').hitTestable(), findsOneWidget);
+      await tester.drag(
+        find.byType(SingleChildScrollView),
+        const Offset(0, -600),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.getRect(save), initial);
+      await tester.tap(save);
+      expect(saves, 1);
+      expect(tester.takeException(), isNull);
+    });
+  }
 }
