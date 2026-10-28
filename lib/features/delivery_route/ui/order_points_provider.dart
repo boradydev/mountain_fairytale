@@ -42,6 +42,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
   bool isEditing = true;
   bool documentBusy = false;
   String? documentError;
+  String? editingBlockedBy;
   String? lockOwner;
   bool documentChanged = false;
   int documentRevision = 1;
@@ -111,6 +112,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     documentBusy = false;
     documentError = null;
     lockOwner = null;
+    editingBlockedBy = null;
     documentChanged = false;
   }
 
@@ -323,6 +325,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     notifyListeners();
     try {
       lockOwner = await lockRepository!.acquireEditLock(id);
+      editingBlockedBy = null;
       _hasLock = true;
       if (version != _sessionVersion || _closed || _closing) {
         await lockRepository!.releaseEditLock(id);
@@ -341,6 +344,9 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       return true;
     } catch (error) {
       isEditing = false;
+      editingBlockedBy = error is ApiException && error.statusCode == 423
+          ? error.ownerName ?? 'Другой сотрудник'
+          : null;
       documentError = documentFailure(error);
       return false;
     } finally {

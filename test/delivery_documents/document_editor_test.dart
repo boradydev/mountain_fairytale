@@ -131,7 +131,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Редактировать'), findsNothing);
     expect(
-      find.text('Документ отменён. Для редактирования восстановите его.'),
+      find.text('Документ отменён'),
       findsOneWidget,
     );
     await tester.tap(find.text('Закрыть'));

@@ -169,8 +169,8 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
       context,
       title: active ? 'Отменить документ?' : 'Восстановить документ?',
       content: active
-          ? 'Документ будет отменён. Несохранённые изменения формы не сохранятся.'
-          : 'Документ снова станет активным со всеми сохранёнными данными.',
+          ? 'Документ не будет учитываться в показателях дня доставки и расчётах вознаграждений торговых представителей и менеджеров офиса.\n\nДанные сохранятся — документ можно будет просмотреть и восстановить.'
+          : 'Документ снова будет учитываться в показателях дня доставки и расчётах вознаграждений торговых представителей и менеджеров офиса.\n\nСохранённые начисления снова будут учитываться. Редактирование документа станет доступно.',
       confirmText: active ? 'Отменить документ' : 'Восстановить',
       destructive: active,
     );
@@ -294,21 +294,13 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
                         creating: creating,
                         editing: editing,
                         active: p.documentActive,
+                        message: p.documentError,
+                        editingBlockedBy: p.editingBlockedBy,
                         creationTitle: widget.title == 'Самовывоз'
                             ? 'Новый самовывоз'
                             : 'Новый маршрутный лист',
                         onEdit: _loading || busy ? null : p.beginEditing,
                       ),
-                      if (p.documentError != null)
-                        Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Text(
-                            p.documentError!,
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
-                            ),
-                          ),
-                        ),
                       SizedBox(
                         height: 4,
                         child: busy
