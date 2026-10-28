@@ -5,6 +5,7 @@ import 'package:mountain_fairytale/features/commissions/data/commission_amount.d
 import 'package:mountain_fairytale/features/commissions/data/commission_models.dart';
 import 'package:mountain_fairytale/features/commissions/ui/commission_widgets.dart';
 import 'package:mountain_fairytale/features/commissions/ui/commissions_provider.dart';
+import 'package:mountain_fairytale/features/commissions/ui/commission_metric_help.dart';
 import 'package:mountain_fairytale/features/sales_representative_commissions/ui/month_picker_dialog.dart';
 import 'package:mountain_fairytale/shared/widgets/labeled_checkbox_toggle.dart';
 
@@ -177,11 +178,11 @@ class _CommissionSummary extends StatelessWidget {
       (
         mode == CommissionMode.representatives
             ? 'Оборот представителей'
-            : 'Общая база сотрудников',
+            : 'Оборот сотрудников',
         formatCommissionCents(
           mode == CommissionMode.representatives
               ? report.representedTurnover
-              : report.totalTurnover,
+              : report.employeeTurnover.cents,
         ),
         false,
       ),
@@ -229,34 +230,38 @@ class _CommissionSummaryValue extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
+    return Tooltip(
+      message: commissionMetricHelp(label),
+      constraints: const BoxConstraints(maxWidth: 360),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
-        ),
-        const SizedBox(height: 3),
-        Text(
-          value,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style:
-              (prominent
-                      ? theme.textTheme.titleLarge
-                      : theme.textTheme.titleMedium)
-                  ?.copyWith(
-                    fontWeight: prominent ? FontWeight.w600 : FontWeight.w500,
-                    color: prominent ? theme.colorScheme.primary : null,
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                  ),
-        ),
-      ],
+          const SizedBox(height: 3),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style:
+                (prominent
+                        ? theme.textTheme.titleLarge
+                        : theme.textTheme.titleMedium)
+                    ?.copyWith(
+                      fontWeight: prominent ? FontWeight.w600 : FontWeight.w500,
+                      color: prominent ? theme.colorScheme.primary : null,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+          ),
+        ],
+      ),
     );
   }
 }

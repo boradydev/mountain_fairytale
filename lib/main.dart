@@ -105,16 +105,19 @@ Future<void> main() async {
       center: !restorePosition,
       title: "Mountain Fairytale",
     );
+    final restoreMaximized =
+        prefs.getBool(WindowSettingsService.maximizedKey) ?? false;
 
     windowManager.waitUntilReadyToShow(windowOptions, () async {
       if (restorePosition) {
         await windowManager.setPosition(storedPosition);
       }
+      if (restoreMaximized) await windowManager.maximize();
+      windowManager.addListener(WindowSettingsService(prefs));
+      await windowManager.setPreventClose(true);
       await windowManager.show();
       await windowManager.focus();
     });
-
-    windowManager.addListener(WindowSettingsService());
   }
   final serverSettings = ServerSettingsProvider(
     ServerSettingsRepository(

@@ -1,6 +1,8 @@
 import 'package:mountain_fairytale/features/pickup/data/pickup_model.dart';
 import 'package:mountain_fairytale/features/pickup/pickup_abcs.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/order_points_provider.dart';
+import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_sheet_model.dart';
+import 'package:mountain_fairytale/core/network/api_exception.dart';
 
 class PickupConstructorProvider extends OrderPointsProvider {
   final PickupRepository _pickupRepo;
@@ -31,6 +33,7 @@ class PickupConstructorProvider extends OrderPointsProvider {
   Future<void> loadDirectories() => loadOrderDirectories();
   void _applySheet(PickupSheet sheet) {
     documentId = sheet.id;
+    documentRevision = sheet.revision;
     documentCreatedAt = sheet.createdAt;
     documentActive = sheet.isActive;
     selectedDate = sheet.date;
@@ -60,8 +63,28 @@ class PickupConstructorProvider extends OrderPointsProvider {
     _applySheet(await _pickupRepo.getPickupSheetById(documentId!));
   }
 
+  @override
+  Future<RouteDocument?> readRecoveryDocument() =>
+      _pickupRepo.getPickupSheetById(documentId!);
+
+  @override
+  Future<RouteDocument?> findPendingCreation(String requestId) async {
+    try {
+      return await _pickupRepo.findCreatedPickup(requestId);
+    } on ApiException catch (error) {
+      if (error.statusCode == 404) return null;
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> applyRecoveryDocument(RouteDocument document) async =>
+      _applySheet(document as PickupSheet);
+
   PickupSheet get currentPickupSheet => PickupSheet(
     id: documentId,
+    revision: documentRevision,
+    saveOperationId: saveOperationId,
     createdAt: documentCreatedAt,
     isActive: documentActive,
     date: selectedDate,
@@ -74,6 +97,7 @@ class PickupConstructorProvider extends OrderPointsProvider {
     documentError = null;
     notifyListeners();
     try {
+      prepareDocumentSave();
       _applySheet(await _pickupRepo.savePickupSheet(currentPickupSheet));
       markDocumentSaved(created: creating);
       return true;
@@ -100,6 +124,7 @@ class PickupConstructorProvider extends OrderPointsProvider {
         id: saved.id,
         createdAt: saved.createdAt,
         active: saved.isActive,
+        revision: saved.revision,
       );
       documentChanged = true;
       return true;

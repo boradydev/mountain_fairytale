@@ -9,6 +9,7 @@ import 'package:mountain_fairytale/features/delivery_route/ui/route_points_list.
 import 'package:mountain_fairytale/shared/widgets/confirm_dialog.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/theme_toggle_button.dart';
+import 'package:mountain_fairytale/features/delivery_route/ui/document_connection_dialog.dart';
 
 /// Shared document lifecycle for delivery and pickup constructors.
 class DeliveryDocumentEditor extends StatefulWidget {
@@ -44,6 +45,50 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
   bool _lastEditing = false;
   bool _leaving = false;
   ({bool creating, bool editing})? _savePresentation;
+  BuildContext? _connectionDialogContext;
+  bool _connectionDialogShowing = false;
+
+  void _syncConnectionDialog() {
+    if (widget.provider.connectionInterrupted && !_connectionDialogShowing) {
+      _connectionDialogShowing = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted || !widget.provider.connectionInterrupted) {
+          _connectionDialogShowing = false;
+          return;
+        }
+        await showDialog<void>(
+          context: context,
+          barrierDismissible: false,
+          builder: (dialogContext) {
+            _connectionDialogContext = dialogContext;
+            return DocumentConnectionDialog(provider: widget.provider);
+          },
+        );
+        _connectionDialogContext = null;
+        _connectionDialogShowing = false;
+      });
+    } else if (!widget.provider.connectionInterrupted &&
+        _connectionDialogContext != null) {
+      final dialogContext = _connectionDialogContext!;
+      _connectionDialogContext = null;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (dialogContext.mounted) Navigator.of(dialogContext).pop();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.provider.stopConnectionWatch();
+    final dialogContext = _connectionDialogContext;
+    if (dialogContext != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (dialogContext.mounted) Navigator.of(dialogContext).pop();
+      });
+    }
+    super.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -90,11 +135,31 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
     try {
       if (!await widget.save() || !mounted) return;
       widget.onDocumentChanged?.call();
-      closed = await _close(afterSave: true);
+      if (_savePresentation!.creating) {
+        closed = await _close(afterSave: true);
+      } else {
+        await widget.provider.finishEditingAfterSave();
+      }
     } finally {
       // Keep the presentation through the reverse route animation on success.
       // On failure, show the provider's real mode and allow recovery.
       if (mounted && !closed) setState(() => _savePresentation = null);
+    }
+  }
+
+  Future<void> _back() async {
+    final p = widget.provider;
+    if (_loading ||
+        _leaving ||
+        _savePresentation != null ||
+        p.documentBusy ||
+        p.connectionInterrupted) {
+      return;
+    }
+    if (p.documentId != null && p.isEditing) {
+      await p.cancelEditing();
+    } else {
+      await _close();
     }
   }
 
@@ -104,8 +169,8 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
       context,
       title: active ? 'Отменить документ?' : 'Восстановить документ?',
       content: active
-          ? 'Документ будет отменён. Несохранённые изменения формы не сохранятся.'
-          : 'Документ снова станет активным со всеми сохранёнными данными.',
+          ? 'Документ не будет учитываться в показателях дня доставки и расчётах вознаграждений торговых представителей и менеджеров офиса.\n\nДанные сохранятся — документ можно будет просмотреть и восстановить.'
+          : 'Документ снова будет учитываться в показателях дня доставки и расчётах вознаграждений торговых представителей и менеджеров офиса.\n\nСохранённые начисления снова будут учитываться. Редактирование документа станет доступно.',
       confirmText: active ? 'Отменить документ' : 'Восстановить',
       destructive: active,
     );
@@ -118,6 +183,8 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
     listenable: widget.provider,
     builder: (context, _) {
       final p = widget.provider;
+      p.startConnectionWatch();
+      _syncConnectionDialog();
       final creating = _savePresentation?.creating ?? (p.documentId == null);
       final editing = _savePresentation?.editing ?? p.isEditing;
       final busy = p.documentBusy || _savePresentation != null || _leaving;
@@ -131,7 +198,7 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
       return PopScope(
         canPop: _canPop,
         onPopInvokedWithResult: (didPop, result) {
-          if (!didPop) _close();
+          if (!didPop) _back();
         },
         child: AbsorbPointer(
           absorbing: _savePresentation != null || _leaving,
@@ -139,7 +206,7 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
             appBar: AppBar(
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back),
-                onPressed: busy ? null : _close,
+                onPressed: busy || _loading ? null : _back,
               ),
               centerTitle: true,
               title: LayoutBuilder(
@@ -227,21 +294,13 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
                         creating: creating,
                         editing: editing,
                         active: p.documentActive,
+                        message: p.documentError,
+                        editingBlockedBy: p.editingBlockedBy,
                         creationTitle: widget.title == 'Самовывоз'
                             ? 'Новый самовывоз'
                             : 'Новый маршрутный лист',
                         onEdit: _loading || busy ? null : p.beginEditing,
                       ),
-                      if (p.documentError != null)
-                        Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Text(
-                            p.documentError!,
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
-                            ),
-                          ),
-                        ),
                       SizedBox(
                         height: 4,
                         child: busy

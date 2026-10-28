@@ -122,7 +122,9 @@ class AppDropdown<T> extends StatelessWidget {
                 isDense: true,
                 enabled: enabled,
               ),
-              hint: hint != null ? Text(hint!) : null,
+              hint: hint != null
+                  ? Text(hint!, maxLines: 1, overflow: TextOverflow.ellipsis)
+                  : null,
               validator: validator,
               items: items.map((item) {
                 return DropdownMenuItem<T>(

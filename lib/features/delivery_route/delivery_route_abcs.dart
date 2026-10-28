@@ -10,6 +10,7 @@ abstract interface class DeliveryRouteRepository
     bool includeCancelled = false,
   });
   Future<DeliveryRouteSheet> getRouteSheetById(String id);
+  Future<DeliveryRouteSheet> findCreatedRoute(String requestId);
   Future<DeliveryRouteSheet> saveRouteSheet(DeliveryRouteSheet sheet);
   Future<DeliveryRouteSheet> cancelRouteSheet(String id);
   Future<DeliveryRouteSheet> restoreRouteSheet(String id);

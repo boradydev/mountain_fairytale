@@ -18,6 +18,10 @@ import 'document_provider_test.dart'
     show Orders, Catalog, Locks, Clients, point;
 
 class RepresentativeClients extends Clients {
+  bool failLoad = false;
+  List<ClientDirectoryEntry> representativeRows = [
+    const ClientDirectoryEntry('rep', 'Иванов Алексей'),
+  ];
   int representativeLoads = 0;
   UpdateClientRequest? request;
   bool fail = false;
@@ -26,7 +30,8 @@ class RepresentativeClients extends Clients {
     bool includeDeactivated = false,
   }) async {
     representativeLoads++;
-    return [const ClientDirectoryEntry('rep', 'Иванов Алексей')];
+    if (failLoad) throw StateError('offline');
+    return representativeRows;
   }
 
   @override
@@ -62,6 +67,99 @@ class RepresentativeOrders extends OrderPointsProvider {
 }
 
 void main() {
+  for (final editing in [false, true]) {
+    testWidgets(
+      'inactive representative is marked independently of filter, editing=$editing',
+      (tester) async {
+        final repo = RepresentativeClients()
+          ..representativeRows = [
+            const ClientDirectoryEntry(
+              'rep',
+              'Иванов Алексей',
+              isActive: false,
+            ),
+          ];
+        final clients = ClientsProvider(repo);
+        final orders = RepresentativeOrders(repo)
+          ..isEditing = editing
+          ..points = [
+            RoutePoint.fromJson({
+              ...point.toJson(),
+              'salesRepresentativeId': 'rep',
+              'salesRepresentativeName': 'Иванов Алексей',
+            }),
+          ];
+        addTearDown(clients.dispose);
+        addTearDown(orders.dispose);
+        await tester.pumpWidget(
+          ChangeNotifierProvider.value(
+            value: clients,
+            child: MaterialApp(
+              home: Scaffold(
+                body: SizedBox(
+                  width: 550,
+                  child: ListenableBuilder(
+                    listenable: orders,
+                    builder: (_, _) => PointRepresentativeSelector(
+                      provider: orders,
+                      point: orders.points.single,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('Иванов Алексей — Неактивен'), findsOneWidget);
+        final dropdown = find.byType(AppDropdown<ClientDirectoryEntry>);
+        expect(
+          tester.widget<AppDropdown<ClientDirectoryEntry>>(dropdown).items,
+          isEmpty,
+        );
+        if (editing) {
+          await tester.tap(find.byTooltip('Показать неактивные записи'));
+          await tester.pumpAndSettle();
+          expect(find.text('Иванов Алексей — Неактивен'), findsOneWidget);
+          expect(
+            tester
+                .widget<AppDropdown<ClientDirectoryEntry>>(dropdown)
+                .items
+                .single
+                .isActive,
+            isFalse,
+          );
+          await tester.tap(find.byTooltip('Скрыть неактивные записи'));
+          await tester.pumpAndSettle();
+          expect(find.text('Иванов Алексей — Неактивен'), findsOneWidget);
+        }
+        expect(repo.request, isNull);
+        expect(
+          orders.points.single.items.map((item) => item.toJson()).toList(),
+          point.items.map((item) => item.toJson()).toList(),
+        );
+        expect(orders.points.single.totalCents, point.totalCents);
+        repo.failLoad = true;
+        orders.isEditing = false;
+        orders.notifyListeners();
+        await tester.pumpAndSettle();
+        orders.isEditing = true;
+        orders.notifyListeners();
+        await tester.pumpAndSettle();
+        expect(find.text('Иванов Алексей — Статус неизвестен'), findsOneWidget);
+        expect(
+          tester.widget<AppDropdown<ClientDirectoryEntry>>(dropdown).enabled,
+          isFalse,
+        );
+        repo.failLoad = false;
+        await tester.tap(find.text('Повторить загрузку'));
+        await tester.pumpAndSettle();
+        expect(find.text('Иванов Алексей — Неактивен'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
   for (final width in [360.0, 1200.0]) {
     testWidgets('route summary and quantity controls work at width $width', (
       tester,
@@ -200,7 +298,7 @@ void main() {
         tester.widget<AppDropdown<ClientDirectoryEntry>>(repField).enabled,
         isFalse,
       );
-      expect(repo.representativeLoads, 0);
+      expect(repo.representativeLoads, 1);
       expect(find.text('Наличные'), findsOneWidget);
       expect(find.text('Иванов Алексей'), findsOneWidget);
       final anchors = [
@@ -239,7 +337,7 @@ void main() {
         );
         expect(tester.takeException(), isNull);
       }
-      expect(repo.representativeLoads, 1);
+      expect(repo.representativeLoads, 2);
       expect(repo.request, isNull);
     });
   }

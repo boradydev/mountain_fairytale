@@ -2,20 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/shared/widgets/active_status_label.dart';
 
 import 'package:mountain_fairytale/features/commissions/data/commission_models.dart';
+import 'package:mountain_fairytale/features/commissions/ui/commission_metric_help.dart';
 
 class CommissionMetric extends StatelessWidget {
   final String label;
   final String value;
-  const CommissionMetric(this.label, this.value, {super.key});
+  final String? tooltip;
+  const CommissionMetric(this.label, this.value, {super.key, this.tooltip});
   @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Text(label, style: Theme.of(context).textTheme.bodySmall),
-      const SizedBox(height: 4),
-      Text(value, style: Theme.of(context).textTheme.titleMedium),
-    ],
+  Widget build(BuildContext context) => Tooltip(
+    message: tooltip ?? commissionMetricHelp(label),
+    constraints: const BoxConstraints(maxWidth: 360),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(label, style: Theme.of(context).textTheme.bodySmall),
+        const SizedBox(height: 4),
+        Text(value, style: Theme.of(context).textTheme.titleMedium),
+      ],
+    ),
   );
 }
 
@@ -38,7 +44,13 @@ class CommissionRates extends StatelessWidget {
                   runSpacing: 12,
                   children: [
                     CommissionMetric('Ставка', '${rate.percent}%'),
-                    CommissionMetric('Оборотная база', rate.turnover.formatted),
+                    CommissionMetric(
+                      'Оборотная база',
+                      rate.turnover.formatted,
+                      tooltip:
+                          'Оборот за выбранный месяц, к которому применялась эта сохранённая ставка. '
+                          'Используется для расчёта начисления в этой строке.',
+                    ),
                     CommissionMetric('Начислено', rate.payable.formatted),
                   ],
                 ),

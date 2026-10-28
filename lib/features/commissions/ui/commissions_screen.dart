@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:mountain_fairytale/features/clients/ui/clients_provider.dart';
 import 'package:mountain_fairytale/shared/widgets/base_card_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/add_action_card.dart';
+import 'package:mountain_fairytale/features/sales_representatives/data/sales_representative_api_repo.dart';
+import 'package:mountain_fairytale/features/sales_representatives/ui/sales_rep_dialog.dart';
 
 import 'package:mountain_fairytale/features/commissions/data/commission_models.dart';
 import 'package:mountain_fairytale/features/commissions/ui/commission_widgets.dart';
@@ -18,6 +21,42 @@ class CommissionsScreen extends StatefulWidget {
 
 class _CommissionsScreenState extends State<CommissionsScreen> {
   bool _visible = false;
+  bool _creatingRepresentative = false;
+
+  Future<ApiSalesRepresentative?> _representativeForm(
+    SalesRepresentativeApiRepository repository, {
+    ApiSalesRepresentative? current,
+  }) async {
+    ApiSalesRepresentative? openAfter;
+    final saved = await showDialog<ApiSalesRepresentative>(
+      context: context,
+      builder: (dialogContext) => SalesRepDialog(
+        apiRepository: repository,
+        apiSalesRep: current,
+        onOpenSalesRep: (existing) {
+          openAfter = existing;
+          Navigator.pop(dialogContext);
+        },
+      ),
+    );
+    if (mounted && openAfter != null) {
+      return _representativeForm(repository, current: openAfter);
+    }
+    return saved;
+  }
+
+  Future<void> _addRepresentative() async {
+    if (_creatingRepresentative) return;
+    _creatingRepresentative = true;
+    try {
+      final repository = context.read<SalesRepresentativeApiRepository>();
+      final provider = context.read<CommissionsProvider>();
+      final saved = await _representativeForm(repository);
+      if (mounted && saved != null) await provider.refresh();
+    } finally {
+      _creatingRepresentative = false;
+    }
+  }
 
   @override
   void didChangeDependencies() {
@@ -79,13 +118,17 @@ class _CommissionsScreenState extends State<CommissionsScreen> {
     CommissionsProvider provider,
     CommissionReport report,
   ) {
-    if (report.representatives.isEmpty) {
-      return const Center(child: Text('Представителей нет'));
-    }
     return ListView.builder(
-      itemCount: report.representatives.length,
+      itemCount: report.representatives.length + 1,
       itemBuilder: (context, index) {
-        final row = report.representatives[index];
+        if (index == 0) {
+          return AddActionButton(
+            label: 'Добавить представителя',
+            icon: Icons.person_add_alt_1_outlined,
+            onTap: _addRepresentative,
+          );
+        }
+        final row = report.representatives[index - 1];
         return AppBaseCard(
           onTap: () async {
             final changed = await showDialog<bool>(
@@ -124,7 +167,7 @@ class _CommissionsScreenState extends State<CommissionsScreen> {
                     '${row.assignedClientsCount}',
                   ),
                   CommissionMetric('Заказов', '${row.ordersCount}'),
-                  CommissionMetric('Оборот', row.turnover.formatted),
+                  CommissionMetric('Оборотная база', row.turnover.formatted),
                   CommissionMetric('К выплате', row.payable.formatted),
                 ],
               ),

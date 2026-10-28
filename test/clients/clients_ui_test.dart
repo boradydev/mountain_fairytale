@@ -90,6 +90,7 @@ class ClientsFake implements ClientRepository {
   List<ClientDirectoryEntry> paymentRows = [];
   Client? selected;
   bool conflict = false;
+  bool updateFailure = false;
   bool duplicateFailure = false;
   Client? duplicate;
   Completer<Client?>? duplicateGate;
@@ -150,6 +151,7 @@ class ClientsFake implements ClientRepository {
 
   @override
   Future<Client> updateClient(String id, UpdateClientRequest request) async {
+    if (updateFailure) throw Exception('offline');
     updated = request;
     return row(id: id, active: request.isActive ?? true);
   }
@@ -365,7 +367,158 @@ Future<void> fill(WidgetTester tester, {bool withDistrict = true}) async {
   await tester.pump();
 }
 
+Future<void> openSelection(
+  WidgetTester tester,
+  ClientsFake repo,
+  SearchOrders orders, {
+  Brightness brightness = Brightness.light,
+}) async {
+  tester.view.physicalSize = const Size(1200, 900);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+  final clients = ClientsProvider(repo);
+  addTearDown(clients.dispose);
+  await clients.fetchClients();
+  await tester.pumpWidget(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: clients),
+        Provider<LocationRepository>.value(value: FakeLocations()),
+      ],
+      child: MaterialApp(
+        theme: AppTheme.createTheme(brightness),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SizedBox(
+            width: 500,
+            child: ListenableBuilder(
+              listenable: orders,
+              builder: (context, _) => ClientSelectionPanel(provider: orders),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
 void main() {
+  testWidgets(
+    'activation does not add a point; cancel and failure preserve inactivity',
+    (tester) async {
+      final repo = ClientsFake();
+      repo.onSearch = (_, include) async => [
+        row(active: repo.updated?.isActive ?? false),
+      ];
+      final orders = SearchOrders(repo);
+      addTearDown(orders.dispose);
+      await openSelection(tester, repo, orders);
+      await tester.tap(find.byTooltip('Показать неактивные записи'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Клиент'));
+      await tester.pumpAndSettle();
+      expect(find.text('Активировать клиента?'), findsNothing);
+      expect(repo.updated, isNull);
+      final activation = find.byTooltip('Активировать клиента');
+      final center = tester.getCenter(find.byIcon(Icons.unarchive_outlined));
+      await tester.tap(activation);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Отмена'));
+      await tester.pumpAndSettle();
+      expect(repo.updated, isNull);
+      expect(orders.points, isEmpty);
+      repo.updateFailure = true;
+      await tester.tap(activation);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Активировать'));
+      await tester.pumpAndSettle();
+      expect(activation, findsOneWidget);
+      expect(orders.points, isEmpty);
+      repo.updateFailure = false;
+      await tester.tap(activation);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Активировать'));
+      await tester.pumpAndSettle();
+      expect(repo.updated!.toJson(), {'isActive': true});
+      expect(orders.points, isEmpty);
+      expect(activation, findsNothing);
+      expect(tester.getCenter(find.byIcon(Icons.add_circle)), center);
+      await tester.tap(find.byTooltip('Добавить клиента в документ'));
+      await tester.pumpAndSettle();
+      expect(orders.points, hasLength(1));
+      expect(tester.getCenter(find.byIcon(Icons.check_circle)), center);
+    },
+  );
+
+  for (final brightness in Brightness.values) {
+    testWidgets('editing selected client does not add a point in $brightness', (
+      tester,
+    ) async {
+      final repo = ClientsFake();
+      final orders = SearchOrders(repo);
+      addTearDown(orders.dispose);
+      await openSelection(tester, repo, orders, brightness: brightness);
+      await tester.tap(find.text('Клиент'));
+      await tester.pumpAndSettle();
+      expect(orders.points, isEmpty);
+      final tile = tester.widget<ListTile>(find.byType(ListTile));
+      expect(tile.selected, isTrue);
+      expect(
+        tile.selectedTileColor,
+        Theme.of(tester.element(find.byType(ListTile)))
+            .colorScheme
+            .secondaryContainer,
+      );
+      await tester.tap(find.byTooltip('Редактировать выбранный элемент'));
+      await tester.pumpAndSettle();
+      // Even an unchanged OK used to add the client to the document.
+      await tester.tap(find.text('ОК'));
+      await tester.pumpAndSettle();
+      expect(orders.points, isEmpty);
+      await tester.tap(find.byTooltip('Редактировать выбранный элемент'));
+      await tester.pumpAndSettle();
+      await tester.enterText(field('Детали доставки'), 'Позвонить заранее');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Сохранить'));
+      await tester.pumpAndSettle();
+      expect(repo.updated, isNotNull);
+      expect(orders.points, isEmpty);
+      final addCenter = tester.getCenter(find.byIcon(Icons.add_circle));
+      await tester.tap(find.byTooltip('Добавить клиента в документ'));
+      await tester.pumpAndSettle();
+      expect(orders.points, hasLength(1));
+      expect(tester.getCenter(find.byIcon(Icons.check_circle)), addCenter);
+      await tester.tap(find.text('Клиент'));
+      await tester.pumpAndSettle();
+      expect(orders.points, hasLength(1));
+      expect(find.byTooltip('Добавить клиента в документ'), findsNothing);
+    });
+  }
+
+  testWidgets('new client created in constructor is still added', (
+    tester,
+  ) async {
+    final repo = ClientsFake();
+    final orders = SearchOrders(repo);
+    addTearDown(orders.dispose);
+    await openSelection(tester, repo, orders);
+    await tester.tap(find.byTooltip('Добавить Клиент *'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      field('Название организации / ФИО *'),
+      'Новый клиент',
+    );
+    await tester.enterText(field('Адрес *'), 'Михайловск, Тестовая 1');
+    await tester.enterText(field('Номер телефона *'), '9123456789');
+    await tester.tap(find.text('Добавить'));
+    await tester.pumpAndSettle();
+    expect(repo.creates, 1);
+    expect(orders.points, hasLength(1));
+  });
+
   testWidgets(
     'free address and delivery details save without any Geoapify request',
     (tester) async {
@@ -739,13 +892,26 @@ void main() {
       oldResponse.complete([row(id: 'outdated')]);
       await tester.pumpAndSettle();
       await tester.tap(find.text('Клиент'));
+      await tester.pumpAndSettle();
+      expect(orders.points, isEmpty);
+      final tile = tester.widget<ListTile>(find.byType(ListTile));
+      expect(tile.selected, isTrue);
+      expect(tile.selectedTileColor, isNotNull);
+      await tester.tap(find.byTooltip('Добавить клиента в документ'));
+      await tester.pumpAndSettle();
       expect(orders.points.single.clientId, 'current');
+      expect(find.byTooltip('Добавить клиента в документ'), findsNothing);
       orders.points.clear();
       await tester.tap(find.byTooltip('Показать неактивные записи'));
       await tester.pump(const Duration(milliseconds: 350));
       await tester.pumpAndSettle();
       expect(find.textContaining('Деактивирован'), findsOneWidget);
       await tester.tap(find.text('Клиент'));
+      await tester.pumpAndSettle();
+      expect(find.text('Активировать клиента?'), findsNothing);
+      expect(repo.updated, isNull);
+      expect(orders.points, isEmpty);
+      await tester.tap(find.byTooltip('Активировать клиента'));
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('Отмена'));
       await tester.tap(find.text('Отмена'));

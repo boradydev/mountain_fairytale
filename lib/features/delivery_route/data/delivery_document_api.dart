@@ -1,6 +1,7 @@
 import 'package:mountain_fairytale/core/network/api_client.dart';
 
 abstract interface class DocumentLockRepository {
+  Future<void> checkConnection();
   Future<String> acquireEditLock(String id);
   Future<String> renewEditLock(String id);
   Future<void> releaseEditLock(String id);
@@ -10,6 +11,7 @@ abstract interface class DeliveryDocumentDataSource
     implements DocumentLockRepository {
   Future<List<Map<String, dynamic>>> getAll({bool includeCancelled = false});
   Future<Map<String, dynamic>> getById(String id);
+  Future<Map<String, dynamic>> findCreated(String requestId);
   Future<Map<String, dynamic>> create(Map<String, dynamic> json);
   Future<Map<String, dynamic>> patch(String id, Map<String, dynamic> json);
   Future<Map<String, dynamic>> setActive(String id, bool active);
@@ -24,6 +26,11 @@ class ApiDeliveryDocumentDataSource implements DeliveryDocumentDataSource {
     required this.path,
     required this.listKey,
   });
+  @override
+  Future<void> checkConnection() async {
+    await client.get('/health/ready');
+  }
+
   Map<String, dynamic> _data(Map<String, dynamic> response) =>
       Map<String, dynamic>.from(response['data'] as Map);
   @override
@@ -49,6 +56,9 @@ class ApiDeliveryDocumentDataSource implements DeliveryDocumentDataSource {
   @override
   Future<Map<String, dynamic>> getById(String id) async =>
       _data(await client.get('$path/$id'));
+  @override
+  Future<Map<String, dynamic>> findCreated(String requestId) async =>
+      _data(await client.get('$path/creation-requests/$requestId'));
   @override
   Future<Map<String, dynamic>> create(Map<String, dynamic> json) async =>
       _data(await client.post('$path/create', body: json));

@@ -4,6 +4,8 @@ import 'package:mountain_fairytale/features/delivery_route/data/route_point_mode
 part 'delivery_route_sheet_model.g.dart';
 
 abstract class RouteDocument {
+  int get revision;
+  String? get lastOperationId;
   String? get id;
   DateTime? get createdAt;
   bool get isActive;
@@ -21,6 +23,13 @@ class DeliveryRouteSheet implements RouteDocument {
   @override
   @JsonKey(defaultValue: true)
   final bool isActive;
+  @override
+  @JsonKey(defaultValue: 1)
+  final int revision;
+  @override
+  final String? lastOperationId;
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  final String? saveOperationId;
   @override
   @JsonKey(name: 'plannedDate')
   final DateTime date;
@@ -46,6 +55,10 @@ class DeliveryRouteSheet implements RouteDocument {
   double get grandTotal =>
       points.fold(0, (sum, point) => sum + point.totalCents) / 100;
   Map<String, dynamic> toRequestJson() => {
+    if (id != null) 'expectedRevision': revision,
+    if (id != null && saveOperationId != null) 'operationId': saveOperationId,
+    if (id == null && saveOperationId != null)
+      'creationRequestId': saveOperationId,
     'plannedDate': date.toIso8601String().substring(0, 10),
     'driverId': driverId,
     'carId': carId,
@@ -63,6 +76,9 @@ class DeliveryRouteSheet implements RouteDocument {
     this.id,
     this.createdAt,
     this.isActive = true,
+    this.revision = 1,
+    this.lastOperationId,
+    this.saveOperationId,
     required this.date,
     required this.driverName,
     this.driverId,
@@ -90,6 +106,9 @@ class DeliveryRouteSheet implements RouteDocument {
       id: id ?? this.id,
       createdAt: createdAt,
       isActive: isActive,
+      revision: revision,
+      lastOperationId: lastOperationId,
+      saveOperationId: saveOperationId,
       date: date ?? this.date,
       driverName: driverName ?? this.driverName,
       driverId: driverId ?? this.driverId,

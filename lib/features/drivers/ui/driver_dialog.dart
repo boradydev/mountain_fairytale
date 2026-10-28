@@ -177,16 +177,22 @@ class _DriverDialogState extends State<DriverDialog> {
     final provider = context.read<RouteConstructorProvider>();
     final confirmed = await showDriverActivationDialog(context, driver);
     if (!confirmed || !mounted) return;
+    setState(() => _busy = true);
     final success = await provider.activateAndSelectDriver(driver);
     if (!mounted) return;
     if (success) {
       Navigator.pop(context);
     } else {
       setState(
-        () => _error = 'Не удалось активировать водителя. Повторите попытку.',
+        () {
+          _busy = false;
+          _error = 'Не удалось активировать водителя. Повторите попытку.';
+        },
       );
     }
   }
+
+  Future<void> _activate() => _confirmAndActivate(widget.driver!);
 
   Future<void> _deactivate() async {
     if (_busy) return;
@@ -237,11 +243,15 @@ class _DriverDialogState extends State<DriverDialog> {
       onSubmit: _save,
       isBusy: _busy,
       isLoading: _busy && !_checking,
-      leadingAction: widget.isEditMode && widget.driver!.isActive
+      leadingAction: widget.isEditMode
           ? AppSecondaryButton(
-              text: 'Деактивировать',
-              destructive: true,
-              onPressed: _busy ? null : _deactivate,
+              text: widget.driver!.isActive ? 'Деактивировать' : 'Активировать',
+              destructive: widget.driver!.isActive,
+              onPressed: _busy
+                  ? null
+                  : widget.driver!.isActive
+                  ? _deactivate
+                  : _activate,
             )
           : null,
       children: [

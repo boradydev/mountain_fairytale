@@ -380,7 +380,7 @@ void main() {
             .length;
         await tap(marker);
         await settled(
-          () => find.text('Начать редактирование').evaluate().isNotEmpty,
+          () => find.text('Редактировать').evaluate().isNotEmpty,
         );
         expect(
           transport.requests.where((r) => r.endsWith('/edit-lock')).length,
@@ -406,11 +406,15 @@ void main() {
         await settled(() => route.documentActive);
         expect(days.days.first.totalAmount, 5.70);
         debugPrint('LIVE: restoration reflected in card');
-        await tap('Начать редактирование');
+        await tap('Редактировать');
         await settled(() => route.isEditing);
         route.updateTaskQuantity(0, 0, 4);
         await tester.pump();
         await tap('Сохранить');
+        await settled(
+          () => find.text('Маршрутный лист (просмотр)').evaluate().isNotEmpty,
+        );
+        await tap('Закрыть');
         await settled(
           () => find.byType(DayDocumentsDialog).evaluate().isNotEmpty,
         );
@@ -419,9 +423,9 @@ void main() {
 
         await tap(marker);
         await settled(
-          () => find.text('Начать редактирование').evaluate().isNotEmpty,
+          () => find.text('Редактировать').evaluate().isNotEmpty,
         );
-        await tap('Начать редактирование');
+        await tap('Редактировать');
         await settled(() => route.isEditing);
         await tap(marker);
         await tester.pump(const Duration(milliseconds: 350));
@@ -434,6 +438,10 @@ void main() {
         expect(route.points.single.items.single.price, 2.675);
         expect(route.points.single.items.single.productName, originalName);
         await tap('Сохранить');
+        await settled(
+          () => find.text('Маршрутный лист (просмотр)').evaluate().isNotEmpty,
+        );
+        await tap('Закрыть');
         await settled(
           () => find.byType(DayDocumentsDialog).evaluate().isNotEmpty,
         );
@@ -449,13 +457,17 @@ void main() {
           ),
         );
         await settled(
-          () => find.text('Начать редактирование').evaluate().isNotEmpty,
+          () => find.text('Редактировать').evaluate().isNotEmpty,
         );
-        await tap('Начать редактирование');
+        await tap('Редактировать');
         await settled(() => pickup.isEditing);
         pickup.setDate(backdated);
         await tester.pump();
         await tap('Сохранить');
+        await settled(
+          () => find.text('Самовывоз (просмотр)').evaluate().isNotEmpty,
+        );
+        await tap('Закрыть');
         await settled(
           () => find.byType(DayDocumentsDialog).evaluate().isNotEmpty,
         );
@@ -543,9 +555,11 @@ void main() {
             final document = data(await api.get(path));
             if (document['isActive'] == false) await api.post('$path/restore');
             await api.post('$path/edit-lock');
+            final current = data(await api.get(path));
             await api.patch(
               path,
               body: {
+                'expectedRevision': current['revision'],
                 'plannedDate': originalFirst!.toIso8601String().substring(
                   0,
                   10,

@@ -3,6 +3,7 @@ import 'package:mountain_fairytale/app/application_menu_button.dart';
 import 'package:mountain_fairytale/features/auth/ui/auth_provider.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/theme_toggle_button.dart';
+import 'package:mountain_fairytale/shared/widgets/icon_button_widget.dart';
 import 'package:provider/provider.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -14,6 +15,8 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
+  final _passwordFocus = FocusNode();
+  bool _obscurePassword = true;
   String? _selectedUsername;
 
   @override
@@ -27,6 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void dispose() {
     _passwordController.dispose();
+    _passwordFocus.dispose();
     super.dispose();
   }
 
@@ -43,7 +47,10 @@ class _LoginScreenState extends State<LoginScreen> {
       username: username,
       password: _passwordController.text,
     );
-    if (mounted && success) _passwordController.clear();
+    if (mounted && success) {
+      _passwordController.clear();
+      setState(() => _obscurePassword = true);
+    }
   }
 
   @override
@@ -58,6 +65,10 @@ class _LoginScreenState extends State<LoginScreen> {
         !auth.isLoadingUsers &&
         auth.usersError == null &&
         selected != null;
+    final passwordHelp =
+        auth.error ?? 'Если пароль не установлен, оставьте поле пустым';
+    final helperFontSize =
+        Theme.of(context).textTheme.bodySmall?.fontSize ?? 12;
 
     return Scaffold(
       appBar: AppBar(
@@ -108,9 +119,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       content: Text(auth.usersError!),
                       contentTextStyle: Theme.of(context).textTheme.bodyMedium
                           ?.copyWith(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                       forceActionsBelow: true,
                       actions: [
@@ -152,37 +161,71 @@ class _LoginScreenState extends State<LoginScreen> {
                   onChanged: auth.isLoading || auth.isLoadingUsers
                       ? null
                       : (value) {
+                          auth.clearLoginError();
                           setState(() {
                             _selectedUsername = value;
                             _passwordController.clear();
+                            _obscurePassword = true;
                           });
                         },
                 ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: _passwordController,
+                  focusNode: _passwordFocus,
                   enabled: !auth.isLoading,
-                  obscureText: true,
+                  obscureText: _obscurePassword,
                   maxLength: 50,
+                  onChanged: (_) => auth.clearLoginError(),
                   onSubmitted: (_) => _login(),
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Пароль',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.lock_outline),
-                    helperText:
-                        'Если пароль не установлен, оставьте поле пустым',
-                  ),
-                ),
-                if (auth.error != null) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    auth.error!,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: AppIconButton(
+                      icon: _obscurePassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      tooltip: _obscurePassword
+                          ? 'Показать пароль'
+                          : 'Скрыть пароль',
+                      onPressed: auth.isLoading
+                          ? null
+                          : () {
+                              setState(
+                                () => _obscurePassword = !_obscurePassword,
+                              );
+                              _passwordFocus.requestFocus();
+                            },
+                    ),
+                    helper: Tooltip(
+                      message: passwordHelp,
+                      child: SizedBox(
+                        height:
+                            MediaQuery.textScalerOf(context)
+                                .scale(helperFontSize) *
+                            2.8,
+                        child: Semantics(
+                          liveRegion: true,
+                          child: Text(
+                            passwordHelp,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  height: 1.4,
+                                  color: auth.error == null
+                                      ? Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant
+                                      : Theme.of(context).colorScheme.error,
+                                ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                ],
+                ),
                 const SizedBox(height: 28),
                 SizedBox(
                   width: double.infinity,
@@ -191,10 +234,17 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: canLogin ? _login : null,
                   ),
                 ),
-                if (auth.isLoading) ...[
-                  const SizedBox(height: 20),
-                  const CircularProgressIndicator(),
-                ],
+                SizedBox(
+                  height: 56,
+                  child: auth.isLoading
+                      ? const Center(
+                          child: SizedBox.square(
+                            dimension: 24,
+                            child: CircularProgressIndicator(),
+                          ),
+                        )
+                      : null,
+                ),
               ],
             ),
           ),

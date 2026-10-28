@@ -1,5 +1,8 @@
 import 'dart:async';
 
+import 'package:mountain_fairytale/features/pickup/data/pickup_model.dart';
+import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_sheet_model.dart';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mountain_fairytale/core/network/api_exception.dart';
@@ -40,12 +43,21 @@ class Catalog implements ProductRepository {
 }
 
 class Locks implements DocumentLockRepository {
+  Object? connectionError;
+  Object? acquireError;
+  Object? releaseError;
+  @override
+  Future<void> checkConnection() async {
+    if (connectionError != null) throw connectionError!;
+  }
+
   int acquired = 0, renewed = 0, released = 0;
   bool failRenew = false, failRelease = false;
   Completer<String>? acquireGate;
   @override
   Future<String> acquireEditLock(String id) async {
     acquired++;
+    if (acquireError != null) throw acquireError!;
     return acquireGate == null ? 'manager' : acquireGate!.future;
   }
 
@@ -61,6 +73,7 @@ class Locks implements DocumentLockRepository {
   @override
   Future<void> releaseEditLock(String id) async {
     released++;
+    if (releaseError != null) throw releaseError!;
     if (failRelease) throw StateError('Offline');
   }
 }
@@ -82,6 +95,21 @@ const point = RoutePoint(
 );
 
 class Orders extends OrderPointsProvider {
+  RouteDocument? recoveryDocument;
+  @override
+  Future<RouteDocument?> readRecoveryDocument() async => recoveryDocument;
+  @override
+  Future<RouteDocument?> findPendingCreation(String requestId) async =>
+      recoveryDocument;
+  @override
+  Future<void> applyRecoveryDocument(RouteDocument document) async {
+    final sheet = document as PickupSheet;
+    points = sheet.points;
+    documentId = sheet.id;
+    documentRevision = sheet.revision;
+    documentActive = sheet.isActive;
+  }
+
   int refreshes = 0;
   bool failRead = false;
   Orders(Catalog catalog, Locks locks)
@@ -256,7 +284,8 @@ void main() {
       locks.failRenew = true;
       await tester.pump(const Duration(seconds: 30));
       expect(provider.canSave, isFalse);
-      expect(provider.documentError, contains('Блокировка потеряна'));
+      expect(provider.connectionInterrupted, isTrue);
+      expect(provider.isEditing, isTrue);
       locks.failRenew = false;
       expect(await provider.beginEditing(), isTrue);
       expect(provider.refreshes, 1);

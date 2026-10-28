@@ -32,13 +32,14 @@ class _PointRepresentativeSelectorState
   bool _includeInactive = false;
   String? _error;
   int _version = 0;
+  int _loadGeneration = 0;
   late bool _wasEditable;
 
   @override
   void initState() {
     super.initState();
     _wasEditable = widget.provider.canEdit;
-    if (_wasEditable) {
+    if (_wasEditable || widget.point.salesRepresentativeId != null) {
       _load();
     } else {
       _loading = false;
@@ -49,12 +50,16 @@ class _PointRepresentativeSelectorState
   void didUpdateWidget(covariant PointRepresentativeSelector oldWidget) {
     super.didUpdateWidget(oldWidget);
     final editable = widget.provider.canEdit;
-    if (editable && !_wasEditable) _load();
+    if ((editable && !_wasEditable) ||
+        widget.point.salesRepresentativeId !=
+            oldWidget.point.salesRepresentativeId) {
+      _load();
+    }
     _wasEditable = editable;
   }
 
   Future<void> _load() async {
-    if (!widget.provider.canEdit) return;
+    final generation = ++_loadGeneration;
     setState(() {
       _loading = true;
       _error = null;
@@ -62,14 +67,16 @@ class _PointRepresentativeSelectorState
     try {
       final items = await context
           .read<ClientsProvider>()
-          .getSalesRepresentatives(includeDeactivated: _includeInactive);
-      if (mounted) setState(() => _items = items);
+          .getSalesRepresentatives(includeDeactivated: true);
+      if (mounted && generation == _loadGeneration) {
+        setState(() => _items = items);
+      }
     } catch (_) {
-      if (mounted) {
+      if (mounted && generation == _loadGeneration) {
         setState(() => _error = 'Не удалось загрузить представителей.');
       }
     } finally {
-      if (mounted) {
+      if (mounted && generation == _loadGeneration) {
         setState(() {
           _loading = false;
           _version++;
@@ -159,9 +166,24 @@ class _PointRepresentativeSelectorState
   @override
   Widget build(BuildContext context) {
     final point = widget.point;
-    final selected = _items
-        .where((item) => item.id == point.salesRepresentativeId)
-        .firstOrNull;
+    final selected = (_loading || _error != null)
+        ? null
+        : _items
+              .where((item) => item.id == point.salesRepresentativeId)
+              .firstOrNull;
+    final visible = _items
+        .where((item) => _includeInactive || item.isActive)
+        .toList();
+    final selectedVisible =
+        selected != null && visible.any((item) => item.id == selected.id);
+    final name = point.salesRepresentative.trim().isEmpty
+        ? selected?.name ?? 'Не указан'
+        : point.salesRepresentative;
+    final hint = point.salesRepresentativeId == null
+        ? name
+        : selected != null
+        ? '$name${selected.isActive ? '' : ' — Неактивен'}'
+        : '$name — ${_loading ? 'Статус уточняется' : 'Статус неизвестен'}';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -169,20 +191,18 @@ class _PointRepresentativeSelectorState
           isLoading: widget.provider.canEdit && (_loading || _busy),
           key: ValueKey('rep-$_version-${point.salesRepresentativeId}'),
           label: 'Торговый представитель',
-          items: _items,
-          value: selected,
-          hint: point.salesRepresentative.trim().isEmpty
-              ? 'Не указан'
-              : point.salesRepresentative,
-          enabled: !_busy && !_loading && widget.provider.canEdit,
+          items: visible,
+          value: selectedVisible ? selected : null,
+          hint: hint,
+          enabled:
+              !_busy && !_loading && _error == null && widget.provider.canEdit,
           showAdd: true,
           showEdit: true,
           editBeforeAdd: true,
           showInactiveToggle: true,
           includeInactive: _includeInactive,
           onIncludeInactiveChanged: (value) {
-            _includeInactive = value;
-            _load();
+            setState(() => _includeInactive = value);
           },
           itemLabelBuilder: (item) =>
               '${item.name}${item.isActive ? '' : ' — Неактивен'}',

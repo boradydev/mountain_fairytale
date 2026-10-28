@@ -13,6 +13,8 @@ DeliveryRouteSheet _$DeliveryRouteSheetFromJson(Map<String, dynamic> json) =>
           ? null
           : DateTime.parse(json['createdAt'] as String),
       isActive: json['isActive'] as bool? ?? true,
+      revision: (json['revision'] as num?)?.toInt() ?? 1,
+      lastOperationId: json['lastOperationId'] as String?,
       date: DateTime.parse(json['plannedDate'] as String),
       driverName: json['driverName'] as String,
       driverId: json['driverId'] as String?,
@@ -30,6 +32,8 @@ Map<String, dynamic> _$DeliveryRouteSheetToJson(DeliveryRouteSheet instance) =>
       'deliveryDocumentId': instance.id,
       'createdAt': instance.createdAt?.toIso8601String(),
       'isActive': instance.isActive,
+      'revision': instance.revision,
+      'lastOperationId': instance.lastOperationId,
       'plannedDate': instance.date.toIso8601String(),
       'driverName': instance.driverName,
       'driverId': instance.driverId,

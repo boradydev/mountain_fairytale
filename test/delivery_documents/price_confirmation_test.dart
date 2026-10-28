@@ -81,7 +81,11 @@ void main() {
       await tester.pump();
       expect(formKey.currentState!.validate(), isFalse);
       await tester.pump();
-      expect(find.text('Больше 0'), findsOneWidget);
+      expect(find.text('Больше 0'), findsNothing);
+      expect(
+        tester.state<FormFieldState<String>>(quantityField).hasError,
+        isTrue,
+      );
       expect(provider.points.single.items.single.quantity, 4);
       expect(tester.takeException(), isNull);
     },

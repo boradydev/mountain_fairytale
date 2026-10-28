@@ -136,10 +136,12 @@ class CommissionReport {
   final List<RepresentativeCommission> representatives;
   final List<EmployeeCommission> employees;
   final CommissionAmount unassignedTurnover;
+  final CommissionAmount employeeTurnover;
   const CommissionReport({
     required this.representatives,
     required this.employees,
     required this.unassignedTurnover,
+    this.employeeTurnover = CommissionAmount.zero,
   });
   factory CommissionReport.fromJson(Map<String, dynamic> json) =>
       CommissionReport(
@@ -151,6 +153,9 @@ class CommissionReport {
         employees: _rows(json, 'employees', EmployeeCommission.fromJson),
         unassignedTurnover: CommissionAmount.fromJson(
           json['summary']['unassignedTurnover'],
+        ),
+        employeeTurnover: CommissionAmount.fromJson(
+          json['summary']['employeeTurnover'],
         ),
       );
   BigInt get representativesPayable =>

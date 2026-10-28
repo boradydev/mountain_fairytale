@@ -5,6 +5,8 @@ class PickupRepositoryImpl implements PickupRepository {
   final PickupDataSource dataSource;
   PickupRepositoryImpl(this.dataSource);
   @override
+  Future<void> checkConnection() => dataSource.checkConnection();
+  @override
   Future<List<PickupSheet>> getPickupSheets({
     bool includeCancelled = false,
   }) async =>
@@ -14,6 +16,9 @@ class PickupRepositoryImpl implements PickupRepository {
   @override
   Future<PickupSheet> getPickupSheetById(String id) async =>
       PickupSheet.fromJson(await dataSource.getById(id));
+  @override
+  Future<PickupSheet> findCreatedPickup(String requestId) async =>
+      PickupSheet.fromJson(await dataSource.findCreated(requestId));
   @override
   Future<PickupSheet> savePickupSheet(PickupSheet sheet) async {
     final request = sheet.toRequestJson();
