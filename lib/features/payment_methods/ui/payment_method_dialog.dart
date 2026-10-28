@@ -10,12 +10,14 @@ import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 
 class PaymentMethodDialog extends StatefulWidget {
   final OrderPointsProvider provider;
+  final bool directoryMode;
   final PaymentMethod? paymentMethod;
   final ValueChanged<PaymentMethod>? onOpenPaymentMethod;
 
   const PaymentMethodDialog({
     super.key,
     required this.provider,
+    this.directoryMode = false,
     this.paymentMethod,
     this.onOpenPaymentMethod,
   });
@@ -181,6 +183,7 @@ class _PaymentMethodDialogState extends State<PaymentMethodDialog> {
     final confirmed = await showPaymentMethodActivationDialog(
       context,
       paymentMethod,
+      selectAfterActivation: !widget.directoryMode,
     );
     if (!confirmed || !mounted) return;
     final activated = await widget.provider.activatePaymentMethod(
@@ -296,20 +299,23 @@ class _PaymentMethodDialogState extends State<PaymentMethodDialog> {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    AppPrimaryButton(
-                      text: _duplicate!.isActive
-                          ? 'Выбрать для клиента'
-                          : 'Активировать и выбрать',
-                      onPressed: _busy
-                          ? null
-                          : () {
-                              if (_duplicate!.isActive) {
-                                Navigator.of(context).pop(_duplicate);
-                              } else {
-                                _activateFromForm(_duplicate!);
-                              }
-                            },
-                    ),
+                    if (!widget.directoryMode || !_duplicate!.isActive)
+                      AppPrimaryButton(
+                        text: _duplicate!.isActive
+                            ? 'Выбрать для клиента'
+                            : widget.directoryMode
+                            ? 'Активировать'
+                            : 'Активировать и выбрать',
+                        onPressed: _busy
+                            ? null
+                            : () {
+                                if (_duplicate!.isActive) {
+                                  Navigator.of(context).pop(_duplicate);
+                                } else {
+                                  _activateFromForm(_duplicate!);
+                                }
+                              },
+                      ),
                     AppSecondaryButton(
                       text: 'Открыть существующий способ оплаты',
                       onPressed: _busy || widget.onOpenPaymentMethod == null

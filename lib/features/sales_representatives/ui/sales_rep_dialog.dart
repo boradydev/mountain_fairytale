@@ -29,6 +29,7 @@ Future<bool> confirmSalesRepresentativeActivity(
 
 class SalesRepDialog extends StatefulWidget {
   final SalesRepresentative? salesRep;
+  final bool directoryMode;
   final ApiSalesRepresentative? apiSalesRep;
   final SalesRepresentativeApiRepository? apiRepository;
   final ValueChanged<ApiSalesRepresentative>? onOpenSalesRep;
@@ -36,6 +37,7 @@ class SalesRepDialog extends StatefulWidget {
   const SalesRepDialog({
     super.key,
     this.salesRep,
+    this.directoryMode = false,
     this.apiSalesRep,
     this.apiRepository,
     this.onOpenSalesRep,
@@ -415,20 +417,23 @@ class _SalesRepDialogState extends State<SalesRepDialog> {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      AppPrimaryButton(
-                        text: _apiDuplicate!.isActive
-                            ? 'Выбрать представителя'
-                            : 'Активировать и выбрать',
-                        onPressed: _busy
-                            ? null
-                            : () {
-                                if (_apiDuplicate!.isActive) {
-                                  Navigator.pop(context, _apiDuplicate);
-                                } else {
-                                  _setApiActive(_apiDuplicate!);
-                                }
-                              },
-                      ),
+                      if (!widget.directoryMode || !_apiDuplicate!.isActive)
+                        AppPrimaryButton(
+                          text: _apiDuplicate!.isActive
+                              ? 'Выбрать представителя'
+                              : widget.directoryMode
+                              ? 'Активировать'
+                              : 'Активировать и выбрать',
+                          onPressed: _busy
+                              ? null
+                              : () {
+                                  if (_apiDuplicate!.isActive) {
+                                    Navigator.pop(context, _apiDuplicate);
+                                  } else {
+                                    _setApiActive(_apiDuplicate!);
+                                  }
+                                },
+                        ),
                       AppSecondaryButton(
                         text: 'Открыть представителя',
                         onPressed: _busy || widget.onOpenSalesRep == null

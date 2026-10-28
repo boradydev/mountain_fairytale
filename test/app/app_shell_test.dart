@@ -28,6 +28,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../auth/auth_fakes.dart';
+import '../directories/directories_test.dart' show Store;
 
 class _ClientsRepository implements ClientRepository {
   int calls = 0;
@@ -143,6 +144,8 @@ void main() {
           commissionRepo,
         );
         final theme = ThemeProvider(prefs);
+        final directories = Store().provider;
+        addTearDown(directories.dispose);
         final employeeRepo = _EmployeeRepository();
         final employees = EmployeesProvider(employeeRepo);
         addTearDown(() {
@@ -163,6 +166,7 @@ void main() {
               ChangeNotifierProvider.value(value: days),
               ChangeNotifierProvider.value(value: audit),
               ChangeNotifierProvider.value(value: commissions),
+              ChangeNotifierProvider.value(value: directories),
               ChangeNotifierProvider.value(value: theme),
               if (isAdmin) ChangeNotifierProvider.value(value: employees),
             ],
@@ -190,6 +194,8 @@ void main() {
           isAdmin ? findsOneWidget : findsNothing,
         );
         expect(employeeRepo.calls, 0);
+        expect(find.widgetWithText(Tab, 'Справочники'), findsOneWidget);
+        expect(directories.current.items, isEmpty);
 
         await tester.tap(find.text('Обзвон клиентов'));
         await tester.pumpAndSettle();
@@ -211,6 +217,10 @@ void main() {
           expect(find.byType(AppBar), findsOneWidget);
         }
 
+        await tester.tap(find.widgetWithText(Tab, 'Справочники'));
+        await tester.pumpAndSettle();
+        expect(find.text('Добавить товар'), findsOneWidget);
+        expect(directories.current.items, hasLength(1));
         await tester.tap(find.text('Журнал событий'));
         await tester.pumpAndSettle();
         expect(auditRepo.searches, [null]);

@@ -55,6 +55,19 @@ void main() {
       'name': 'Иван & Co',
       'phone': '+79123456789',
     });
+    transport.respond = (_) async => envelope({
+      'salesRepresentatives': [record],
+    });
+    expect((await repo.getAll(includeDeactivated: true)).single.id, 'rep-uuid');
+    expect(
+      transport.requests.last.path,
+      '/protected/sales-representatives?include_deactivated=true',
+    );
+    await repo.getAll();
+    expect(
+      transport.requests.last.path,
+      '/protected/sales-representatives?include_deactivated=false',
+    );
     transport.respond = (_) async => envelope(null);
     expect(await repo.checkDuplicate('Иван', '+79123456789'), isNull);
   });

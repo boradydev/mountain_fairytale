@@ -4,10 +4,15 @@ import 'package:mountain_fairytale/shared/widgets/confirm_dialog.dart';
 
 Future<bool> showPaymentMethodActivationDialog(
   BuildContext context,
-  PaymentMethod paymentMethod,
-) => ConfirmDialog.show(
+  PaymentMethod paymentMethod, {
+  bool selectAfterActivation = true,
+}) => ConfirmDialog.show(
   context,
   title: 'Способ оплаты неактивен',
-  content: 'Активировать «${paymentMethod.name}» и выбрать для клиента?',
-  confirmText: 'Активировать и выбрать',
+  content: selectAfterActivation
+      ? 'Активировать «${paymentMethod.name}» и выбрать для клиента?'
+      : 'Активировать «${paymentMethod.name}»?',
+  confirmText: selectAfterActivation
+      ? 'Активировать и выбрать'
+      : 'Активировать',
 );
