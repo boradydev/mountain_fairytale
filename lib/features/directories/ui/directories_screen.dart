@@ -13,7 +13,7 @@ import 'package:mountain_fairytale/features/payment_methods/data/payment_method_
 import 'package:mountain_fairytale/features/payment_methods/ui/payment_method_dialog.dart';
 import 'package:mountain_fairytale/features/sales_representatives/data/sales_representative_api_repo.dart';
 import 'package:mountain_fairytale/features/sales_representatives/ui/sales_rep_dialog.dart';
-import 'package:mountain_fairytale/shared/widgets/active_status_label.dart';
+import 'package:mountain_fairytale/features/commissions/ui/commission_widgets.dart';
 import 'package:mountain_fairytale/shared/widgets/add_action_card.dart';
 import 'package:mountain_fairytale/shared/widgets/base_card_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/labeled_checkbox_toggle.dart';
@@ -141,7 +141,7 @@ class _DirectoriesScreenState extends State<DirectoriesScreen> {
           description: 'Добавление, редактирование и управление активностью.',
           controls: Row(
             children: [
-              Expanded(
+              Flexible(
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: SegmentedButton<DirectorySection>(
@@ -248,15 +248,7 @@ class _DirectoryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Wrap(
-            spacing: 12,
-            runSpacing: 4,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              Text(name, style: Theme.of(context).textTheme.titleMedium),
-              ActiveStatusLabel(isActive: active),
-            ],
-          ),
+          CommissionPersonHeader(name: name, isActive: active),
           if (description.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(description),
