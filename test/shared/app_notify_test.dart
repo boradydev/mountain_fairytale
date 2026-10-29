@@ -141,9 +141,10 @@ void main() {
       final card = find.byType(AppSnackBarContent);
       expect(card, findsOneWidget);
       final rect = tester.getRect(card);
-      final color = Theme.of(tester.element(card))
-          .colorScheme
-          .surfaceContainerHigh;
+      final container = tester.widget<Container>(
+        find.descendant(of: card, matching: find.byType(Container)).first,
+      );
+      final color = (container.decoration! as BoxDecoration).color!;
 
       // Assert actual painted pixels, rather than finding text hidden by a dialog.
       await tester.runAsync(() async {

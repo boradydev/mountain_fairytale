@@ -16,6 +16,11 @@ class AppSnackBarContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor = Color.alphaBlend(
+      colorScheme.onSurface.withAlpha(isDark ? 20 : 12),
+      colorScheme.surfaceContainerHighest,
+    );
     final (statusIcon, iconColor) = switch ((isError, isWarning)) {
       (true, _) => (Icons.error_outline_rounded, colorScheme.error),
       (_, true) => (Icons.warning_amber_rounded, const Color(0xFFED6C02)),
@@ -28,14 +33,18 @@ class AppSnackBarContent extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerHigh,
+            color: backgroundColor,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: colorScheme.outlineVariant, width: 0.5),
+            border: Border.all(
+              color: colorScheme.outline.withAlpha(isDark ? 204 : 166),
+              width: 1,
+            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withAlpha(25),
-                blurRadius: 4,
-                offset: const Offset(0, 4),
+                color: Colors.black.withAlpha(isDark ? 110 : 50),
+                blurRadius: 20,
+                spreadRadius: 1,
+                offset: const Offset(0, 6),
               ),
             ],
           ),
