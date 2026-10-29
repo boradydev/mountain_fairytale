@@ -225,7 +225,13 @@ Widget _configuredApplication(
     ),
     Provider<EmployeeRepository>.value(value: employeeRepository),
     ChangeNotifierProvider(
-      create: (_) => EmployeesProvider(employeeRepository),
+      create: (_) => EmployeesProvider(
+        employeeRepository,
+        onEmployeeUpdated: (employee) => authService.updateCurrentUsername(
+          employeeId: employee.id,
+          username: employee.username,
+        ),
+      ),
     ),
 
     // Репозитории (доступны через context.read<T>())

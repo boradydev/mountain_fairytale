@@ -5,8 +5,9 @@ import 'package:mountain_fairytale/features/employees/employees_abcs.dart';
 
 class EmployeesProvider extends ChangeNotifier {
   final EmployeeRepository _repository;
+  final ValueChanged<Employee>? onEmployeeUpdated;
 
-  EmployeesProvider(this._repository);
+  EmployeesProvider(this._repository, {this.onEmployeeUpdated});
 
   List<Employee> _employees = const [];
   bool _isLoading = false;
@@ -74,6 +75,7 @@ class EmployeesProvider extends ChangeNotifier {
     try {
       final employee = await _repository.updateEmployee(id, request);
       _upsert(employee);
+      if (!_disposed) onEmployeeUpdated?.call(employee);
       return employee;
     } catch (error) {
       if (error is ApiException && error.statusCode == 409) {

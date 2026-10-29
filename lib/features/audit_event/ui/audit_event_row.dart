@@ -41,7 +41,7 @@ const auditFieldLabels = <String, String>{
   'defaultPaymentMethodId': 'Способ оплаты',
 };
 
-String formatAuditValue(Object? value) {
+String formatAuditValue(Object? value, {String? fieldKey}) {
   if (value == null) return '—';
   if (value is bool) return value ? 'Да' : 'Нет';
   if (value is Map) {
@@ -55,8 +55,10 @@ String formatAuditValue(Object? value) {
   if (value is String) {
     if (value == 'delivery_route_sheet') return 'Доставка';
     if (value == 'pickup_sheet') return 'Самовывоз';
-    if (value == 'admin') return 'Администратор';
-    if (value == 'employee') return 'Сотрудник';
+    if (fieldKey == 'role') {
+      if (value == 'admin') return 'Администратор';
+      if (value == 'employee') return 'Сотрудник';
+    }
     if (RegExp(r'^\d{4}-\d{2}-\d{2}(T.*)?$').hasMatch(value)) {
       final date = DateTime.tryParse(value);
       if (date != null) {
@@ -463,6 +465,7 @@ class _AuditDetails extends StatelessWidget {
         if (document) ...[
           for (final key in keys)
             _AuditFieldRow(
+              fieldKey: key,
               label: auditFieldLabels[key] ?? key,
               value: event.data[key],
               change: event.changes[key],
@@ -471,11 +474,13 @@ class _AuditDetails extends StatelessWidget {
         ] else ...[
           for (final entry in fields)
             _AuditFieldRow(
+              fieldKey: entry.key,
               label: auditFieldLabels[entry.key] ?? entry.key,
               value: entry.value,
             ),
           for (final entry in event.changes.entries)
             _AuditFieldRow(
+              fieldKey: entry.key,
               label: auditFieldLabels[entry.key] ?? entry.key,
               change: entry.value,
             ),
@@ -486,16 +491,22 @@ class _AuditDetails extends StatelessWidget {
 }
 
 class _AuditFieldRow extends StatelessWidget {
+  final String? fieldKey;
   final String label;
   final Object? value;
   final AuditChange? change;
-  const _AuditFieldRow({required this.label, this.value, this.change});
+  const _AuditFieldRow({
+    this.fieldKey,
+    required this.label,
+    this.value,
+    this.change,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     Widget text(Object? value) => SelectableText(
-      formatAuditValue(value),
+      formatAuditValue(value, fieldKey: fieldKey),
       style: theme.textTheme.bodyMedium?.copyWith(fontSize: 14),
     );
     return Padding(
