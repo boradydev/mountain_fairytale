@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart';
+
 void printModel(
   Map<String, dynamic> json, {
   String title = 'MODEL DATA',
   int maxLength = 100, // Значение по умолчанию
 }) {
-  print('--- $title ---');
+  debugPrint('--- $title ---');
 
   final buffer = StringBuffer();
 
@@ -19,6 +21,8 @@ void printModel(
   });
 
   final result = buffer.toString();
-  print(result.isNotEmpty ? result.substring(0, result.length - 3) : result);
-  print('-' * (title.length + 8));
+  debugPrint(
+    result.isNotEmpty ? result.substring(0, result.length - 3) : result,
+  );
+  debugPrint('-' * (title.length + 8));
 }

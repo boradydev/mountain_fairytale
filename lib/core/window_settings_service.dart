@@ -87,8 +87,9 @@ class WindowSettingsService extends WindowListener {
   }
 
   void _saveSettings({bool? maximized}) {
-    if (!_closing)
+    if (!_closing) {
       unawaited(saveNow(maximized: maximized).catchError((Object _) {}));
+    }
   }
 
   @override

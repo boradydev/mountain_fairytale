@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mountain_fairytale/features/payment_methods/data/payment_method_model.dart';
 import 'package:mountain_fairytale/features/payment_methods/data/payment_method_repo.dart';
@@ -18,7 +19,7 @@ void main() {
     expect(initialList, isNotEmpty);
     final int initialLength = initialList.length;
 
-    print('\n--- ИСХОДНЫЕ СПОСОБЫ ОПЛАТЫ ---');
+    debugPrint('\n--- ИСХОДНЫЕ СПОСОБЫ ОПЛАТЫ ---');
     for (final method in initialList) {
       printModel(method.toJson(), title: 'СПОСОБ ОПЛАТЫ ID: ${method.id}');
     }
@@ -28,7 +29,7 @@ void main() {
     final fetchedById = await repository.getPaymentMethodById(firstId);
     expect(fetchedById.id, firstId);
 
-    print('\n--- ПОЛУЧЕННЫЙ СПОСОБ ОПЛАТЫ ПО ID: $firstId ---');
+    debugPrint('\n--- ПОЛУЧЕННЫЙ СПОСОБ ОПЛАТЫ ПО ID: $firstId ---');
     printModel(fetchedById.toJson(), title: 'СПОСОБ ОПЛАТЫ ИЗ API');
 
     // 2. CREATE - Проверка создания нового способа оплаты через Create Request DTO
@@ -40,7 +41,7 @@ void main() {
     expect(createdMethod.id, isNotEmpty);
     expect(createdMethod.name, createRequest.name);
 
-    print('\n--- СОЗДАННЫЙ СПОСОБ ОПЛАТЫ ---');
+    debugPrint('\n--- СОЗДАННЫЙ СПОСОБ ОПЛАТЫ ---');
     printModel(createdMethod.toJson(), title: 'НОВЫЙ СПОСОБ ОПЛАТЫ');
 
     // Проверяем, что в списке теперь на один элемент больше
@@ -59,7 +60,7 @@ void main() {
     expect(updatedMethod.id, createdMethod.id);
     expect(updatedMethod.name, 'Оплата через СБП Qr');
 
-    print('\n--- ОБНОВЛЕННЫЙ СПОСОБ ОПЛАТЫ ---');
+    debugPrint('\n--- ОБНОВЛЕННЫЙ СПОСОБ ОПЛАТЫ ---');
     printModel(updatedMethod.toJson(), title: 'ИЗМЕНЕННЫЙ СПОСОБ ОПЛАТЫ');
 
     // 4. Деактивация сохраняет запись, но скрывает её из активного списка
@@ -86,6 +87,8 @@ void main() {
       hasLength(initialLength + 1),
     );
 
-    print('\n--- УСПЕШНОЕ УДАЛЕНИЕ СПОСОБА ОПЛАТЫ ID: ${updatedMethod.id} ---');
+    debugPrint(
+      '\n--- УСПЕШНОЕ УДАЛЕНИЕ СПОСОБА ОПЛАТЫ ID: ${updatedMethod.id} ---',
+    );
   });
 }
