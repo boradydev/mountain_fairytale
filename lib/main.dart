@@ -62,6 +62,7 @@ import 'package:mountain_fairytale/features/pickup/ui/pickup_constructor_provide
 import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_provider.dart';
 import 'package:mountain_fairytale/shared/providers/theme_provider.dart';
 import 'package:mountain_fairytale/app/app_shell.dart';
+import 'package:mountain_fairytale/app/server_application_scope.dart';
 import 'package:mountain_fairytale/features/products/products_abcs.dart';
 import 'package:mountain_fairytale/features/auth/ui/login_screen.dart';
 import 'package:provider/provider.dart';
@@ -136,9 +137,9 @@ Future<void> main() async {
   runApp(
     AnimatedBuilder(
       animation: serverSettings,
-      builder: (_, _) => KeyedSubtree(
+      builder: (_, _) => ServerApplicationScope(
         key: ValueKey(serverSettings.url),
-        child: _configuredApplication(prefs, serverSettings),
+        createApplication: () => _configuredApplication(prefs, serverSettings),
       ),
     ),
   );
