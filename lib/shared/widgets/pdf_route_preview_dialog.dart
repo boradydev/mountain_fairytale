@@ -433,7 +433,7 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
   }
 
   Widget _buildPrintRangeSelector() {
-    return Row(
+    final controls = Row(
       children: [
         const Text(
           'Печать:',
@@ -444,41 +444,17 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
 
         const SizedBox(width: 12),
 
-        Radio<_PrintMode>(
-          value: _PrintMode.all,
-          groupValue: _printMode,
-          onChanged: (value) {
-            if (value != null) {
-              _selectPrintMode(value);
-            }
-          },
-        ),
+        const Radio<_PrintMode>(value: _PrintMode.all),
         const Text('Все страницы'),
 
         const SizedBox(width: 8),
 
-        Radio<_PrintMode>(
-          value: _PrintMode.current,
-          groupValue: _printMode,
-          onChanged: (value) {
-            if (value != null) {
-              _selectPrintMode(value);
-            }
-          },
-        ),
+        const Radio<_PrintMode>(value: _PrintMode.current),
         const Text('Текущая'),
 
         const SizedBox(width: 8),
 
-        Radio<_PrintMode>(
-          value: _PrintMode.range,
-          groupValue: _printMode,
-          onChanged: (value) {
-            if (value != null) {
-              _selectPrintMode(value);
-            }
-          },
-        ),
+        const Radio<_PrintMode>(value: _PrintMode.range),
         const Text('Диапазон'),
 
         const SizedBox(width: 8),
@@ -571,6 +547,13 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
           ],
         ),
       ],
+    );
+    return RadioGroup<_PrintMode>(
+      groupValue: _printMode,
+      onChanged: (value) {
+        if (value != null) _selectPrintMode(value);
+      },
+      child: controls,
     );
   }
 
