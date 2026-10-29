@@ -50,8 +50,8 @@ Name: "desktopicon"; Description: "Создать ярлык на рабочем
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{userprograms}\Mountain Fairytale"; Filename: "{app}\mountain_fairytale.exe"; WorkingDir: "{app}"
-Name: "{userdesktop}\Mountain Fairytale"; Filename: "{app}\mountain_fairytale.exe"; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{userprograms}\Горная Сказка"; Filename: "{app}\mountain_fairytale.exe"; WorkingDir: "{app}"
+Name: "{userdesktop}\Горная Сказка"; Filename: "{app}\mountain_fairytale.exe"; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
 Filename: "{app}\mountain_fairytale.exe"; Description: "Запустить Mountain Fairytale"; Flags: nowait postinstall skipifsilent

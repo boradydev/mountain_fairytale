@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:mountain_fairytale/core/monitoring/monitoring_service.dart';
 
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/shared/widgets/app_notify.dart';
 import 'package:pdfrx/pdfrx.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 import 'package:printing/printing.dart';
@@ -227,10 +228,9 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
 
       case _PrintMode.range:
         if (!_validatePageRange()) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Укажите корректный диапазон страниц'),
-            ),
+          AppNotify.show(
+            'Укажите корректный диапазон страниц',
+            isWarning: true,
           );
           return;
         }
@@ -272,10 +272,9 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Не удалось отправить документ на печать'),
-        ),
+      AppNotify.show(
+        'Не удалось отправить документ на печать',
+        isError: true,
       );
     } finally {
       if (mounted) {
@@ -434,7 +433,7 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
   }
 
   Widget _buildPrintRangeSelector() {
-    return Row(
+    final controls = Row(
       children: [
         const Text(
           'Печать:',
@@ -445,41 +444,17 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
 
         const SizedBox(width: 12),
 
-        Radio<_PrintMode>(
-          value: _PrintMode.all,
-          groupValue: _printMode,
-          onChanged: (value) {
-            if (value != null) {
-              _selectPrintMode(value);
-            }
-          },
-        ),
+        const Radio<_PrintMode>(value: _PrintMode.all),
         const Text('Все страницы'),
 
         const SizedBox(width: 8),
 
-        Radio<_PrintMode>(
-          value: _PrintMode.current,
-          groupValue: _printMode,
-          onChanged: (value) {
-            if (value != null) {
-              _selectPrintMode(value);
-            }
-          },
-        ),
+        const Radio<_PrintMode>(value: _PrintMode.current),
         const Text('Текущая'),
 
         const SizedBox(width: 8),
 
-        Radio<_PrintMode>(
-          value: _PrintMode.range,
-          groupValue: _printMode,
-          onChanged: (value) {
-            if (value != null) {
-              _selectPrintMode(value);
-            }
-          },
-        ),
+        const Radio<_PrintMode>(value: _PrintMode.range),
         const Text('Диапазон'),
 
         const SizedBox(width: 8),
@@ -572,6 +547,13 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
           ],
         ),
       ],
+    );
+    return RadioGroup<_PrintMode>(
+      groupValue: _printMode,
+      onChanged: (value) {
+        if (value != null) _selectPrintMode(value);
+      },
+      child: controls,
     );
   }
 

@@ -178,6 +178,7 @@ class SalesRepresentativeDetailsDialog extends StatelessWidget {
                       ),
                     );
 
+                    if (!context.mounted) return;
                     if (selected != null) {
                       final confirmed = await ConfirmDialog.show(
                         context,

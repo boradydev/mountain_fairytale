@@ -1,5 +1,6 @@
 import 'package:mountain_fairytale/core/state/form_editing.dart';
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/shared/widgets/app_notify.dart';
 import 'package:mountain_fairytale/features/employees/data/employee_model.dart';
 import 'package:mountain_fairytale/features/employees/ui/employee_password_dialog.dart';
 import 'package:mountain_fairytale/features/employees/ui/employees_provider.dart';
@@ -237,9 +238,7 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
       ),
     );
     if (!mounted || changed != true) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Пароль сотрудника изменён.')),
-    );
+    AppNotify.show('Пароль сотрудника изменён.');
   }
 
   Future<void> _changeActive(bool isActive) async {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/shared/widgets/app_notify.dart';
 import 'package:mountain_fairytale/core/utils/datetime_extensions.dart';
 import 'package:mountain_fairytale/features/cars/data/cars_model.dart';
 import 'package:mountain_fairytale/features/cars/data/cars_number.dart';
@@ -81,12 +82,9 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
       final success = await provider.activateAndSelectDriver(driver);
       if (!mounted) return;
       if (!success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Не удалось активировать водителя. Повторите попытку.',
-            ),
-          ),
+        AppNotify.show(
+          'Не удалось активировать водителя. Повторите попытку.',
+          isError: true,
         );
       }
     }
@@ -106,12 +104,9 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
       final success = await provider.activateAndSelectCar(car);
       if (!mounted) return;
       if (!success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Не удалось активировать автомобиль. Повторите попытку.',
-            ),
-          ),
+        AppNotify.show(
+          'Не удалось активировать автомобиль. Повторите попытку.',
+          isError: true,
         );
       }
     }

@@ -19,7 +19,7 @@ import 'package:mountain_fairytale/features/app_updates/ui/update_provider.dart'
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/features/directories/ui/directories_provider.dart';
 import 'package:mountain_fairytale/features/dashboard/data/dashboard_updates_repo.dart';
-import 'package:mountain_fairytale/core/utils/scaffold_messenger_key.dart';
+import 'package:mountain_fairytale/shared/widgets/app_notify.dart';
 import 'package:mountain_fairytale/features/auth/auth_abcs.dart';
 import 'package:mountain_fairytale/features/auth/services/auth_service_impl.dart';
 import 'package:mountain_fairytale/features/auth/services/secure_token_storage.dart';
@@ -62,6 +62,7 @@ import 'package:mountain_fairytale/features/pickup/ui/pickup_constructor_provide
 import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_provider.dart';
 import 'package:mountain_fairytale/shared/providers/theme_provider.dart';
 import 'package:mountain_fairytale/app/app_shell.dart';
+import 'package:mountain_fairytale/app/server_application_scope.dart';
 import 'package:mountain_fairytale/features/products/products_abcs.dart';
 import 'package:mountain_fairytale/features/auth/ui/login_screen.dart';
 import 'package:provider/provider.dart';
@@ -136,9 +137,9 @@ Future<void> main() async {
   runApp(
     AnimatedBuilder(
       animation: serverSettings,
-      builder: (_, _) => KeyedSubtree(
+      builder: (_, _) => ServerApplicationScope(
         key: ValueKey(serverSettings.url),
-        child: _configuredApplication(prefs, serverSettings),
+        createApplication: () => _configuredApplication(prefs, serverSettings),
       ),
     ),
   );
@@ -225,7 +226,13 @@ Widget _configuredApplication(
     ),
     Provider<EmployeeRepository>.value(value: employeeRepository),
     ChangeNotifierProvider(
-      create: (_) => EmployeesProvider(employeeRepository),
+      create: (_) => EmployeesProvider(
+        employeeRepository,
+        onEmployeeUpdated: (employee) => authService.updateCurrentUsername(
+          employeeId: employee.id,
+          username: employee.username,
+        ),
+      ),
     ),
 
     // Репозитории (доступны через context.read<T>())
@@ -366,7 +373,9 @@ class MyApp extends StatelessWidget {
       theme: themeProvider.lightTheme,
       darkTheme: themeProvider.darkTheme,
 
-      scaffoldMessengerKey: scaffoldMessengerKey,
+      builder: (_, child) => AppNotificationHost(
+        child: child ?? const SizedBox.shrink(),
+      ),
 
       home: switch (compatibility.status) {
         CompatibilityStatus.updateRequired => const AppCompatibilityScreen(),

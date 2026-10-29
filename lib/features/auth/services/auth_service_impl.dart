@@ -34,6 +34,24 @@ class AuthServiceImpl extends ChangeNotifier implements AuthService {
   @override
   CurrentEmployeeModel? get currentUser => _currentUser;
 
+  void updateCurrentUsername({
+    required String employeeId,
+    required String username,
+  }) {
+    final user = _currentUser;
+    if (user == null ||
+        user.employeeId != employeeId ||
+        user.username == username) {
+      return;
+    }
+    _currentUser = CurrentEmployeeModel(
+      employeeId: user.employeeId,
+      username: username,
+      role: user.role,
+    );
+    notifyListeners();
+  }
+
   @override
   int get sessionVersion => _sessionVersion;
 
