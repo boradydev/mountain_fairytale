@@ -8,6 +8,7 @@ import 'package:mountain_fairytale/features/employees/ui/employee_password_dialo
 import 'package:mountain_fairytale/features/employees/ui/employees_provider.dart';
 import 'package:mountain_fairytale/features/employees/ui/employees_screen.dart';
 import 'package:mountain_fairytale/shared/widgets/add_action_card.dart';
+import 'package:mountain_fairytale/shared/widgets/app_notify.dart';
 import 'package:mountain_fairytale/shared/widgets/base_card_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/dropdown_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/labeled_checkbox_toggle.dart';
@@ -17,6 +18,12 @@ class _EmployeesRepository implements EmployeeRepository {
   bool? includeDeactivated;
   final created = <CreateEmployeeRequest>[];
   final updated = <UpdateEmployeeRequest>[];
+  String? passwordEmployeeId;
+
+  @override
+  Future<void> changePassword(String id, String password) async {
+    passwordEmployeeId = id;
+  }
 
   @override
   Future<Employee?> checkDuplicate(String username) async => null;
@@ -84,6 +91,7 @@ Future<_EmployeesRepository> _openScreen(WidgetTester tester) async {
       create: (_) => EmployeesProvider(repository),
       child: MaterialApp(
         theme: AppTheme.createTheme(Brightness.light),
+        builder: (_, child) => AppNotificationHost(child: child!),
         home: const Scaffold(body: EmployeesScreen()),
       ),
     ),
@@ -93,6 +101,37 @@ Future<_EmployeesRepository> _openScreen(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets(
+    'password success notification appears while employee editor stays open',
+    (
+      tester,
+    ) async {
+      final repository = await _openScreen(tester);
+      await tester.tap(find.widgetWithText(AppBaseCard, 'manager'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Изменить пароль'));
+      await tester.tap(find.text('Изменить пароль'));
+      await tester.pumpAndSettle();
+      final dialog = find.byType(EmployeePasswordDialog);
+      final fields = find.descendant(
+        of: dialog,
+        matching: find.byType(TextFormField),
+      );
+      await tester.enterText(fields.at(0), 'test-password');
+      await tester.enterText(fields.at(1), 'test-password');
+      await tester.tap(
+        find.descendant(of: dialog, matching: find.text('Сохранить')),
+      );
+      await tester.pumpAndSettle();
+      expect(repository.passwordEmployeeId, 'active');
+      expect(find.byType(EmployeePasswordDialog), findsNothing);
+      expect(find.byType(EmployeeDialog), findsOneWidget);
+      expect(find.text('Пароль сотрудника изменён.'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 3));
+      expect(find.text('Пароль сотрудника изменён.'), findsNothing);
+    },
+  );
+
   testWidgets('shows employee cards and toggles deactivated employees', (
     tester,
   ) async {

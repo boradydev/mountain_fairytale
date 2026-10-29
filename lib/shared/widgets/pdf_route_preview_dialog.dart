@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:mountain_fairytale/core/monitoring/monitoring_service.dart';
 
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/shared/widgets/app_notify.dart';
 import 'package:pdfrx/pdfrx.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 import 'package:printing/printing.dart';
@@ -227,10 +228,9 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
 
       case _PrintMode.range:
         if (!_validatePageRange()) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Укажите корректный диапазон страниц'),
-            ),
+          AppNotify.show(
+            'Укажите корректный диапазон страниц',
+            isWarning: true,
           );
           return;
         }
@@ -272,10 +272,9 @@ class _PdfRoutePreviewDialogState extends State<PdfRoutePreviewDialog> {
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Не удалось отправить документ на печать'),
-        ),
+      AppNotify.show(
+        'Не удалось отправить документ на печать',
+        isError: true,
       );
     } finally {
       if (mounted) {

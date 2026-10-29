@@ -10,6 +10,7 @@ import 'package:mountain_fairytale/features/commissions/data/commissions_repo.da
 import 'package:mountain_fairytale/features/commissions/ui/commissions_provider.dart';
 import 'package:mountain_fairytale/features/commissions/ui/commissions_screen.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/app_notify.dart';
 import 'package:mountain_fairytale/shared/widgets/labeled_checkbox_toggle.dart';
 import 'package:provider/provider.dart';
 
@@ -216,7 +217,10 @@ void main() {
       await tester.pumpWidget(
         ChangeNotifierProvider.value(
           value: provider,
-          child: const MaterialApp(home: Scaffold(body: CommissionsScreen())),
+          child: MaterialApp(
+            builder: (_, child) => AppNotificationHost(child: child!),
+            home: const Scaffold(body: CommissionsScreen()),
+          ),
         ),
       );
       await tester.pumpAndSettle();
@@ -286,6 +290,7 @@ void main() {
       await tester.tap(find.text('Подтвердить'));
       await tester.pumpAndSettle();
       expect(repo.assignments.single, (repId, targetId));
+      expect(find.text('Передано клиентов: 1'), findsOneWidget);
       final transfer = tester.widget<AppPrimaryButton>(
         find.widgetWithText(AppPrimaryButton, 'Передать клиентов'),
       );
@@ -294,6 +299,7 @@ void main() {
       await tester.tap(find.text('Закрыть'));
       await tester.pumpAndSettle();
       expect(repo.calls.length, calls + 3);
+      await tester.pump(const Duration(seconds: 3));
       expect(tester.takeException(), isNull);
     },
   );

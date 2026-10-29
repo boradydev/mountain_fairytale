@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/shared/widgets/app_notify.dart';
 import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:mountain_fairytale/features/app_compatibility/ui/app_compatibility_provider.dart';
@@ -100,12 +101,9 @@ class UpdateButton extends StatelessWidget {
     } catch (_) {
       releaseBarrier();
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Не удалось запустить обновление. Попробуйте ещё раз.',
-            ),
-          ),
+        AppNotify.show(
+          'Не удалось запустить обновление. Попробуйте ещё раз.',
+          isError: true,
         );
       }
     }

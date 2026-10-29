@@ -4,6 +4,7 @@ import 'package:mountain_fairytale/core/network/api_exception.dart';
 import 'package:mountain_fairytale/shared/widgets/russian_phone_input_formatter.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/shared/widgets/app_notify.dart';
 import 'package:mountain_fairytale/features/sales_representatives/data/sales_representative_model.dart';
 import 'package:mountain_fairytale/features/sales_representatives/ui/sales_representative_provider.dart';
 import 'package:mountain_fairytale/shared/widgets/base_form_dialog_widget.dart';
@@ -270,10 +271,9 @@ class _SalesRepDialogState extends State<SalesRepDialog> {
     if (success) {
       Navigator.of(context).pop(success);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Не удалось удалить торгового представителя'),
-        ),
+      AppNotify.show(
+        'Не удалось удалить торгового представителя',
+        isError: true,
       );
     }
   }

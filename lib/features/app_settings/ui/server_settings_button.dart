@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:mountain_fairytale/core/utils/scaffold_messenger_key.dart';
+import 'package:mountain_fairytale/shared/widgets/app_notify.dart';
 import 'package:mountain_fairytale/features/auth/auth_abcs.dart';
 import 'package:mountain_fairytale/features/app_settings/ui/server_settings_provider.dart';
 import 'package:mountain_fairytale/features/app_settings/ui/server_settings_dialog.dart';
@@ -29,12 +29,9 @@ class ServerSettingsButton extends StatelessWidget {
     try {
       await settings.changeUrl(url, endSession: auth.logout);
     } catch (_) {
-      scaffoldMessengerKey.currentState?.showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Адрес не изменён. Не удалось очистить сохранённый вход или записать настройки. Повторите попытку.',
-          ),
-        ),
+      AppNotify.show(
+        'Адрес не изменён. Не удалось очистить сохранённый вход или записать настройки. Повторите попытку.',
+        isError: true,
       );
     }
   }

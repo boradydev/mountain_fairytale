@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/shared/widgets/app_notify.dart';
 import 'package:mountain_fairytale/features/auth/ui/auth_provider.dart';
 import 'package:mountain_fairytale/features/auth/ui/change_password_dialog.dart';
 import 'package:provider/provider.dart';
@@ -27,9 +28,7 @@ class AccountMenuButton extends StatelessWidget {
               builder: (_) => const ChangePasswordDialog(),
             );
             if (!context.mounted || changed != true) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Пароль изменён.')),
-            );
+            AppNotify.show('Пароль изменён.');
         }
       },
       itemBuilder: (_) => [

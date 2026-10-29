@@ -3,6 +3,7 @@ import 'package:mountain_fairytale/features/delivery_route/ui/route_optimization
 import 'package:mountain_fairytale/features/delivery_route/ui/document_mode_banner.dart';
 import 'package:mountain_fairytale/shared/widgets/icon_button_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/shared/widgets/app_notify.dart';
 import 'package:mountain_fairytale/features/clients/ui/clients_selection_panel.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/order_points_provider.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/route_points_list.dart';
@@ -266,12 +267,9 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
                         : () async {
                             if (!await widget.printDocument!() &&
                                 context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Не удалось напечатать документ.',
-                                  ),
-                                ),
+                              AppNotify.show(
+                                'Не удалось напечатать документ.',
+                                isError: true,
                               );
                             }
                           },
