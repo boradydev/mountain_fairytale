@@ -48,10 +48,7 @@ app.*.map.json
 .widget_preview/
 
 
-.metadata
 readme_clone.md
-devtools_options.yaml
-analysis_options.yaml
 # Local verification logs.
 tmp_client_ui_results.txt
 tmp_analysis_results.txt
