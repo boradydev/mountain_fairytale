@@ -160,9 +160,16 @@ class RouteSheetPdfBuilder {
                       ),
                       pw.TextSpan(text: 'Адрес: '),
                       pw.TextSpan(
-                        text: '${point.address}\n',
+                        text: '${point.clientAddress ?? point.address}\n',
                         style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
                       ),
+                      if (point.deliveryDetails.trim().isNotEmpty) ...[
+                        const pw.TextSpan(text: 'Доп: '),
+                        pw.TextSpan(
+                          text: '${point.deliveryDetails}\n',
+                          style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                        ),
+                      ],
                       pw.TextSpan(text: 'Тел: '),
                       pw.TextSpan(
                         text: '${point.phone}\n',
@@ -170,8 +177,12 @@ class RouteSheetPdfBuilder {
                       ),
                       const pw.TextSpan(text: 'Форма оплаты: '),
                       pw.TextSpan(
-                        text: point.paymentMethod?.trim().isNotEmpty == true
-                            ? point.paymentMethod!
+                        text:
+                            point.documentPaymentMethodName
+                                    ?.trim()
+                                    .isNotEmpty ==
+                                true
+                            ? point.documentPaymentMethodName!
                             : 'Не указана',
                         style: pw.TextStyle(
                           fontWeight: pw.FontWeight.bold,

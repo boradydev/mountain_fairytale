@@ -626,7 +626,8 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     final method = await paymentMethodRepo.getPaymentMethodById(id);
     paymentMethodsById[method.id] = method;
     for (var i = 0; i < points.length; i++) {
-      if (points[i].paymentMethodId == method.id) {
+      if (points[i].paymentMethodId == method.id ||
+          points[i].documentPaymentMethodId == method.id) {
         points[i] = _withPaymentMethod(points[i], method);
       }
     }
@@ -647,39 +648,57 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     paymentMethods.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     for (var i = 0; i < points.length; i++) {
       final point = points[i];
-      if (point.paymentMethodId == method.id) {
+      if (point.paymentMethodId == method.id ||
+          point.documentPaymentMethodId == method.id) {
         points[i] = _withPaymentMethod(point, method);
       }
     }
     notifyListeners();
   }
 
-  RoutePoint _withPaymentMethod(RoutePoint point, PaymentMethod method) =>
-      RoutePoint(
-        pointId: point.pointId,
-        position: point.position,
-        salesRepresentativeId: point.salesRepresentativeId,
-        clientId: point.clientId,
-        clientName: point.clientName,
-        city: point.city,
-        address: point.address,
-        phone: point.phone,
-        paymentMethodId: method.id,
-        paymentMethod: method.name,
-        salesRepresentative: point.salesRepresentative,
-        items: point.items,
-      );
+  RoutePoint _withPaymentMethod(
+    RoutePoint point,
+    PaymentMethod method, {
+    bool selectForDocument = false,
+  }) => RoutePoint(
+    pointId: point.pointId,
+    position: point.position,
+    salesRepresentativeId: point.salesRepresentativeId,
+    clientId: point.clientId,
+    clientName: point.clientName,
+    city: point.city,
+    address: point.address,
+    phone: point.phone,
+    clientAddress: point.clientAddress,
+    deliveryDetails: point.deliveryDetails,
+    paymentMethodId: selectForDocument || point.paymentMethodId == method.id
+        ? method.id
+        : point.paymentMethodId,
+    paymentMethod: selectForDocument || point.paymentMethodId == method.id
+        ? method.name
+        : point.paymentMethod,
+    documentPaymentMethodId: selectForDocument
+        ? method.id
+        : point.documentPaymentMethodId,
+    documentPaymentMethodName:
+        selectForDocument || point.documentPaymentMethodId == method.id
+        ? method.name
+        : point.documentPaymentMethodName,
+    salesRepresentative: point.salesRepresentative,
+    items: point.items,
+  );
 
   Future<bool> selectPointPaymentMethod(
     String clientId,
     PaymentMethod method,
     ClientsProvider clientsProvider,
   ) async {
-    if (!method.isActive) {
+    if (!canEdit || !method.isActive) {
       return false;
     }
     paymentMethodErrorMessage = null;
     paymentMethodNameError = null;
+    final selectionSession = _sessionVersion;
     try {
       final client = await clientRepo.updateClient(
         clientId,
@@ -688,8 +707,12 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       clientsProvider.syncUpdatedClient(client);
       paymentMethodsById[method.id] = method;
       final index = points.indexWhere((point) => point.clientId == clientId);
-      if (index != -1) {
-        points[index] = _withPaymentMethod(points[index], method);
+      if (index != -1 && canEdit && selectionSession == _sessionVersion) {
+        points[index] = _withPaymentMethod(
+          points[index],
+          method,
+          selectForDocument: true,
+        );
       }
       notifyListeners();
       return true;
@@ -722,8 +745,12 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
         city: point.city,
         address: point.address,
         phone: point.phone,
+        clientAddress: point.clientAddress,
+        deliveryDetails: point.deliveryDetails,
         paymentMethodId: point.paymentMethodId,
         paymentMethod: point.paymentMethod,
+        documentPaymentMethodId: point.documentPaymentMethodId,
+        documentPaymentMethodName: point.documentPaymentMethodName,
         salesRepresentativeId: client.salesRepresentativeId,
         salesRepresentative:
             client.salesRepresentativeName ?? 'Нет представителя',
@@ -815,8 +842,12 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
                       client.deliveryDetails,
                   ].join(' — '),
                   phone: client.phone,
+                  clientAddress: client.address,
+                  deliveryDetails: client.deliveryDetails,
                   paymentMethodId: client.defaultPaymentMethodId,
                   paymentMethod: client.defaultPaymentMethodName,
+                  documentPaymentMethodId: point.documentPaymentMethodId,
+                  documentPaymentMethodName: point.documentPaymentMethodName,
                   salesRepresentative:
                       client.salesRepresentativeName ?? 'Нет представителя',
                   items: point.items,
@@ -843,8 +874,14 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
           if (client.deliveryDetails.isNotEmpty) client.deliveryDetails,
         ].join(' — '),
         phone: client.phone,
+        clientAddress: client.address,
+        deliveryDetails: client.deliveryDetails,
         paymentMethodId: client.defaultPaymentMethodId,
         paymentMethod:
+            paymentMethodsById[client.defaultPaymentMethodId]?.name ??
+            client.defaultPaymentMethodName,
+        documentPaymentMethodId: client.defaultPaymentMethodId,
+        documentPaymentMethodName:
             paymentMethodsById[client.defaultPaymentMethodId]?.name ??
             client.defaultPaymentMethodName,
         salesRepresentative:
@@ -909,8 +946,12 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       city: currentPoint.city,
       address: currentPoint.address,
       phone: currentPoint.phone,
+      clientAddress: currentPoint.clientAddress,
+      deliveryDetails: currentPoint.deliveryDetails,
       paymentMethodId: currentPoint.paymentMethodId,
       paymentMethod: currentPoint.paymentMethod,
+      documentPaymentMethodId: currentPoint.documentPaymentMethodId,
+      documentPaymentMethodName: currentPoint.documentPaymentMethodName,
       salesRepresentative: currentPoint.salesRepresentative,
       items: updatedItems,
     );
@@ -955,8 +996,12 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       city: currentPoint.city,
       address: currentPoint.address,
       phone: currentPoint.phone,
+      clientAddress: currentPoint.clientAddress,
+      deliveryDetails: currentPoint.deliveryDetails,
       paymentMethodId: currentPoint.paymentMethodId,
       paymentMethod: currentPoint.paymentMethod,
+      documentPaymentMethodId: currentPoint.documentPaymentMethodId,
+      documentPaymentMethodName: currentPoint.documentPaymentMethodName,
       salesRepresentative: currentPoint.salesRepresentative,
       items: items,
     );

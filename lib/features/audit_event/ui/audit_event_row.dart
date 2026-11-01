@@ -39,6 +39,7 @@ const auditFieldLabels = <String, String>{
   'lastDeliveryQuantity': 'Количество в последней доставке',
   'salesRepresentativeId': 'Представитель',
   'defaultPaymentMethodId': 'Способ оплаты',
+  'paymentMethodId': 'Способ оплаты точки',
 };
 
 String formatAuditValue(Object? value, {String? fieldKey}) {

@@ -204,7 +204,7 @@ class _RoutePointsListState extends State<RoutePointsList> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '${point.items.length} ${_positionsLabel(point.items.length)} · ${point.paymentMethod ?? 'Оплата не указана'}',
+                              '${point.items.length} ${_positionsLabel(point.items.length)} · ${point.documentPaymentMethodName ?? 'Оплата не указана'}',
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ],
@@ -288,8 +288,8 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                   provider: provider,
                                   clientsProvider: clientsProvider,
                                   clientId: point.clientId,
-                                  selectedId: point.paymentMethodId,
-                                  selectedName: point.paymentMethod,
+                                  selectedId: point.documentPaymentMethodId,
+                                  selectedName: point.documentPaymentMethodName,
                                 );
                                 final representative =
                                     PointRepresentativeSelector(
@@ -319,7 +319,7 @@ class _RoutePointsListState extends State<RoutePointsList> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Изменения оплаты и представителя сохраняются в карточке клиента.',
+                              'Способ оплаты по умолчанию и представитель сохраняются у клиента сразу. Оплата точки — при сохранении документа.',
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                             const SizedBox(height: 24),

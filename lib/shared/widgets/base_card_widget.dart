@@ -6,12 +6,14 @@ class AppBaseCard extends StatelessWidget {
   final Widget child;
   final VoidCallback? onTap;
   final Color? backgroundColor;
+  final EdgeInsetsGeometry margin;
 
   const AppBaseCard({
     super.key,
     required this.child,
     this.onTap,
     this.backgroundColor,
+    this.margin = const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
   });
 
   @override
@@ -20,7 +22,7 @@ class AppBaseCard extends StatelessWidget {
 
     return Card(
       elevation: 0,
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      margin: margin,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(

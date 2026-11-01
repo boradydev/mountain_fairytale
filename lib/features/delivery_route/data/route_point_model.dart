@@ -13,11 +13,18 @@ class RoutePoint {
   @JsonKey(defaultValue: '')
   final String city;
   final String address;
+  final String? clientAddress;
+  @JsonKey(defaultValue: '')
+  final String deliveryDetails;
   final String phone;
   @JsonKey(name: 'defaultPaymentMethodId')
   final String? paymentMethodId;
   @JsonKey(name: 'defaultPaymentMethodName')
   final String? paymentMethod; // Форма оплаты (Нал, Безнал, Карта)
+  @JsonKey(name: 'paymentMethodId')
+  final String? documentPaymentMethodId;
+  @JsonKey(name: 'paymentMethodName')
+  final String? documentPaymentMethodName;
   @JsonKey(name: 'salesRepresentativeName', defaultValue: 'Нет представителя')
   final String salesRepresentative; // Торговый представитель
 
@@ -35,9 +42,13 @@ class RoutePoint {
     clientName: clientName,
     city: city,
     address: address,
+    clientAddress: clientAddress,
+    deliveryDetails: deliveryDetails,
     phone: phone,
     paymentMethodId: paymentMethodId,
     paymentMethod: paymentMethod,
+    documentPaymentMethodId: documentPaymentMethodId,
+    documentPaymentMethodName: documentPaymentMethodName,
     salesRepresentativeId: salesRepresentativeId,
     salesRepresentative: salesRepresentative,
     items: items ?? this.items,
@@ -45,6 +56,7 @@ class RoutePoint {
   Map<String, dynamic> toRequestJson({required bool creating}) => {
     if (!creating && pointId != null) 'pointId': pointId,
     'clientId': clientId,
+    'paymentMethodId': documentPaymentMethodId,
     'items': items.map((item) => item.toRequestJson()).toList(),
   };
 
@@ -56,9 +68,13 @@ class RoutePoint {
     required this.clientName,
     this.city = '',
     required this.address,
+    this.clientAddress,
+    this.deliveryDetails = '',
     required this.phone,
     this.paymentMethod,
     this.paymentMethodId,
+    this.documentPaymentMethodId,
+    this.documentPaymentMethodName,
     required this.salesRepresentative,
     required this.items,
   });

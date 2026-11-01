@@ -196,6 +196,7 @@ void main() {
           RoutePoint.fromJson({
             ...point.toJson(),
             'defaultPaymentMethodName': payment,
+            'paymentMethodName': payment,
           }),
         ];
         orders.notifyListeners();
@@ -258,8 +259,10 @@ void main() {
             ...point.toJson(),
             'salesRepresentativeId': 'rep',
             'salesRepresentativeName': 'Иванов Алексей',
-            'defaultPaymentMethodId': 'cash',
-            'defaultPaymentMethodName': 'Наличные',
+            'defaultPaymentMethodId': 'card',
+            'defaultPaymentMethodName': 'Карта',
+            'paymentMethodId': 'cash',
+            'paymentMethodName': 'Наличные',
           }),
         ];
       final payment = PaymentMethod(
@@ -300,6 +303,7 @@ void main() {
       );
       expect(repo.representativeLoads, 1);
       expect(find.text('Наличные'), findsOneWidget);
+      expect(find.text('Карта'), findsNothing);
       expect(find.text('Иванов Алексей'), findsOneWidget);
       final anchors = [
         find.byKey(const ValueKey('route-point-client')),

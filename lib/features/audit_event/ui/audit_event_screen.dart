@@ -7,6 +7,7 @@ import 'package:mountain_fairytale/features/audit_event/ui/audit_event_provider.
 import 'package:mountain_fairytale/features/audit_event/ui/audit_event_row.dart';
 import 'package:mountain_fairytale/shared/widgets/icon_button_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
+import 'package:mountain_fairytale/shared/utils/app_date_range_picker.dart';
 import 'package:provider/provider.dart';
 
 class AuditLogScreen extends StatefulWidget {
@@ -101,10 +102,8 @@ class _AuditLogScreenState extends State<AuditLogScreen>
     if (selection == 'dates') {
       final from = filters.dateFrom?.toLocal();
       final to = filters.dateTo?.toLocal();
-      final range = await showDateRangePicker(
-        context: context,
-        firstDate: DateTime(1900),
-        lastDate: DateTime(2100, 12, 31),
+      final range = await showAppDateRangePicker(
+        context,
         initialDateRange: from != null && to != null
             ? DateTimeRange(
                 start: from,
@@ -112,10 +111,6 @@ class _AuditLogScreenState extends State<AuditLogScreen>
               )
             : null,
         helpText: 'Период событий',
-        saveText: 'Применить',
-        cancelText: 'Отмена',
-        fieldStartLabelText: 'От',
-        fieldEndLabelText: 'До',
       );
       if (!mounted || range == null) return;
       updated = AuditFilters(

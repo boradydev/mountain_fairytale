@@ -62,7 +62,7 @@ void main() {
           'endMileage': null,
         },
         'points': [
-          {
+          <String, dynamic>{
             'pointId': id,
             'clientId': id,
             'clientName': 'Клиент',
@@ -161,6 +161,7 @@ void main() {
           expect(request.containsKey('isActive'), isFalse);
           expect((request['points'] as List).single, {
             'clientId': id,
+            'paymentMethodId': null,
             'items': [
               {
                 'productId': id,
@@ -181,6 +182,50 @@ void main() {
           if (delivery) expect((patch.body as Map)['endMileage'], isNull);
         },
       );
+      for (final paymentId in [null, '019a2222-2222-7222-8222-222222222222']) {
+        test(
+          'create and patch preserve point payment $paymentId independently of client default',
+          () async {
+            final data = {
+              ...json,
+              'points': [
+                <String, dynamic>{
+                  ...(json['points'] as List).single as Map,
+                  'defaultPaymentMethodId': id,
+                  'defaultPaymentMethodName': 'СБП',
+                  'paymentMethodId': paymentId,
+                  'paymentMethodName': paymentId == null ? null : 'Наличные',
+                  'clientAddress': 'Адрес',
+                  'deliveryDetails': 'Вход со двора',
+                },
+              ],
+            };
+            transport.respond = (_) async => envelope(data);
+            for (final creating in [true, false]) {
+              final saved = await save({
+                ...data,
+                'deliveryDocumentId': creating ? null : id,
+              });
+              final point =
+                  ((transport.requests.last.body as Map)['points'] as List)
+                          .single
+                      as Map;
+              expect(point.containsKey('paymentMethodId'), isTrue);
+              expect(point['paymentMethodId'], paymentId);
+              expect(point.containsKey('defaultPaymentMethodId'), isFalse);
+              expect(point.containsKey('deliveryDetails'), isFalse);
+              expect(point.containsKey('clientAddress'), isFalse);
+              expect(point.containsKey('pointId'), !creating);
+              final savedPoint = saved is DeliveryRouteSheet
+                  ? saved.points.single
+                  : (saved as PickupSheet).points.single;
+              expect(savedPoint.documentPaymentMethodId, paymentId);
+              expect(savedPoint.clientAddress, 'Адрес');
+              expect(savedPoint.deliveryDetails, 'Вход со двора');
+            }
+          },
+        );
+      }
       test('empty documents remain writable', () async {
         transport.respond = (_) async => envelope({...json, 'points': []});
         await save({...json, 'deliveryDocumentId': null, 'points': []});
