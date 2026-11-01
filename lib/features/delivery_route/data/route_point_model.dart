@@ -51,6 +51,7 @@ class RoutePoint {
   Map<String, dynamic> toRequestJson({required bool creating}) => {
     if (!creating && pointId != null) 'pointId': pointId,
     'clientId': clientId,
+    'paymentMethodId': documentPaymentMethodId,
     'items': items.map((item) => item.toRequestJson()).toList(),
   };
 
