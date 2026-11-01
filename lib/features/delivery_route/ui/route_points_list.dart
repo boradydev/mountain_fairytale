@@ -204,7 +204,7 @@ class _RoutePointsListState extends State<RoutePointsList> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '${point.items.length} ${_positionsLabel(point.items.length)} · ${point.paymentMethod ?? 'Оплата не указана'}',
+                              '${point.items.length} ${_positionsLabel(point.items.length)} · ${point.pointId == null ? point.paymentMethod : point.documentPaymentMethodName ?? 'Оплата не указана'}',
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ],

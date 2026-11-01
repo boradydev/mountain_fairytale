@@ -18,6 +18,10 @@ class RoutePoint {
   final String? paymentMethodId;
   @JsonKey(name: 'defaultPaymentMethodName')
   final String? paymentMethod; // Форма оплаты (Нал, Безнал, Карта)
+  @JsonKey(name: 'paymentMethodId')
+  final String? documentPaymentMethodId;
+  @JsonKey(name: 'paymentMethodName')
+  final String? documentPaymentMethodName;
   @JsonKey(name: 'salesRepresentativeName', defaultValue: 'Нет представителя')
   final String salesRepresentative; // Торговый представитель
 
@@ -38,6 +42,8 @@ class RoutePoint {
     phone: phone,
     paymentMethodId: paymentMethodId,
     paymentMethod: paymentMethod,
+    documentPaymentMethodId: documentPaymentMethodId,
+    documentPaymentMethodName: documentPaymentMethodName,
     salesRepresentativeId: salesRepresentativeId,
     salesRepresentative: salesRepresentative,
     items: items ?? this.items,
@@ -59,6 +65,8 @@ class RoutePoint {
     required this.phone,
     this.paymentMethod,
     this.paymentMethodId,
+    this.documentPaymentMethodId,
+    this.documentPaymentMethodName,
     required this.salesRepresentative,
     required this.items,
   });

@@ -666,6 +666,8 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
         phone: point.phone,
         paymentMethodId: method.id,
         paymentMethod: method.name,
+        documentPaymentMethodId: point.documentPaymentMethodId,
+        documentPaymentMethodName: point.documentPaymentMethodName,
         salesRepresentative: point.salesRepresentative,
         items: point.items,
       );
@@ -724,6 +726,8 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
         phone: point.phone,
         paymentMethodId: point.paymentMethodId,
         paymentMethod: point.paymentMethod,
+        documentPaymentMethodId: point.documentPaymentMethodId,
+        documentPaymentMethodName: point.documentPaymentMethodName,
         salesRepresentativeId: client.salesRepresentativeId,
         salesRepresentative:
             client.salesRepresentativeName ?? 'Нет представителя',
@@ -817,6 +821,8 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
                   phone: client.phone,
                   paymentMethodId: client.defaultPaymentMethodId,
                   paymentMethod: client.defaultPaymentMethodName,
+                  documentPaymentMethodId: point.documentPaymentMethodId,
+                  documentPaymentMethodName: point.documentPaymentMethodName,
                   salesRepresentative:
                       client.salesRepresentativeName ?? 'Нет представителя',
                   items: point.items,
@@ -911,6 +917,8 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       phone: currentPoint.phone,
       paymentMethodId: currentPoint.paymentMethodId,
       paymentMethod: currentPoint.paymentMethod,
+      documentPaymentMethodId: currentPoint.documentPaymentMethodId,
+      documentPaymentMethodName: currentPoint.documentPaymentMethodName,
       salesRepresentative: currentPoint.salesRepresentative,
       items: updatedItems,
     );
@@ -957,6 +965,8 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       phone: currentPoint.phone,
       paymentMethodId: currentPoint.paymentMethodId,
       paymentMethod: currentPoint.paymentMethod,
+      documentPaymentMethodId: currentPoint.documentPaymentMethodId,
+      documentPaymentMethodName: currentPoint.documentPaymentMethodName,
       salesRepresentative: currentPoint.salesRepresentative,
       items: items,
     );

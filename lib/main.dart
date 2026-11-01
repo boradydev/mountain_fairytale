@@ -29,6 +29,9 @@ import 'package:mountain_fairytale/features/delivery_route/services/route_sheet_
 import 'package:mountain_fairytale/features/delivery_route/services/windows_route_print_service.dart';
 import 'package:mountain_fairytale/features/audit_event/data/audit_events_repo.dart';
 import 'package:mountain_fairytale/features/audit_event/data/audit_events_api_data_source.dart';
+import 'package:mountain_fairytale/features/sales_report/data/sales_report_api_data_source.dart';
+import 'package:mountain_fairytale/features/sales_report/data/sales_report_repo.dart';
+import 'package:mountain_fairytale/features/sales_report/ui/sales_report_provider.dart';
 import 'package:mountain_fairytale/features/auth/data/auth_repo.dart';
 import 'package:mountain_fairytale/features/auth/data/auth_api_data_source.dart';
 import 'package:mountain_fairytale/features/cars/data/cars_repo.dart';
@@ -195,6 +198,9 @@ Widget _configuredApplication(
   final auditLogRepository = AuditLogRepositoryImpl(
     ApiAuditLogDataSource(apiClient),
   );
+  final salesReportRepository = SalesReportRepositoryImpl(
+    ApiSalesReportDataSource(apiClient),
+  );
 
   // ===========================================================================
   // 4. ЗАПУСК ПРИЛОЖЕНИЯ И ВНЕДРЕНИЕ ЗАВИСИМОСТЕЙ (DI)
@@ -282,6 +288,9 @@ Widget _configuredApplication(
       create: (_) => AuditLogProvider(
         auditLogRepository,
       ),
+    ),
+    ChangeNotifierProvider(
+      create: (_) => SalesReportProvider(salesReportRepository),
     ),
   ];
 

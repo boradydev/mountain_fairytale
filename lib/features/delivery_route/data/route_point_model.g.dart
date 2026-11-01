@@ -17,6 +17,8 @@ RoutePoint _$RoutePointFromJson(Map<String, dynamic> json) => RoutePoint(
   phone: json['phone'] as String,
   paymentMethod: json['defaultPaymentMethodName'] as String?,
   paymentMethodId: json['defaultPaymentMethodId'] as String?,
+  documentPaymentMethodId: json['paymentMethodId'] as String?,
+  documentPaymentMethodName: json['paymentMethodName'] as String?,
   salesRepresentative:
       json['salesRepresentativeName'] as String? ?? 'Нет представителя',
   items: (json['items'] as List<dynamic>)
@@ -36,6 +38,8 @@ Map<String, dynamic> _$RoutePointToJson(RoutePoint instance) =>
       'phone': instance.phone,
       'defaultPaymentMethodId': instance.paymentMethodId,
       'defaultPaymentMethodName': instance.paymentMethod,
+      'paymentMethodId': instance.documentPaymentMethodId,
+      'paymentMethodName': instance.documentPaymentMethodName,
       'salesRepresentativeName': instance.salesRepresentative,
       'items': instance.items.map((e) => e.toJson()).toList(),
     };
