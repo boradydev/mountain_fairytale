@@ -669,6 +669,8 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     city: point.city,
     address: point.address,
     phone: point.phone,
+    clientAddress: point.clientAddress,
+    deliveryDetails: point.deliveryDetails,
     paymentMethodId: selectForDocument || point.paymentMethodId == method.id
         ? method.id
         : point.paymentMethodId,
@@ -743,6 +745,8 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
         city: point.city,
         address: point.address,
         phone: point.phone,
+        clientAddress: point.clientAddress,
+        deliveryDetails: point.deliveryDetails,
         paymentMethodId: point.paymentMethodId,
         paymentMethod: point.paymentMethod,
         documentPaymentMethodId: point.documentPaymentMethodId,
@@ -838,6 +842,8 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
                       client.deliveryDetails,
                   ].join(' — '),
                   phone: client.phone,
+                  clientAddress: client.address,
+                  deliveryDetails: client.deliveryDetails,
                   paymentMethodId: client.defaultPaymentMethodId,
                   paymentMethod: client.defaultPaymentMethodName,
                   documentPaymentMethodId: point.documentPaymentMethodId,
@@ -868,6 +874,8 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
           if (client.deliveryDetails.isNotEmpty) client.deliveryDetails,
         ].join(' — '),
         phone: client.phone,
+        clientAddress: client.address,
+        deliveryDetails: client.deliveryDetails,
         paymentMethodId: client.defaultPaymentMethodId,
         paymentMethod:
             paymentMethodsById[client.defaultPaymentMethodId]?.name ??
@@ -938,6 +946,8 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       city: currentPoint.city,
       address: currentPoint.address,
       phone: currentPoint.phone,
+      clientAddress: currentPoint.clientAddress,
+      deliveryDetails: currentPoint.deliveryDetails,
       paymentMethodId: currentPoint.paymentMethodId,
       paymentMethod: currentPoint.paymentMethod,
       documentPaymentMethodId: currentPoint.documentPaymentMethodId,
@@ -986,6 +996,8 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       city: currentPoint.city,
       address: currentPoint.address,
       phone: currentPoint.phone,
+      clientAddress: currentPoint.clientAddress,
+      deliveryDetails: currentPoint.deliveryDetails,
       paymentMethodId: currentPoint.paymentMethodId,
       paymentMethod: currentPoint.paymentMethod,
       documentPaymentMethodId: currentPoint.documentPaymentMethodId,

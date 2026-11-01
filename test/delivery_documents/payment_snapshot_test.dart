@@ -18,6 +18,7 @@ Client _client(String method) => Client(
   name: 'Клиент',
   phone: '123',
   address: 'Адрес',
+  deliveryDetails: 'Вход со двора',
   sleepingThresholdDays: 7,
   createdAt: DateTime(2026),
   isActive: true,
@@ -59,6 +60,8 @@ void main() {
       addTearDown(directory.dispose);
       provider.resetForm();
       provider.addClientPoint(clients.saved);
+      expect(provider.points.single.clientAddress, 'Адрес');
+      expect(provider.points.single.deliveryDetails, 'Вход со двора');
       expect(provider.points.single.documentPaymentMethodId, 'cash');
       provider.syncClientPoint(_client('card'));
       expect(provider.points.single.paymentMethodId, 'card');
@@ -72,6 +75,8 @@ void main() {
         isTrue,
       );
       expect(clients.saved.defaultPaymentMethodId, 'sbp');
+      expect(provider.points.single.clientAddress, 'Адрес');
+      expect(provider.points.single.deliveryDetails, 'Вход со двора');
       expect(provider.points.single.documentPaymentMethodId, 'sbp');
       expect(
         provider.points.single.toRequestJson(creating: true)['paymentMethodId'],

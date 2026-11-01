@@ -13,6 +13,9 @@ class RoutePoint {
   @JsonKey(defaultValue: '')
   final String city;
   final String address;
+  final String? clientAddress;
+  @JsonKey(defaultValue: '')
+  final String deliveryDetails;
   final String phone;
   @JsonKey(name: 'defaultPaymentMethodId')
   final String? paymentMethodId;
@@ -39,6 +42,8 @@ class RoutePoint {
     clientName: clientName,
     city: city,
     address: address,
+    clientAddress: clientAddress,
+    deliveryDetails: deliveryDetails,
     phone: phone,
     paymentMethodId: paymentMethodId,
     paymentMethod: paymentMethod,
@@ -63,6 +68,8 @@ class RoutePoint {
     required this.clientName,
     this.city = '',
     required this.address,
+    this.clientAddress,
+    this.deliveryDetails = '',
     required this.phone,
     this.paymentMethod,
     this.paymentMethodId,
