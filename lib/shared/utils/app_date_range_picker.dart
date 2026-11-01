@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/shared/widgets/app_date_range_dialog.dart';
 
 Future<DateTimeRange?> showAppDateRangePicker(
   BuildContext context, {
   DateTimeRange? initialDateRange,
   required String helpText,
-}) => showDateRangePicker(
+}) => showDialog<DateTimeRange>(
   context: context,
-  firstDate: DateTime(1900),
-  lastDate: DateTime(2100, 12, 31),
-  initialDateRange: initialDateRange,
-  helpText: helpText,
-  saveText: 'Применить',
-  cancelText: 'Отмена',
-  fieldStartLabelText: 'От',
-  fieldEndLabelText: 'До',
+  builder: (_) => AppDateRangeDialog(
+    initialDateRange: initialDateRange,
+    title: helpText,
+  ),
 );
