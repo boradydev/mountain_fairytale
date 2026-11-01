@@ -100,8 +100,7 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
           const Expanded(child: Center(child: CircularProgressIndicator()))
         else
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Column(
               children: [
                 if (provider.status == SalesReportStatus.failure)
                   Padding(
@@ -116,22 +115,107 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
                       ],
                     ),
                   ),
-                if (report.paymentMethods.isEmpty)
-                  const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(24),
-                      child: Text('Способы оплаты не настроены.'),
-                    ),
-                  )
-                else
-                  for (final method in report.paymentMethods)
-                    _PaymentMethodCard(method: method),
+                Expanded(
+                  child: report.paymentMethods.isEmpty
+                      ? const Center(
+                          child: Text('Способы оплаты не настроены.'),
+                        )
+                      : _PaymentMethodCards(methods: report.paymentMethods),
+                ),
               ],
             ),
           ),
       ],
     );
   }
+}
+
+class _PaymentMethodCards extends StatefulWidget {
+  final List<SalesReportPaymentMethod> methods;
+
+  const _PaymentMethodCards({required this.methods});
+
+  @override
+  State<_PaymentMethodCards> createState() => _PaymentMethodCardsState();
+}
+
+class _PaymentMethodCardsState extends State<_PaymentMethodCards> {
+  final _horizontal = ScrollController();
+  final _vertical = ScrollController();
+
+  @override
+  void dispose() {
+    _horizontal.dispose();
+    _vertical.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final cardWidth = (constraints.maxWidth - 32)
+          .clamp(0.0, 380.0)
+          .toDouble();
+      final rowWidth =
+          widget.methods.length * cardWidth +
+          (widget.methods.length - 1) * 16 +
+          32;
+      final contentWidth = rowWidth < constraints.maxWidth
+          ? constraints.maxWidth
+          : rowWidth;
+      // Both scrollbars belong to the visible viewport. The horizontal bar stays
+      // reachable even when a tall card requires vertical scrolling.
+      return ScrollConfiguration(
+        behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+        child: Scrollbar(
+          controller: _vertical,
+          notificationPredicate: (notification) =>
+              notification.metrics.axis == Axis.vertical,
+          child: Scrollbar(
+            controller: _horizontal,
+            thumbVisibility: true,
+            trackVisibility: true,
+            scrollbarOrientation: ScrollbarOrientation.bottom,
+            notificationPredicate: (notification) =>
+                notification.metrics.axis == Axis.horizontal,
+            child: SingleChildScrollView(
+              controller: _horizontal,
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.only(bottom: 16),
+              child: SizedBox(
+                width: contentWidth,
+                child: ListView(
+                  controller: _vertical,
+                  primary: false,
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (
+                          var index = 0;
+                          index < widget.methods.length;
+                          index++
+                        ) ...[
+                          if (index > 0) const SizedBox(width: 16),
+                          SizedBox(
+                            width: cardWidth,
+                            child: _PaymentMethodCard(
+                              method: widget.methods[index],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+  );
 }
 
 class _SalesReportToolbar extends StatelessWidget {
@@ -248,7 +332,9 @@ class _PaymentMethodCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     return AppBaseCard(
+      margin: EdgeInsets.zero,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
