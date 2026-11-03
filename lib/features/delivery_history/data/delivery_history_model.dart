@@ -11,6 +11,8 @@ class HistoryItem {
 }
 
 class HistoryPurchase {
+  final bool isDelivered;
+  final String nonDeliveryReason;
   final String pointId;
   final String clientId;
   final String clientName;
@@ -20,7 +22,9 @@ class HistoryPurchase {
   final double totalAmount;
   final List<HistoryItem> items;
   HistoryPurchase.fromJson(Map<String, dynamic> json)
-    : pointId = json['pointId'] as String,
+    : isDelivered = json['isDelivered'] as bool? ?? true,
+      nonDeliveryReason = json['nonDeliveryReason'] as String? ?? '',
+      pointId = json['pointId'] as String,
       clientId = json['clientId'] as String,
       clientName = json['clientName'] as String,
       address = json['address'] as String,

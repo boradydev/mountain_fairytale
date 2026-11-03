@@ -53,7 +53,7 @@ class DeliveryRouteSheet implements RouteDocument {
   String get title => 'Доставка: $driverName';
 
   double get grandTotal =>
-      points.fold(0, (sum, point) => sum + point.totalCents) / 100;
+      points.fold(0, (sum, point) => sum + point.accountedTotalCents) / 100;
   Map<String, dynamic> toRequestJson() => {
     if (id != null) 'expectedRevision': revision,
     if (id != null && saveOperationId != null) 'operationId': saveOperationId,

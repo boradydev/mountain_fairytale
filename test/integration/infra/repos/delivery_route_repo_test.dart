@@ -65,6 +65,8 @@ void main() {
           <String, dynamic>{
             'pointId': id,
             'clientId': delivery ? id : null,
+            'isDelivered': true,
+            'nonDeliveryReason': '',
             'clientName': 'Клиент',
             'address': 'Адрес',
             'phone': '123',
@@ -161,6 +163,8 @@ void main() {
           expect(request.containsKey('isActive'), isFalse);
           expect((request['points'] as List).single, {
             'clientId': delivery ? id : null,
+            'isDelivered': true,
+            'nonDeliveryReason': '',
             'paymentMethodId': null,
             'items': [
               {

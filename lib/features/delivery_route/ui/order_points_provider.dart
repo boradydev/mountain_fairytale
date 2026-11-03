@@ -658,12 +658,29 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     notifyListeners();
   }
 
+  void setDeliveryOutcome(
+    int index, {
+    required bool delivered,
+    String reason = '',
+  }) {
+    if (!canEdit || isPickup) return;
+    final normalized = reason.trim();
+    if (!delivered && (normalized.isEmpty || normalized.length > 1000)) return;
+    points[index] = points[index].copyWith(
+      isDelivered: delivered,
+      nonDeliveryReason: delivered ? '' : normalized,
+    );
+    notifyListeners();
+  }
+
   RoutePoint _withPaymentMethod(
     RoutePoint point,
     PaymentMethod method, {
     bool selectForDocument = false,
   }) => RoutePoint(
     pointId: point.pointId,
+    isDelivered: point.isDelivered,
+    nonDeliveryReason: point.nonDeliveryReason,
     localId: point.localId,
     position: point.position,
     salesRepresentativeId: point.salesRepresentativeId,
@@ -761,6 +778,8 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       final point = points[index];
       points[index] = RoutePoint(
         pointId: point.pointId,
+        isDelivered: point.isDelivered,
+        nonDeliveryReason: point.nonDeliveryReason,
         localId: point.localId,
         position: point.position,
         clientId: point.clientId,
@@ -785,7 +804,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
   }
 
   double get grandTotal =>
-      points.fold(0, (sum, point) => sum + point.totalCents) / 100;
+      points.fold(0, (sum, point) => sum + point.accountedTotalCents) / 100;
 
   Future<void> loadOrderDirectories() async {
     isLoadingDirectories = true;
@@ -854,6 +873,8 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
               ? point
               : RoutePoint(
                   pointId: point.pointId,
+                  isDelivered: point.isDelivered,
+                  nonDeliveryReason: point.nonDeliveryReason,
                   localId: point.localId,
                   position: point.position,
                   salesRepresentativeId: client.salesRepresentativeId,
@@ -963,6 +984,8 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
 
     points[pointIndex] = RoutePoint(
       pointId: currentPoint.pointId,
+      isDelivered: currentPoint.isDelivered,
+      nonDeliveryReason: currentPoint.nonDeliveryReason,
       localId: currentPoint.localId,
       position: currentPoint.position,
       salesRepresentativeId: currentPoint.salesRepresentativeId,
@@ -1014,6 +1037,8 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
 
     points[pointIndex] = RoutePoint(
       pointId: currentPoint.pointId,
+      isDelivered: currentPoint.isDelivered,
+      nonDeliveryReason: currentPoint.nonDeliveryReason,
       localId: currentPoint.localId,
       position: currentPoint.position,
       salesRepresentativeId: currentPoint.salesRepresentativeId,

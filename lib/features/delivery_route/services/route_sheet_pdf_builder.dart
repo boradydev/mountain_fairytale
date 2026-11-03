@@ -153,6 +153,14 @@ class RouteSheetPdfBuilder {
                       color: PdfColors.black,
                     ),
                     children: [
+                      if (!point.isDelivered)
+                        pw.TextSpan(
+                          text: 'НЕ ДОСТАВЛЕНО: ${point.nonDeliveryReason}\n',
+                          style: pw.TextStyle(
+                            fontWeight: pw.FontWeight.bold,
+                            color: PdfColors.red900,
+                          ),
+                        ),
                       pw.TextSpan(text: 'Клиент: '),
                       pw.TextSpan(
                         text: '${point.clientName}\n',
@@ -195,7 +203,9 @@ class RouteSheetPdfBuilder {
               // Сюда передаем наш список продуктов, он разложится в красивую мини-таблицу
               _buildItemsCell(point.items),
               _tableCell(
-                '${point.totalAmount.toStringAsFixed(2)} ₽',
+                point.isDelivered
+                    ? '${point.totalAmount.toStringAsFixed(2)} ₽'
+                    : 'Не включено в итог',
                 align: pw.TextAlign.center,
               ),
             ],

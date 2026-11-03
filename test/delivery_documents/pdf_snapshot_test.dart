@@ -32,6 +32,32 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(pdfrxInitialize);
 
+  test('PDF preserves unsuccessful order and reason but excludes its sum from route total', () async {
+    final text = await _printedText(
+      const RoutePoint(
+        clientId: 'client',
+        clientName: 'Клиент',
+        address: 'Адрес',
+        phone: '123',
+        salesRepresentative: '',
+        isDelivered: false,
+        nonDeliveryReason: 'Закрыт магазин',
+        items: [
+          DeliveryTaskItem(
+            productId: 'water',
+            productName: 'Вода',
+            quantity: 2,
+            price: 350,
+          ),
+        ],
+      ),
+    );
+    expect(text, contains('НЕ ДОСТАВЛЕНО: Закрыт магазин'));
+    expect(text, contains('Не включено в итог'));
+    expect(text, contains('Вода'));
+    expect(text, contains('0.00'));
+  });
+
   for (final savedPayment in ['Наличные', null]) {
     test(
       'actual PDF prints document payment $savedPayment and client details once',

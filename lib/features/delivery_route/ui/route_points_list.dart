@@ -1,3 +1,4 @@
+import 'package:mountain_fairytale/features/delivery_route/ui/failed_delivery_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/shared/widgets/icon_button_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
@@ -144,7 +145,9 @@ class _RoutePointsListState extends State<RoutePointsList> {
                   clipBehavior: Clip.antiAlias,
                   // =============================================
                   decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerLow,
+                    color: point.isDelivered
+                        ? colorScheme.surfaceContainerLow
+                        : colorScheme.errorContainer,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: colorScheme.outlineVariant,
@@ -178,6 +181,13 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
+                            if (!point.isDelivered) ...[
+                              const Text(
+                                'Не доставлено',
+                                style: TextStyle(fontWeight: FontWeight.w700),
+                              ),
+                              Text(point.nonDeliveryReason),
+                            ],
                             if (!provider.isPickup) const SizedBox(height: 4),
                             if (!provider.isPickup)
                               Text(
@@ -260,6 +270,44 @@ class _RoutePointsListState extends State<RoutePointsList> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            if (!provider.isPickup)
+                              AppSecondaryButton(
+                                text: point.isDelivered
+                                    ? 'Отметить как недоставленное'
+                                    : 'Снять отметку «Не доставлено»',
+                                onPressed: !provider.canEdit
+                                    ? null
+                                    : () async {
+                                        if (!point.isDelivered) {
+                                          provider.setDeliveryOutcome(
+                                            index,
+                                            delivered: true,
+                                          );
+                                          return;
+                                        }
+                                        final reason = await showDialog<String>(
+                                          context: context,
+                                          builder: (_) =>
+                                              const FailedDeliveryDialog(),
+                                        );
+                                        if (reason != null &&
+                                            context.mounted &&
+                                            provider.canEdit) {
+                                          final currentIndex = provider.points
+                                              .indexWhere(
+                                                (p) => p.viewId == point.viewId,
+                                              );
+                                          if (currentIndex >= 0) {
+                                            provider.setDeliveryOutcome(
+                                              currentIndex,
+                                              delivered: false,
+                                              reason: reason,
+                                            );
+                                          }
+                                        }
+                                      },
+                              ),
+                            const SizedBox(height: 8),
                             Row(
                               children: [
                                 Expanded(

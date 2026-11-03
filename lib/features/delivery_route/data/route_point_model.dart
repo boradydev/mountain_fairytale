@@ -6,6 +6,10 @@ part 'route_point_model.g.dart';
 @JsonSerializable(explicitToJson: true)
 class RoutePoint {
   final String? pointId;
+  @JsonKey(defaultValue: true)
+  final bool isDelivered;
+  @JsonKey(defaultValue: '')
+  final String nonDeliveryReason;
   final int position;
   final String? salesRepresentativeId;
   final String? clientId;
@@ -38,8 +42,15 @@ class RoutePoint {
 
   int get totalCents => items.fold(0, (sum, item) => sum + item.amountCents);
   double get totalAmount => totalCents / 100;
-  RoutePoint copyWith({List<DeliveryTaskItem>? items}) => RoutePoint(
+  int get accountedTotalCents => isDelivered ? totalCents : 0;
+  RoutePoint copyWith({
+    List<DeliveryTaskItem>? items,
+    bool? isDelivered,
+    String? nonDeliveryReason,
+  }) => RoutePoint(
     pointId: pointId,
+    isDelivered: isDelivered ?? this.isDelivered,
+    nonDeliveryReason: nonDeliveryReason ?? this.nonDeliveryReason,
     localId: localId,
     position: position,
     clientId: clientId,
@@ -60,12 +71,16 @@ class RoutePoint {
   Map<String, dynamic> toRequestJson({required bool creating}) => {
     if (!creating && pointId != null) 'pointId': pointId,
     'clientId': clientId,
+    'isDelivered': isDelivered,
+    'nonDeliveryReason': nonDeliveryReason,
     'paymentMethodId': documentPaymentMethodId,
     'items': items.map((item) => item.toRequestJson()).toList(),
   };
 
   const RoutePoint({
     this.pointId,
+    this.isDelivered = true,
+    this.nonDeliveryReason = '',
     this.localId,
     this.position = 0,
     this.salesRepresentativeId,

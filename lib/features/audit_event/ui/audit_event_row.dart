@@ -15,6 +15,8 @@ const auditFieldLabels = <String, String>{
   'price': 'Цена',
   'quantity': 'Количество',
   'isActive': 'Активность',
+  'isDelivered': 'Доставка состоялась',
+  'nonDeliveryReason': 'Причина недоставки',
   'role': 'Роль',
   'commissionPercent': 'Процент комиссии',
   'model': 'Модель',

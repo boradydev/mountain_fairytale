@@ -354,7 +354,11 @@ class _DayDocumentsDialogState extends State<DayDocumentsDialog> {
             symbol: '₽',
             decimalDigits: 2,
           ).format(
-            points.fold<int>(0, (sum, point) => sum + point.totalCents) / 100,
+            points.fold<int>(
+                  0,
+                  (sum, point) => sum + point.accountedTotalCents,
+                ) /
+                100,
           );
       details.addAll([
         (
