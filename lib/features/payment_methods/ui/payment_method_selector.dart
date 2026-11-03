@@ -9,16 +9,18 @@ import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 
 class PaymentMethodSelector extends StatefulWidget {
   final OrderPointsProvider provider;
-  final ClientsProvider clientsProvider;
-  final String clientId;
+  final ClientsProvider? clientsProvider;
+  final String? clientId;
+  final String? purchaseKey;
   final String? selectedId;
   final String? selectedName;
 
   const PaymentMethodSelector({
     super.key,
     required this.provider,
-    required this.clientsProvider,
-    required this.clientId,
+    this.clientsProvider,
+    this.clientId,
+    this.purchaseKey,
     this.selectedId,
     this.selectedName,
   });
@@ -92,11 +94,16 @@ class _PaymentMethodSelectorState extends State<PaymentMethodSelector> {
         selected = activated;
       }
       setState(() => _saving = true);
-      final success = await widget.provider.selectPointPaymentMethod(
-        widget.clientId,
-        selected,
-        widget.clientsProvider,
-      );
+      final success = widget.purchaseKey != null
+          ? await widget.provider.selectPurchasePaymentMethod(
+              widget.purchaseKey!,
+              selected,
+            )
+          : await widget.provider.selectPointPaymentMethod(
+              widget.clientId!,
+              selected,
+              widget.clientsProvider!,
+            );
       if (mounted && !success) {
         setState(() => _error = widget.provider.paymentMethodErrorMessage);
       }

@@ -8,7 +8,10 @@ class RoutePoint {
   final String? pointId;
   final int position;
   final String? salesRepresentativeId;
-  final String clientId;
+  final String? clientId;
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  final String? localId;
+  String get viewId => clientId ?? pointId ?? localId!;
   final String clientName;
   @JsonKey(defaultValue: '')
   final String city;
@@ -37,6 +40,7 @@ class RoutePoint {
   double get totalAmount => totalCents / 100;
   RoutePoint copyWith({List<DeliveryTaskItem>? items}) => RoutePoint(
     pointId: pointId,
+    localId: localId,
     position: position,
     clientId: clientId,
     clientName: clientName,
@@ -62,6 +66,7 @@ class RoutePoint {
 
   const RoutePoint({
     this.pointId,
+    this.localId,
     this.position = 0,
     this.salesRepresentativeId,
     required this.clientId,
@@ -80,7 +85,7 @@ class RoutePoint {
   });
 
   factory RoutePoint.fromJson(Map<String, dynamic> json) =>
-      _$RoutePointFromJson({...json, 'clientId': json['clientId'].toString()});
+      _$RoutePointFromJson({...json, 'clientId': json['clientId']?.toString()});
 
   Map<String, dynamic> toJson() => _$RoutePointToJson(this);
 }

@@ -22,6 +22,7 @@ class DeliveryDocumentEditor extends StatefulWidget {
   final Widget Function(GlobalKey<FormState>) metaBuilder;
   final Future<bool> Function()? printDocument;
   final VoidCallback? onDocumentChanged;
+  final VoidCallback? onAddPurchase;
   const DeliveryDocumentEditor({
     super.key,
     required this.provider,
@@ -32,6 +33,7 @@ class DeliveryDocumentEditor extends StatefulWidget {
     required this.metaBuilder,
     this.printDocument,
     this.onDocumentChanged,
+    this.onAddPurchase,
   });
   @override
   State<DeliveryDocumentEditor> createState() => _DeliveryDocumentEditorState();
@@ -311,36 +313,61 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              SizedBox(
-                                width: 360,
-                                child: LayoutBuilder(
-                                  builder: (context, constraints) => Column(
-                                    children: [
-                                      ConstrainedBox(
-                                        constraints: BoxConstraints(
-                                          // Leave room for client search in short windows.
-                                          maxHeight:
-                                              (constraints.maxHeight - 220)
-                                                  .clamp(
-                                                    0.0,
-                                                    constraints.maxHeight,
-                                                  ),
+                              if (p.isPickup)
+                                SizedBox(
+                                  width: 300,
+                                  child: SingleChildScrollView(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        widget.metaBuilder(_formKey),
+                                        if (editing)
+                                          Padding(
+                                            padding: const EdgeInsets.all(16),
+                                            child: AppPrimaryButton(
+                                              text: 'Добавить покупку',
+                                              icon: Icons.add_shopping_cart,
+                                              onPressed: p.canEdit
+                                                  ? widget.onAddPurchase
+                                                  : null,
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                )
+                              else
+                                SizedBox(
+                                  width: 360,
+                                  child: LayoutBuilder(
+                                    builder: (context, constraints) => Column(
+                                      children: [
+                                        ConstrainedBox(
+                                          constraints: BoxConstraints(
+                                            // Leave room for client search in short windows.
+                                            maxHeight:
+                                                (constraints.maxHeight - 220)
+                                                    .clamp(
+                                                      0.0,
+                                                      constraints.maxHeight,
+                                                    ),
+                                          ),
+                                          child: SingleChildScrollView(
+                                            primary: false,
+                                            child: widget.metaBuilder(_formKey),
+                                          ),
                                         ),
-                                        child: SingleChildScrollView(
-                                          primary: false,
-                                          child: widget.metaBuilder(_formKey),
+                                        const Divider(height: 1),
+                                        Expanded(
+                                          child: ClientSelectionPanel(
+                                            provider: p,
+                                          ),
                                         ),
-                                      ),
-                                      const Divider(height: 1),
-                                      Expanded(
-                                        child: ClientSelectionPanel(
-                                          provider: p,
-                                        ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 ),
-                              ),
                               const VerticalDivider(width: 1),
                               Expanded(
                                 child: RoutePointsList(

@@ -108,7 +108,7 @@ class _PointRepresentativeSelectorState
       }
       if (!mounted || !widget.provider.canEdit) return;
       await widget.provider.selectPointRepresentative(
-        widget.point.clientId,
+        widget.point.clientId!,
         selected,
         context.read<ClientsProvider>(),
       );

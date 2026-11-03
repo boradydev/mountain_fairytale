@@ -3,6 +3,7 @@ import 'package:mountain_fairytale/features/pickup/pickup_abcs.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/order_points_provider.dart';
 import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_sheet_model.dart';
 import 'package:mountain_fairytale/core/network/api_exception.dart';
+import 'package:mountain_fairytale/features/delivery_route/data/route_point_model.dart';
 
 class PickupConstructorProvider extends OrderPointsProvider {
   final PickupRepository _pickupRepo;
@@ -13,6 +14,26 @@ class PickupConstructorProvider extends OrderPointsProvider {
     required super.clientRepo,
   }) : _pickupRepo = pickupRepo,
        super(lockRepository: pickupRepo);
+  @override
+  bool get isPickup => true;
+  int _purchaseSequence = 0;
+
+  void addPurchase() {
+    if (!canEdit) return;
+    points.add(
+      RoutePoint(
+        localId: 'purchase-${++_purchaseSequence}',
+        clientId: null,
+        clientName: '',
+        address: '',
+        phone: '',
+        salesRepresentative: '',
+        items: [],
+      ),
+    );
+    notifyListeners();
+  }
+
   DateTime selectedDate = DateTime.now();
   String? get currentPickupId => documentId;
   bool isOldDocument = false;

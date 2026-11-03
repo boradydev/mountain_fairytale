@@ -10,7 +10,7 @@ RoutePoint _$RoutePointFromJson(Map<String, dynamic> json) => RoutePoint(
   pointId: json['pointId'] as String?,
   position: (json['position'] as num?)?.toInt() ?? 0,
   salesRepresentativeId: json['salesRepresentativeId'] as String?,
-  clientId: json['clientId'] as String,
+  clientId: json['clientId'] as String?,
   clientName: json['clientName'] as String,
   city: json['city'] as String? ?? '',
   address: json['address'] as String,

@@ -75,7 +75,9 @@ class _RoutePointsListState extends State<RoutePointsList> {
     final provider = widget.provider;
     final viewState = _viewState;
     final colorScheme = Theme.of(context).colorScheme;
-    final clientsProvider = context.read<ClientsProvider>();
+    final clientsProvider = provider.isPickup
+        ? null
+        : context.read<ClientsProvider>();
 
     if (!_initialized) {
       _lastPointsCount = provider.points.length;
@@ -95,27 +97,23 @@ class _RoutePointsListState extends State<RoutePointsList> {
     }
 
     if (provider.points.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
-          'Добавьте клиентов из левой панели, чтобы составить маршрут объезда.',
+          provider.isPickup
+              ? 'Нажмите «Добавить покупку», чтобы добавить товары и способ оплаты.'
+              : 'Добавьте клиентов из левой панели, чтобы составить маршрут объезда.',
         ),
       );
     }
 
-    return ReorderableListView.builder(
-      scrollController: _scrollController,
-      padding: const EdgeInsets.all(16),
-      buildDefaultDragHandles: false,
-      itemCount: provider.points.length,
-      onReorderItem: (oldIndex, newIndex) => provider.reorderPoints(
-        oldIndex,
-        oldIndex < newIndex ? newIndex + 1 : newIndex,
-      ),
+    return _documentPointsList(
+      controller: _scrollController,
+      provider: provider,
       itemBuilder: (context, index) {
         final point = provider.points[index];
 
         return Padding(
-          key: ValueKey(point.clientId),
+          key: ValueKey(point.viewId),
           padding: const EdgeInsets.only(bottom: 12),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -159,10 +157,10 @@ class _RoutePointsListState extends State<RoutePointsList> {
                     backgroundColor: Colors.transparent,
                     collapsedBackgroundColor: Colors.transparent,
                     // ====================================
-                    key: ValueKey('route-point-${point.clientId}'),
-                    initiallyExpanded: viewState.isExpanded(point.clientId),
+                    key: ValueKey('route-point-${point.viewId}'),
+                    initiallyExpanded: viewState.isExpanded(point.viewId),
                     onExpansionChanged: (expanded) =>
-                        viewState.setExpanded(point.clientId, expanded),
+                        viewState.setExpanded(point.viewId, expanded),
                     tilePadding: const EdgeInsets.symmetric(
                       horizontal: 20,
                       vertical: 8,
@@ -173,16 +171,19 @@ class _RoutePointsListState extends State<RoutePointsList> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              point.clientName,
+                              provider.isPickup
+                                  ? 'Покупка ${index + 1}'
+                                  : point.clientName,
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              point.address,
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
+                            if (!provider.isPickup) const SizedBox(height: 4),
+                            if (!provider.isPickup)
+                              Text(
+                                point.address,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
                           ],
                         );
                         final summary = Column(
@@ -229,7 +230,7 @@ class _RoutePointsListState extends State<RoutePointsList> {
                         );
                       },
                     ),
-                    leading: !provider.canEdit
+                    leading: !provider.canEdit || provider.isPickup
                         ? const SizedBox(width: 24, height: 40)
                         : ReorderableDragStartListener(
                             index: index,
@@ -258,12 +259,14 @@ class _RoutePointsListState extends State<RoutePointsList> {
                             Row(
                               children: [
                                 Expanded(
-                                  child: Text(
-                                    'Телефон: ${point.phone}',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium,
-                                  ),
+                                  child: provider.isPickup
+                                      ? const SizedBox.shrink()
+                                      : Text(
+                                          'Телефон: ${point.phone}',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium,
+                                        ),
                                 ),
                                 Visibility(
                                   visible: provider.canEdit,
@@ -272,7 +275,9 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                   maintainState: true,
                                   child: AppIconButton(
                                     icon: Icons.delete_outline,
-                                    tooltip: 'Удалить точку',
+                                    tooltip: provider.isPickup
+                                        ? 'Удалить покупку'
+                                        : 'Удалить точку',
                                     destructive: true,
                                     onPressed: provider.canEdit
                                         ? () => provider.removePoint(index)
@@ -288,9 +293,13 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                   provider: provider,
                                   clientsProvider: clientsProvider,
                                   clientId: point.clientId,
+                                  purchaseKey: provider.isPickup
+                                      ? point.viewId
+                                      : null,
                                   selectedId: point.documentPaymentMethodId,
                                   selectedName: point.documentPaymentMethodName,
                                 );
+                                if (provider.isPickup) return payment;
                                 final representative =
                                     PointRepresentativeSelector(
                                       provider: provider,
@@ -318,10 +327,11 @@ class _RoutePointsListState extends State<RoutePointsList> {
                               },
                             ),
                             const SizedBox(height: 8),
-                            Text(
-                              'Способ оплаты по умолчанию и представитель сохраняются у клиента сразу. Оплата точки — при сохранении документа.',
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
+                            if (!provider.isPickup)
+                              Text(
+                                'Способ оплаты по умолчанию и представитель сохраняются у клиента сразу. Оплата точки — при сохранении документа.',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
                             const SizedBox(height: 24),
 
                             Row(
@@ -334,7 +344,9 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    'Задание для водителя',
+                                    provider.isPickup
+                                        ? 'Товары и услуги'
+                                        : 'Задание для водителя',
                                     style: TextStyle(
                                       fontWeight: FontWeight.w600,
                                       fontSize: 15,
@@ -603,4 +615,30 @@ String _positionsLabel(int count) {
     2 || 3 || 4 => 'позиции',
     _ => 'позиций',
   };
+}
+
+Widget _documentPointsList({
+  required ScrollController controller,
+  required OrderPointsProvider provider,
+  required IndexedWidgetBuilder itemBuilder,
+}) {
+  if (provider.isPickup) {
+    return ListView.builder(
+      controller: controller,
+      padding: const EdgeInsets.all(16),
+      itemCount: provider.points.length,
+      itemBuilder: itemBuilder,
+    );
+  }
+  return ReorderableListView.builder(
+    scrollController: controller,
+    padding: const EdgeInsets.all(16),
+    buildDefaultDragHandles: false,
+    itemCount: provider.points.length,
+    onReorderItem: (oldIndex, newIndex) => provider.reorderPoints(
+      oldIndex,
+      oldIndex < newIndex ? newIndex + 1 : newIndex,
+    ),
+    itemBuilder: itemBuilder,
+  );
 }

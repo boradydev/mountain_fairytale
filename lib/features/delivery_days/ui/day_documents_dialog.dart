@@ -357,7 +357,10 @@ class _DayDocumentsDialogState extends State<DayDocumentsDialog> {
             points.fold<int>(0, (sum, point) => sum + point.totalCents) / 100,
           );
       details.addAll([
-        ('Клиентов:', '$clientsCount'),
+        (
+          document is PickupSheet ? 'Покупок:' : 'Клиентов:',
+          document is PickupSheet ? '${points.length}' : '$clientsCount',
+        ),
         ('Сумма:', amount),
       ]);
     }

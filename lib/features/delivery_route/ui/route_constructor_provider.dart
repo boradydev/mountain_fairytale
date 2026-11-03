@@ -92,7 +92,7 @@ class RouteConstructorProvider extends OrderPointsProvider {
     optimizationFailed = false;
     notifyListeners();
     final revision = _orderRevision, session = _optimizationSession;
-    final originalIds = points.map((p) => p.clientId).toList();
+    final originalIds = points.map((p) => p.clientId!).toList();
     try {
       final result = await locationRepository!.optimize(originalIds);
       if (session != _optimizationSession) return;

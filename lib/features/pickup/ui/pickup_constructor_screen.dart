@@ -30,6 +30,7 @@ class PickupConstructorScreen extends StatelessWidget {
         }
       },
       save: provider.savePickup,
+      onAddPurchase: provider.addPurchase,
       changeActive: provider.changeDocumentActive,
       onDocumentChanged: onDocumentChanged,
       metaBuilder: (key) => PickupMetaPanel(formKey: key),
