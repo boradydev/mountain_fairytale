@@ -240,6 +240,7 @@ class RouteSheetPdfBuilder {
     // still have been loaded onto the vehicle before the delivery attempt.
     for (final point in sheet.points) {
       for (final item in point.items) {
+        if (item.isFreePrice) continue;
         final existing = quantitiesByProduct[item.productId];
         quantitiesByProduct[item.productId] = (
           productName: existing?.productName ?? item.productName,
@@ -252,7 +253,7 @@ class RouteSheetPdfBuilder {
       crossAxisAlignment: pw.CrossAxisAlignment.stretch,
       children: [
         pw.Text(
-          'ЗАГРУЗИТЬ В АВТОМОБИЛЬ',
+          'ЗАГРУЗИТЬ СО СКЛАДА',
           style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold),
         ),
         pw.SizedBox(height: 6),
@@ -292,6 +293,7 @@ class RouteSheetPdfBuilder {
 
   pw.Widget _buildItemsCell(List<dynamic> items) {
     return pw.Table(
+      defaultVerticalAlignment: pw.TableCellVerticalAlignment.middle,
       // Внутренние границы между колонками продуктов
       border: const pw.TableBorder(
         verticalInside: pw.BorderSide(color: PdfColors.grey400, width: 0.4),

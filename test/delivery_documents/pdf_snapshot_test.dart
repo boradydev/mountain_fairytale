@@ -88,6 +88,52 @@ void main() {
     },
   );
 
+  test(
+    'warehouse load summary excludes all free-price rows',
+    () async {
+      final text = await _printedText(
+        const RoutePoint(
+          clientId: 'client',
+          clientName: 'Клиент',
+          address: 'Адрес',
+          phone: '123',
+          salesRepresentative: '',
+          items: [
+            DeliveryTaskItem(
+              productId: 'water',
+              productName: 'Бесплатная вода',
+              quantity: 2,
+              price: 0,
+            ),
+            DeliveryTaskItem(
+              productId: 'service-zero',
+              productName: 'Услуга без цены',
+              quantity: 3,
+              price: 0,
+              isFreePrice: true,
+            ),
+            DeliveryTaskItem(
+              productId: 'service-priced',
+              productName: 'Оценённая услуга',
+              quantity: 4,
+              price: 25,
+              isFreePrice: true,
+            ),
+          ],
+        ),
+      );
+
+      int occurrences(String value) =>
+          RegExp(RegExp.escape(value)).allMatches(text).length;
+
+      expect(occurrences('Бесплатная вода'), 2);
+      expect(occurrences('Услуга без цены'), 1);
+      expect(occurrences('Оценённая услуга'), 1);
+      expect(text, contains('ЗАГРУЗИТЬ СО СКЛАДА'));
+      expect(text, isNot(contains('ЗАГРУЗИТЬ В АВТОМОБИЛЬ')));
+    },
+  );
+
   for (final savedPayment in ['Наличные', null]) {
     test(
       'actual PDF prints document payment $savedPayment and client details once',

@@ -87,6 +87,7 @@ void main() {
 
       expect(note, 'Позвонить перед выездом');
       expect(find.text('Уточнение: Позвонить перед выездом'), findsOneWidget);
+      expect(find.text('Свободная цена'), findsNothing);
       expect(tester.takeException(), isNull);
     },
   );

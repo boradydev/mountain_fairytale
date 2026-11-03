@@ -302,17 +302,10 @@ class _TaskItemRowState extends State<TaskItemRow> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           name,
-                          if (_showFreePrice) ...[
+                          if (_showFreePrice &&
+                              widget.item.driverNote.isNotEmpty) ...[
                             const SizedBox(height: 4),
-                            Text(
-                              'Свободная цена',
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.primary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            if (widget.item.driverNote.isNotEmpty)
-                              _noteSummary(),
+                            _noteSummary(),
                           ],
                         ],
                       ),
@@ -342,16 +335,10 @@ class _TaskItemRowState extends State<TaskItemRow> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       name,
-                      if (_showFreePrice) ...[
+                      if (_showFreePrice &&
+                          widget.item.driverNote.isNotEmpty) ...[
                         const SizedBox(height: 4),
-                        Text(
-                          'Свободная цена',
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        if (widget.item.driverNote.isNotEmpty) _noteSummary(),
+                        _noteSummary(),
                       ],
                     ],
                   ),
