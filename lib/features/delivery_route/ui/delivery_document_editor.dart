@@ -42,6 +42,7 @@ class DeliveryDocumentEditor extends StatefulWidget {
 class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
   // Survives form rebuilds on mode changes, but ends with this editor session.
   final _pointViewState = RoutePointsViewState();
+  final _routeMetaController = ExpansibleController()..expand();
   GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _loading = true;
   bool _canPop = false;
@@ -82,6 +83,7 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
 
   @override
   void dispose() {
+    _routeMetaController.dispose();
     widget.provider.stopConnectionWatch();
     final dialogContext = _connectionDialogContext;
     if (dialogContext != null) {
@@ -122,10 +124,11 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
   }
 
   Future<void> _save() async {
-    if (_savePresentation != null ||
-        _leaving ||
-        !widget.provider.canSave ||
-        !(_formKey.currentState?.validate() ?? false)) {
+    if (_savePresentation != null || _leaving || !widget.provider.canSave) {
+      return;
+    }
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      if (!widget.provider.isPickup) _routeMetaController.expand();
       return;
     }
     setState(
@@ -343,20 +346,47 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
                                   child: LayoutBuilder(
                                     builder: (context, constraints) => Column(
                                       children: [
-                                        ConstrainedBox(
-                                          constraints: BoxConstraints(
-                                            // Leave room for client search in short windows.
-                                            maxHeight:
-                                                (constraints.maxHeight - 220)
-                                                    .clamp(
-                                                      0.0,
-                                                      constraints.maxHeight,
-                                                    ),
+                                        ExpansionTile(
+                                          controller: _routeMetaController,
+                                          maintainState: true,
+                                          shape: const Border(),
+                                          collapsedShape: const Border(),
+                                          tilePadding:
+                                              const EdgeInsets.symmetric(
+                                                horizontal: 16,
+                                              ),
+                                          title: const Text(
+                                            '1. Данные рейса',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                           ),
-                                          child: SingleChildScrollView(
-                                            primary: false,
-                                            child: widget.metaBuilder(_formKey),
-                                          ),
+                                          onExpansionChanged: (expanded) {
+                                            if (!expanded) {
+                                              FocusScope.of(context).unfocus();
+                                            }
+                                          },
+                                          children: [
+                                            ConstrainedBox(
+                                              constraints: BoxConstraints(
+                                                // Reserve client search space and the section header.
+                                                maxHeight:
+                                                    (constraints.maxHeight -
+                                                            276)
+                                                        .clamp(
+                                                          0.0,
+                                                          constraints.maxHeight,
+                                                        ),
+                                              ),
+                                              child: SingleChildScrollView(
+                                                primary: false,
+                                                child: widget.metaBuilder(
+                                                  _formKey,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                         const Divider(height: 1),
                                         Expanded(
