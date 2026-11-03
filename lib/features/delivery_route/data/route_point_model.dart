@@ -10,6 +10,8 @@ class RoutePoint {
   final bool isDelivered;
   @JsonKey(defaultValue: '')
   final String nonDeliveryReason;
+  @JsonKey(defaultValue: '')
+  final String memo;
   final int position;
   final String? salesRepresentativeId;
   final String? clientId;
@@ -47,10 +49,12 @@ class RoutePoint {
     List<DeliveryTaskItem>? items,
     bool? isDelivered,
     String? nonDeliveryReason,
+    String? memo,
   }) => RoutePoint(
     pointId: pointId,
     isDelivered: isDelivered ?? this.isDelivered,
     nonDeliveryReason: nonDeliveryReason ?? this.nonDeliveryReason,
+    memo: memo ?? this.memo,
     localId: localId,
     position: position,
     clientId: clientId,
@@ -68,11 +72,15 @@ class RoutePoint {
     salesRepresentative: salesRepresentative,
     items: items ?? this.items,
   );
-  Map<String, dynamic> toRequestJson({required bool creating}) => {
+  Map<String, dynamic> toRequestJson({
+    required bool creating,
+    bool includeMemo = true,
+  }) => {
     if (!creating && pointId != null) 'pointId': pointId,
     'clientId': clientId,
     'isDelivered': isDelivered,
     'nonDeliveryReason': nonDeliveryReason,
+    if (includeMemo) 'memo': memo,
     'paymentMethodId': documentPaymentMethodId,
     'items': items.map((item) => item.toRequestJson()).toList(),
   };
@@ -81,6 +89,7 @@ class RoutePoint {
     this.pointId,
     this.isDelivered = true,
     this.nonDeliveryReason = '',
+    this.memo = '',
     this.localId,
     this.position = 0,
     this.salesRepresentativeId,

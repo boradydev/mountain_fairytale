@@ -673,6 +673,12 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     notifyListeners();
   }
 
+  void setPointMemo(int index, String memo) {
+    if (!canEdit || isPickup || memo.trim().length > 1000) return;
+    points[index] = points[index].copyWith(memo: memo.trim());
+    notifyListeners();
+  }
+
   RoutePoint _withPaymentMethod(
     RoutePoint point,
     PaymentMethod method, {
@@ -681,6 +687,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     pointId: point.pointId,
     isDelivered: point.isDelivered,
     nonDeliveryReason: point.nonDeliveryReason,
+    memo: point.memo,
     localId: point.localId,
     position: point.position,
     salesRepresentativeId: point.salesRepresentativeId,
@@ -780,6 +787,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
         pointId: point.pointId,
         isDelivered: point.isDelivered,
         nonDeliveryReason: point.nonDeliveryReason,
+        memo: point.memo,
         localId: point.localId,
         position: point.position,
         clientId: point.clientId,
@@ -875,6 +883,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
                   pointId: point.pointId,
                   isDelivered: point.isDelivered,
                   nonDeliveryReason: point.nonDeliveryReason,
+                  memo: point.memo,
                   localId: point.localId,
                   position: point.position,
                   salesRepresentativeId: client.salesRepresentativeId,
@@ -986,6 +995,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       pointId: currentPoint.pointId,
       isDelivered: currentPoint.isDelivered,
       nonDeliveryReason: currentPoint.nonDeliveryReason,
+      memo: currentPoint.memo,
       localId: currentPoint.localId,
       position: currentPoint.position,
       salesRepresentativeId: currentPoint.salesRepresentativeId,
@@ -1039,6 +1049,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       pointId: currentPoint.pointId,
       isDelivered: currentPoint.isDelivered,
       nonDeliveryReason: currentPoint.nonDeliveryReason,
+      memo: currentPoint.memo,
       localId: currentPoint.localId,
       position: currentPoint.position,
       salesRepresentativeId: currentPoint.salesRepresentativeId,

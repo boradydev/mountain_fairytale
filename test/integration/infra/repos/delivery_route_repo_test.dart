@@ -67,6 +67,7 @@ void main() {
             'clientId': delivery ? id : null,
             'isDelivered': true,
             'nonDeliveryReason': '',
+            'memo': '',
             'clientName': 'Клиент',
             'address': 'Адрес',
             'phone': '123',
@@ -165,6 +166,7 @@ void main() {
             'clientId': delivery ? id : null,
             'isDelivered': true,
             'nonDeliveryReason': '',
+            'memo': '',
             'paymentMethodId': null,
             'items': [
               {

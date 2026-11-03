@@ -1,3 +1,4 @@
+import 'package:mountain_fairytale/features/delivery_route/ui/route_point_memo_dialog.dart';
 import 'package:mountain_fairytale/core/theme_extensions.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/failed_delivery_dialog.dart';
 import 'package:flutter/material.dart';
@@ -188,6 +189,27 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
+                            if (!provider.isPickup && point.memo.isNotEmpty)
+                              Tooltip(
+                                message: 'Памятка: ${point.memo}',
+                                child: Text.rich(
+                                  TextSpan(
+                                    style: DefaultTextStyle.of(context).style,
+                                    children: [
+                                      const TextSpan(
+                                        text: 'Памятка: ',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      TextSpan(text: point.memo),
+                                    ],
+                                  ),
+                                  maxLines: 1,
+                                  softWrap: false,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
                             if (!point.isDelivered)
                               Tooltip(
                                 message:
@@ -306,6 +328,53 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                     maintainAnimation: true,
                                     maintainState: true,
                                     child: AppIconButton(
+                                      icon: point.memo.isEmpty
+                                          ? Icons.sticky_note_2_outlined
+                                          : Icons.edit_note,
+                                      tooltip: point.memo.isEmpty
+                                          ? 'Добавить памятку'
+                                          : 'Изменить памятку',
+                                      onPressed: provider.canEdit
+                                          ? () async {
+                                              final memo =
+                                                  await showDialog<String>(
+                                                    context: context,
+                                                    builder: (_) =>
+                                                        RoutePointMemoDialog(
+                                                          initialMemo:
+                                                              point.memo,
+                                                        ),
+                                                  );
+                                              if (memo != null &&
+                                                  context.mounted &&
+                                                  provider.canEdit) {
+                                                final currentIndex = provider
+                                                    .points
+                                                    .indexWhere(
+                                                      (p) =>
+                                                          p.viewId ==
+                                                          point.viewId,
+                                                    );
+                                                if (currentIndex >= 0) {
+                                                  provider.setPointMemo(
+                                                    currentIndex,
+                                                    memo,
+                                                  );
+                                                }
+                                              }
+                                            }
+                                          : null,
+                                    ),
+                                  ),
+                                if (!provider.isPickup)
+                                  const SizedBox(height: 8),
+                                if (!provider.isPickup)
+                                  Visibility(
+                                    visible: provider.canEdit,
+                                    maintainSize: true,
+                                    maintainAnimation: true,
+                                    maintainState: true,
+                                    child: AppIconButton(
                                       icon: point.isDelivered
                                           ? Icons.close
                                           : Icons.undo,
@@ -349,7 +418,6 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                             },
                                     ),
                                   ),
-                                const SizedBox(height: 8),
                                 Visibility(
                                   visible: provider.canEdit,
                                   maintainSize: true,

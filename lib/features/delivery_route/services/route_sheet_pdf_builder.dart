@@ -196,6 +196,15 @@ class RouteSheetPdfBuilder {
                           fontWeight: pw.FontWeight.bold,
                         ), // ДЕЛАЕМ ЖИРНЫМ
                       ),
+                      if (point.memo.isNotEmpty) ...[
+                        const pw.TextSpan(text: '\nПамятка: '),
+                        pw.TextSpan(
+                          text: point.memo,
+                          style: pw.TextStyle(
+                            fontWeight: pw.FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -341,4 +350,3 @@ String formatSavedUnitPrice(double price) {
   }
   return price.toStringAsFixed(2);
 }
-

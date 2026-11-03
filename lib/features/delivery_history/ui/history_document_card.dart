@@ -79,6 +79,8 @@ class HistoryDocumentCard extends StatelessWidget {
                   ),
                   if (!purchase.isDelivered)
                     Text('Не доставлено: ${purchase.nonDeliveryReason}'),
+                  if (purchase.memo.isNotEmpty)
+                    Text('Памятка: ${purchase.memo}'),
                   if (purchase.address.isNotEmpty) Text(purchase.address),
                   if (purchase.phone.isNotEmpty) Text(purchase.phone),
                   const SizedBox(height: 6),
@@ -138,6 +140,8 @@ Future<void> showHistoryPurchase(
           children: [
             if (!purchase.isDelivered)
               Text('Не доставлено: ${purchase.nonDeliveryReason}'),
+            if (purchase.memo.isNotEmpty)
+              Text('Памятка водителю: ${purchase.memo}'),
             Text('Плановая дата: ${_date.format(document.plannedDate)}'),
             if (!document.isActive) const Text('Документ отменён'),
             if (purchase.address.isNotEmpty) Text(purchase.address),

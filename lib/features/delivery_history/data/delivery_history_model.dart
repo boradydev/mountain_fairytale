@@ -13,6 +13,7 @@ class HistoryItem {
 class HistoryPurchase {
   final bool isDelivered;
   final String nonDeliveryReason;
+  final String memo;
   final String pointId;
   final String clientId;
   final String clientName;
@@ -24,6 +25,7 @@ class HistoryPurchase {
   HistoryPurchase.fromJson(Map<String, dynamic> json)
     : isDelivered = json['isDelivered'] as bool? ?? true,
       nonDeliveryReason = json['nonDeliveryReason'] as String? ?? '',
+      memo = json['memo'] as String? ?? '',
       pointId = json['pointId'] as String,
       clientId = json['clientId'] as String,
       clientName = json['clientName'] as String,
