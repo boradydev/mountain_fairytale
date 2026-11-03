@@ -59,6 +59,35 @@ void main() {
     expect(text, contains('0.00'));
   });
 
+  test(
+    'PDF prints free-price item with its driver note and saved price',
+    () async {
+      final text = await _printedText(
+        const RoutePoint(
+          clientId: 'client',
+          clientName: 'Клиент',
+          address: 'Адрес',
+          phone: '123',
+          salesRepresentative: '',
+          items: [
+            DeliveryTaskItem(
+              productId: 'service',
+              productName: 'Настройка',
+              quantity: 1,
+              price: 75,
+              isFreePrice: true,
+              driverNote: 'Забрать кулер',
+            ),
+          ],
+        ),
+      );
+
+      expect(text, contains('Настройка'));
+      expect(text, contains('75.00'));
+      expect(text, contains('Уточнение: Забрать кулер'));
+    },
+  );
+
   for (final savedPayment in ['Наличные', null]) {
     test(
       'actual PDF prints document payment $savedPayment and client details once',

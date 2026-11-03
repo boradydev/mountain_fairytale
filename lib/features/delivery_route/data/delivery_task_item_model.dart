@@ -10,6 +10,10 @@ class DeliveryTaskItem {
   final String productName;
   final int quantity;
   final double price;
+  @JsonKey(defaultValue: false)
+  final bool isFreePrice;
+  @JsonKey(defaultValue: '')
+  final String driverNote;
 
   // Вычисляемое поле суммы для удобства на UI
   int get amountCents => lineAmountCents(quantity, price);
@@ -19,6 +23,8 @@ class DeliveryTaskItem {
     'productName': productName,
     'quantity': quantity,
     'price': price,
+    'isFreePrice': isFreePrice,
+    'driverNote': driverNote,
   };
 
   const DeliveryTaskItem({
@@ -26,6 +32,8 @@ class DeliveryTaskItem {
     required this.productName,
     required this.quantity,
     required this.price,
+    this.isFreePrice = false,
+    this.driverNote = '',
   });
 
   factory DeliveryTaskItem.fromJson(Map<String, dynamic> json) =>

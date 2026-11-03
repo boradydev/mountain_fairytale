@@ -12,6 +12,8 @@ DeliveryTaskItem _$DeliveryTaskItemFromJson(Map<String, dynamic> json) =>
       productName: json['productName'] as String,
       quantity: (json['quantity'] as num).toInt(),
       price: (json['price'] as num).toDouble(),
+      isFreePrice: json['isFreePrice'] as bool? ?? false,
+      driverNote: json['driverNote'] as String? ?? '',
     );
 
 Map<String, dynamic> _$DeliveryTaskItemToJson(DeliveryTaskItem instance) =>
@@ -20,4 +22,6 @@ Map<String, dynamic> _$DeliveryTaskItemToJson(DeliveryTaskItem instance) =>
       'productName': instance.productName,
       'quantity': instance.quantity,
       'price': instance.price,
+      'isFreePrice': instance.isFreePrice,
+      'driverNote': instance.driverNote,
     };

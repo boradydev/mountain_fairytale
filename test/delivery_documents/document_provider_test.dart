@@ -30,11 +30,13 @@ class Catalog implements ProductRepository {
   double price = 10;
   String name = 'Товар';
   bool active = true;
+  bool freePrice = false;
   @override
   Future<Product> getProductById(String id) async => Product(
     id: id,
     name: name,
     basePrice: price,
+    isFreePrice: freePrice,
     createdAt: DateTime(2026),
     isActive: active,
   );
@@ -171,11 +173,21 @@ void main() {
         'productName': '  Вода Горная  ',
         'quantity': 4,
         'price': 40.0,
+        'isFreePrice': false,
+        'driverNote': '',
       });
       expect(
         DeliveryTaskItem.fromJson(item.toJson()).toRequestJson()['productName'],
         'Товар',
       );
+      final legacyItem = DeliveryTaskItem.fromJson({
+        'productId': 'legacy',
+        'productName': 'Старая позиция',
+        'quantity': 1,
+        'price': 10,
+      });
+      expect(legacyItem.isFreePrice, isFalse);
+      expect(legacyItem.driverNote, isEmpty);
       provider.removeTaskFromPoint(0, 1);
       expect(
         await provider.addCurrentProduct(
@@ -192,6 +204,55 @@ void main() {
       );
     },
   );
+  test(
+    'free-price item price and driver note are saved on its document row',
+    () async {
+      catalog.freePrice = true;
+      catalog.price = 0;
+      expect(
+        await provider.addCurrentProduct(
+          0,
+          'service',
+          2,
+          productName: 'Услуга',
+        ),
+        isTrue,
+      );
+
+      expect(provider.points.single.items.last.isFreePrice, isTrue);
+      expect(provider.points.single.items.last.price, 0);
+      provider.updateTaskPrice(0, 1, 125.5);
+      provider.updateTaskDriverNote(0, 1, 'Позвонить перед выездом');
+
+      final savedItem = provider.points.single.items.last;
+      expect(savedItem.price, 125.5);
+      expect(savedItem.amount, 251);
+      expect(savedItem.toRequestJson(), {
+        'productId': 'service',
+        'productName': 'Услуга',
+        'quantity': 2,
+        'price': 125.5,
+        'isFreePrice': true,
+        'driverNote': 'Позвонить перед выездом',
+      });
+    },
+  );
+
+  test('free-price item is rejected by pickup documents', () async {
+    catalog.freePrice = true;
+    final pickup = PickupOrders(catalog, locks)..points = [point];
+    expect(
+      await pickup.addCurrentProduct(
+        0,
+        'service',
+        1,
+        productName: 'Услуга',
+      ),
+      isFalse,
+    );
+    expect(pickup.points.single.items, [item]);
+    pickup.dispose();
+  });
   test('HALF_UP rounds each row before point/document sums', () {
     expect(lineAmountCents(1, 1.005), 101);
     expect(lineAmountCents(3, 1.005), 302);
@@ -356,4 +417,11 @@ void main() {
       expect(locks.released, greaterThanOrEqualTo(1));
     },
   );
+}
+
+class PickupOrders extends Orders {
+  PickupOrders(super.catalog, super.locks);
+
+  @override
+  bool get isPickup => true;
 }

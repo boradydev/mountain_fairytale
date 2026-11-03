@@ -325,7 +325,11 @@ class RouteSheetPdfBuilder {
           return pw.TableRow(
             children: [
               _tableCell('${subIndex + 1}', align: pw.TextAlign.center),
-              _tableCell(item.productName),
+              _tableCell(
+                item.isFreePrice && item.driverNote.trim().isNotEmpty
+                    ? '${item.productName}\nУточнение: ${item.driverNote.trim()}'
+                    : item.productName,
+              ),
               _tableCell('${item.quantity}', align: pw.TextAlign.center),
               _tableCell(
                 '${formatSavedUnitPrice(item.price)} ₽',

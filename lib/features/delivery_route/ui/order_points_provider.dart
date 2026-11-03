@@ -972,6 +972,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     String? productName,
   }) {
     if (!canEdit) return;
+    if (isPickup && product.isFreePrice) return;
     if (!product.isActive || quantity <= 0) return;
     final currentPoint = points[pointIndex];
 
@@ -987,7 +988,8 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
         productId: product.id,
         productName: productName ?? product.name,
         quantity: quantity,
-        price: product.basePrice,
+        price: product.isFreePrice ? 0 : product.basePrice,
+        isFreePrice: !isPickup && product.isFreePrice,
       ),
     );
 
@@ -1043,6 +1045,8 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       productName: oldItem.productName,
       quantity: quantity,
       price: oldItem.price,
+      isFreePrice: oldItem.isFreePrice,
+      driverNote: oldItem.driverNote,
     );
 
     points[pointIndex] = RoutePoint(
@@ -1089,8 +1093,10 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     }
     try {
       final product = await productRepo.getProductById(productId);
-      if (!canEdit || !product.isActive) {
-        documentError = 'Нельзя добавить неактивный товар.';
+      if (!canEdit || !product.isActive || (isPickup && product.isFreePrice)) {
+        documentError = isPickup && product.isFreePrice
+            ? 'Товар со свободной ценой нельзя добавить в самовывоз.'
+            : 'Нельзя добавить неактивный товар.';
         notifyListeners();
         return false;
       }
@@ -1130,11 +1136,53 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       productId: item.productId,
       productName: item.productName,
       quantity: item.quantity,
-      price: product.basePrice,
+      price: item.isFreePrice ? item.price : product.basePrice,
+      isFreePrice: item.isFreePrice,
+      driverNote: item.driverNote,
     );
     points[index] = point.copyWith(items: items);
     notifyListeners();
     return true;
+  }
+
+  void updateTaskPrice(int pointIndex, int taskIndex, double price) {
+    if (!canEdit || isPickup || !price.isFinite || price < 0) return;
+    if (pointIndex < 0 || pointIndex >= points.length) return;
+    final point = points[pointIndex];
+    if (taskIndex < 0 || taskIndex >= point.items.length) return;
+    final items = List<DeliveryTaskItem>.from(point.items);
+    final oldItem = items[taskIndex];
+    if (!oldItem.isFreePrice) return;
+    items[taskIndex] = DeliveryTaskItem(
+      productId: oldItem.productId,
+      productName: oldItem.productName,
+      quantity: oldItem.quantity,
+      price: price,
+      isFreePrice: oldItem.isFreePrice,
+      driverNote: oldItem.driverNote,
+    );
+    points[pointIndex] = point.copyWith(items: items);
+    notifyListeners();
+  }
+
+  void updateTaskDriverNote(int pointIndex, int taskIndex, String driverNote) {
+    if (!canEdit || isPickup || driverNote.length > 1000) return;
+    if (pointIndex < 0 || pointIndex >= points.length) return;
+    final point = points[pointIndex];
+    if (taskIndex < 0 || taskIndex >= point.items.length) return;
+    final items = List<DeliveryTaskItem>.from(point.items);
+    final oldItem = items[taskIndex];
+    if (!oldItem.isFreePrice) return;
+    items[taskIndex] = DeliveryTaskItem(
+      productId: oldItem.productId,
+      productName: oldItem.productName,
+      quantity: oldItem.quantity,
+      price: oldItem.price,
+      isFreePrice: oldItem.isFreePrice,
+      driverNote: driverNote,
+    );
+    points[pointIndex] = point.copyWith(items: items);
+    notifyListeners();
   }
 
   Future<PaymentMethod?> addPaymentMethod(String name) async {
@@ -1209,6 +1257,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
   Future<Product?> addProduct({
     required String name,
     required double basePrice,
+    bool isFreePrice = false,
   }) async {
     final normalizedName = name.trim();
 
@@ -1220,7 +1269,8 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     try {
       final request = CreateProductRequest(
         name: normalizedName,
-        basePrice: basePrice,
+        basePrice: isFreePrice ? 0 : basePrice,
+        isFreePrice: isFreePrice,
       );
 
       final created = await productRepo.createProduct(request);
@@ -1240,6 +1290,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     String id, {
     String? name,
     double? basePrice,
+    bool? isFreePrice,
   }) async {
     final normalizedName = name?.trim();
 
@@ -1253,6 +1304,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       final request = UpdateProductRequest(
         name: normalizedName,
         basePrice: basePrice,
+        isFreePrice: isFreePrice,
       );
 
       final updated = await productRepo.updateProduct(id, request);

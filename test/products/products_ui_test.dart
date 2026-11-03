@@ -23,10 +23,17 @@ class _Payments implements PaymentMethodRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-Product _product(String id, String name, {bool active = true}) => Product(
+Product _product(
+  String id,
+  String name, {
+  bool active = true,
+  bool freePrice = false,
+  double price = 100,
+}) => Product(
   id: id,
   name: name,
-  basePrice: 100,
+  basePrice: price,
+  isFreePrice: freePrice,
   createdAt: DateTime.utc(2026),
   isActive: active,
 );
@@ -39,6 +46,7 @@ class _Products implements ProductRepository {
   Product? duplicate;
   int creates = 0;
   int patches = 0;
+  CreateProductRequest? lastCreateRequest;
   Completer<List<Product>>? loadGate;
 
   @override
@@ -55,7 +63,13 @@ class _Products implements ProductRepository {
   @override
   Future<Product> createProduct(CreateProductRequest request) async {
     creates++;
-    final result = _product('created', request.name);
+    lastCreateRequest = request;
+    final result = _product(
+      'created',
+      request.name,
+      freePrice: request.isFreePrice,
+      price: request.basePrice,
+    );
     rows.add(result);
     return result;
   }
@@ -68,6 +82,7 @@ class _Products implements ProductRepository {
       id: id,
       name: request.name ?? old.name,
       basePrice: request.basePrice ?? old.basePrice,
+      isFreePrice: request.isFreePrice ?? old.isFreePrice,
       createdAt: old.createdAt,
       isActive: request.isActive ?? old.isActive,
     );
@@ -243,6 +258,31 @@ void main() {
     expect(repo.creates, 1);
     expect(repo.rows.last.name, 'Вода большая');
     expect(find.byType(ProductDialog), findsNothing);
+  });
+
+  testWidgets('free-price product disables and submits zero base price', (
+    tester,
+  ) async {
+    final repo = _Products();
+    await _open(tester, _Orders(repo), editor: true);
+    await tester.enterText(find.byType(TextFormField).at(0), 'Настройка');
+    await tester.tap(find.text('Свободная цена'));
+    await tester.pumpAndSettle();
+
+    final priceField = tester.widget<TextFormField>(
+      find.byType(TextFormField).at(1),
+    );
+    expect(priceField.enabled, isFalse);
+    expect(priceField.controller!.text, '0');
+
+    await tester.tap(find.text('Добавить'));
+    await tester.pumpAndSettle();
+
+    expect(repo.creates, 1);
+    expect(repo.lastCreateRequest!.isFreePrice, isTrue);
+    expect(repo.lastCreateRequest!.basePrice, 0);
+    expect(repo.rows.last.isFreePrice, isTrue);
+    expect(repo.rows.last.basePrice, 0);
   });
 
   testWidgets(

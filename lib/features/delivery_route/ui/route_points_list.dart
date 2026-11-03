@@ -608,6 +608,7 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                           TaskItemRow(
                                             key: ValueKey(item.productId),
                                             enabled: provider.canEdit,
+                                            allowFreePrice: !provider.isPickup,
                                             onRefreshPrice: () async {
                                               try {
                                                 final product = await provider
@@ -650,6 +651,18 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                             },
                                             index: taskIndex,
                                             item: item,
+                                            onPriceChanged: (price) =>
+                                                provider.updateTaskPrice(
+                                                  index,
+                                                  taskIndex,
+                                                  price,
+                                                ),
+                                            onDriverNoteChanged: (note) =>
+                                                provider.updateTaskDriverNote(
+                                                  index,
+                                                  taskIndex,
+                                                  note,
+                                                ),
                                             onDelete: () =>
                                                 provider.removeTaskFromPoint(
                                                   index,
