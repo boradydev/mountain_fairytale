@@ -33,6 +33,15 @@ class RouteSheetPdfBuilder {
           pw.SizedBox(height: 18),
           _buildRouteInfo(sheet),
           pw.SizedBox(height: 20),
+          if (sheet.points.any((point) => point.items.isNotEmpty)) ...[
+            _buildProductLoadSummary(sheet),
+            pw.SizedBox(height: 20),
+          ],
+          pw.Text(
+            'ДОСТАВИТЬ КЛИЕНТАМ',
+            style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold),
+          ),
+          pw.SizedBox(height: 6),
           _buildPointsTable(sheet),
         ],
       ),
@@ -219,6 +228,64 @@ class RouteSheetPdfBuilder {
             ],
           );
         }),
+      ],
+    );
+  }
+
+  pw.Widget _buildProductLoadSummary(DeliveryRouteSheet sheet) {
+    final quantitiesByProduct =
+        <String, ({String productName, int quantity})>{};
+
+    // Include every route point, including failed deliveries: the goods may
+    // still have been loaded onto the vehicle before the delivery attempt.
+    for (final point in sheet.points) {
+      for (final item in point.items) {
+        final existing = quantitiesByProduct[item.productId];
+        quantitiesByProduct[item.productId] = (
+          productName: existing?.productName ?? item.productName,
+          quantity: (existing?.quantity ?? 0) + item.quantity,
+        );
+      }
+    }
+
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+      children: [
+        pw.Text(
+          'ЗАГРУЗИТЬ В АВТОМОБИЛЬ',
+          style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold),
+        ),
+        pw.SizedBox(height: 6),
+        pw.Table(
+          border: pw.TableBorder.all(color: PdfColors.grey600, width: 0.6),
+          columnWidths: const {
+            0: pw.FixedColumnWidth(28),
+            1: pw.FlexColumnWidth(1),
+            2: pw.FixedColumnWidth(75),
+          },
+          children: [
+            pw.TableRow(
+              decoration: const pw.BoxDecoration(color: PdfColors.grey300),
+              children: [
+                _tableHeader('#'),
+                _tableHeader('Товар'),
+                _tableHeader('Количество'),
+              ],
+            ),
+            ...quantitiesByProduct.values.toList().asMap().entries.map(
+              (entry) => pw.TableRow(
+                children: [
+                  _tableCell('${entry.key + 1}', align: pw.TextAlign.center),
+                  _tableCell(entry.value.productName),
+                  _tableCell(
+                    '${entry.value.quantity}',
+                    align: pw.TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
