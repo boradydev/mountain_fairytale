@@ -22,6 +22,7 @@ class DeliveryDocumentEditor extends StatefulWidget {
   final Widget Function(GlobalKey<FormState>) metaBuilder;
   final Future<bool> Function()? printDocument;
   final VoidCallback? onDocumentChanged;
+  final VoidCallback? onAddPurchase;
   const DeliveryDocumentEditor({
     super.key,
     required this.provider,
@@ -32,6 +33,7 @@ class DeliveryDocumentEditor extends StatefulWidget {
     required this.metaBuilder,
     this.printDocument,
     this.onDocumentChanged,
+    this.onAddPurchase,
   });
   @override
   State<DeliveryDocumentEditor> createState() => _DeliveryDocumentEditorState();
@@ -40,6 +42,7 @@ class DeliveryDocumentEditor extends StatefulWidget {
 class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
   // Survives form rebuilds on mode changes, but ends with this editor session.
   final _pointViewState = RoutePointsViewState();
+  final _routeMetaController = ExpansibleController()..expand();
   GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _loading = true;
   bool _canPop = false;
@@ -80,6 +83,7 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
 
   @override
   void dispose() {
+    _routeMetaController.dispose();
     widget.provider.stopConnectionWatch();
     final dialogContext = _connectionDialogContext;
     if (dialogContext != null) {
@@ -120,10 +124,11 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
   }
 
   Future<void> _save() async {
-    if (_savePresentation != null ||
-        _leaving ||
-        !widget.provider.canSave ||
-        !(_formKey.currentState?.validate() ?? false)) {
+    if (_savePresentation != null || _leaving || !widget.provider.canSave) {
+      return;
+    }
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      if (!widget.provider.isPickup) _routeMetaController.expand();
       return;
     }
     setState(
@@ -311,36 +316,88 @@ class _DeliveryDocumentEditorState extends State<DeliveryDocumentEditor> {
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              SizedBox(
-                                width: 360,
-                                child: LayoutBuilder(
-                                  builder: (context, constraints) => Column(
-                                    children: [
-                                      ConstrainedBox(
-                                        constraints: BoxConstraints(
-                                          // Leave room for client search in short windows.
-                                          maxHeight:
-                                              (constraints.maxHeight - 220)
-                                                  .clamp(
-                                                    0.0,
-                                                    constraints.maxHeight,
-                                                  ),
+                              if (p.isPickup)
+                                SizedBox(
+                                  width: 300,
+                                  child: SingleChildScrollView(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        widget.metaBuilder(_formKey),
+                                        if (editing)
+                                          Padding(
+                                            padding: const EdgeInsets.all(16),
+                                            child: AppPrimaryButton(
+                                              text: 'Добавить покупку',
+                                              icon: Icons.add_shopping_cart,
+                                              onPressed: p.canEdit
+                                                  ? widget.onAddPurchase
+                                                  : null,
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                )
+                              else
+                                SizedBox(
+                                  width: 360,
+                                  child: LayoutBuilder(
+                                    builder: (context, constraints) => Column(
+                                      children: [
+                                        ExpansionTile(
+                                          controller: _routeMetaController,
+                                          maintainState: true,
+                                          shape: const Border(),
+                                          collapsedShape: const Border(),
+                                          tilePadding:
+                                              const EdgeInsets.symmetric(
+                                                horizontal: 16,
+                                              ),
+                                          title: const Text(
+                                            '1. Данные рейса',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          onExpansionChanged: (expanded) {
+                                            if (!expanded) {
+                                              FocusScope.of(context).unfocus();
+                                            }
+                                          },
+                                          children: [
+                                            ConstrainedBox(
+                                              constraints: BoxConstraints(
+                                                // Reserve client search space and the section header.
+                                                maxHeight:
+                                                    (constraints.maxHeight -
+                                                            276)
+                                                        .clamp(
+                                                          0.0,
+                                                          constraints.maxHeight,
+                                                        ),
+                                              ),
+                                              child: SingleChildScrollView(
+                                                primary: false,
+                                                child: widget.metaBuilder(
+                                                  _formKey,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                        child: SingleChildScrollView(
-                                          primary: false,
-                                          child: widget.metaBuilder(_formKey),
+                                        const Divider(height: 1),
+                                        Expanded(
+                                          child: ClientSelectionPanel(
+                                            provider: p,
+                                          ),
                                         ),
-                                      ),
-                                      const Divider(height: 1),
-                                      Expanded(
-                                        child: ClientSelectionPanel(
-                                          provider: p,
-                                        ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 ),
-                              ),
                               const VerticalDivider(width: 1),
                               Expanded(
                                 child: RoutePointsList(

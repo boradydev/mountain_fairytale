@@ -355,7 +355,7 @@ void main() {
         expect(pickup.selectedDate, target);
         debugPrint('LIVE: pickup editor ready');
         await network(() async {
-          pickup.addClientPoint(await clientsRepo.getClientById(fixture.$1));
+          pickup.addPurchase();
           expect(
             await pickup.addCurrentProduct(
               0,

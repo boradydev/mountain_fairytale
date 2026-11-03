@@ -90,7 +90,7 @@ void main() {
   }
 
   testWidgets(
-    'cards identify driver and pickup creation with clients and total',
+    'cards identify driver, delivery clients and anonymous pickup purchases with totals',
     (
       tester,
     ) async {
@@ -129,10 +129,11 @@ void main() {
             date: date,
             createdAt: DateTime(2026, 10, 17, 10, 15),
             points: [
-              for (final clientId in ['first', 'first', 'second'])
+              for (var index = 0; index < 3; index++)
                 RoutePoint(
-                  clientId: clientId,
-                  clientName: clientId,
+                  pointId: 'pickup-point-$index',
+                  clientId: null,
+                  clientName: '',
                   address: '',
                   phone: '',
                   salesRepresentative: '',
@@ -160,7 +161,10 @@ void main() {
       expect(find.text('Газель А123ВС'), findsOneWidget);
       expect(find.text('17.10.2026 09:42'), findsOneWidget);
       expect(find.text('17.10.2026 10:15'), findsOneWidget);
-      expect(find.text('2'), findsNWidgets(2));
+      expect(find.text('Клиентов:'), findsOneWidget);
+      expect(find.text('Покупок:'), findsOneWidget);
+      expect(find.text('2'), findsOneWidget);
+      expect(find.text('3'), findsOneWidget);
       expect(
         find.byWidgetPredicate(
           (widget) =>

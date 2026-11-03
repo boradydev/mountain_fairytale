@@ -35,7 +35,7 @@ class RouteConstructorScreen extends StatelessWidget {
       save: provider.saveRoute,
       changeActive: provider.changeDocumentActive,
       onDocumentChanged: onDocumentChanged,
-      metaBuilder: (key) => RouteMetaPanel(formKey: key),
+      metaBuilder: (key) => RouteMetaPanel(formKey: key, showTitle: false),
       printDocument: () async {
         final sheet = provider.currentRouteSheet;
         if (sheet == null) return false;

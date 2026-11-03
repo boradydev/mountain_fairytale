@@ -16,8 +16,13 @@ import 'package:provider/provider.dart';
 
 class RouteMetaPanel extends StatefulWidget {
   final GlobalKey<FormState> formKey;
+  final bool showTitle;
 
-  const RouteMetaPanel({super.key, required this.formKey});
+  const RouteMetaPanel({
+    super.key,
+    required this.formKey,
+    this.showTitle = true,
+  });
 
   @override
   State<RouteMetaPanel> createState() => _RouteMetaPanelState();
@@ -160,11 +165,12 @@ class _RouteMetaPanelState extends State<RouteMetaPanel> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '1. Данные рейса',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
+          if (widget.showTitle)
+            const Text(
+              '1. Данные рейса',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          if (widget.showTitle) const SizedBox(height: 12),
           TextButton.icon(
             icon: const Icon(Icons.calendar_today),
             label: Text('Дата: ${provider.selectedDate.toFormattedString()}'),

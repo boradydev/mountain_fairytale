@@ -50,8 +50,11 @@ void main() {
     () async {
       final clients = _Clients();
       final directory = ClientsProvider(clients);
-      final provider = PickupConstructorProvider(
-        pickupRepo: fixtures.Pickups(),
+      final provider = RouteConstructorProvider(
+        carRepo: fixtures.Cars(),
+        driverRepo: fixtures.Drivers(),
+        routeRepo: fixtures.Routes(),
+        printService: fixtures.PrintService(),
         productRepo: fixtures.Products(),
         paymentMethodRepo: fixtures.PaymentDirectory(),
         clientRepo: clients,
@@ -103,13 +106,14 @@ void main() {
 
   for (final delivery in [true, false]) {
     test(
-      'payment selection updates client immediately; cancel restores document; delivery=$delivery',
+      'payment selection preserves document snapshot and only delivery updates client; delivery=$delivery',
       () async {
         final clients = _Clients();
         final directory = ClientsProvider(clients);
         final original = RoutePoint.fromJson({
           ...point.toJson(),
-          'defaultPaymentMethodId': 'card',
+          'clientId': delivery ? 'client' : null,
+          'defaultPaymentMethodId': delivery ? 'card' : null,
           'paymentMethodId': 'cash',
           'paymentMethodName': 'Наличные',
         });
@@ -152,16 +156,25 @@ void main() {
         expect(await provider.beginEditing(), isTrue);
         expect(provider.points.single.documentPaymentMethodId, 'cash');
         expect(
-          await provider.selectPointPaymentMethod('client', _sbp, directory),
+          delivery
+              ? await provider.selectPointPaymentMethod(
+                  'client',
+                  _sbp,
+                  directory,
+                )
+              : await provider.selectPurchasePaymentMethod(
+                  provider.points.single.viewId,
+                  _sbp,
+                ),
           isTrue,
         );
-        expect(clients.saved.defaultPaymentMethodId, 'sbp');
+        expect(clients.saved.defaultPaymentMethodId, delivery ? 'sbp' : 'cash');
         expect(provider.points.single.documentPaymentMethodId, 'sbp');
         expect(routes.sheet.points.single.documentPaymentMethodId, 'cash');
         expect(pickups.sheet!.points.single.documentPaymentMethodId, 'cash');
         expect(await provider.cancelEditing(), isTrue);
         expect(provider.points.single.documentPaymentMethodId, 'cash');
-        expect(clients.saved.defaultPaymentMethodId, 'sbp');
+        expect(clients.saved.defaultPaymentMethodId, delivery ? 'sbp' : 'cash');
         expect(routes.saved, 0);
         expect(pickups.updates, 0);
         await provider.closeDocument();

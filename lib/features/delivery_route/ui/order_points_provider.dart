@@ -35,6 +35,8 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     this.lockRepository,
   });
 
+  bool get isPickup => false;
+
   final DocumentLockRepository? lockRepository;
   String? documentId;
   DateTime? documentCreatedAt;
@@ -662,6 +664,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     bool selectForDocument = false,
   }) => RoutePoint(
     pointId: point.pointId,
+    localId: point.localId,
     position: point.position,
     salesRepresentativeId: point.salesRepresentativeId,
     clientId: point.clientId,
@@ -671,10 +674,12 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     phone: point.phone,
     clientAddress: point.clientAddress,
     deliveryDetails: point.deliveryDetails,
-    paymentMethodId: selectForDocument || point.paymentMethodId == method.id
+    paymentMethodId:
+        !isPickup && (selectForDocument || point.paymentMethodId == method.id)
         ? method.id
         : point.paymentMethodId,
-    paymentMethod: selectForDocument || point.paymentMethodId == method.id
+    paymentMethod:
+        !isPickup && (selectForDocument || point.paymentMethodId == method.id)
         ? method.name
         : point.paymentMethod,
     documentPaymentMethodId: selectForDocument
@@ -688,12 +693,29 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     items: point.items,
   );
 
+  Future<bool> selectPurchasePaymentMethod(
+    String viewId,
+    PaymentMethod method,
+  ) async {
+    if (!canEdit || !isPickup || !method.isActive) return false;
+    final index = points.indexWhere((point) => point.viewId == viewId);
+    if (index == -1 || points[index].clientId != null) return false;
+    paymentMethodsById[method.id] = method;
+    points[index] = _withPaymentMethod(
+      points[index],
+      method,
+      selectForDocument: true,
+    );
+    notifyListeners();
+    return true;
+  }
+
   Future<bool> selectPointPaymentMethod(
     String clientId,
     PaymentMethod method,
     ClientsProvider clientsProvider,
   ) async {
-    if (!canEdit || !method.isActive) {
+    if (!canEdit || isPickup || !method.isActive) {
       return false;
     }
     paymentMethodErrorMessage = null;
@@ -728,7 +750,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     ClientDirectoryEntry representative,
     ClientsProvider clientsProvider,
   ) async {
-    if (!canEdit || !representative.isActive) return false;
+    if (!canEdit || isPickup || !representative.isActive) return false;
     final client = await clientRepo.updateClient(
       clientId,
       UpdateClientRequest(salesRepresentativeId: representative.id),
@@ -739,6 +761,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       final point = points[index];
       points[index] = RoutePoint(
         pointId: point.pointId,
+        localId: point.localId,
         position: point.position,
         clientId: point.clientId,
         clientName: point.clientName,
@@ -831,6 +854,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
               ? point
               : RoutePoint(
                   pointId: point.pointId,
+                  localId: point.localId,
                   position: point.position,
                   salesRepresentativeId: client.salesRepresentativeId,
                   clientId: point.clientId,
@@ -858,7 +882,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
   }
 
   void addClientPoint(Client client) {
-    if (!canEdit) return;
+    if (!canEdit || isPickup) return;
     if (!client.isActive || points.any((p) => p.clientId == client.id)) {
       return;
     }
@@ -900,7 +924,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
   }
 
   void reorderPoints(int oldIndex, int newIndex) {
-    if (!canEdit) return;
+    if (!canEdit || isPickup) return;
     if (oldIndex < newIndex) {
       newIndex -= 1;
     }
@@ -939,6 +963,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
 
     points[pointIndex] = RoutePoint(
       pointId: currentPoint.pointId,
+      localId: currentPoint.localId,
       position: currentPoint.position,
       salesRepresentativeId: currentPoint.salesRepresentativeId,
       clientId: currentPoint.clientId,
@@ -989,6 +1014,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
 
     points[pointIndex] = RoutePoint(
       pointId: currentPoint.pointId,
+      localId: currentPoint.localId,
       position: currentPoint.position,
       salesRepresentativeId: currentPoint.salesRepresentativeId,
       clientId: currentPoint.clientId,
