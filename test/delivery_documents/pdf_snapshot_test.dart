@@ -53,7 +53,8 @@ void main() {
       ),
     );
     expect(text, contains('НЕ ДОСТАВЛЕНО: Закрыт магазин'));
-    expect(text, contains('Не включено в итог'));
+    expect(text, contains('700.00'));
+    expect(text, isNot(contains('Не включено в итог')));
     expect(text, contains('Вода'));
     expect(text, contains('0.00'));
   });

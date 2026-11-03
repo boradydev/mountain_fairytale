@@ -203,9 +203,8 @@ class RouteSheetPdfBuilder {
               // Сюда передаем наш список продуктов, он разложится в красивую мини-таблицу
               _buildItemsCell(point.items),
               _tableCell(
-                point.isDelivered
-                    ? '${point.totalAmount.toStringAsFixed(2)} ₽'
-                    : 'Не включено в итог',
+                '${point.totalAmount.toStringAsFixed(2)} ₽',
+                strikeThrough: !point.isDelivered,
                 align: pw.TextAlign.center,
               ),
             ],
@@ -278,7 +277,11 @@ class RouteSheetPdfBuilder {
     );
   }
 
-  pw.Widget _tableCell(String text, {pw.TextAlign align = pw.TextAlign.left}) {
+  pw.Widget _tableCell(
+    String text, {
+    pw.TextAlign align = pw.TextAlign.left,
+    bool strikeThrough = false,
+  }) {
     // Мапим pw.TextAlign в соответствующий pw.Alignment для контейнера
     final containerAlignment = switch (align) {
       pw.TextAlign.left => pw.Alignment.centerLeft,
@@ -294,7 +297,10 @@ class RouteSheetPdfBuilder {
       child: pw.Text(
         text,
         textAlign: align, // Сохраняем горизонтальный текст-элайн
-        style: const pw.TextStyle(fontSize: 7.5),
+        style: pw.TextStyle(
+          decoration: strikeThrough ? pw.TextDecoration.lineThrough : null,
+          fontSize: 7.5,
+        ),
       ),
     );
   }
@@ -335,3 +341,4 @@ String formatSavedUnitPrice(double price) {
   }
   return price.toStringAsFixed(2);
 }
+

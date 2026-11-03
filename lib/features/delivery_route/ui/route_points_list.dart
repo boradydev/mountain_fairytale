@@ -1,3 +1,4 @@
+import 'package:mountain_fairytale/core/theme_extensions.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/failed_delivery_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/shared/widgets/icon_button_widget.dart';
@@ -147,7 +148,13 @@ class _RoutePointsListState extends State<RoutePointsList> {
                   decoration: BoxDecoration(
                     color: point.isDelivered
                         ? colorScheme.surfaceContainerLow
-                        : colorScheme.errorContainer,
+                        : (Theme.of(context)
+                                  .extension<AppColorsExtension>()
+                                  ?.warningContainer ??
+                              Color.alphaBlend(
+                                colorScheme.error.withValues(alpha: 0.08),
+                                colorScheme.surfaceContainerLow,
+                              )),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: colorScheme.outlineVariant,
@@ -181,13 +188,20 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            if (!point.isDelivered) ...[
-                              const Text(
-                                'Не доставлено',
-                                style: TextStyle(fontWeight: FontWeight.w700),
+                            if (!point.isDelivered)
+                              Tooltip(
+                                message:
+                                    'Не доставлено: ${point.nonDeliveryReason}',
+                                child: Text(
+                                  'Не доставлено: ${point.nonDeliveryReason}',
+                                  maxLines: 1,
+                                  softWrap: false,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
                               ),
-                              Text(point.nonDeliveryReason),
-                            ],
                             if (!provider.isPickup) const SizedBox(height: 4),
                             if (!provider.isPickup)
                               Text(
@@ -206,6 +220,9 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                   ? 'Задание не заполнено'
                                   : '${point.totalAmount.toStringAsFixed(2)} ₽',
                               style: TextStyle(
+                                decoration: point.isDelivered
+                                    ? null
+                                    : TextDecoration.lineThrough,
                                 fontWeight: FontWeight.w700,
                                 fontSize: 16,
                                 color: point.items.isEmpty
@@ -270,44 +287,6 @@ class _RoutePointsListState extends State<RoutePointsList> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            if (!provider.isPickup)
-                              AppSecondaryButton(
-                                text: point.isDelivered
-                                    ? 'Отметить как недоставленное'
-                                    : 'Снять отметку «Не доставлено»',
-                                onPressed: !provider.canEdit
-                                    ? null
-                                    : () async {
-                                        if (!point.isDelivered) {
-                                          provider.setDeliveryOutcome(
-                                            index,
-                                            delivered: true,
-                                          );
-                                          return;
-                                        }
-                                        final reason = await showDialog<String>(
-                                          context: context,
-                                          builder: (_) =>
-                                              const FailedDeliveryDialog(),
-                                        );
-                                        if (reason != null &&
-                                            context.mounted &&
-                                            provider.canEdit) {
-                                          final currentIndex = provider.points
-                                              .indexWhere(
-                                                (p) => p.viewId == point.viewId,
-                                              );
-                                          if (currentIndex >= 0) {
-                                            provider.setDeliveryOutcome(
-                                              currentIndex,
-                                              delivered: false,
-                                              reason: reason,
-                                            );
-                                          }
-                                        }
-                                      },
-                              ),
-                            const SizedBox(height: 8),
                             Row(
                               children: [
                                 Expanded(
@@ -320,6 +299,57 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                               .bodyMedium,
                                         ),
                                 ),
+                                if (!provider.isPickup)
+                                  Visibility(
+                                    visible: provider.canEdit,
+                                    maintainSize: true,
+                                    maintainAnimation: true,
+                                    maintainState: true,
+                                    child: AppIconButton(
+                                      icon: point.isDelivered
+                                          ? Icons.close
+                                          : Icons.undo,
+                                      tooltip: point.isDelivered
+                                          ? 'Отметить как недоставленное'
+                                          : 'Снять отметку «Не доставлено»',
+                                      onPressed: !provider.canEdit
+                                          ? null
+                                          : () async {
+                                              if (!point.isDelivered) {
+                                                provider.setDeliveryOutcome(
+                                                  index,
+                                                  delivered: true,
+                                                );
+                                                return;
+                                              }
+                                              final reason =
+                                                  await showDialog<String>(
+                                                    context: context,
+                                                    builder: (_) =>
+                                                        const FailedDeliveryDialog(),
+                                                  );
+                                              if (reason != null &&
+                                                  context.mounted &&
+                                                  provider.canEdit) {
+                                                final currentIndex = provider
+                                                    .points
+                                                    .indexWhere(
+                                                      (p) =>
+                                                          p.viewId ==
+                                                          point.viewId,
+                                                    );
+                                                if (currentIndex >= 0) {
+                                                  provider.setDeliveryOutcome(
+                                                    currentIndex,
+                                                    delivered: false,
+                                                    reason: reason,
+                                                  );
+                                                }
+                                              }
+                                            },
+                                    ),
+                                  ),
+                                const SizedBox(height: 8),
                                 Visibility(
                                   visible: provider.canEdit,
                                   maintainSize: true,
@@ -611,6 +641,9 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                         final total = Text(
                                           'Итого: ${point.totalAmount.toStringAsFixed(2)} ₽',
                                           style: TextStyle(
+                                            decoration: point.isDelivered
+                                                ? null
+                                                : TextDecoration.lineThrough,
                                             fontWeight: FontWeight.w700,
                                             fontSize: 16,
                                             color: colorScheme.onSurface,
