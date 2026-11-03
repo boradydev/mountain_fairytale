@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:mountain_fairytale/shared/utils/date_range_limits.dart';
 import 'package:mountain_fairytale/shared/widgets/base_form_dialog_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/dropdown_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/icon_button_widget.dart';
@@ -10,12 +11,14 @@ class AppDateRangeDialog extends StatefulWidget {
   final String title;
   final DateTimeRange? initialDateRange;
   final DateTime? currentDate;
+  final int? maxRangeMonths;
 
   const AppDateRangeDialog({
     super.key,
     required this.title,
     this.initialDateRange,
     this.currentDate,
+    this.maxRangeMonths,
   });
 
   @override
@@ -75,6 +78,12 @@ class _AppDateRangeDialogState extends State<AppDateRangeDialog> {
     final start = _parse(_from.text);
     if (end && start != null && date.isBefore(start)) {
       return 'Окончание раньше начала';
+    }
+    if (end &&
+        start != null &&
+        widget.maxRangeMonths != null &&
+        date.isAfter(lastDateOfRange(start, widget.maxRangeMonths!))) {
+      return 'Период не может превышать ${widget.maxRangeMonths} месяцев';
     }
     return null;
   }
