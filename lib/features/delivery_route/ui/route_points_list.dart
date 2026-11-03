@@ -221,7 +221,9 @@ class _RoutePointsListState extends State<RoutePointsList> {
                           );
                         }
                         return Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: provider.isPickup
+                              ? CrossAxisAlignment.center
+                              : CrossAxisAlignment.start,
                           children: [
                             Expanded(child: details),
                             const SizedBox(width: 20),
@@ -230,8 +232,8 @@ class _RoutePointsListState extends State<RoutePointsList> {
                         );
                       },
                     ),
-                    leading: !provider.canEdit || provider.isPickup
-                        ? const SizedBox(width: 24, height: 40)
+                    leading: provider.isPickup
+                        ? null
                         : ReorderableDragStartListener(
                             index: index,
                             enabled: provider.canEdit,
@@ -245,7 +247,9 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                 ),
                                 child: Icon(
                                   Icons.drag_indicator,
-                                  color: colorScheme.onSurfaceVariant,
+                                  color: provider.canEdit
+                                      ? colorScheme.onSurfaceVariant
+                                      : Theme.of(context).disabledColor,
                                 ),
                               ),
                             ),
@@ -299,7 +303,17 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                   selectedId: point.documentPaymentMethodId,
                                   selectedName: point.documentPaymentMethodName,
                                 );
-                                if (provider.isPickup) return payment;
+                                if (provider.isPickup) {
+                                  return Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: ConstrainedBox(
+                                      constraints: const BoxConstraints(
+                                        maxWidth: 360,
+                                      ),
+                                      child: payment,
+                                    ),
+                                  );
+                                }
                                 final representative =
                                     PointRepresentativeSelector(
                                       provider: provider,
