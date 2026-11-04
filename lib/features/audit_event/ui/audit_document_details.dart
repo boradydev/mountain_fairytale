@@ -48,7 +48,8 @@ List<_AuditSnapshotPair> _auditPairs(
   Map<String, Map<String, Object?>> index(Object? value) => {
     if (value is List)
       for (final item in value)
-        if (item is Map) _auditReferenceId(item[idKey]): _auditMap(item),
+        if (item is Map)
+          _auditReferenceId(item[idKey] ?? item['productId']): _auditMap(item),
   };
   final oldValues = index(before);
   final newValues = index(after);
@@ -111,7 +112,7 @@ class _AuditPointDetails extends StatelessWidget {
     final items = _auditPairs(
       point.before?['items'],
       point.after?['items'],
-      'productId',
+      'itemId',
     );
     final positionBefore = point.before?['position'];
     final positionAfter = point.after?['position'];
@@ -137,6 +138,15 @@ class _AuditPointDetails extends StatelessWidget {
             ),
           if (items.isEmpty)
             const _AuditFieldRow(label: 'Товары', value: 'Нет товаров'),
+          _AuditSnapshotFields(
+            pair: point,
+            keys: const [
+              'memo',
+              'isDelivered',
+              'nonDeliveryReason',
+              'paymentMethodId',
+            ],
+          ),
           for (final item in items) _AuditItemDetails(item: item),
         ],
       ),
@@ -167,6 +177,10 @@ class _AuditItemDetails extends StatelessWidget {
                 : '$name · ${auditActionLabel(item.action!)}',
             style: theme.textTheme.bodyMedium?.copyWith(fontSize: 14),
           ),
+          _AuditSnapshotFields(
+            pair: item,
+            keys: const ['isFreePrice', 'driverNote'],
+          ),
           if (item.before != null && item.after != null) ...[
             for (final key in ['quantity', 'price'])
               if (!_auditEqual(item.before?[key], item.after?[key]))
@@ -196,6 +210,34 @@ class _AuditItemDetails extends StatelessWidget {
 }
 
 // Разделы журнала имеют собственное состояние раскрытия и стабильные ключи.
+class _AuditSnapshotFields extends StatelessWidget {
+  final _AuditSnapshotPair pair;
+  final List<String> keys;
+  const _AuditSnapshotFields({required this.pair, required this.keys});
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      for (final key in keys)
+        if (pair.before != null && pair.after != null) ...[
+          if (!_auditEqual(pair.before?[key], pair.after?[key]))
+            _AuditFieldRow(
+              label: auditFieldLabels[key] ?? key,
+              change: AuditChange(
+                oldValue: pair.before?[key],
+                newValue: pair.after?[key],
+              ),
+            ),
+        ] else if (pair.value.containsKey(key))
+          _AuditFieldRow(
+            label: auditFieldLabels[key] ?? key,
+            value: pair.value[key],
+          ),
+    ],
+  );
+}
+
 class _AuditDisclosure extends StatefulWidget {
   final String label;
   final AuditAction? action;

@@ -1,10 +1,12 @@
 class HistoryItem {
+  final String driverNote;
   final String productName;
   final int quantity;
   final double price;
   final double amount;
   HistoryItem.fromJson(Map<String, dynamic> json)
-    : productName = json['productName'] as String,
+    : driverNote = json['driverNote'] as String? ?? '',
+      productName = json['productName'] as String,
       quantity = json['quantity'] as int,
       price = double.parse('${json['price']}'),
       amount = double.parse('${json['amount']}');

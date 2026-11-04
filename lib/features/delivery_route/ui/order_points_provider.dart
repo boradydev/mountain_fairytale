@@ -19,6 +19,7 @@ import 'package:mountain_fairytale/features/clients/ui/clients_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 abstract class OrderPointsProvider extends SafeChangeNotifier {
+  int _itemSequence = 0;
   // 1. Поля БЕЗ подчеркивания и с аннотацией
   @protected
   final ProductRepository productRepo;
@@ -378,7 +379,21 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       return;
     }
     try {
-      final owner = await lockRepository!.renewEditLock(id);
+      String? owner;
+      for (var attempt = 0; attempt < 3; attempt++) {
+        try {
+          owner = await lockRepository!.renewEditLock(id);
+          break;
+        } catch (error) {
+          if (!_connectionFailure(error) || attempt == 2) rethrow;
+          await Future<void>.delayed(
+            Duration(milliseconds: 400 * (attempt + 1)),
+          );
+          if (version != _sessionVersion || _closed || _closing || !isEditing) {
+            return;
+          }
+        }
+      }
       if (version == _sessionVersion && !_closed && !_closing) {
         lockOwner = owner;
       }
@@ -982,9 +997,10 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       (item) => item.productId == product.id,
     );
 
-    if (existingIndex != -1) return;
+    if (existingIndex != -1 && !product.isFreePrice) return;
     updatedItems.add(
       DeliveryTaskItem(
+        localId: 'item-${++_itemSequence}',
         productId: product.id,
         productName: productName ?? product.name,
         quantity: quantity,
@@ -1040,14 +1056,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     final items = List<DeliveryTaskItem>.from(currentPoint.items);
     final oldItem = items[taskIndex];
 
-    items[taskIndex] = DeliveryTaskItem(
-      productId: oldItem.productId,
-      productName: oldItem.productName,
-      quantity: quantity,
-      price: oldItem.price,
-      isFreePrice: oldItem.isFreePrice,
-      driverNote: oldItem.driverNote,
-    );
+    items[taskIndex] = oldItem.copyWith(quantity: quantity);
 
     points[pointIndex] = RoutePoint(
       pointId: currentPoint.pointId,
@@ -1085,7 +1094,9 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       return false;
     }
     final point = points[pointIndex];
-    if (point.items.any((item) => item.productId == productId)) {
+    if (point.items.any(
+      (item) => item.productId == productId && !item.isFreePrice,
+    )) {
       documentError =
           'Этот товар уже добавлен. Измените количество существующей строки.';
       notifyListeners();
@@ -1097,6 +1108,13 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
         documentError = isPickup && product.isFreePrice
             ? 'Товар со свободной ценой нельзя добавить в самовывоз.'
             : 'Нельзя добавить неактивный товар.';
+        notifyListeners();
+        return false;
+      }
+      if (!product.isFreePrice &&
+          point.items.any((item) => item.productId == productId)) {
+        documentError =
+            'Этот товар уже добавлен. Измените количество существующей строки.';
         notifyListeners();
         return false;
       }
@@ -1132,13 +1150,8 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       return false;
     }
     final items = List<DeliveryTaskItem>.from(point.items);
-    items[itemIndex] = DeliveryTaskItem(
-      productId: item.productId,
-      productName: item.productName,
-      quantity: item.quantity,
+    items[itemIndex] = item.copyWith(
       price: item.isFreePrice ? item.price : product.basePrice,
-      isFreePrice: item.isFreePrice,
-      driverNote: item.driverNote,
     );
     points[index] = point.copyWith(items: items);
     notifyListeners();
@@ -1153,14 +1166,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     final items = List<DeliveryTaskItem>.from(point.items);
     final oldItem = items[taskIndex];
     if (!oldItem.isFreePrice) return;
-    items[taskIndex] = DeliveryTaskItem(
-      productId: oldItem.productId,
-      productName: oldItem.productName,
-      quantity: oldItem.quantity,
-      price: price,
-      isFreePrice: oldItem.isFreePrice,
-      driverNote: oldItem.driverNote,
-    );
+    items[taskIndex] = oldItem.copyWith(price: price);
     points[pointIndex] = point.copyWith(items: items);
     notifyListeners();
   }
@@ -1173,14 +1179,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     final items = List<DeliveryTaskItem>.from(point.items);
     final oldItem = items[taskIndex];
     if (!oldItem.isFreePrice) return;
-    items[taskIndex] = DeliveryTaskItem(
-      productId: oldItem.productId,
-      productName: oldItem.productName,
-      quantity: oldItem.quantity,
-      price: oldItem.price,
-      isFreePrice: oldItem.isFreePrice,
-      driverNote: driverNote,
-    );
+    items[taskIndex] = oldItem.copyWith(driverNote: driverNote);
     points[pointIndex] = point.copyWith(items: items);
     notifyListeners();
   }

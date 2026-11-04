@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/features/delivery_route/data/document_money.dart';
 import 'package:mountain_fairytale/features/delivery_route/data/delivery_task_item_model.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/route_item_note_dialog.dart';
 import 'package:mountain_fairytale/shared/widgets/icon_button_widget.dart';
@@ -42,7 +43,7 @@ class _TaskItemRowState extends State<TaskItemRow> {
     super.initState();
     _controller = TextEditingController(text: widget.item.quantity.toString());
     _priceController = TextEditingController(
-      text: widget.item.price.toStringAsFixed(2),
+      text: formatUnitPrice(widget.item.price),
     );
     _focusNode.addListener(_onFocusChanged);
     _priceFocusNode.addListener(_onPriceFocusChanged);
@@ -69,7 +70,7 @@ class _TaskItemRowState extends State<TaskItemRow> {
   }
 
   void _restorePrice() {
-    final text = widget.item.price.toStringAsFixed(2);
+    final text = formatUnitPrice(widget.item.price);
     if (_priceController.text != text) {
       _priceController.value = TextEditingValue(
         text: text,
@@ -182,7 +183,7 @@ class _TaskItemRowState extends State<TaskItemRow> {
       return SizedBox(
         width: 112,
         child: Text(
-          '${widget.item.price.toStringAsFixed(2)} ₽ / шт.',
+          '${formatUnitPrice(widget.item.price)} ₽ / шт.',
           textAlign: TextAlign.right,
         ),
       );

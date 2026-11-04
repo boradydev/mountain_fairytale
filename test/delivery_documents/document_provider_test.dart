@@ -55,6 +55,7 @@ class Locks implements DocumentLockRepository {
 
   int acquired = 0, renewed = 0, released = 0;
   bool failRenew = false, failRelease = false;
+  int transientRenewFailures = 0;
   Completer<String>? acquireGate;
   @override
   Future<String> acquireEditLock(String id) async {
@@ -66,6 +67,10 @@ class Locks implements DocumentLockRepository {
   @override
   Future<String> renewEditLock(String id) async {
     renewed++;
+    if (transientRenewFailures > 0) {
+      transientRenewFailures--;
+      throw TimeoutException('temporary outage');
+    }
     if (failRenew) {
       throw const ApiException(statusCode: 409, message: 'Expired');
     }
@@ -140,6 +145,56 @@ void main() {
     provider.points = [point];
   });
   tearDown(() => provider.dispose());
+  testWidgets(
+    'heartbeat tolerates a transient timeout without interrupting the draft',
+    (tester) async {
+      provider.initializeDocumentSession(id: 'document');
+      expect(await provider.beginEditing(), isTrue);
+      provider.updateTaskQuantity(0, 0, 5);
+      locks.transientRenewFailures = 1;
+      await tester.pump(const Duration(seconds: 30));
+      expect(provider.connectionInterrupted, isFalse);
+      expect(provider.canSave, isTrue);
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(locks.renewed, 2);
+      expect(provider.connectionInterrupted, isFalse);
+      expect(provider.points.single.items.single.quantity, 5);
+      await provider.closeDocument();
+    },
+  );
+
+  testWidgets('heartbeat stops after three transient failures', (tester) async {
+    provider.initializeDocumentSession(id: 'document');
+    expect(await provider.beginEditing(), isTrue);
+    locks.transientRenewFailures = 3;
+    await tester.pump(const Duration(seconds: 30));
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump(const Duration(milliseconds: 800));
+    expect(locks.renewed, 3);
+    expect(provider.connectionInterrupted, isTrue);
+    expect(provider.canSave, isFalse);
+    await provider.closeDocument();
+  });
+
+  test(
+    'free rows keep independent local identity through edits and deletion',
+    () async {
+      catalog.freePrice = true;
+      await provider.addCurrentProduct(0, 'service', 1, productName: 'Услуга');
+      await provider.addCurrentProduct(0, 'service', 2, productName: 'Услуга');
+      final firstId = provider.points.single.items[1].localId;
+      final secondId = provider.points.single.items[2].localId;
+      expect(firstId, isNot(secondId));
+      provider.updateTaskPrice(0, 1, 1.005);
+      provider.updateTaskDriverNote(0, 2, 'Вторая');
+      provider.updateTaskQuantity(0, 1, 3);
+      expect(provider.points.single.items[1].localId, firstId);
+      expect(provider.points.single.items[2].localId, secondId);
+      provider.removeTaskFromPoint(0, 1);
+      expect(provider.points.single.items.last.localId, secondId);
+      expect(provider.points.single.items.last.driverNote, 'Вторая');
+    },
+  );
   test(
     'selected name survives catalog rename, edits and request serialization',
     () async {
@@ -169,6 +224,7 @@ void main() {
         isTrue,
       );
       expect(provider.points.single.items.last.toRequestJson(), {
+        'itemId': null,
         'productId': 'second',
         'productName': '  Вода Горная  ',
         'quantity': 4,
@@ -228,6 +284,7 @@ void main() {
       expect(savedItem.price, 125.5);
       expect(savedItem.amount, 251);
       expect(savedItem.toRequestJson(), {
+        'itemId': null,
         'productId': 'service',
         'productName': 'Услуга',
         'quantity': 2,

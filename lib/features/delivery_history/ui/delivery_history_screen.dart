@@ -157,11 +157,6 @@ class _DeliveryHistoryScreenState extends State<DeliveryHistoryScreen> {
                     icon: Icons.date_range,
                     onPressed: () => _selectPeriod(provider),
                   ),
-                  LabeledCheckboxToggle(
-                    label: 'Показывать отменённые',
-                    value: provider.includeCancelled,
-                    onChanged: provider.setIncludeCancelled,
-                  ),
                   AppSecondaryButton(
                     text: 'Сбросить',
                     onPressed: () {
@@ -169,6 +164,11 @@ class _DeliveryHistoryScreenState extends State<DeliveryHistoryScreen> {
                       _search.clear();
                       unawaited(provider.resetFilters());
                     },
+                  ),
+                  LabeledCheckboxToggle(
+                    label: 'Показывать отменённые',
+                    value: provider.includeCancelled,
+                    onChanged: provider.setIncludeCancelled,
                   ),
                   AppIconButton(
                     icon: Icons.refresh,

@@ -82,7 +82,11 @@ class RoutePoint {
     'nonDeliveryReason': nonDeliveryReason,
     if (includeMemo) 'memo': memo,
     'paymentMethodId': documentPaymentMethodId,
-    'items': items.map((item) => item.toRequestJson()).toList(),
+    'items': items
+        .map(
+          (item) => item.toRequestJson(creating: creating || pointId == null),
+        )
+        .toList(),
   };
 
   const RoutePoint({

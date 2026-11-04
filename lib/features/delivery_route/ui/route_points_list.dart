@@ -606,7 +606,11 @@ class _RoutePointsListState extends State<RoutePointsList> {
                                       return Column(
                                         children: [
                                           TaskItemRow(
-                                            key: ValueKey(item.productId),
+                                            key: ValueKey(
+                                              item.itemId ??
+                                                  item.localId ??
+                                                  item.productId,
+                                            ),
                                             enabled: provider.canEdit,
                                             allowFreePrice: !provider.isPickup,
                                             onRefreshPrice: () async {

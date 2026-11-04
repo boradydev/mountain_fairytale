@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/features/delivery_route/data/document_money.dart';
 import 'package:intl/intl.dart';
 import 'package:mountain_fairytale/features/delivery_history/data/delivery_history_model.dart';
 import 'package:mountain_fairytale/shared/widgets/base_card_widget.dart';
@@ -159,7 +160,9 @@ Future<void> showHistoryPurchase(
                       style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 4),
-                    Text('${item.quantity} × ${_money.format(item.price)}'),
+                    if (item.driverNote.isNotEmpty)
+                      Text('Уточнение: ${item.driverNote}'),
+                    Text('${item.quantity} × ${formatUnitPrice(item.price)} ₽'),
                     Text('Сумма: ${_money.format(item.amount)}'),
                   ],
                 ),

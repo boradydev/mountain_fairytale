@@ -78,6 +78,7 @@ void main() {
             'salesRepresentativeName': null,
             'items': [
               {
+                'itemId': id,
                 'productId': id,
                 'productName': 'Вода',
                 'quantity': 3,
@@ -166,7 +167,7 @@ void main() {
             'clientId': delivery ? id : null,
             'isDelivered': true,
             'nonDeliveryReason': '',
-            'memo': '',
+            if (delivery) 'memo': '',
             'paymentMethodId': null,
             'items': [
               {
@@ -174,6 +175,8 @@ void main() {
                 'productName': 'Вода',
                 'quantity': 3,
                 'price': 1.005,
+                'isFreePrice': false,
+                'driverNote': '',
               },
             ],
           });
@@ -185,6 +188,11 @@ void main() {
           expect(patch.method, 'PATCH');
           expect(patch.path, '$path/$id');
           expect(((patch.body as Map)['points'] as List).single['pointId'], id);
+          expect(
+            (((patch.body as Map)['points'] as List).single['items'] as List)
+                .single['itemId'],
+            id,
+          );
           if (delivery) expect((patch.body as Map)['endMileage'], isNull);
         },
       );

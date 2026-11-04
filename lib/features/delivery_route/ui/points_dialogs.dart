@@ -189,7 +189,9 @@ class _AddTaskDialogState extends State<_AddTaskDialog> {
               validator: (value) => value == null || !value.isActive
                   ? 'Выберите активный товар'
                   : provider.points[widget.pointIndex].items.any(
-                      (item) => item.productId == value.id,
+                      (item) =>
+                          item.productId == value.id &&
+                          (!value.isFreePrice || !item.isFreePrice),
                     )
                   ? 'Товар уже добавлен. Измените количество строки.'
                   : null,

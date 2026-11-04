@@ -70,6 +70,17 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(form.currentState!.validate(), isTrue);
 
+      await tester.enterText(priceField, '1,005');
+      await tester.pumpAndSettle();
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<TextFormField>(priceField).controller!.text,
+        '1.005',
+      );
+      expect(price, 1.005);
+      expect(find.text('2.01 ₽'), findsOneWidget);
+
       await tester.tap(find.byTooltip('Действия с позицией'));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
