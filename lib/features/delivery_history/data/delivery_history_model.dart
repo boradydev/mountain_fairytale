@@ -104,7 +104,6 @@ class ClientDelivery extends HistoryPurchase {
         ...json,
         'documentType': 'deliveryRouteSheet',
         'isActive': true,
-        'clientsCount': 0,
         'purchasesCount': 0,
         'totalAmount': json['documentTotalAmount'],
         'matchedClients': [],

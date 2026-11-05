@@ -4,7 +4,7 @@ import 'package:mountain_fairytale/features/delivery_history/data/delivery_histo
 import 'package:mountain_fairytale/features/delivery_route/data/route_point_model.dart';
 import 'package:mountain_fairytale/features/delivery_route/data/delivery_task_item_model.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/route_point_read_only_card.dart';
-import 'package:mountain_fairytale/shared/widgets/dialog_card_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/document_summary_card.dart';
 
 class ClientDeliveryCard extends StatelessWidget {
   final ClientDelivery delivery;
@@ -15,83 +15,27 @@ class ClientDeliveryCard extends StatelessWidget {
     required this.onOpen,
   });
 
-  Widget _line(BuildContext context, String label, String value) => Tooltip(
-    message: value,
-    child: Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '$label: ',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-
   @override
   Widget build(BuildContext context) {
     final d = delivery;
     final doc = d.document;
     final colors = Theme.of(context).colorScheme;
-    final route = AppDialogCard(
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      padding: const EdgeInsets.all(12),
-      onTap: onOpen,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 2),
-            child: Icon(
-              Icons.local_shipping_outlined,
-              size: 20,
-              color: colors.primary,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _line(
-                  context,
-                  'Дата',
-                  DateFormat('dd.MM.yyyy').format(doc.plannedDate),
-                ),
-                _line(context, 'Водитель', doc.driverName ?? 'Не указан'),
-                _line(
-                  context,
-                  'Автомобиль',
-                  doc.carModelAndNumber ?? 'Не указан',
-                ),
-                _line(
-                  context,
-                  'Сумма',
-                  NumberFormat.currency(
-                    locale: 'ru_RU',
-                    symbol: '₽',
-                  ).format(doc.totalAmount),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 4),
-          Icon(Icons.chevron_right, size: 16, color: colors.onSurfaceVariant),
-        ],
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    final route = Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      child: DocumentSummaryCard(
+        isPickup: doc.isPickup,
+        date: DateFormat.yMd(locale).format(doc.plannedDate),
+        count: doc.clientsCount.toString(),
+        amount: NumberFormat.currency(
+          locale: locale,
+          symbol: '₽',
+          decimalDigits: 2,
+        ).format(doc.totalAmount),
+        driver: doc.driverName ?? 'Не указан',
+        car: doc.carModelAndNumber ?? 'Не указан',
+        isActive: doc.isActive,
+        onOpen: onOpen,
       ),
     );
     final point = RoutePointReadOnlyCard(
@@ -135,7 +79,10 @@ class ClientDeliveryCard extends StatelessWidget {
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(width: 332, child: route),
+            SizedBox(
+              width: ((constraints.maxWidth - 18) / 2).clamp(0, 400),
+              child: route,
+            ),
             Padding(
               padding: const EdgeInsets.only(top: 24),
               child: IgnorePointer(

@@ -148,7 +148,7 @@ void main() {
       expect(pickups.creates, 1);
       expect(pickups.sheet!.date, date);
       expect(find.byType(DayDocumentsDialog), findsOneWidget);
-      expect(find.text('13.10.2026 10:00'), findsOneWidget);
+      expect(find.text('13.10.2026 10:00'), findsNothing);
       expect(repo.documentCalls.length, 2);
       expect(repo.dayCalls.length, 1);
       expect(tester.takeException(), isNull);

@@ -1,4 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/features/delivery_history/ui/client_delivery_card.dart';
+import 'package:mountain_fairytale/shared/widgets/document_summary_card.dart';
+import 'package:mountain_fairytale/l10n/app_localizations.dart';
 import 'package:mountain_fairytale/core/network/api_client.dart';
 import 'package:mountain_fairytale/features/delivery_history/data/delivery_history_api_repo.dart';
 
@@ -29,6 +33,7 @@ class _ApiClient implements ApiClient {
               'createdAt': '2026-11-02T12:30:00',
               'totalAmount': '1.01',
               'documentTotalAmount': '19.99',
+              'clientsCount': 3,
               'items': [
                 {
                   'itemId': 'item',
@@ -74,6 +79,49 @@ class _ApiClient implements ApiClient {
 }
 
 void main() {
+  testWidgets(
+    'one filtered delivery retains all three route clients in the mini card',
+    (tester) async {
+      final api = _ApiClient();
+      final page = await ApiDeliveryHistoryRepository(api).getClientHistory(
+        dateFrom: DateTime(2026, 10, 5),
+        dateTo: DateTime(2026, 11, 3),
+        search: 'Saved name',
+        offset: 0,
+        limit: 50,
+      );
+      expect(api.request!.queryParameters['search'], 'Saved name');
+      expect(page.deliveries, hasLength(1));
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: ListView(
+              children: [
+                ClientDeliveryCard(
+                  delivery: page.deliveries.single,
+                  onOpen: () {},
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final card = find.byType(DocumentSummaryCard);
+      expect(
+        find.descendant(of: card, matching: find.text('Клиентов:')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: card, matching: find.text('3')),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
   test(
     'client API reads point identity, snapshots and route total separately',
     () async {
@@ -98,6 +146,7 @@ void main() {
       expect(point.clientName, 'Saved name');
       expect(point.document.id, 'route');
       expect(point.document.totalAmount, 19.99);
+      expect(point.document.clientsCount, 3);
       expect(point.document.createdAt, DateTime(2026, 11, 2, 12, 30));
       expect(point.totalAmount, 1.01);
       expect(point.salesRepresentativeId, 'rep');

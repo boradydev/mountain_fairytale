@@ -9,7 +9,7 @@ import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_s
 import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_screen.dart';
 import 'package:mountain_fairytale/features/pickup/ui/pickup_constructor_screen.dart';
 import 'package:mountain_fairytale/features/pickup/data/pickup_model.dart';
-import 'package:mountain_fairytale/shared/widgets/dialog_card_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/document_summary_card.dart';
 import 'package:mountain_fairytale/shared/widgets/labeled_checkbox_toggle.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 
@@ -331,111 +331,43 @@ class _DayDocumentsDialogState extends State<DayDocumentsDialog> {
     DeliveryType type,
     String locale,
   ) {
-    final colors = Theme.of(context).colorScheme;
-    final iconColor = document.isActive
-        ? colors.primary
-        : colors.onSurfaceVariant;
-    final createdLabel = document.createdAt == null
-        ? 'Дата создания неизвестна'
-        : DateFormat.yMd(locale).add_Hm().format(document.createdAt!);
-    final details = <(String, String)>[
-      ('Плановая дата:', DateFormat.yMd(locale).format(document.date)),
-      ('Создан:', '$createdLabel${document.isActive ? '' : ' — Отменён'}'),
-    ];
     final points = switch (document) {
       DeliveryRouteSheet() => document.points,
       PickupSheet() => document.points,
       _ => null,
     };
-    if (points != null) {
-      final clientsCount = points.map((point) => point.clientId).toSet().length;
-      final amount =
-          NumberFormat.currency(
-            locale: locale,
-            symbol: '₽',
-            decimalDigits: 2,
-          ).format(
-            points.fold<int>(
-                  0,
-                  (sum, point) => sum + point.accountedTotalCents,
-                ) /
-                100,
-          );
-      details.addAll([
-        (
-          document is PickupSheet ? 'Покупок:' : 'Клиентов:',
-          document is PickupSheet ? '${points.length}' : '$clientsCount',
-        ),
-        ('Сумма:', amount),
-      ]);
-    }
-    if (document is DeliveryRouteSheet) {
-      details.addAll([
-        ('Водитель:', document.driverName),
-        ('Автомобиль:', document.carModelAndNumber),
-      ]);
-    }
-
-    return AppDialogCard(
-      onTap: _opening ? null : () => _open(type, document),
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Icon(
-            type == DeliveryType.delivery
-                ? Icons.local_shipping_outlined
-                : Icons.store_outlined,
-            color: iconColor,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (details.isNotEmpty) ...[
-                  Table(
-                    columnWidths: const {
-                      0: IntrinsicColumnWidth(),
-                      1: FlexColumnWidth(),
-                    },
-                    defaultVerticalAlignment: TableCellVerticalAlignment.top,
-                    children: [
-                      for (final (label, value) in details)
-                        TableRow(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                right: 12,
-                                bottom: 4,
-                              ),
-                              child: Text(
-                                label,
-                                style: label == 'Создан:'
-                                    ? Theme.of(context).textTheme.bodyLarge
-                                    : null,
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 4),
-                              child: Text(
-                                value,
-                                style: label == 'Создан:'
-                                    ? Theme.of(context).textTheme.bodyLarge
-                                    : null,
-                              ),
-                            ),
-                          ],
-                        ),
-                    ],
-                  ),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Icon(Icons.chevron_right, color: colors.onSurfaceVariant),
-        ],
+    final isPickup = type == DeliveryType.pickup;
+    final count = isPickup
+        ? points?.length
+        : points?.map((point) => point.clientId).toSet().length;
+    final amount =
+        NumberFormat.currency(
+          locale: locale,
+          symbol: '₽',
+          decimalDigits: 2,
+        ).format(
+          (points?.fold<int>(
+                    0,
+                    (sum, point) => sum + point.accountedTotalCents,
+                  ) ??
+                  0) /
+              100,
+        );
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: DocumentSummaryCard(
+        isPickup: isPickup,
+        date: DateFormat.yMd(locale).format(document.date),
+        count: count?.toString() ?? 'Нет данных',
+        amount: amount,
+        driver: document is DeliveryRouteSheet
+            ? document.driverName
+            : 'Не указан',
+        car: document is DeliveryRouteSheet
+            ? document.carModelAndNumber
+            : 'Не указан',
+        isActive: document.isActive,
+        onOpen: _opening ? null : () => _open(type, document),
       ),
     );
   }

@@ -18,6 +18,7 @@ import 'package:mountain_fairytale/features/delivery_history/ui/client_delivery_
 import 'package:mountain_fairytale/features/delivery_history/ui/history_document_card.dart';
 import 'package:mountain_fairytale/shared/widgets/app_date_range_dialog.dart';
 import 'package:mountain_fairytale/shared/widgets/dialog_card_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/document_summary_card.dart';
 import 'package:provider/provider.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/route_point_card_content.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/task_item_row.dart';
@@ -41,6 +42,7 @@ Map<String, dynamic> _json(String id) => {
   'driverName': 'Водитель',
   'carModelAndNumber': 'Машина',
   'documentTotalAmount': '900.50',
+  'clientsCount': 3,
   'totalAmount': '200.00',
   'items': [
     {
@@ -235,14 +237,17 @@ void main() {
         );
         final routeSize = tester.getSize(routeCard);
         final before = tester.getTopLeft(routeText);
-        expect(find.text('Дата: '), findsOneWidget);
-        expect(find.text('Водитель: '), findsOneWidget);
-        expect(find.text('Автомобиль: '), findsOneWidget);
-        expect(find.text('Сумма: '), findsOneWidget);
+        expect(find.text('Дата:'), findsOneWidget);
+        expect(find.text('Водитель:'), findsOneWidget);
+        expect(find.text('Автомобиль:'), findsOneWidget);
+        expect(find.text('Сумма:'), findsOneWidget);
         expect(find.textContaining('Создан:'), findsNothing);
+        expect(find.byType(DocumentSummaryCard), findsOneWidget);
+        expect(find.text('Клиентов:'), findsOneWidget);
+        expect(find.text('3'), findsOneWidget);
         if (width > 760) {
           final surface = find.byType(RoutePointCardSurface);
-          expect(tester.getSize(routeCard).width, inInclusiveRange(280, 320));
+          expect(tester.getSize(routeCard).width, inInclusiveRange(280, 370));
           expect(
             tester.getSize(routeCard).width,
             lessThanOrEqualTo(tester.getSize(surface).width),
@@ -293,6 +298,37 @@ void main() {
         expect(opened, 1);
       },
     );
+  }
+  for (final width in [320.0, 800.0]) {
+    testWidgets('client summary fits enlarged text at $width', (tester) async {
+      tester.view.physicalSize = Size(width, 1200);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final long = List.filled(10, 'Очень длинное значение').join(' ');
+      await tester.pumpWidget(
+        _app(
+          MediaQuery(
+            data: const MediaQueryData(textScaler: TextScaler.linear(1.8)),
+            child: ListView(
+              children: [
+                ClientDeliveryCard(
+                  delivery: ClientDelivery.fromJson({
+                    ..._json('scaled'),
+                    'driverName': long,
+                    'carModelAndNumber': long,
+                  }),
+                  onOpen: () {},
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      expect(find.byType(DocumentSummaryCard), findsOneWidget);
+      expect(find.byTooltip(long), findsNWidgets(2));
+      expect(tester.takeException(), isNull);
+    });
   }
   for (final width in [320.0, 680.0, 1100.0, 1500.0]) {
     testWidgets(
