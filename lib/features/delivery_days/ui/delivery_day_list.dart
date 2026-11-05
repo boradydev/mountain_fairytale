@@ -154,13 +154,13 @@ class DeliveryDayItem extends StatelessWidget {
       metrics: [
         MetricRow(
           icon: Icons.local_shipping_outlined,
-          label: 'Точки доставки',
+          label: 'Клиенты доставки',
           truncateLabel: true,
           value: '${day.deliveryPointsCount}',
         ),
         MetricRow(
           icon: Icons.store_outlined,
-          label: 'Точки самовывоза',
+          label: 'Клиенты самовывоза',
           truncateLabel: true,
           value: '${day.pickupPointsCount}',
         ),

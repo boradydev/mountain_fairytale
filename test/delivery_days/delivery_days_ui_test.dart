@@ -325,8 +325,8 @@ void main() {
       addTearDown(p.dispose);
       await p.fetchDeliveryDays();
       await showDays(tester, p);
-      expect(find.text('Точки доставки'), findsOneWidget);
-      expect(find.text('Точки самовывоза'), findsOneWidget);
+      expect(find.text('Клиенты доставки'), findsOneWidget);
+      expect(find.text('Клиенты самовывоза'), findsOneWidget);
       expect(find.text('Возвраты'), findsNothing);
       expect(find.text('3510.50 ₽'), findsOneWidget);
       expect(find.byTooltip(name), findsOneWidget);
