@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/shared/widgets/icon_button_widget.dart';
 import 'package:mountain_fairytale/core/theme_extensions.dart';
 import 'package:mountain_fairytale/features/delivery_route/data/route_point_model.dart';
 import 'package:mountain_fairytale/features/delivery_route/data/delivery_task_item_model.dart';
@@ -17,24 +18,28 @@ class RoutePointCardSurface extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: isDelivered
-            ? colorScheme.surfaceContainerLow
-            : (Theme.of(context)
-                      .extension<AppColorsExtension>()
-                      ?.warningContainer ??
-                  Color.alphaBlend(
-                    colorScheme.error.withValues(alpha: 0.08),
-                    colorScheme.surfaceContainerLow,
-                  )),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: colorScheme.outlineVariant,
+    // Keep each card's semantics together when reorderable items move.
+    return Semantics(
+      container: true,
+      child: Container(
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: isDelivered
+              ? colorScheme.surfaceContainerLow
+              : (Theme.of(context)
+                        .extension<AppColorsExtension>()
+                        ?.warningContainer ??
+                    Color.alphaBlend(
+                      colorScheme.error.withValues(alpha: 0.08),
+                      colorScheme.surfaceContainerLow,
+                    )),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: colorScheme.outlineVariant,
+          ),
         ),
+        child: child,
       ),
-      child: child,
     );
   }
 }
@@ -49,110 +54,198 @@ class RoutePointHeader extends StatelessWidget {
     this.isPickup = false,
     this.pickupTitle = '',
   });
+
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final warning =
+        theme.extension<AppColorsExtension>()?.warningColor ?? colors.error;
+    Widget line(String value, TextStyle? style) => Text(
+      value,
+      style: style,
+      maxLines: 1,
+      softWrap: false,
+      overflow: TextOverflow.ellipsis,
+    );
+    Widget note(String label, String value, TextStyle? style, {Color? color}) =>
+        Text.rich(
+          TextSpan(
+            style: style,
+            children: [
+              TextSpan(
+                text: '$label: ',
+                style: style?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
+              ),
+              TextSpan(text: value),
+            ],
+          ),
+          maxLines: 1,
+          softWrap: false,
+          overflow: TextOverflow.ellipsis,
+        );
     return LayoutBuilder(
       builder: (context, constraints) {
-        final details = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        final narrow = constraints.maxWidth < 440;
+        final name = line(
+          isPickup ? pickupTitle : point.clientName,
+          theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+        );
+        final address = line(point.address, theme.textTheme.bodyMedium);
+        final memo = !isPickup && point.memo.trim().isNotEmpty
+            ? note('Памятка', point.memo, theme.textTheme.bodyLarge)
+            : null;
+        final reason =
+            !isPickup &&
+                !point.isDelivered &&
+                point.nonDeliveryReason.trim().isNotEmpty
+            ? note(
+                'Не доставлено',
+                point.nonDeliveryReason,
+                theme.textTheme.bodyMedium,
+                color: warning,
+              )
+            : null;
+        Widget detailRow(Widget left, Widget? center) => Row(
           children: [
-            Text(
-              isPickup ? pickupTitle : point.clientName,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            if (!isPickup && point.memo.isNotEmpty)
-              Tooltip(
-                message: 'Памятка: ${point.memo}',
-                child: Text.rich(
-                  TextSpan(
-                    style: DefaultTextStyle.of(context).style,
-                    children: [
-                      const TextSpan(
-                        text: 'Памятка: ',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      TextSpan(text: point.memo),
-                    ],
-                  ),
-                  maxLines: 1,
-                  softWrap: false,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            if (!point.isDelivered)
-              Tooltip(
-                message: 'Не доставлено: ${point.nonDeliveryReason}',
-                child: Text(
-                  'Не доставлено: ${point.nonDeliveryReason}',
-                  maxLines: 1,
-                  softWrap: false,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            if (!isPickup) const SizedBox(height: 4),
-            if (!isPickup)
-              Text(
-                point.address,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
+            Expanded(child: left),
+            if (center != null) ...[
+              const SizedBox(width: 16),
+              Expanded(child: center),
+            ],
           ],
         );
+        final details = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: narrow
+              ? [
+                  name,
+                  ?memo,
+                  if (!isPickup) address,
+                  ?reason,
+                ]
+              : [
+                  detailRow(name, memo),
+                  if (!isPickup) detailRow(address, reason),
+                ],
+        );
         final summary = Column(
-          crossAxisAlignment: constraints.maxWidth < 440
+          crossAxisAlignment: narrow
               ? CrossAxisAlignment.start
               : CrossAxisAlignment.end,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
+            line(
               point.items.isEmpty
                   ? 'Задание не заполнено'
                   : '${point.totalAmount.toStringAsFixed(2)} ₽',
-              style: TextStyle(
+              theme.textTheme.bodyLarge?.copyWith(
                 decoration: point.isDelivered
                     ? null
                     : TextDecoration.lineThrough,
                 fontWeight: FontWeight.w700,
-                fontSize: 16,
                 color: point.items.isEmpty
-                    ? colorScheme.onSurfaceVariant
-                    : colorScheme.onSurface,
+                    ? colors.onSurfaceVariant
+                    : colors.onSurface,
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
+            line(
               '${point.items.length} ${routePointPositionsLabel(point.items.length)} · ${point.documentPaymentMethodName ?? 'Оплата не указана'}',
-              style: Theme.of(context).textTheme.bodySmall,
+              theme.textTheme.bodySmall,
             ),
           ],
         );
-        if (constraints.maxWidth < 440) {
+        if (narrow) {
           return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              details,
-              const SizedBox(height: 8),
-              summary,
-            ],
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [details, const SizedBox(height: 4), summary],
           );
         }
         return Row(
-          crossAxisAlignment: isPickup
-              ? CrossAxisAlignment.center
-              : CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Expanded(child: details),
+            Expanded(flex: 3, child: details),
             const SizedBox(width: 20),
             Expanded(child: summary),
           ],
         );
       },
+    );
+  }
+}
+
+/// Full point notes, shared by the editor and historical snapshots.
+class RoutePointNotes extends StatelessWidget {
+  final RoutePoint point;
+  final VoidCallback? onEditMemo;
+  final VoidCallback? onEditReason;
+
+  const RoutePointNotes({
+    super.key,
+    required this.point,
+    this.onEditMemo,
+    this.onEditReason,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final hasMemo = point.memo.trim().isNotEmpty;
+    final hasReason =
+        !point.isDelivered && point.nonDeliveryReason.trim().isNotEmpty;
+    Widget entry(String label, String value, VoidCallback? onEdit) => Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: '$label: ',
+                  style: textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                TextSpan(text: value),
+              ],
+            ),
+            style: textTheme.bodyMedium,
+          ),
+        ),
+        // Reserve the same space when switching between view and edit.
+        SizedBox(
+          width: 40,
+          height: 40,
+          child: onEdit == null
+              ? null
+              : AppIconButton(
+                  icon: Icons.edit_outlined,
+                  tooltip:
+                      'Изменить ${label == 'Памятка' ? 'памятку' : 'причину недоставки'}',
+                  onPressed: onEdit,
+                ),
+        ),
+      ],
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Телефон: ${point.phone}', style: textTheme.bodyMedium),
+        const Divider(height: 16),
+        if (hasMemo) ...[
+          entry('Памятка', point.memo, onEditMemo),
+          const Divider(height: 16),
+        ],
+        if (hasReason) ...[
+          entry('Не доставлено', point.nonDeliveryReason, onEditReason),
+          const Divider(height: 16),
+        ],
+      ],
     );
   }
 }

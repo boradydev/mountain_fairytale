@@ -46,10 +46,7 @@ class RoutePointReadOnlyCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Телефон: ${point.phone}',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
+                RoutePointNotes(point: point),
                 const SizedBox(height: 16),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -71,17 +68,6 @@ class RoutePointReadOnlyCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                if (point.memo.isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  Text('Памятка: ${point.memo}'),
-                ],
-                if (!point.isDelivered) ...[
-                  const SizedBox(height: 16),
-                  Text(
-                    'Не доставлено: ${point.nonDeliveryReason}',
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                ],
                 const SizedBox(height: 24),
                 const RoutePointTaskHeading(),
                 const SizedBox(height: 12),

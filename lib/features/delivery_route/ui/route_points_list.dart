@@ -2,7 +2,7 @@ import 'package:mountain_fairytale/features/delivery_route/ui/route_point_card_c
 import 'package:mountain_fairytale/features/delivery_route/ui/route_point_memo_dialog.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/failed_delivery_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:mountain_fairytale/shared/widgets/icon_button_widget.dart';
+import 'package:mountain_fairytale/features/delivery_route/data/route_point_model.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/point_representative_selector.dart';
 import 'package:mountain_fairytale/shared/widgets/confirm_dialog.dart';
@@ -72,6 +72,92 @@ class _RoutePointsListState extends State<RoutePointsList> {
     _scrollController.dispose();
     super.dispose();
   }
+
+  int _pointIndex(String viewId) => widget.provider.points.indexWhere(
+    (point) => point.viewId == viewId,
+  );
+
+  Future<void> _editMemo(String viewId) async {
+    final provider = widget.provider;
+    final index = _pointIndex(viewId);
+    if (!provider.canEdit || index < 0) return;
+    final initialMemo = provider.points[index].memo;
+    final memo = await showDialog<String>(
+      context: context,
+      builder: (_) => RoutePointMemoDialog(initialMemo: initialMemo),
+    );
+    if (!mounted || memo == null || !provider.canEdit) return;
+    final currentIndex = _pointIndex(viewId);
+    if (currentIndex >= 0) provider.setPointMemo(currentIndex, memo);
+  }
+
+  Future<void> _editReason(String viewId, {bool editing = false}) async {
+    final provider = widget.provider;
+    final index = _pointIndex(viewId);
+    if (!provider.canEdit || index < 0) return;
+    final initialReason = editing
+        ? provider.points[index].nonDeliveryReason
+        : '';
+    final reason = await showDialog<String>(
+      context: context,
+      builder: (_) => FailedDeliveryDialog(initialReason: initialReason),
+    );
+    if (!mounted || reason == null || !provider.canEdit) return;
+    final currentIndex = _pointIndex(viewId);
+    if (currentIndex >= 0) {
+      provider.setDeliveryOutcome(
+        currentIndex,
+        delivered: false,
+        reason: reason,
+      );
+    }
+  }
+
+  Widget _pointMenu(RoutePoint point) => PopupMenuButton<String>(
+    tooltip: 'Действия с точкой',
+    icon: const Icon(Icons.more_vert),
+    onSelected: (action) {
+      final provider = widget.provider;
+      final index = _pointIndex(point.viewId);
+      if (!provider.canEdit || index < 0) return;
+      switch (action) {
+        case 'memo':
+          _editMemo(point.viewId);
+        case 'outcome':
+          if (provider.points[index].isDelivered) {
+            _editReason(point.viewId);
+          } else {
+            provider.setDeliveryOutcome(index, delivered: true);
+          }
+        case 'delete':
+          provider.removePoint(index);
+      }
+    },
+    itemBuilder: (_) => [
+      if (!widget.provider.isPickup) ...[
+        PopupMenuItem(
+          value: 'memo',
+          child: Text(
+            point.memo.isEmpty ? 'Добавить памятку' : 'Изменить памятку',
+          ),
+        ),
+        PopupMenuItem(
+          value: 'outcome',
+          child: Text(
+            point.isDelivered
+                ? 'Отметить как недоставленное'
+                : 'Снять отметку «Не доставлено»',
+          ),
+        ),
+      ],
+      PopupMenuItem(
+        value: 'delete',
+        child: Text(
+          widget.provider.isPickup ? 'Удалить покупку' : 'Удалить точку',
+        ),
+      ),
+    ],
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -159,10 +245,21 @@ class _RoutePointsListState extends State<RoutePointsList> {
                       horizontal: 20,
                       vertical: 8,
                     ),
-                    title: RoutePointHeader(
-                      point: point,
-                      isPickup: provider.isPickup,
-                      pickupTitle: 'Покупка ${index + 1}',
+                    title: Row(
+                      children: [
+                        Expanded(
+                          child: RoutePointHeader(
+                            point: point,
+                            isPickup: provider.isPickup,
+                            pickupTitle: 'Покупка ${index + 1}',
+                          ),
+                        ),
+                        SizedBox(
+                          width: 40,
+                          height: 48,
+                          child: provider.canEdit ? _pointMenu(point) : null,
+                        ),
+                      ],
                     ),
                     leading: provider.isPickup
                         ? null
@@ -192,134 +289,21 @@ class _RoutePointsListState extends State<RoutePointsList> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: provider.isPickup
-                                      ? const SizedBox.shrink()
-                                      : Text(
-                                          'Телефон: ${point.phone}',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium,
-                                        ),
-                                ),
-                                if (!provider.isPickup)
-                                  Visibility(
-                                    visible: provider.canEdit,
-                                    maintainSize: true,
-                                    maintainAnimation: true,
-                                    maintainState: true,
-                                    child: AppIconButton(
-                                      icon: point.memo.isEmpty
-                                          ? Icons.sticky_note_2_outlined
-                                          : Icons.edit_note,
-                                      tooltip: point.memo.isEmpty
-                                          ? 'Добавить памятку'
-                                          : 'Изменить памятку',
-                                      onPressed: provider.canEdit
-                                          ? () async {
-                                              final memo =
-                                                  await showDialog<String>(
-                                                    context: context,
-                                                    builder: (_) =>
-                                                        RoutePointMemoDialog(
-                                                          initialMemo:
-                                                              point.memo,
-                                                        ),
-                                                  );
-                                              if (memo != null &&
-                                                  context.mounted &&
-                                                  provider.canEdit) {
-                                                final currentIndex = provider
-                                                    .points
-                                                    .indexWhere(
-                                                      (p) =>
-                                                          p.viewId ==
-                                                          point.viewId,
-                                                    );
-                                                if (currentIndex >= 0) {
-                                                  provider.setPointMemo(
-                                                    currentIndex,
-                                                    memo,
-                                                  );
-                                                }
-                                              }
-                                            }
-                                          : null,
-                                    ),
-                                  ),
-                                if (!provider.isPickup)
-                                  const SizedBox(height: 8),
-                                if (!provider.isPickup)
-                                  Visibility(
-                                    visible: provider.canEdit,
-                                    maintainSize: true,
-                                    maintainAnimation: true,
-                                    maintainState: true,
-                                    child: AppIconButton(
-                                      icon: point.isDelivered
-                                          ? Icons.close
-                                          : Icons.undo,
-                                      tooltip: point.isDelivered
-                                          ? 'Отметить как недоставленное'
-                                          : 'Снять отметку «Не доставлено»',
-                                      onPressed: !provider.canEdit
-                                          ? null
-                                          : () async {
-                                              if (!point.isDelivered) {
-                                                provider.setDeliveryOutcome(
-                                                  index,
-                                                  delivered: true,
-                                                );
-                                                return;
-                                              }
-                                              final reason =
-                                                  await showDialog<String>(
-                                                    context: context,
-                                                    builder: (_) =>
-                                                        const FailedDeliveryDialog(),
-                                                  );
-                                              if (reason != null &&
-                                                  context.mounted &&
-                                                  provider.canEdit) {
-                                                final currentIndex = provider
-                                                    .points
-                                                    .indexWhere(
-                                                      (p) =>
-                                                          p.viewId ==
-                                                          point.viewId,
-                                                    );
-                                                if (currentIndex >= 0) {
-                                                  provider.setDeliveryOutcome(
-                                                    currentIndex,
-                                                    delivered: false,
-                                                    reason: reason,
-                                                  );
-                                                }
-                                              }
-                                            },
-                                    ),
-                                  ),
-                                Visibility(
-                                  visible: provider.canEdit,
-                                  maintainSize: true,
-                                  maintainAnimation: true,
-                                  maintainState: true,
-                                  child: AppIconButton(
-                                    icon: Icons.delete_outline,
-                                    tooltip: provider.isPickup
-                                        ? 'Удалить покупку'
-                                        : 'Удалить точку',
-                                    destructive: true,
-                                    onPressed: provider.canEdit
-                                        ? () => provider.removePoint(index)
-                                        : null,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
+                            if (!provider.isPickup) ...[
+                              RoutePointNotes(
+                                point: point,
+                                onEditMemo: provider.canEdit
+                                    ? () => _editMemo(point.viewId)
+                                    : null,
+                                onEditReason: provider.canEdit
+                                    ? () => _editReason(
+                                        point.viewId,
+                                        editing: true,
+                                      )
+                                    : null,
+                              ),
+                              const SizedBox(height: 16),
+                            ],
                             LayoutBuilder(
                               builder: (context, constraints) {
                                 final payment = PaymentMethodSelector(

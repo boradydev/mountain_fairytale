@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/shared/widgets/base_form_dialog_widget.dart';
 
 class FailedDeliveryDialog extends StatefulWidget {
-  const FailedDeliveryDialog({super.key});
+  final String initialReason;
+  const FailedDeliveryDialog({super.key, this.initialReason = ''});
   @override
   State<FailedDeliveryDialog> createState() => _FailedDeliveryDialogState();
 }
 
 class _FailedDeliveryDialogState extends State<FailedDeliveryDialog> {
   final _form = GlobalKey<FormState>();
-  final _reason = TextEditingController();
+  late final _reason = TextEditingController(text: widget.initialReason);
   @override
   void dispose() {
     _reason.dispose();
