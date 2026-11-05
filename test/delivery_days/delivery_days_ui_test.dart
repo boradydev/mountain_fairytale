@@ -159,6 +159,9 @@ void main() {
       expect(find.text('Самовывозы'), findsOneWidget);
       expect(find.text('Иванов Иван'), findsOneWidget);
       expect(find.text('Газель А123ВС'), findsOneWidget);
+      expect(find.text('Плановая дата:'), findsNWidgets(2));
+      expect(find.text('18.10.2026'), findsNWidgets(2));
+      expect(find.text('Создан:'), findsNWidgets(2));
       expect(find.text('17.10.2026 09:42'), findsOneWidget);
       expect(find.text('17.10.2026 10:15'), findsOneWidget);
       expect(find.text('Клиентов:'), findsOneWidget);
@@ -205,7 +208,14 @@ void main() {
           findsOneWidget,
         );
       } else {
-        expect(find.text('Дата создания неизвестна'), findsNWidgets(count));
+        // Taller cards are built as they enter the scroll viewport.
+        expect(find.text('Дата создания неизвестна'), findsWidgets);
+        if (count > 1) {
+          await tester.drag(find.byType(ListView).last, const Offset(0, -500));
+          await tester.pumpAndSettle();
+          expect(find.text('Дата создания неизвестна'), findsWidgets);
+          expect(tester.takeException(), isNull);
+        }
       }
       await tester.tap(find.text('Закрыть'));
       await tester.pumpAndSettle();

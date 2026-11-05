@@ -1,3 +1,4 @@
+import 'package:mountain_fairytale/features/delivery_route/ui/route_point_labels.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/route_point_memo_dialog.dart';
 import 'package:mountain_fairytale/core/theme_extensions.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/failed_delivery_dialog.dart';
@@ -254,7 +255,7 @@ class _RoutePointsListState extends State<RoutePointsList> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '${point.items.length} ${_positionsLabel(point.items.length)} · ${point.documentPaymentMethodName ?? 'Оплата не указана'}',
+                              '${point.items.length} ${routePointPositionsLabel(point.items.length)} · ${point.documentPaymentMethodName ?? 'Оплата не указана'}',
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ],
@@ -786,15 +787,6 @@ extension ListX<T> on List<T> {
       return null;
     }
   }
-}
-
-String _positionsLabel(int count) {
-  if (count % 100 >= 11 && count % 100 <= 14) return 'позиций';
-  return switch (count % 10) {
-    1 => 'позиция',
-    2 || 3 || 4 => 'позиции',
-    _ => 'позиций',
-  };
 }
 
 Widget _documentPointsList({

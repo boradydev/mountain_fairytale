@@ -789,14 +789,21 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     ClientDirectoryEntry representative,
     ClientsProvider clientsProvider,
   ) async {
-    if (!canEdit || isPickup || !representative.isActive) return false;
+    if (!canEdit ||
+        isPickup ||
+        !representative.isActive ||
+        !points.any(
+          (point) => point.clientId == clientId && point.pointId == null,
+        )) {
+      return false;
+    }
     final client = await clientRepo.updateClient(
       clientId,
       UpdateClientRequest(salesRepresentativeId: representative.id),
     );
     clientsProvider.syncUpdatedClient(client);
     final index = points.indexWhere((point) => point.clientId == clientId);
-    if (index != -1) {
+    if (index != -1 && points[index].pointId == null) {
       final point = points[index];
       points[index] = RoutePoint(
         pointId: point.pointId,
@@ -817,8 +824,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
         documentPaymentMethodId: point.documentPaymentMethodId,
         documentPaymentMethodName: point.documentPaymentMethodName,
         salesRepresentativeId: client.salesRepresentativeId,
-        salesRepresentative:
-            client.salesRepresentativeName ?? 'Нет представителя',
+        salesRepresentative: client.salesRepresentativeName ?? 'Не указан',
         items: point.items,
       );
     }
@@ -892,7 +898,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
   void syncClientPoint(Client client) {
     points = points
         .map(
-          (point) => point.clientId != client.id
+          (point) => point.clientId != client.id || point.pointId != null
               ? point
               : RoutePoint(
                   pointId: point.pointId,
@@ -918,7 +924,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
                   documentPaymentMethodId: point.documentPaymentMethodId,
                   documentPaymentMethodName: point.documentPaymentMethodName,
                   salesRepresentative:
-                      client.salesRepresentativeName ?? 'Нет представителя',
+                      client.salesRepresentativeName ?? 'Не указан',
                   items: point.items,
                 ),
         )
@@ -953,8 +959,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
         documentPaymentMethodName:
             paymentMethodsById[client.defaultPaymentMethodId]?.name ??
             client.defaultPaymentMethodName,
-        salesRepresentative:
-            client.salesRepresentativeName ?? 'Нет представителя',
+        salesRepresentative: client.salesRepresentativeName ?? 'Не указан',
         items: [],
       ),
     );

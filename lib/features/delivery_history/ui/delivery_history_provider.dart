@@ -12,7 +12,26 @@ class DeliveryHistoryProvider extends SafeChangeNotifier {
     _dateRange = _defaultRange();
   }
 
-  static const pageSize = 25;
+  static const pageSize = 50;
+  bool clientsMode = true;
+  String documentType = 'all';
+  List<ClientDelivery> _deliveries = [];
+  List<ClientDelivery> get deliveries => List.unmodifiable(_deliveries);
+  int _offset = 0;
+  bool get isEmpty => clientsMode ? _deliveries.isEmpty : _documents.isEmpty;
+
+  Future<void> setClientsMode(bool value) async {
+    if (clientsMode == value) return;
+    clientsMode = value;
+    await refresh();
+  }
+
+  Future<void> setDocumentType(String value) async {
+    if (documentType == value) return;
+    documentType = value;
+    await refresh();
+  }
+
   late DateTimeRange _dateRange;
   DateTimeRange get dateRange => _dateRange;
   String _search = '';
@@ -29,7 +48,7 @@ class DeliveryHistoryProvider extends SafeChangeNotifier {
   bool get loaded => _loaded;
   String? _error;
   String? get error => _error;
-  bool get hasMore => _documents.length < _total;
+  bool get hasMore => _offset < _total;
   int _generation = 0;
 
   DateTimeRange _defaultRange() {
@@ -64,16 +83,12 @@ class DeliveryHistoryProvider extends SafeChangeNotifier {
     await refresh();
   }
 
-  Future<void> resetFilters() async {
-    _dateRange = _defaultRange();
-    _search = '';
-    _includeCancelled = false;
-    await refresh();
-  }
-
   Future<void> refresh() async {
     _generation++;
     _documents = [];
+    _deliveries = [];
+    _offset = 0;
+    _loaded = false;
     _total = 0;
     await _fetch(append: false);
   }
@@ -89,17 +104,38 @@ class DeliveryHistoryProvider extends SafeChangeNotifier {
     _error = null;
     notifyListeners();
     try {
-      final page = await _repository.getHistory(
-        dateFrom: _dateRange.start,
-        dateTo: _dateRange.end,
-        search: _search,
-        includeCancelled: _includeCancelled,
-        offset: append ? _documents.length : 0,
-        limit: pageSize,
-      );
-      if (generation != _generation) return;
-      _documents = append ? [..._documents, ...page.documents] : page.documents;
-      _total = page.total;
+      if (clientsMode) {
+        final page = await _repository.getClientHistory(
+          dateFrom: _dateRange.start,
+          dateTo: _dateRange.end,
+          search: _search,
+          offset: append ? _offset : 0,
+          limit: pageSize,
+        );
+        if (generation != _generation) return;
+        _offset = (append ? _offset : 0) + page.deliveries.length;
+        _deliveries = {
+          for (final point in [..._deliveries, ...page.deliveries])
+            point.pointId: point,
+        }.values.toList();
+        _total = page.total;
+      } else {
+        final page = await _repository.getHistory(
+          dateFrom: _dateRange.start,
+          dateTo: _dateRange.end,
+          search: '',
+          includeCancelled: _includeCancelled,
+          documentType: documentType,
+          offset: append ? _offset : 0,
+          limit: pageSize,
+        );
+        if (generation != _generation) return;
+        _offset = (append ? _offset : 0) + page.documents.length;
+        _documents = {
+          for (final doc in [..._documents, ...page.documents]) doc.id: doc,
+        }.values.toList();
+        _total = page.total;
+      }
       _loaded = true;
     } catch (_) {
       if (generation != _generation) return;

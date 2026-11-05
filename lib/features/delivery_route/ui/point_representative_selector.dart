@@ -38,7 +38,7 @@ class _PointRepresentativeSelectorState
   @override
   void initState() {
     super.initState();
-    _wasEditable = widget.provider.canEdit;
+    _wasEditable = (widget.provider.canEdit && widget.point.pointId == null);
     if (_wasEditable || widget.point.salesRepresentativeId != null) {
       _load();
     } else {
@@ -49,7 +49,7 @@ class _PointRepresentativeSelectorState
   @override
   void didUpdateWidget(covariant PointRepresentativeSelector oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final editable = widget.provider.canEdit;
+    final editable = (widget.provider.canEdit && widget.point.pointId == null);
     if ((editable && !_wasEditable) ||
         widget.point.salesRepresentativeId !=
             oldWidget.point.salesRepresentativeId) {
@@ -86,7 +86,11 @@ class _PointRepresentativeSelectorState
   }
 
   Future<void> _select(ClientDirectoryEntry? entry) async {
-    if (entry == null || _busy || !widget.provider.canEdit) return;
+    if (entry == null ||
+        _busy ||
+        !(widget.provider.canEdit && widget.point.pointId == null)) {
+      return;
+    }
     setState(() {
       _busy = true;
       _error = null;
@@ -100,13 +104,20 @@ class _PointRepresentativeSelectorState
           content: '«${entry.name}» снова станет доступен.',
           confirmText: 'Активировать и выбрать',
         );
-        if (!confirmed || !mounted || !widget.provider.canEdit) return;
+        if (!confirmed ||
+            !mounted ||
+            !(widget.provider.canEdit && widget.point.pointId == null)) {
+          return;
+        }
         final active = await context
             .read<SalesRepresentativeApiRepository>()
             .update(entry.id, {'isActive': true});
         selected = ClientDirectoryEntry(active.id, active.name);
       }
-      if (!mounted || !widget.provider.canEdit) return;
+      if (!mounted ||
+          !(widget.provider.canEdit && widget.point.pointId == null)) {
+        return;
+      }
       await widget.provider.selectPointRepresentative(
         widget.point.clientId!,
         selected,
@@ -131,7 +142,9 @@ class _PointRepresentativeSelectorState
   }
 
   Future<void> _edit({String? id}) async {
-    if (_busy || !widget.provider.canEdit) return;
+    if (_busy || !(widget.provider.canEdit && widget.point.pointId == null)) {
+      return;
+    }
     setState(() => _busy = true);
     ApiSalesRepresentative? saved;
     ApiSalesRepresentative? openAfter;
@@ -188,14 +201,19 @@ class _PointRepresentativeSelectorState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         AppDropdown<ClientDirectoryEntry>(
-          isLoading: widget.provider.canEdit && (_loading || _busy),
+          isLoading:
+              (widget.provider.canEdit && widget.point.pointId == null) &&
+              (_loading || _busy),
           key: ValueKey('rep-$_version-${point.salesRepresentativeId}'),
           label: 'Торговый представитель',
           items: visible,
           value: selectedVisible ? selected : null,
           hint: hint,
           enabled:
-              !_busy && !_loading && _error == null && widget.provider.canEdit,
+              !_busy &&
+              !_loading &&
+              _error == null &&
+              (widget.provider.canEdit && widget.point.pointId == null),
           showAdd: true,
           showEdit: true,
           editBeforeAdd: true,
@@ -212,7 +230,8 @@ class _PointRepresentativeSelectorState
               ? null
               : () => _edit(id: point.salesRepresentativeId),
         ),
-        if (widget.provider.canEdit && _error != null) ...[
+        if ((widget.provider.canEdit && widget.point.pointId == null) &&
+            _error != null) ...[
           Text(
             _error!,
             style: TextStyle(color: Theme.of(context).colorScheme.error),

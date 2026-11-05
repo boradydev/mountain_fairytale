@@ -339,6 +339,7 @@ class _DayDocumentsDialogState extends State<DayDocumentsDialog> {
         ? 'Дата создания неизвестна'
         : DateFormat.yMd(locale).add_Hm().format(document.createdAt!);
     final details = <(String, String)>[
+      ('Плановая дата:', DateFormat.yMd(locale).format(document.date)),
       ('Создан:', '$createdLabel${document.isActive ? '' : ' — Отменён'}'),
     ];
     final points = switch (document) {

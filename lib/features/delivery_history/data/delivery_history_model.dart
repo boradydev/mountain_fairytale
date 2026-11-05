@@ -1,11 +1,17 @@
 class HistoryItem {
+  final String? itemId;
+  final String productId;
+  final bool isFreePrice;
   final String driverNote;
   final String productName;
   final int quantity;
   final double price;
   final double amount;
   HistoryItem.fromJson(Map<String, dynamic> json)
-    : driverNote = json['driverNote'] as String? ?? '',
+    : itemId = json['itemId'] as String?,
+      productId = json['productId'] as String? ?? '',
+      isFreePrice = json['isFreePrice'] as bool? ?? false,
+      driverNote = json['driverNote'] as String? ?? '',
       productName = json['productName'] as String,
       quantity = json['quantity'] as int,
       price = double.parse('${json['price']}'),
@@ -44,6 +50,7 @@ class HistoryDocument {
   final String id;
   final bool isPickup;
   final DateTime plannedDate;
+  final DateTime? createdAt;
   final bool isActive;
   final String? driverName;
   final String? carModelAndNumber;
@@ -55,6 +62,7 @@ class HistoryDocument {
     : id = json['deliveryDocumentId'] as String,
       isPickup = json['documentType'] == 'pickupSheet',
       plannedDate = DateTime.parse(json['plannedDate'] as String),
+      createdAt = DateTime.tryParse('${json['createdAt']}'),
       isActive = json['isActive'] as bool,
       driverName = json['driverName'] as String?,
       carModelAndNumber = json['carModelAndNumber'] as String?,
@@ -82,4 +90,40 @@ class DeliveryHistoryPage {
             )
             .toList(growable: false),
       );
+}
+
+class ClientDelivery extends HistoryPurchase {
+  final HistoryDocument document;
+  final String? salesRepresentativeId;
+  final String? salesRepresentativeName;
+  final String clientAddress;
+  final String deliveryDetails;
+  // ignore: use_super_parameters
+  ClientDelivery.fromJson(Map<String, dynamic> json)
+    : document = HistoryDocument.fromJson({
+        ...json,
+        'documentType': 'deliveryRouteSheet',
+        'isActive': true,
+        'clientsCount': 0,
+        'purchasesCount': 0,
+        'totalAmount': json['documentTotalAmount'],
+        'matchedClients': [],
+      }),
+      salesRepresentativeId = json['salesRepresentativeId'] as String?,
+      salesRepresentativeName = json['salesRepresentativeName'] as String?,
+      clientAddress = json['clientAddress'] as String,
+      deliveryDetails = json['deliveryDetails'] as String,
+      super.fromJson(json);
+}
+
+class ClientDeliveryHistoryPage {
+  final List<ClientDelivery> deliveries;
+  final int total;
+  ClientDeliveryHistoryPage.fromJson(Map<String, dynamic> json)
+    : total = json['total'] as int,
+      deliveries = ((json['data'] as Map)['deliveries'] as List)
+          .map(
+            (item) => ClientDelivery.fromJson(Map<String, dynamic>.from(item)),
+          )
+          .toList(growable: false);
 }

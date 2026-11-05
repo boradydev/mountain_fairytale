@@ -6,11 +6,13 @@ Future<DateTimeRange?> showAppDateRangePicker(
   DateTimeRange? initialDateRange,
   required String helpText,
   int? maxRangeMonths,
+  bool showReset = false,
 }) => showDialog<DateTimeRange>(
   context: context,
   builder: (_) => AppDateRangeDialog(
     initialDateRange: initialDateRange,
     title: helpText,
     maxRangeMonths: maxRangeMonths,
+    showReset: showReset,
   ),
 );

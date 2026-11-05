@@ -8,5 +8,13 @@ abstract interface class DeliveryHistoryRepository {
     required bool includeCancelled,
     required int offset,
     required int limit,
+    String documentType = 'all',
+  });
+  Future<ClientDeliveryHistoryPage> getClientHistory({
+    required DateTime dateFrom,
+    required DateTime dateTo,
+    required String search,
+    required int offset,
+    required int limit,
   });
 }

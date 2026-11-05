@@ -34,7 +34,7 @@ class RoutePoint {
   final String? documentPaymentMethodId;
   @JsonKey(name: 'paymentMethodName')
   final String? documentPaymentMethodName;
-  @JsonKey(name: 'salesRepresentativeName', defaultValue: 'Нет представителя')
+  @JsonKey(name: 'salesRepresentativeName', defaultValue: 'Не указан')
   final String salesRepresentative; // Торговый представитель
 
   // Список товаров/услуг для этой точки

@@ -15,6 +15,7 @@ class ApiDeliveryHistoryRepository implements DeliveryHistoryRepository {
     required bool includeCancelled,
     required int offset,
     required int limit,
+    String documentType = 'all',
   }) async {
     final format = DateFormat('yyyy-MM-dd');
     final response = await _client.get(
@@ -23,7 +24,8 @@ class ApiDeliveryHistoryRepository implements DeliveryHistoryRepository {
         queryParameters: {
           'date_from': format.format(dateFrom),
           'date_to': format.format(dateTo),
-          'search': search,
+          if (search.isNotEmpty) 'search': search,
+          'document_type': documentType,
           'include_cancelled': '$includeCancelled',
           'offset': '$offset',
           'limit': '$limit',
@@ -31,5 +33,30 @@ class ApiDeliveryHistoryRepository implements DeliveryHistoryRepository {
       ).toString(),
     );
     return DeliveryHistoryPage.fromJson(response);
+  }
+
+  @override
+  Future<ClientDeliveryHistoryPage> getClientHistory({
+    required DateTime dateFrom,
+    required DateTime dateTo,
+    required String search,
+    required int offset,
+    required int limit,
+  }) async {
+    final format = DateFormat('yyyy-MM-dd');
+    return ClientDeliveryHistoryPage.fromJson(
+      await _client.get(
+        Uri(
+          path: '/protected/client-delivery-history',
+          queryParameters: {
+            'date_from': format.format(dateFrom),
+            'date_to': format.format(dateTo),
+            'search': search,
+            'offset': '$offset',
+            'limit': '$limit',
+          },
+        ).toString(),
+      ),
+    );
   }
 }

@@ -25,7 +25,7 @@ RoutePoint _$RoutePointFromJson(Map<String, dynamic> json) => RoutePoint(
   documentPaymentMethodId: json['paymentMethodId'] as String?,
   documentPaymentMethodName: json['paymentMethodName'] as String?,
   salesRepresentative:
-      json['salesRepresentativeName'] as String? ?? 'Нет представителя',
+      json['salesRepresentativeName'] as String? ?? 'Не указан',
   items: (json['items'] as List<dynamic>)
       .map((e) => DeliveryTaskItem.fromJson(e as Map<String, dynamic>))
       .toList(),

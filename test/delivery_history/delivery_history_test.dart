@@ -1,3 +1,10 @@
+import 'package:flutter/services.dart';
+
+import 'dart:io';
+import 'dart:ui' as ui;
+
+import 'package:flutter/rendering.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -7,24 +14,91 @@ import 'package:mountain_fairytale/features/delivery_history/data/delivery_histo
 import 'package:mountain_fairytale/features/delivery_history/delivery_history_abcs.dart';
 import 'package:mountain_fairytale/features/delivery_history/ui/delivery_history_provider.dart';
 import 'package:mountain_fairytale/features/delivery_history/ui/delivery_history_screen.dart';
+import 'package:mountain_fairytale/features/delivery_history/ui/client_delivery_card.dart';
 import 'package:mountain_fairytale/features/delivery_history/ui/history_document_card.dart';
 import 'package:mountain_fairytale/shared/widgets/app_date_range_dialog.dart';
-import 'package:mountain_fairytale/shared/widgets/labeled_checkbox_toggle.dart';
 import 'package:provider/provider.dart';
 
+Map<String, dynamic> _json(String id) => {
+  'pointId': id,
+  'clientId': 'client',
+  'clientName': 'Исторический клиент',
+  'address': 'Сохранённый адрес',
+  'clientAddress': 'Сохранённый адрес',
+  'deliveryDetails': '',
+  'phone': '123',
+  'memo': 'Задание',
+  'isDelivered': false,
+  'nonDeliveryReason': 'Закрыто',
+  'paymentMethodName': 'Наличные',
+  'salesRepresentativeName': 'Исторический представитель',
+  'deliveryDocumentId': 'route-$id',
+  'plannedDate': '2026-11-03',
+  'createdAt': '2026-11-02T12:30:00',
+  'driverName': 'Водитель',
+  'carModelAndNumber': 'Машина',
+  'documentTotalAmount': '900.50',
+  'totalAmount': '200.00',
+  'items': [
+    {
+      'productId': 'product',
+      'itemId': 'item',
+      'productName': 'Исторический товар',
+      'quantity': 2,
+      'price': '100.00',
+      'amount': '200.00',
+      'isFreePrice': true,
+      'driverNote': 'Уточнение',
+    },
+  ],
+};
+ClientDeliveryHistoryPage _page(List<String> ids, int total) =>
+    ClientDeliveryHistoryPage.fromJson({
+      'total': total,
+      'data': {'deliveries': ids.map(_json).toList()},
+    });
+
 class _Request {
-  final DateTime from;
-  final DateTime to;
-  final String search;
-  final bool cancelled;
   final int offset;
-  final Completer<DeliveryHistoryPage> result = Completer();
-  _Request(this.from, this.to, this.search, this.cancelled, this.offset);
+  final int limit;
+  final String search;
+  final Completer<ClientDeliveryHistoryPage> result = Completer();
+  _Request(this.offset, this.limit, this.search);
 }
 
 class _Repository implements DeliveryHistoryRepository {
-  final List<_Request> requests = [];
+  final requests = <_Request>[];
   bool automatic = false;
+  int rows = 0;
+  final documentOffsets = <int>[];
+  final documentLimits = <int>[];
+  String? documentType;
+  String? documentSearch;
+  bool? cancelled;
+  @override
+  Future<ClientDeliveryHistoryPage> getClientHistory({
+    required DateTime dateFrom,
+    required DateTime dateTo,
+    required String search,
+    required int offset,
+    required int limit,
+  }) {
+    final request = _Request(offset, limit, search);
+    requests.add(request);
+    if (automatic) {
+      request.result.complete(
+        _page(
+          List.generate(
+            (rows - offset).clamp(0, limit),
+            (i) => '${offset + i}',
+          ),
+          rows,
+        ),
+      );
+    }
+    return request.result.future;
+  }
+
   @override
   Future<DeliveryHistoryPage> getHistory({
     required DateTime dateFrom,
@@ -33,243 +107,304 @@ class _Repository implements DeliveryHistoryRepository {
     required bool includeCancelled,
     required int offset,
     required int limit,
-  }) {
-    final request = _Request(
-      dateFrom,
-      dateTo,
-      search,
-      includeCancelled,
-      offset,
+    String documentType = 'all',
+  }) async {
+    this.documentType = documentType;
+    documentSearch = search;
+    cancelled = includeCancelled;
+    documentOffsets.add(offset);
+    documentLimits.add(limit);
+    return DeliveryHistoryPage(
+      documents: List.generate(
+        (rows - offset).clamp(0, limit),
+        (i) => ClientDelivery.fromJson(_json('${offset + i}')).document,
+      ),
+      total: rows,
     );
-    requests.add(request);
-    if (automatic) {
-      request.result.complete(
-        const DeliveryHistoryPage(documents: [], total: 0),
-      );
-    }
-    return request.result.future;
   }
 }
 
-HistoryDocument _document(String id, {bool pickup = false}) =>
-    HistoryDocument.fromJson({
-      'deliveryDocumentId': id,
-      'documentType': pickup ? 'pickupSheet' : 'deliveryRouteSheet',
-      'plannedDate': '2026-11-03',
-      'isActive': true,
-      'driverName': 'Водитель Иван',
-      'carModelAndNumber': 'ГАЗ А123АА',
-      'clientsCount': 4,
-      'purchasesCount': 3,
-      'totalAmount': '900.50',
-      'matchedClients': [
-        {
-          'pointId': 'purchase-$id',
-          'clientId': 'client',
-          'clientName': 'Магазин Север',
-          'address': 'Длинный адрес клиента, улица Северная, дом 123',
-          'phone': '+7 (999) 123-45-67',
-          'paymentMethodName': 'Наличные',
-          'totalAmount': '200.00',
-          'items': [
-            {
-              'productName': 'Историческое название товара',
-              'quantity': 2,
-              'price': '100.00',
-              'amount': '200.00',
-            },
-          ],
-        },
-      ],
-    });
-
-Widget _app(Widget child) => MaterialApp(
-  locale: const Locale('ru'),
-  supportedLocales: const [Locale('ru')],
-  localizationsDelegates: GlobalMaterialLocalizations.delegates,
-  home: Scaffold(body: child),
+final _captureKey = GlobalKey();
+Widget _app(Widget child) => RepaintBoundary(
+  key: _captureKey,
+  child: MaterialApp(
+    locale: const Locale('ru'),
+    supportedLocales: const [Locale('ru')],
+    localizationsDelegates: GlobalMaterialLocalizations.delegates,
+    debugShowCheckedModeBanner: false,
+    theme: ThemeData(fontFamily: 'NotoSans'),
+    home: Scaffold(body: child),
+  ),
 );
-
 void main() {
+  setUpAll(() async {
+    final loader = FontLoader('NotoSans')
+      ..addFont(rootBundle.load('assets/fonts/NotoSans-Regular.ttf'));
+    await loader.load();
+  });
   test(
-    'last 30 calendar days, stale responses, pagination and reset',
+    '50 rows, stale answers, deduplication, retry and independent filters',
     () async {
       final repo = _Repository();
       final provider = DeliveryHistoryProvider(
         repo,
-        now: () => DateTime(2026, 11, 3, 23),
+        now: () => DateTime(2026, 11, 3),
       );
       addTearDown(provider.dispose);
       expect(provider.dateRange.start, DateTime(2026, 10, 5));
-      expect(provider.dateRange.end, DateTime(2026, 11, 3));
       final old = provider.refresh();
-      final current = provider.setSearch('Север');
-      repo.requests[1].result.complete(
-        DeliveryHistoryPage(documents: [_document('new')], total: 2),
-      );
+      final current = provider.setSearch('Текущий клиент');
+      expect(repo.requests.last.limit, 50);
+      repo.requests[1].result.complete(_page(['new'], 3));
       await current;
-      repo.requests[0].result.complete(
-        DeliveryHistoryPage(documents: [_document('old')], total: 100),
-      );
+      repo.requests[0].result.complete(_page(['stale'], 100));
       await old;
-      expect(provider.documents.single.id, 'new');
+      expect(provider.deliveries.single.pointId, 'new');
       final next = provider.loadMore();
+      await provider.loadMore();
+      expect(repo.requests.length, 3);
       expect(repo.requests.last.offset, 1);
-      expect(repo.requests.last.search, 'Север');
-      repo.requests.last.result.complete(
-        DeliveryHistoryPage(documents: [_document('next')], total: 2),
-      );
+      repo.requests.last.result.completeError(Exception('offline'));
       await next;
-      expect(provider.documents.length, 2);
+      expect(provider.error, isNotNull);
+      expect(provider.deliveries.length, 1);
+      final retry = provider.loadMore();
+      expect(repo.requests.last.offset, 1);
+      repo.requests.last.result.complete(_page(['new', 'second'], 3));
+      await retry;
+      expect(provider.deliveries.length, 2);
       expect(provider.hasMore, isFalse);
-      repo.automatic = true;
+      await provider.setClientsMode(false);
       await provider.setIncludeCancelled(true);
-      expect(repo.requests.last.cancelled, isTrue);
-      await provider.resetFilters();
-      expect(repo.requests.last.search, '');
-      expect(repo.requests.last.cancelled, isFalse);
-      expect(repo.requests.last.from, DateTime(2026, 10, 5));
+      await provider.setDocumentType('pickup_sheet');
+      expect(repo.documentType, 'pickup_sheet');
+      expect(repo.documentSearch, '');
+      expect(repo.cancelled, true);
+      repo.automatic = true;
+      await provider.setClientsMode(true);
+      expect(provider.search, 'Текущий клиент');
+      expect(provider.documentType, 'pickup_sheet');
+      expect(provider.includeCancelled, true);
+      expect(provider.dateRange.start, DateTime(2026, 10, 5));
     },
   );
-
-  test(
-    'year limit includes leap day and rejects longer ranges before request',
-    () async {
-      final repo = _Repository()..automatic = true;
-      final provider = DeliveryHistoryProvider(repo);
-      addTearDown(provider.dispose);
-      await provider.setDateRange(
-        DateTimeRange(start: DateTime(2024, 2, 29), end: DateTime(2025, 2, 28)),
-      );
-      expect(repo.requests.length, 1);
-      await expectLater(
-        provider.setDateRange(
-          DateTimeRange(
-            start: DateTime(2024, 2, 29),
-            end: DateTime(2025, 3, 1),
-          ),
-        ),
-        throwsArgumentError,
-      );
-      expect(repo.requests.length, 1);
-    },
-  );
-
-  test('failed page can be retried without losing previous results', () async {
-    final repo = _Repository();
+  test('calendar year includes leap day and rejects longer ranges', () async {
+    final repo = _Repository()..automatic = true;
     final provider = DeliveryHistoryProvider(repo);
     addTearDown(provider.dispose);
-    final first = provider.refresh();
-    repo.requests.last.result.complete(
-      DeliveryHistoryPage(documents: [_document('first')], total: 2),
+    await provider.setDateRange(
+      DateTimeRange(start: DateTime(2024, 2, 29), end: DateTime(2025, 2, 28)),
     );
-    await first;
-    final next = provider.loadMore();
-    repo.requests.last.result.completeError(Exception('offline'));
-    await next;
-    expect(provider.error, isNotNull);
-    expect(provider.documents.single.id, 'first');
-    final retry = provider.loadMore();
-    expect(repo.requests.last.offset, 1);
-    repo.requests.last.result.complete(
-      DeliveryHistoryPage(documents: [_document('second')], total: 2),
+    await expectLater(
+      provider.setDateRange(
+        DateTimeRange(start: DateTime(2024, 2, 29), end: DateTime(2025, 3, 1)),
+      ),
+      throwsArgumentError,
     );
-    await retry;
-    expect(provider.error, isNull);
-    expect(provider.documents.length, 2);
+    expect(repo.requests.length, 1);
   });
-
+  for (final width in [390.0, 1100.0]) {
+    testWidgets(
+      'client expands independently and route stays compact at $width',
+      (tester) async {
+        tester.view.physicalSize = Size(width, 900);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        var opened = 0;
+        await tester.pumpWidget(
+          _app(
+            ListView(
+              children: [
+                ClientDeliveryCard(
+                  delivery: ClientDelivery.fromJson(_json('one')),
+                  onOpen: () => opened++,
+                ),
+              ],
+            ),
+          ),
+        );
+        final routeText = find.text('Маршрут: 900.50 ₽');
+        final before = tester.getTopLeft(routeText);
+        await tester.tap(find.byType(ExpansionTile));
+        await tester.pumpAndSettle();
+        expect(opened, 0);
+        expect(tester.getTopLeft(routeText), before);
+        final qaDir = Platform.environment['DELIVERY_HISTORY_QA_DIR'];
+        if (qaDir != null) {
+          await tester.runAsync(() async {
+            final boundary =
+                _captureKey.currentContext!.findRenderObject()
+                    as RenderRepaintBoundary;
+            final image = await boundary.toImage();
+            final bytes = await image.toByteData(
+              format: ui.ImageByteFormat.png,
+            );
+            await File('$qaDir/client-history-$width.png')
+                .writeAsBytes(bytes!.buffer.asUint8List());
+            image.dispose();
+          });
+        }
+        expect(find.text('Исторический товар'), findsOneWidget);
+        expect(
+          find.text('Представитель: Исторический представитель'),
+          findsOneWidget,
+        );
+        expect(find.byType(DropdownButtonFormField<String>), findsNothing);
+        expect(tester.takeException(), isNull);
+        await tester.tap(routeText);
+        expect(opened, 1);
+      },
+    );
+  }
+  for (final clientsMode in [true, false]) {
+    testWidgets(
+      'automatically loads long history in pages of 50, clients=$clientsMode',
+      (tester) async {
+        final repo = _Repository()
+          ..automatic = true
+          ..rows = 120;
+        final provider = DeliveryHistoryProvider(repo);
+        addTearDown(provider.dispose);
+        if (!clientsMode) await provider.setClientsMode(false);
+        repo.documentOffsets.clear();
+        repo.documentLimits.clear();
+        await tester.pumpWidget(
+          _app(
+            ChangeNotifierProvider.value(
+              value: provider,
+              child: const DeliveryHistoryScreen(),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(
+          clientsMode ? provider.deliveries.length : provider.documents.length,
+          50,
+        );
+        for (var i = 0; i < 45; i++) {
+          await tester.drag(find.byType(ListView), const Offset(0, -900));
+          await tester.pumpAndSettle();
+          if (!provider.hasMore) {
+            break;
+          }
+        }
+        expect(
+          clientsMode ? provider.deliveries.length : provider.documents.length,
+          120,
+        );
+        expect(
+          clientsMode
+              ? repo.requests.map((r) => r.offset)
+              : repo.documentOffsets,
+          [0, 50, 100],
+        );
+        expect(
+          clientsMode ? repo.requests.map((r) => r.limit) : repo.documentLimits,
+          everyElement(50),
+        );
+        expect(find.text('Показать ещё'), findsNothing);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
   testWidgets(
-    'purchase opens a detail dialog independently from document on narrow screen',
+    'toolbar fits a narrow window with enlarged text and stable filter height',
     (tester) async {
-      tester.view.physicalSize = const Size(390, 844);
+      tester.view.physicalSize = const Size(390, 1200);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      var opened = 0;
+      final repo = _Repository()..automatic = true;
+      final provider = DeliveryHistoryProvider(repo);
+      addTearDown(provider.dispose);
       await tester.pumpWidget(
         _app(
-          ListView(
-            children: [
-              HistoryDocumentCard(
-                document: _document('one'),
-                onOpen: () => opened++,
-              ),
-            ],
+          MediaQuery(
+            data: const MediaQueryData(textScaler: TextScaler.linear(1.8)),
+            child: ChangeNotifierProvider.value(
+              value: provider,
+              child: const DeliveryHistoryScreen(),
+            ),
           ),
         ),
       );
-      expect(find.text('Клиентов: 4'), findsOneWidget);
-      expect(find.text('Водитель: Водитель Иван'), findsOneWidget);
-      await tester.tap(find.text('Подробнее о покупке'));
       await tester.pumpAndSettle();
-      expect(opened, 0);
-      expect(find.byType(AlertDialog), findsOneWidget);
-      expect(find.text('Способ оплаты: Наличные'), findsOneWidget);
-      expect(find.text('Историческое название товара'), findsOneWidget);
+      final top = tester.getTopLeft(find.byType(ListView));
+      await provider.setClientsMode(false);
+      await tester.pumpAndSettle();
+      expect(tester.getTopLeft(find.byType(ListView)), top);
       expect(tester.takeException(), isNull);
-      await tester.tap(find.text('Закрыть'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Доставка · 03.11.2026'));
-      expect(opened, 1);
     },
   );
-
-  testWidgets('pickup card uses purchases and hides vehicle and driver', (
+  testWidgets('document shows both dates and no matched clients', (
     tester,
   ) async {
+    final doc = ClientDelivery.fromJson(_json('one')).document;
     await tester.pumpWidget(
-      _app(
-        HistoryDocumentCard(
-          document: _document('pickup', pickup: true),
-          onOpen: () {},
-        ),
-      ),
+      _app(HistoryDocumentCard(document: doc, onOpen: () {})),
     );
-    expect(find.text('Покупок: 3'), findsOneWidget);
-    expect(find.textContaining('Водитель:'), findsNothing);
-    expect(find.textContaining('Машина:'), findsNothing);
+    expect(find.text('Плановая дата: 03.11.2026'), findsOneWidget);
+    expect(find.text('Создан: 02.11.2026 12:30'), findsOneWidget);
+    expect(find.text('Исторический клиент'), findsNothing);
   });
-
-  testWidgets('history reuses checkbox and period dialog with year limit', (
-    tester,
-  ) async {
-    final repo = _Repository()..automatic = true;
-    final provider = DeliveryHistoryProvider(
-      repo,
-      now: () => DateTime(2026, 11, 3),
-    );
-    addTearDown(provider.dispose);
-    await tester.pumpWidget(
-      _app(
-        ChangeNotifierProvider.value(
-          value: provider,
-          child: const DeliveryHistoryScreen(),
+  testWidgets(
+    'filters stay in place and reset remains a draft until confirmed',
+    (tester) async {
+      final repo = _Repository()..automatic = true;
+      final provider = DeliveryHistoryProvider(
+        repo,
+        now: () => DateTime(2026, 11, 3),
+      );
+      addTearDown(provider.dispose);
+      await provider.setDateRange(
+        DateTimeRange(start: DateTime(2026, 1, 1), end: DateTime(2026, 1, 31)),
+      );
+      await tester.pumpWidget(
+        _app(
+          ChangeNotifierProvider.value(
+            value: provider,
+            child: const DeliveryHistoryScreen(),
+          ),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
-    expect(find.byType(LabeledCheckboxToggle), findsOneWidget);
-    await tester.tap(find.text('05.10.2026 — 03.11.2026'));
-    await tester.pumpAndSettle();
-    expect(
-      tester
-          .widget<AppDateRangeDialog>(find.byType(AppDateRangeDialog))
-          .maxRangeMonths,
-      12,
-    );
-    await tester.enterText(
-      find.byKey(const ValueKey('period-start')),
-      '01.01.2026',
-    );
-    await tester.enterText(
-      find.byKey(const ValueKey('period-end')),
-      '01.01.2027',
-    );
-    await tester.tap(find.text('Подтвердить'));
-    await tester.pumpAndSettle();
-    expect(find.text('Период не может превышать 12 месяцев'), findsOneWidget);
-    expect(repo.requests.length, 1);
-    expect(tester.takeException(), isNull);
-  });
+      );
+      await tester.pumpAndSettle();
+      final before = tester.getTopLeft(find.byType(ListView));
+      await tester.tap(find.text('Документы'));
+      await tester.pumpAndSettle();
+      expect(tester.getTopLeft(find.byType(ListView)), before);
+      expect(find.byType(TextField), findsNothing);
+      await tester.tap(find.text('01.01.2026 — 31.01.2026'));
+      await tester.pumpAndSettle();
+      final dialog = tester.widget<AppDateRangeDialog>(
+        find.byType(AppDateRangeDialog),
+      );
+      expect(dialog.maxRangeMonths, 12);
+      expect(dialog.showReset, true);
+      await tester.enterText(
+        find.byKey(const ValueKey('period-start')),
+        '01.01.2026',
+      );
+      await tester.tap(find.text('Сбросить'));
+      await tester.pumpAndSettle();
+      expect(find.byType(AppDateRangeDialog), findsOneWidget);
+      expect(provider.dateRange.start, DateTime(2026, 1, 1));
+      await tester.tap(find.text('Отмена'));
+      await tester.pumpAndSettle();
+      expect(provider.dateRange.start, DateTime(2026, 1, 1));
+      await tester.tap(find.text('01.01.2026 — 31.01.2026'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Сбросить'));
+      await tester.pumpAndSettle();
+      expect(provider.dateRange.start, DateTime(2026, 1, 1));
+      await tester.tap(find.text('Подтвердить'));
+      await tester.pumpAndSettle();
+      final today = DateUtils.dateOnly(DateTime.now());
+      expect(
+        provider.dateRange.start,
+        DateTime(today.year, today.month, today.day - 29),
+      );
+      expect(provider.dateRange.end, today);
+    },
+  );
 }
