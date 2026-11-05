@@ -14,6 +14,9 @@ class RoutePoint {
   final String memo;
   final int position;
   final String? salesRepresentativeId;
+  // Local draft only. Server responses always restore immutable historical state.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  final bool representativeCorrectionPending;
   final String? clientId;
   @JsonKey(includeFromJson: false, includeToJson: false)
   final String? localId;
@@ -50,6 +53,9 @@ class RoutePoint {
     bool? isDelivered,
     String? nonDeliveryReason,
     String? memo,
+    String? salesRepresentativeId,
+    String? salesRepresentative,
+    bool? representativeCorrectionPending,
   }) => RoutePoint(
     pointId: pointId,
     isDelivered: isDelivered ?? this.isDelivered,
@@ -68,8 +74,10 @@ class RoutePoint {
     paymentMethod: paymentMethod,
     documentPaymentMethodId: documentPaymentMethodId,
     documentPaymentMethodName: documentPaymentMethodName,
-    salesRepresentativeId: salesRepresentativeId,
-    salesRepresentative: salesRepresentative,
+    salesRepresentativeId: salesRepresentativeId ?? this.salesRepresentativeId,
+    salesRepresentative: salesRepresentative ?? this.salesRepresentative,
+    representativeCorrectionPending:
+        representativeCorrectionPending ?? this.representativeCorrectionPending,
     items: items ?? this.items,
   );
   Map<String, dynamic> toRequestJson({
@@ -77,6 +85,8 @@ class RoutePoint {
     bool includeMemo = true,
   }) => {
     if (!creating && pointId != null) 'pointId': pointId,
+    if (!creating && pointId != null && representativeCorrectionPending)
+      'salesRepresentativeId': salesRepresentativeId,
     'clientId': clientId,
     'isDelivered': isDelivered,
     'nonDeliveryReason': nonDeliveryReason,
@@ -97,6 +107,7 @@ class RoutePoint {
     this.localId,
     this.position = 0,
     this.salesRepresentativeId,
+    this.representativeCorrectionPending = false,
     required this.clientId,
     required this.clientName,
     this.city = '',

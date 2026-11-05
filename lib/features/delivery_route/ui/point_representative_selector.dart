@@ -38,7 +38,7 @@ class _PointRepresentativeSelectorState
   @override
   void initState() {
     super.initState();
-    _wasEditable = (widget.provider.canEdit && widget.point.pointId == null);
+    _wasEditable = widget.provider.canSelectPointRepresentative(widget.point);
     if (_wasEditable || widget.point.salesRepresentativeId != null) {
       _load();
     } else {
@@ -49,7 +49,7 @@ class _PointRepresentativeSelectorState
   @override
   void didUpdateWidget(covariant PointRepresentativeSelector oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final editable = (widget.provider.canEdit && widget.point.pointId == null);
+    final editable = widget.provider.canSelectPointRepresentative(widget.point);
     if ((editable && !_wasEditable) ||
         widget.point.salesRepresentativeId !=
             oldWidget.point.salesRepresentativeId) {
@@ -88,7 +88,7 @@ class _PointRepresentativeSelectorState
   Future<void> _select(ClientDirectoryEntry? entry) async {
     if (entry == null ||
         _busy ||
-        !(widget.provider.canEdit && widget.point.pointId == null)) {
+        !widget.provider.canSelectPointRepresentative(widget.point)) {
       return;
     }
     setState(() {
@@ -106,7 +106,7 @@ class _PointRepresentativeSelectorState
         );
         if (!confirmed ||
             !mounted ||
-            !(widget.provider.canEdit && widget.point.pointId == null)) {
+            !widget.provider.canSelectPointRepresentative(widget.point)) {
           return;
         }
         final active = await context
@@ -115,7 +115,7 @@ class _PointRepresentativeSelectorState
         selected = ClientDirectoryEntry(active.id, active.name);
       }
       if (!mounted ||
-          !(widget.provider.canEdit && widget.point.pointId == null)) {
+          !widget.provider.canSelectPointRepresentative(widget.point)) {
         return;
       }
       await widget.provider.selectPointRepresentative(
@@ -142,7 +142,7 @@ class _PointRepresentativeSelectorState
   }
 
   Future<void> _edit({String? id}) async {
-    if (_busy || !(widget.provider.canEdit && widget.point.pointId == null)) {
+    if (_busy || !widget.provider.canSelectPointRepresentative(widget.point)) {
       return;
     }
     setState(() => _busy = true);
@@ -192,18 +192,16 @@ class _PointRepresentativeSelectorState
     final name = point.salesRepresentative.trim().isEmpty
         ? selected?.name ?? 'Не указан'
         : point.salesRepresentative;
-    final hint = point.salesRepresentativeId == null
+    final hint = point.salesRepresentativeId == null || _loading
         ? name
         : selected != null
         ? '$name${selected.isActive ? '' : ' — Неактивен'}'
-        : '$name — ${_loading ? 'Статус уточняется' : 'Статус неизвестен'}';
+        : '$name — Статус неизвестен';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         AppDropdown<ClientDirectoryEntry>(
-          isLoading:
-              (widget.provider.canEdit && widget.point.pointId == null) &&
-              (_loading || _busy),
+          isLoading: _loading || _busy,
           key: ValueKey('rep-$_version-${point.salesRepresentativeId}'),
           label: 'Торговый представитель',
           items: visible,
@@ -213,7 +211,7 @@ class _PointRepresentativeSelectorState
               !_busy &&
               !_loading &&
               _error == null &&
-              (widget.provider.canEdit && widget.point.pointId == null),
+              widget.provider.canSelectPointRepresentative(widget.point),
           showAdd: true,
           showEdit: true,
           editBeforeAdd: true,
@@ -230,7 +228,7 @@ class _PointRepresentativeSelectorState
               ? null
               : () => _edit(id: point.salesRepresentativeId),
         ),
-        if ((widget.provider.canEdit && widget.point.pointId == null) &&
+        if (widget.provider.canSelectPointRepresentative(widget.point) &&
             _error != null) ...[
           Text(
             _error!,

@@ -67,12 +67,16 @@ class RepresentativeOrders extends OrderPointsProvider {
 }
 
 void main() {
-  test('mixed saved and new points preserve snapshots and only new assignment can change', () async {
+  test('assigned saved and new points preserve snapshots and only new assignment can change', () async {
     final repo = RepresentativeClients();
     final orders = RepresentativeOrders(repo)
       ..isEditing = true
       ..points = [
-        point,
+        RoutePoint.fromJson({
+          ...point.toJson(),
+          'salesRepresentativeId': 'historical-rep',
+          'salesRepresentativeName': 'Исторический представитель',
+        }),
         RoutePoint.fromJson({
           ...point.toJson(),
           'pointId': null,

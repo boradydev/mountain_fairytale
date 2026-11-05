@@ -706,6 +706,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     localId: point.localId,
     position: point.position,
     salesRepresentativeId: point.salesRepresentativeId,
+    representativeCorrectionPending: point.representativeCorrectionPending,
     clientId: point.clientId,
     clientName: point.clientName,
     city: point.city,
@@ -784,28 +785,46 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     }
   }
 
+  bool canSelectPointRepresentative(RoutePoint point) =>
+      canEdit &&
+      !isPickup &&
+      point.clientId != null &&
+      (point.pointId == null ||
+          point.salesRepresentativeId == null ||
+          point.representativeCorrectionPending);
+
   Future<bool> selectPointRepresentative(
     String clientId,
     ClientDirectoryEntry representative,
     ClientsProvider clientsProvider,
   ) async {
-    if (!canEdit ||
-        isPickup ||
-        !representative.isActive ||
-        !points.any(
-          (point) => point.clientId == clientId && point.pointId == null,
-        )) {
+    final index = points.indexWhere((point) => point.clientId == clientId);
+    if (index == -1 ||
+        !canSelectPointRepresentative(points[index]) ||
+        !representative.isActive) {
       return false;
+    }
+    final point = points[index];
+    if (point.pointId != null) {
+      points[index] = point.copyWith(
+        salesRepresentativeId: representative.id,
+        salesRepresentative: representative.name,
+        representativeCorrectionPending: true,
+      );
+      notifyListeners();
+      return true;
     }
     final client = await clientRepo.updateClient(
       clientId,
       UpdateClientRequest(salesRepresentativeId: representative.id),
     );
     clientsProvider.syncUpdatedClient(client);
-    final index = points.indexWhere((point) => point.clientId == clientId);
-    if (index != -1 && points[index].pointId == null) {
-      final point = points[index];
-      points[index] = RoutePoint(
+    final updatedIndex = points.indexWhere(
+      (point) => point.clientId == clientId,
+    );
+    if (updatedIndex != -1 && points[updatedIndex].pointId == null) {
+      final point = points[updatedIndex];
+      points[updatedIndex] = RoutePoint(
         pointId: point.pointId,
         isDelivered: point.isDelivered,
         nonDeliveryReason: point.nonDeliveryReason,
@@ -1022,6 +1041,8 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       localId: currentPoint.localId,
       position: currentPoint.position,
       salesRepresentativeId: currentPoint.salesRepresentativeId,
+      representativeCorrectionPending:
+          currentPoint.representativeCorrectionPending,
       clientId: currentPoint.clientId,
       clientName: currentPoint.clientName,
       city: currentPoint.city,
@@ -1071,6 +1092,8 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       localId: currentPoint.localId,
       position: currentPoint.position,
       salesRepresentativeId: currentPoint.salesRepresentativeId,
+      representativeCorrectionPending:
+          currentPoint.representativeCorrectionPending,
       clientId: currentPoint.clientId,
       clientName: currentPoint.clientName,
       city: currentPoint.city,
