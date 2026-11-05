@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mountain_fairytale/features/payment_methods/data/payment_method_model.dart';
 import 'package:mountain_fairytale/features/pickup/data/pickup_model.dart';
 import 'package:mountain_fairytale/features/pickup/pickup_abcs.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/order_points_provider.dart';
@@ -17,6 +21,33 @@ class PickupConstructorProvider extends OrderPointsProvider {
   @override
   bool get isPickup => true;
   int _purchaseSequence = 0;
+  static const lastPaymentMethodKey = 'pickup_last_payment_method_id';
+  String? _lastPaymentMethodId;
+
+  @override
+  Future<void> loadOrderDirectories() async {
+    final prefs = await SharedPreferences.getInstance();
+    _lastPaymentMethodId = prefs.getString(lastPaymentMethodKey);
+    await super.loadOrderDirectories();
+    if (!paymentMethods.any(
+      (method) => method.id == _lastPaymentMethodId && method.isActive,
+    )) {
+      _lastPaymentMethodId = null;
+    }
+  }
+
+  @override
+  Future<bool> selectPurchasePaymentMethod(
+    String viewId,
+    PaymentMethod method,
+  ) async {
+    final selected = await super.selectPurchasePaymentMethod(viewId, method);
+    if (!selected) return false;
+    _lastPaymentMethodId = method.id;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(lastPaymentMethodKey, method.id);
+    return true;
+  }
 
   void addPurchase() {
     if (!canEdit) return;
@@ -31,6 +62,11 @@ class PickupConstructorProvider extends OrderPointsProvider {
         items: [],
       ),
     );
+    final method = paymentMethodsById[_lastPaymentMethodId];
+    if (method != null && method.isActive && paymentMethodLoadError == null) {
+      // Use the existing selection logic without recording an automatic choice.
+      unawaited(super.selectPurchasePaymentMethod(points.last.viewId, method));
+    }
     notifyListeners();
   }
 
