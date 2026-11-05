@@ -4,7 +4,7 @@ import 'package:mountain_fairytale/features/delivery_history/data/delivery_histo
 import 'package:mountain_fairytale/features/delivery_route/data/route_point_model.dart';
 import 'package:mountain_fairytale/features/delivery_route/data/delivery_task_item_model.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/route_point_read_only_card.dart';
-import 'package:mountain_fairytale/shared/widgets/base_card_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/dialog_card_widget.dart';
 
 class ClientDeliveryCard extends StatelessWidget {
   final ClientDelivery delivery;
@@ -15,24 +15,82 @@ class ClientDeliveryCard extends StatelessWidget {
     required this.onOpen,
   });
 
-  Widget _line(String value) => Tooltip(
+  Widget _line(BuildContext context, String label, String value) => Tooltip(
     message: value,
-    child: Text(value, maxLines: 1, overflow: TextOverflow.ellipsis),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '$label: ',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
+        ],
+      ),
+    ),
   );
 
   @override
   Widget build(BuildContext context) {
     final d = delivery;
     final doc = d.document;
-    final route = AppBaseCard(
+    final colors = Theme.of(context).colorScheme;
+    final route = AppDialogCard(
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      padding: const EdgeInsets.all(12),
       onTap: onOpen,
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(DateFormat('dd.MM.yyyy').format(doc.plannedDate)),
-          _line(doc.driverName ?? 'Водитель не указан'),
-          _line(doc.carModelAndNumber ?? 'Машина не указана'),
-          _line('Маршрут: ${doc.totalAmount.toStringAsFixed(2)} ₽'),
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Icon(
+              Icons.local_shipping_outlined,
+              size: 20,
+              color: colors.primary,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _line(
+                  context,
+                  'Дата',
+                  DateFormat('dd.MM.yyyy').format(doc.plannedDate),
+                ),
+                _line(context, 'Водитель', doc.driverName ?? 'Не указан'),
+                _line(
+                  context,
+                  'Автомобиль',
+                  doc.carModelAndNumber ?? 'Не указан',
+                ),
+                _line(
+                  context,
+                  'Сумма',
+                  NumberFormat.currency(
+                    locale: 'ru_RU',
+                    symbol: '₽',
+                  ).format(doc.totalAmount),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 4),
+          Icon(Icons.chevron_right, size: 16, color: colors.onSurfaceVariant),
         ],
       ),
     );
@@ -68,7 +126,7 @@ class ClientDeliveryCard extends StatelessWidget {
     );
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth < 680) {
+        if (constraints.maxWidth < 760) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [route, point],
@@ -77,7 +135,17 @@ class ClientDeliveryCard extends StatelessWidget {
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(width: 240, child: route),
+            SizedBox(width: 332, child: route),
+            Padding(
+              padding: const EdgeInsets.only(top: 24),
+              child: IgnorePointer(
+                child: Icon(
+                  Icons.link,
+                  size: 18,
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+            ),
             Expanded(child: point),
           ],
         );

@@ -17,6 +17,7 @@ import 'package:mountain_fairytale/features/delivery_history/ui/delivery_history
 import 'package:mountain_fairytale/features/delivery_history/ui/client_delivery_card.dart';
 import 'package:mountain_fairytale/features/delivery_history/ui/history_document_card.dart';
 import 'package:mountain_fairytale/shared/widgets/app_date_range_dialog.dart';
+import 'package:mountain_fairytale/shared/widgets/dialog_card_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/route_point_card_content.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/task_item_row.dart';
@@ -227,12 +228,45 @@ void main() {
             ),
           ),
         );
-        final routeText = find.text('Маршрут: 900.50 ₽');
+        final routeText = find.textContaining('900,50');
+        final routeCard = find.descendant(
+          of: find.byType(AppDialogCard),
+          matching: find.byType(Material),
+        );
+        final routeSize = tester.getSize(routeCard);
         final before = tester.getTopLeft(routeText);
+        expect(find.text('Дата: '), findsOneWidget);
+        expect(find.text('Водитель: '), findsOneWidget);
+        expect(find.text('Автомобиль: '), findsOneWidget);
+        expect(find.text('Сумма: '), findsOneWidget);
+        expect(find.textContaining('Создан:'), findsNothing);
+        if (width > 760) {
+          final surface = find.byType(RoutePointCardSurface);
+          expect(tester.getSize(routeCard).width, inInclusiveRange(280, 320));
+          expect(
+            tester.getSize(routeCard).width,
+            lessThanOrEqualTo(tester.getSize(surface).width),
+          );
+          expect(
+            tester.getTopLeft(routeCard).dy,
+            tester.getTopLeft(surface).dy,
+          );
+          await tester.tap(find.byIcon(Icons.link), warnIfMissed: false);
+          await tester.pumpAndSettle();
+          expect(opened, 0);
+          expect(find.byType(TaskItemRow), findsNothing);
+        } else {
+          expect(find.byIcon(Icons.link), findsNothing);
+          expect(
+            tester.getBottomLeft(routeCard).dy,
+            lessThan(tester.getTopLeft(find.byType(RoutePointCardSurface)).dy),
+          );
+        }
         await tester.tap(find.byType(ExpansionTile));
         await tester.pumpAndSettle();
         expect(opened, 0);
         expect(tester.getTopLeft(routeText), before);
+        expect(tester.getSize(routeCard), routeSize);
         final qaDir = Platform.environment['DELIVERY_HISTORY_QA_DIR'];
         if (qaDir != null) {
           await tester.runAsync(() async {
@@ -279,6 +313,8 @@ void main() {
         final data = {
           ...json,
           'clientName': longText,
+          'driverName': longText,
+          'carModelAndNumber': longText,
           'address': longText,
           'memo': longText,
           'nonDeliveryReason': longText,
