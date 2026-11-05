@@ -330,12 +330,37 @@ class _DeliveryHistoryScreenState extends State<DeliveryHistoryScreen> {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Wrap(
-                        spacing: 16,
-                        runSpacing: 8,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        alignment: WrapAlignment.spaceBetween,
-                        children: [mode, period],
+                      ConstrainedBox(
+                        key: const ValueKey('delivery-history-toolbar-header'),
+                        constraints: BoxConstraints(minHeight: controlHeight),
+                        child: Wrap(
+                          spacing: 16,
+                          runSpacing: 8,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          alignment: WrapAlignment.spaceBetween,
+                          children: [
+                            ConstrainedBox(
+                              constraints: BoxConstraints(
+                                minHeight: controlHeight,
+                              ),
+                              child: Align(
+                                widthFactor: 1,
+                                heightFactor: 1,
+                                child: mode,
+                              ),
+                            ),
+                            ConstrainedBox(
+                              constraints: BoxConstraints(
+                                minHeight: controlHeight,
+                              ),
+                              child: Align(
+                                widthFactor: 1,
+                                heightFactor: 1,
+                                child: period,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 12),

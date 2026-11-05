@@ -566,6 +566,23 @@ void main() {
           ),
         ).colorScheme;
         expect(toolbar.color, colors.surfaceContainerLow);
+        final surfaceRect = tester.getRect(
+          find.byKey(const ValueKey('delivery-history-toolbar-surface')),
+        );
+        final headerRect = tester.getRect(
+          find.byKey(const ValueKey('delivery-history-toolbar-header')),
+        );
+        final dividerRect = tester.getRect(find.byType(Divider).first);
+        expect(surfaceRect.top, 12);
+        expect(headerRect.top - surfaceRect.top, 16);
+        expect(headerRect.height, greaterThanOrEqualTo(48));
+        final modeRect = tester.getRect(find.byType(SegmentedButton<bool>));
+        final periodRect = tester.getRect(
+          find.widgetWithIcon(OutlinedButton, Icons.date_range),
+        );
+        expect(modeRect.center.dy, closeTo(headerRect.center.dy, 0.01));
+        expect(periodRect.center.dy, closeTo(headerRect.center.dy, 0.01));
+        expect(dividerRect.top - headerRect.bottom, 12);
         final toolbarRight = tester
             .getRect(
               find.byKey(const ValueKey('delivery-history-toolbar-surface')),
