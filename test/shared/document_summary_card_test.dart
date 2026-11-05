@@ -67,6 +67,105 @@ void main() {
       }
     }
   }
+  for (final width in [240.0, 320.0, 600.0]) {
+    for (final scale in [1.0, 1.8, 2.5]) {
+      testWidgets('value columns align at width=$width scale=$scale', (
+        tester,
+      ) async {
+        double? deliveryValueLeft;
+        for (final isPickup in [false, true]) {
+          await tester.pumpWidget(
+            MaterialApp(
+              home: Scaffold(
+                body: SingleChildScrollView(
+                  child: Align(
+                    alignment: Alignment.topLeft,
+                    child: SizedBox(
+                      width: width,
+                      child: MediaQuery(
+                        data: MediaQueryData(
+                          textScaler: TextScaler.linear(scale),
+                        ),
+                        child: DocumentSummaryCard(
+                          isPickup: isPickup,
+                          date: '05.11.2026',
+                          createdAt: '04.11.2026 12:30',
+                          count: '3',
+                          amount: '1 234,50 ₽',
+                          driver: 'Водитель',
+                          car: 'Автомобиль',
+                          onOpen: () {},
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+          final valueLeft = tester.getTopLeft(find.text('05.11.2026')).dx;
+          if (isPickup) {
+            expect(valueLeft, closeTo(deliveryValueLeft!, .01));
+          } else {
+            deliveryValueLeft = valueLeft;
+          }
+          for (final value in [
+            '05.11.2026',
+            '04.11.2026 12:30',
+            '3',
+            '1 234,50 ₽',
+            if (!isPickup) ...['Водитель', 'Автомобиль'],
+          ]) {
+            expect(
+              tester.getTopLeft(find.text(value)).dx,
+              closeTo(valueLeft, .01),
+            );
+            final text = tester.widget<Text>(find.text(value));
+            expect(text.maxLines, 1);
+            expect(text.overflow, TextOverflow.ellipsis);
+            expect(find.byTooltip(value), findsOneWidget);
+          }
+          for (final label in [
+            'Дата:',
+            'Создан:',
+            isPickup ? 'Покупок:' : 'Клиентов:',
+            'Сумма:',
+            if (!isPickup) ...['Водитель:', 'Автомобиль:'],
+          ]) {
+            final paragraph = tester.renderObject<RenderParagraph>(
+              find.text(label),
+            );
+            expect(paragraph.didExceedMaxLines, isFalse);
+            final boxes = paragraph.getBoxesForSelection(
+              TextSelection(
+                baseOffset: 0,
+                extentOffset: label.length,
+              ),
+            );
+            for (final box in boxes) {
+              expect(box.left, greaterThanOrEqualTo(-.01));
+              expect(box.right, lessThanOrEqualTo(paragraph.size.width + 1));
+              expect(
+                box.bottom,
+                lessThanOrEqualTo(paragraph.size.height + .01),
+              );
+            }
+            // With enough space the longest label and its padding fit one line.
+            if (width == 600 && label == 'Автомобиль:') {
+              expect(boxes, hasLength(1));
+              expect(
+                tester.getTopLeft(find.text(label)).dx +
+                    boxes.single.right +
+                    12,
+                lessThanOrEqualTo(valueLeft + 1),
+              );
+            }
+          }
+          expect(tester.takeException(), isNull);
+        }
+      });
+    }
+  }
   const driver = 'Иванов Иван Иванович очень длинное имя водителя маршрута';
   const car = 'Очень длинная модель автомобиля с номером А123ВС777';
   for (final brightness in Brightness.values) {
