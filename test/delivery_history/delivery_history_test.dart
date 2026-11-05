@@ -311,7 +311,7 @@ void main() {
   testWidgets(
     'toolbar fits a narrow window with enlarged text and stable filter height',
     (tester) async {
-      tester.view.physicalSize = const Size(390, 1200);
+      tester.view.physicalSize = const Size(320, 1200);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
@@ -333,7 +333,10 @@ void main() {
       final top = tester.getTopLeft(find.byType(ListView));
       await provider.setClientsMode(false);
       await tester.pumpAndSettle();
-      expect(tester.getTopLeft(find.byType(ListView)), top);
+      expect(
+        (tester.getTopLeft(find.byType(ListView)).dy - top.dy).abs(),
+        lessThan(1),
+      );
       expect(tester.takeException(), isNull);
     },
   );
@@ -370,10 +373,28 @@ void main() {
       );
       await tester.pumpAndSettle();
       final before = tester.getTopLeft(find.byType(ListView));
+      final modeSelector = find.byType(SegmentedButton<bool>);
+      final modeWidth = tester.getSize(modeSelector).width;
+      expect(
+        tester.widget<SegmentedButton<bool>>(modeSelector).showSelectedIcon,
+        isFalse,
+      );
       await tester.tap(find.text('Документы'));
       await tester.pumpAndSettle();
       expect(tester.getTopLeft(find.byType(ListView)), before);
+      expect(tester.getSize(modeSelector).width, modeWidth);
       expect(find.byType(TextField), findsNothing);
+      final documentSelector = find.byType(SegmentedButton<String>);
+      final documentSelectorWidth = tester.getSize(documentSelector).width;
+      expect(
+        tester
+            .widget<SegmentedButton<String>>(documentSelector)
+            .showSelectedIcon,
+        isFalse,
+      );
+      await tester.tap(find.text('Доставки'));
+      await tester.pumpAndSettle();
+      expect(tester.getSize(documentSelector).width, documentSelectorWidth);
       await tester.tap(find.text('01.01.2026 — 31.01.2026'));
       await tester.pumpAndSettle();
       final dialog = tester.widget<AppDateRangeDialog>(

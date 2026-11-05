@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -125,24 +126,47 @@ class _DeliveryHistoryScreenState extends State<DeliveryHistoryScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<DeliveryHistoryProvider>();
     final date = DateFormat('dd.MM.yyyy');
+    final colors = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              LayoutBuilder(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          child: Material(
+            key: const ValueKey('delivery-history-toolbar-surface'),
+            color: colors.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: LayoutBuilder(
                 builder: (context, constraints) {
+                  final textScaler = MediaQuery.textScalerOf(context);
+                  final compactWidth = constraints.maxWidth < 300;
+                  final controlHeight = math.max(
+                    72 * textScaler.scale(1),
+                    textScaler.scale(14) * 1.4 + 24,
+                  );
                   final mode = SegmentedButton<bool>(
+                    showSelectedIcon: false,
                     segments: const [
-                      ButtonSegment(value: true, label: Text('Клиенты')),
-                      ButtonSegment(value: false, label: Text('Документы')),
+                      ButtonSegment(
+                        value: true,
+                        label: Text('Клиенты'),
+                        icon: Icon(Icons.people_outline),
+                      ),
+                      ButtonSegment(
+                        value: false,
+                        label: Text('Документы'),
+                        icon: Icon(Icons.description_outlined),
+                      ),
                     ],
                     selected: {provider.clientsMode},
                     onSelectionChanged: (values) =>
                         provider.setClientsMode(values.single),
+                    style: SegmentedButton.styleFrom(
+                      selectedBackgroundColor: colors.primary,
+                      selectedForegroundColor: colors.onPrimary,
+                    ),
                   );
                   final period = AppSecondaryButton(
                     text:
@@ -150,100 +174,105 @@ class _DeliveryHistoryScreenState extends State<DeliveryHistoryScreen> {
                     icon: Icons.date_range,
                     onPressed: () => _selectPeriod(provider),
                   );
-                  final cancelled = Visibility(
-                    visible: !provider.clientsMode,
-                    maintainSize: true,
-                    maintainAnimation: true,
-                    maintainState: true,
-                    child: LabeledCheckboxToggle(
-                      label: 'Отменённые',
-                      value: provider.includeCancelled,
-                      onChanged: provider.setIncludeCancelled,
-                    ),
-                  );
-                  if (constraints.maxWidth <
-                      850 * MediaQuery.textScalerOf(context).scale(1)) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: mode,
-                        ),
-                        Wrap(
-                          spacing: 8,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [cancelled, period],
-                        ),
-                      ],
-                    );
-                  }
-                  return Row(
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      mode,
-                      const SizedBox(width: 16),
-                      cancelled,
-                      const Spacer(),
-                      period,
+                      Wrap(
+                        spacing: 16,
+                        runSpacing: 8,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        alignment: WrapAlignment.spaceBetween,
+                        children: [mode, period],
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Divider(height: 1, color: colors.outlineVariant),
+                      ),
+                      ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight:
+                              controlHeight +
+                              (compactWidth ? 30 : 12) * textScaler.scale(1),
+                        ),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: provider.clientsMode
+                              ? ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    maxWidth: 520,
+                                  ),
+                                  child: TextField(
+                                    controller: _search,
+                                    maxLength: 500,
+                                    decoration: InputDecoration(
+                                      labelText: 'Клиент, адрес, уточнение или телефон',
+                                      border: const OutlineInputBorder(),
+                                      counterText: '',
+                                      prefixIcon: const Icon(Icons.search),
+                                      suffixIcon: AppIconButton(
+                                        icon: Icons.clear,
+                                        tooltip: 'Очистить поиск',
+                                        onPressed: () {
+                                          _debounce?.cancel();
+                                          _search.clear();
+                                          unawaited(provider.setSearch(''));
+                                        },
+                                      ),
+                                    ),
+                                    onChanged: _searchChanged,
+                                    onSubmitted: (value) {
+                                      _debounce?.cancel();
+                                      unawaited(provider.setSearch(value));
+                                    },
+                                  ),
+                                )
+                              : Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  children: [
+                                    SegmentedButton<String>(
+                                      showSelectedIcon: false,
+                                      segments: const [
+                                        ButtonSegment(
+                                          value: 'all',
+                                          label: Text('Все'),
+                                        ),
+                                        ButtonSegment(
+                                          value: 'delivery_route_sheet',
+                                          label: Text('Доставки'),
+                                        ),
+                                        ButtonSegment(
+                                          value: 'pickup_sheet',
+                                          label: Text('Самовывозы'),
+                                        ),
+                                      ],
+                                      selected: {provider.documentType},
+                                      onSelectionChanged: (values) =>
+                                          provider.setDocumentType(
+                                            values.single,
+                                          ),
+                                      style: SegmentedButton.styleFrom(
+                                        selectedBackgroundColor: colors.primary,
+                                        selectedForegroundColor:
+                                            colors.onPrimary,
+                                      ),
+                                    ),
+                                    LabeledCheckboxToggle(
+                                      label: 'Отменённые',
+                                      value: provider.includeCancelled,
+                                      onChanged: provider.setIncludeCancelled,
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      ),
                     ],
                   );
                 },
               ),
-              const SizedBox(height: 8),
-              SizedBox(
-                height: 72 * MediaQuery.textScalerOf(context).scale(1),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: provider.clientsMode
-                      ? SizedBox(
-                          width: 520,
-                          child: TextField(
-                            controller: _search,
-                            maxLength: 500,
-                            decoration: InputDecoration(
-                              labelText: 'Клиент, адрес, уточнение или телефон',
-                              border: const OutlineInputBorder(),
-                              counterText: '',
-                              prefixIcon: const Icon(Icons.search),
-                              suffixIcon: AppIconButton(
-                                icon: Icons.clear,
-                                tooltip: 'Очистить поиск',
-                                onPressed: () {
-                                  _debounce?.cancel();
-                                  _search.clear();
-                                  unawaited(provider.setSearch(''));
-                                },
-                              ),
-                            ),
-                            onChanged: _searchChanged,
-                            onSubmitted: (value) {
-                              _debounce?.cancel();
-                              unawaited(provider.setSearch(value));
-                            },
-                          ),
-                        )
-                      : SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: SegmentedButton<String>(
-                            segments: const [
-                              ButtonSegment(value: 'all', label: Text('Все')),
-                              ButtonSegment(
-                                value: 'delivery_route_sheet',
-                                label: Text('Доставки'),
-                              ),
-                              ButtonSegment(
-                                value: 'pickup_sheet',
-                                label: Text('Самовывозы'),
-                              ),
-                            ],
-                            selected: {provider.documentType},
-                            onSelectionChanged: (values) =>
-                                provider.setDocumentType(values.single),
-                          ),
-                        ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
         SizedBox(
