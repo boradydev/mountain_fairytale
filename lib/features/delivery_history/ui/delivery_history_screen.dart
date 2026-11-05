@@ -141,11 +141,15 @@ class _DeliveryHistoryScreenState extends State<DeliveryHistoryScreen> {
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   final textScaler = MediaQuery.textScalerOf(context);
-                  final compactWidth = constraints.maxWidth < 300;
+                  final scale = math.max(
+                    1.0,
+                    textScaler.scale(14) / 14,
+                  );
                   final controlHeight = math.max(
-                    72 * textScaler.scale(1),
+                    48.0,
                     textScaler.scale(14) * 1.4 + 24,
                   );
+                  final filterRowHeight = controlHeight + 8;
                   final mode = SegmentedButton<bool>(
                     showSelectedIcon: false,
                     segments: const [
@@ -174,6 +178,154 @@ class _DeliveryHistoryScreenState extends State<DeliveryHistoryScreen> {
                     icon: Icons.date_range,
                     onPressed: () => _selectPeriod(provider),
                   );
+                  final resultCount = Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: provider.clientsMode
+                              ? 'Доставок: '
+                              : 'Документов: ',
+                        ),
+                        TextSpan(
+                          text: '${provider.total}',
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: colors.onSurfaceVariant,
+                    ),
+                  );
+                  final search = ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 520),
+                    child: TextField(
+                      controller: _search,
+                      maxLength: 500,
+                      decoration: InputDecoration(
+                        labelText: 'Клиент, адрес, уточнение или телефон',
+                        border: const OutlineInputBorder(),
+                        isDense: true,
+                        counterText: '',
+                        prefixIcon: const Icon(Icons.search),
+                        suffixIcon: AppIconButton(
+                          icon: Icons.clear,
+                          tooltip: 'Очистить поиск',
+                          onPressed: () {
+                            _debounce?.cancel();
+                            _search.clear();
+                            unawaited(provider.setSearch(''));
+                          },
+                        ),
+                      ),
+                      onChanged: _searchChanged,
+                      onSubmitted: (value) {
+                        _debounce?.cancel();
+                        unawaited(provider.setSearch(value));
+                      },
+                    ),
+                  );
+                  final documentFilters = Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SegmentedButton<String>(
+                        showSelectedIcon: false,
+                        segments: const [
+                          ButtonSegment(value: 'all', label: Text('Все')),
+                          ButtonSegment(
+                            value: 'delivery_route_sheet',
+                            label: Text('Доставки'),
+                          ),
+                          ButtonSegment(
+                            value: 'pickup_sheet',
+                            label: Text('Самовывозы'),
+                          ),
+                        ],
+                        selected: {provider.documentType},
+                        onSelectionChanged: (values) =>
+                            provider.setDocumentType(values.single),
+                        style: SegmentedButton.styleFrom(
+                          selectedBackgroundColor: colors.primary,
+                          selectedForegroundColor: colors.onPrimary,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      SizedBox(
+                        height: controlHeight,
+                        child: LabeledCheckboxToggle(
+                          label: 'Отменённые',
+                          value: provider.includeCancelled,
+                          onChanged: provider.setIncludeCancelled,
+                        ),
+                      ),
+                    ],
+                  );
+                  final narrow = constraints.maxWidth < 700 * scale;
+                  final controls = provider.clientsMode
+                      ? narrow
+                            ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: SizedBox(
+                                      width: math.min(
+                                        520,
+                                        constraints.maxWidth,
+                                      ),
+                                      child: search,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: resultCount,
+                                  ),
+                                ],
+                              )
+                            : SizedBox(
+                                width: constraints.maxWidth,
+                                child: Row(
+                                  children: [
+                                    search,
+                                    Expanded(
+                                      child: Align(
+                                        alignment: Alignment.centerRight,
+                                        child: resultCount,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                      : narrow
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  minHeight: filterRowHeight,
+                                ),
+                                child: SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: documentFilters,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: resultCount,
+                            ),
+                          ],
+                        )
+                      : Row(
+                          children: [
+                            documentFilters,
+                            const Spacer(),
+                            resultCount,
+                          ],
+                        );
 
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -191,82 +343,9 @@ class _DeliveryHistoryScreenState extends State<DeliveryHistoryScreen> {
                       ),
                       ConstrainedBox(
                         constraints: BoxConstraints(
-                          minHeight:
-                              controlHeight +
-                              (compactWidth ? 30 : 12) * textScaler.scale(1),
+                          minHeight: filterRowHeight,
                         ),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: provider.clientsMode
-                              ? ConstrainedBox(
-                                  constraints: const BoxConstraints(
-                                    maxWidth: 520,
-                                  ),
-                                  child: TextField(
-                                    controller: _search,
-                                    maxLength: 500,
-                                    decoration: InputDecoration(
-                                      labelText: 'Клиент, адрес, уточнение или телефон',
-                                      border: const OutlineInputBorder(),
-                                      counterText: '',
-                                      prefixIcon: const Icon(Icons.search),
-                                      suffixIcon: AppIconButton(
-                                        icon: Icons.clear,
-                                        tooltip: 'Очистить поиск',
-                                        onPressed: () {
-                                          _debounce?.cancel();
-                                          _search.clear();
-                                          unawaited(provider.setSearch(''));
-                                        },
-                                      ),
-                                    ),
-                                    onChanged: _searchChanged,
-                                    onSubmitted: (value) {
-                                      _debounce?.cancel();
-                                      unawaited(provider.setSearch(value));
-                                    },
-                                  ),
-                                )
-                              : Wrap(
-                                  spacing: 8,
-                                  runSpacing: 8,
-                                  crossAxisAlignment: WrapCrossAlignment.center,
-                                  children: [
-                                    SegmentedButton<String>(
-                                      showSelectedIcon: false,
-                                      segments: const [
-                                        ButtonSegment(
-                                          value: 'all',
-                                          label: Text('Все'),
-                                        ),
-                                        ButtonSegment(
-                                          value: 'delivery_route_sheet',
-                                          label: Text('Доставки'),
-                                        ),
-                                        ButtonSegment(
-                                          value: 'pickup_sheet',
-                                          label: Text('Самовывозы'),
-                                        ),
-                                      ],
-                                      selected: {provider.documentType},
-                                      onSelectionChanged: (values) =>
-                                          provider.setDocumentType(
-                                            values.single,
-                                          ),
-                                      style: SegmentedButton.styleFrom(
-                                        selectedBackgroundColor: colors.primary,
-                                        selectedForegroundColor:
-                                            colors.onPrimary,
-                                      ),
-                                    ),
-                                    LabeledCheckboxToggle(
-                                      label: 'Отменённые',
-                                      value: provider.includeCancelled,
-                                      onChanged: provider.setIncludeCancelled,
-                                    ),
-                                  ],
-                                ),
-                        ),
+                        child: controls,
                       ),
                     ],
                   );
@@ -294,24 +373,25 @@ class _DeliveryHistoryScreenState extends State<DeliveryHistoryScreen> {
                   (provider.clientsMode
                       ? provider.deliveries.length
                       : provider.documents.length) +
-                  2,
+                  (provider.isEmpty ? 1 : 0) +
+                  1,
               itemBuilder: (context, index) {
                 final count = provider.clientsMode
                     ? provider.deliveries.length
                     : provider.documents.length;
-                if (index == 0) {
+                final emptyMessageIndex = provider.isEmpty ? 0 : -1;
+                final footerIndex = count + (provider.isEmpty ? 1 : 0);
+                if (index == emptyMessageIndex) {
                   return Padding(
                     padding: const EdgeInsets.all(16),
                     child: Text(
-                      !provider.isEmpty
-                          ? '${provider.clientsMode ? 'Доставок' : 'Документов'}: ${provider.total}'
-                          : !provider.loading && provider.error == null
+                      !provider.loading && provider.error == null
                           ? 'За выбранный период записи не найдены.'
                           : '',
                     ),
                   );
                 }
-                if (index == count + 1) {
+                if (index == footerIndex) {
                   return Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
@@ -334,14 +414,14 @@ class _DeliveryHistoryScreenState extends State<DeliveryHistoryScreen> {
                   );
                 }
                 if (provider.clientsMode) {
-                  final delivery = provider.deliveries[index - 1];
+                  final delivery = provider.deliveries[index];
                   return ClientDeliveryCard(
                     key: ValueKey(delivery.pointId),
                     delivery: delivery,
                     onOpen: () => _open(delivery.document),
                   );
                 }
-                final document = provider.documents[index - 1];
+                final document = provider.documents[index];
                 return HistoryDocumentCard(
                   key: ValueKey(document.id),
                   document: document,

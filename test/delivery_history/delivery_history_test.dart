@@ -125,17 +125,18 @@ class _Repository implements DeliveryHistoryRepository {
 }
 
 final _captureKey = GlobalKey();
-Widget _app(Widget child) => RepaintBoundary(
-  key: _captureKey,
-  child: MaterialApp(
-    locale: const Locale('ru'),
-    supportedLocales: const [Locale('ru')],
-    localizationsDelegates: GlobalMaterialLocalizations.delegates,
-    debugShowCheckedModeBanner: false,
-    theme: ThemeData(fontFamily: 'NotoSans'),
-    home: Scaffold(body: child),
-  ),
-);
+Widget _app(Widget child, {Brightness brightness = Brightness.light}) =>
+    RepaintBoundary(
+      key: _captureKey,
+      child: MaterialApp(
+        locale: const Locale('ru'),
+        supportedLocales: const [Locale('ru')],
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(fontFamily: 'NotoSans', brightness: brightness),
+        home: Scaffold(body: child),
+      ),
+    );
 void main() {
   setUpAll(() async {
     final loader = FontLoader('NotoSans')
@@ -282,6 +283,16 @@ void main() {
           clientsMode ? provider.deliveries.length : provider.documents.length,
           50,
         );
+        expect(
+          find.text(
+            clientsMode ? 'Доставок: 120' : 'Документов: 120',
+            findRichText: true,
+          ),
+          findsOneWidget,
+        );
+        if (clientsMode) {
+          expect(find.byKey(const ValueKey('0')), findsOneWidget);
+        }
         for (var i = 0; i < 45; i++) {
           await tester.drag(find.byType(ListView), const Offset(0, -900));
           await tester.pumpAndSettle();
@@ -340,6 +351,62 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+  for (final brightness in Brightness.values) {
+    testWidgets(
+      'history toolbar respects $brightness colors and dense search',
+      (
+        tester,
+      ) async {
+        tester.view.physicalSize = const Size(1640, 800);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        final repo = _Repository()
+          ..automatic = true
+          ..rows = 2;
+        final provider = DeliveryHistoryProvider(repo);
+        addTearDown(provider.dispose);
+        await tester.pumpWidget(
+          _app(
+            ChangeNotifierProvider.value(
+              value: provider,
+              child: const DeliveryHistoryScreen(),
+            ),
+            brightness: brightness,
+          ),
+        );
+        await tester.pumpAndSettle();
+        final toolbar = tester.widget<Material>(
+          find.byKey(const ValueKey('delivery-history-toolbar-surface')),
+        );
+        final colors = Theme.of(
+          tester.element(
+            find.byKey(const ValueKey('delivery-history-toolbar-surface')),
+          ),
+        ).colorScheme;
+        expect(toolbar.color, colors.surfaceContainerLow);
+        final toolbarRight = tester
+            .getRect(
+              find.byKey(const ValueKey('delivery-history-toolbar-surface')),
+            )
+            .right;
+        expect(
+          tester.widget<TextField>(find.byType(TextField)).decoration!.isDense,
+          isTrue,
+        );
+        final clientCount = find.text('Доставок: 2', findRichText: true);
+        expect(clientCount, findsOneWidget);
+        expect(
+          (tester.getRect(clientCount).right - (toolbarRight - 16)).abs(),
+          lessThan(1),
+        );
+        await provider.setClientsMode(false);
+        await tester.pumpAndSettle();
+        expect(find.text('Документов: 2', findRichText: true), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
   testWidgets('document shows both dates and no matched clients', (
     tester,
   ) async {
@@ -372,6 +439,11 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      expect(find.text('Доставок: 0', findRichText: true), findsOneWidget);
+      expect(
+        find.text('За выбранный период записи не найдены.'),
+        findsOneWidget,
+      );
       final before = tester.getTopLeft(find.byType(ListView));
       final modeSelector = find.byType(SegmentedButton<bool>);
       final modeWidth = tester.getSize(modeSelector).width;
@@ -384,6 +456,11 @@ void main() {
       expect(tester.getTopLeft(find.byType(ListView)), before);
       expect(tester.getSize(modeSelector).width, modeWidth);
       expect(find.byType(TextField), findsNothing);
+      expect(find.text('Документов: 0', findRichText: true), findsOneWidget);
+      expect(
+        find.text('За выбранный период записи не найдены.'),
+        findsOneWidget,
+      );
       final documentSelector = find.byType(SegmentedButton<String>);
       final documentSelectorWidth = tester.getSize(documentSelector).width;
       expect(
