@@ -253,6 +253,7 @@ Future<void> open(
   Store store, {
   Brightness brightness = Brightness.light,
   double width = 1400,
+  double textScale = 1,
 }) async {
   tester.view.physicalSize = Size(width, 1000);
   tester.view.devicePixelRatio = 1;
@@ -265,6 +266,11 @@ Future<void> open(
       value: store.provider,
       child: MaterialApp(
         theme: AppTheme.createTheme(brightness),
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context)
+              .copyWith(textScaler: TextScaler.linear(textScale)),
+          child: child!,
+        ),
         home: const Scaffold(body: DirectoriesScreen()),
       ),
     ),
@@ -277,12 +283,69 @@ Future<void> choose(WidgetTester tester, DirectorySection section) async {
     of: find.byType(SegmentedButton<DirectorySection>),
     matching: find.text(section.label),
   );
-  await tester.ensureVisible(segment);
+  await Scrollable.ensureVisible(tester.element(segment), alignment: 0.5);
   await tester.tap(segment);
   await tester.pumpAndSettle();
 }
 
 void main() {
+  for (final brightness in Brightness.values) {
+    for (final width in [320.0, 420.0, 1400.0]) {
+      testWidgets('directory layout $brightness width=$width', (tester) async {
+        final store = Store();
+        await open(
+          tester,
+          store,
+          brightness: brightness,
+          width: width,
+          textScale: width == 320 ? 1.8 : 1,
+        );
+        expect(find.text('Справочники'), findsNothing);
+        expect(find.textContaining('Добавление, редактирование'), findsNothing);
+        final surface = tester.widget<Material>(
+          find.byKey(const ValueKey('directories-toolbar-surface')),
+        );
+        final context = tester.element(find.byType(DirectoriesScreen));
+        expect(
+          surface.color,
+          Theme.of(context).colorScheme.surfaceContainerLow,
+        );
+        for (final section in DirectorySection.values) {
+          await choose(tester, section);
+          expect(store.provider.section, section);
+          final cards = find.byType(Card);
+          expect(cards, findsNWidgets(2));
+          for (final card in cards.evaluate()) {
+            final material = find
+                .descendant(
+                  of: find.byWidget(card.widget),
+                  matching: find.byType(Material),
+                )
+                .first;
+            final rect = tester.getRect(material);
+            expect(rect.width, closeTo(width > 752 ? 720 : width - 32, 0.01));
+            expect(rect.left, 16);
+          }
+          final toggle = find.byType(LabeledCheckboxToggle);
+          final icon = find.descendant(of: toggle, matching: find.byType(Icon));
+          final scale = width == 320 ? 1.8 : 1.0;
+          expect(
+            tester.getSize(toggle).height,
+            closeTo(tester.getSize(icon).height + 16 * scale, 0.01),
+          );
+          await tester.tap(toggle);
+          await tester.pumpAndSettle();
+          expect(store.provider.current.includeDeactivated, isTrue);
+          expect(tester.takeException(), isNull);
+        }
+        for (final section in DirectorySection.values) {
+          await choose(tester, section);
+          expect(store.provider.current.includeDeactivated, isTrue);
+        }
+      });
+    }
+  }
+
   for (final section in DirectorySection.values) {
     testWidgets(
       '${section.name}: existing dialog edits and toggles activity without changing open document',

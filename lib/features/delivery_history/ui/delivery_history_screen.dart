@@ -251,10 +251,14 @@ class _DeliveryHistoryScreenState extends State<DeliveryHistoryScreen> {
                       const SizedBox(width: 16),
                       SizedBox(
                         height: controlHeight,
-                        child: LabeledCheckboxToggle(
-                          label: 'Отменённые',
-                          value: provider.includeCancelled,
-                          onChanged: provider.setIncludeCancelled,
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          widthFactor: 1,
+                          child: LabeledCheckboxToggle(
+                            label: 'Отменённые',
+                            value: provider.includeCancelled,
+                            onChanged: provider.setIncludeCancelled,
+                          ),
                         ),
                       ),
                     ],

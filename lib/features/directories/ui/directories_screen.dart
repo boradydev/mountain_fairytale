@@ -17,7 +17,6 @@ import 'package:mountain_fairytale/features/commissions/ui/commission_widgets.da
 import 'package:mountain_fairytale/shared/widgets/add_action_card.dart';
 import 'package:mountain_fairytale/shared/widgets/base_card_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/labeled_checkbox_toggle.dart';
-import 'package:mountain_fairytale/shared/widgets/list_section_header.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/app_notify.dart';
 
@@ -136,42 +135,54 @@ class _DirectoriesScreenState extends State<DirectoriesScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        AppListSectionHeader(
-          title: 'Справочники',
-          description: 'Добавление, редактирование и управление активностью.',
-          controls: Row(
-            children: [
-              Flexible(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: SegmentedButton<DirectorySection>(
-                    showSelectedIcon: false,
-                    segments: [
-                      for (final section in DirectorySection.values)
-                        ButtonSegment(
-                          value: section,
-                          label: Text(section.label),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          child: Material(
+            key: const ValueKey('directories-toolbar-surface'),
+            color: colors.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 48),
+                child: Wrap(
+                  spacing: 16,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: SegmentedButton<DirectorySection>(
+                        showSelectedIcon: false,
+                        segments: [
+                          for (final section in DirectorySection.values)
+                            ButtonSegment(
+                              value: section,
+                              label: Text(section.label),
+                            ),
+                        ],
+                        selected: {provider.section},
+                        onSelectionChanged: (selection) =>
+                            provider.selectSection(selection.single),
+                        style: SegmentedButton.styleFrom(
+                          selectedBackgroundColor: colors.primary,
+                          selectedForegroundColor: colors.onPrimary,
                         ),
-                    ],
-                    selected: {provider.section},
-                    onSelectionChanged: (selection) =>
-                        provider.selectSection(selection.single),
-                    style: SegmentedButton.styleFrom(
-                      selectedBackgroundColor: colors.primary,
-                      selectedForegroundColor: colors.onPrimary,
+                      ),
                     ),
-                  ),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: LabeledCheckboxToggle(
+                        label: 'Деактивированные',
+                        value: state.includeDeactivated,
+                        onChanged: provider.setIncludeDeactivated,
+                        tooltip: 'Показывать деактивированные записи вместе с активными',
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 16),
-              LabeledCheckboxToggle(
-                label: 'Деактивированные',
-                value: state.includeDeactivated,
-                onChanged: provider.setIncludeDeactivated,
-                tooltip:
-                    'Показывать деактивированные записи вместе с активными',
-              ),
-            ],
+            ),
           ),
         ),
         SizedBox(
@@ -200,16 +211,26 @@ class _DirectoriesScreenState extends State<DirectoriesScreen> {
             key: PageStorageKey(provider.section),
             padding: const EdgeInsets.symmetric(vertical: 8),
             itemCount: state.items.length + 1,
-            itemBuilder: (context, index) => index == 0
-                ? AddActionButton(
-                    label: provider.section.addLabel,
-                    icon: Icons.add_circle_outline,
-                    onTap: () => _openEditor(),
-                  )
-                : _DirectoryCard(
-                    record: state.items[index - 1],
-                    onTap: () => _openEditor(state.items[index - 1]),
-                  ),
+            itemBuilder: (context, index) => Align(
+              alignment: Alignment.centerLeft,
+              child: ConstrainedBox(
+                // Include the cards' existing 16 px margins in the constraint.
+                constraints: const BoxConstraints(maxWidth: 720 + 32),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: index == 0
+                      ? AddActionButton(
+                          label: provider.section.addLabel,
+                          icon: Icons.add_circle_outline,
+                          onTap: () => _openEditor(),
+                        )
+                      : _DirectoryCard(
+                          record: state.items[index - 1],
+                          onTap: () => _openEditor(state.items[index - 1]),
+                        ),
+                ),
+              ),
+            ),
           ),
         ),
       ],

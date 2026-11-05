@@ -113,6 +113,15 @@ class _CommissionsScreenState extends State<CommissionsScreen> {
     );
   }
 
+  Widget _constrainCard(Widget card) => Align(
+    alignment: Alignment.centerLeft,
+    child: ConstrainedBox(
+      // Include AppBaseCard's existing horizontal margins.
+      constraints: const BoxConstraints(maxWidth: 720 + 32),
+      child: SizedBox(width: double.infinity, child: card),
+    ),
+  );
+
   Widget _representatives(
     BuildContext context,
     CommissionsProvider provider,
@@ -122,56 +131,60 @@ class _CommissionsScreenState extends State<CommissionsScreen> {
       itemCount: report.representatives.length + 1,
       itemBuilder: (context, index) {
         if (index == 0) {
-          return AddActionButton(
-            label: 'Добавить представителя',
-            icon: Icons.person_add_alt_1_outlined,
-            onTap: _addRepresentative,
+          return _constrainCard(
+            AddActionButton(
+              label: 'Добавить представителя',
+              icon: Icons.person_add_alt_1_outlined,
+              onTap: _addRepresentative,
+            ),
           );
         }
         final row = report.representatives[index - 1];
-        return AppBaseCard(
-          onTap: () async {
-            final changed = await showDialog<bool>(
-              context: context,
-              barrierDismissible: false,
-              builder: (_) => RepresentativeCommissionDialog(
-                repository: provider.repository,
-                representativeId: row.id,
-                month: provider.month,
-                targets: report.representatives
-                    .where((item) => item.isActive && item.id != row.id)
-                    .toList(),
-              ),
-            );
-            if (!context.mounted) return;
-            if (changed == true) {
-              await provider.refresh();
-              if (context.mounted) {
-                await context
-                    .read<ClientsProvider?>()
-                    ?.refreshDashboardClients();
+        return _constrainCard(
+          AppBaseCard(
+            onTap: () async {
+              final changed = await showDialog<bool>(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => RepresentativeCommissionDialog(
+                  repository: provider.repository,
+                  representativeId: row.id,
+                  month: provider.month,
+                  targets: report.representatives
+                      .where((item) => item.isActive && item.id != row.id)
+                      .toList(),
+                ),
+              );
+              if (!context.mounted) return;
+              if (changed == true) {
+                await provider.refresh();
+                if (context.mounted) {
+                  await context
+                      .read<ClientsProvider?>()
+                      ?.refreshDashboardClients();
+                }
               }
-            }
-          },
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              CommissionPersonHeader(name: row.name, isActive: row.isActive),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 32,
-                runSpacing: 12,
-                children: [
-                  CommissionMetric(
-                    'Клиентов закреплено',
-                    '${row.assignedClientsCount}',
-                  ),
-                  CommissionMetric('Заказов', '${row.ordersCount}'),
-                  CommissionMetric('Оборотная база', row.turnover.formatted),
-                  CommissionMetric('К выплате', row.payable.formatted),
-                ],
-              ),
-            ],
+            },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CommissionPersonHeader(name: row.name, isActive: row.isActive),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 32,
+                  runSpacing: 12,
+                  children: [
+                    CommissionMetric(
+                      'Клиентов закреплено',
+                      '${row.assignedClientsCount}',
+                    ),
+                    CommissionMetric('Заказов', '${row.ordersCount}'),
+                    CommissionMetric('Оборотная база', row.turnover.formatted),
+                    CommissionMetric('К выплате', row.payable.formatted),
+                  ],
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -194,73 +207,78 @@ class _CommissionsScreenState extends State<CommissionsScreen> {
       itemCount: report.employees.length,
       itemBuilder: (context, index) {
         final row = report.employees[index];
-        return AppBaseCard(
-          onTap: () => showDialog<void>(
-            context: context,
-            builder: (_) => AlertDialog(
-              title: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CommissionPersonHeader(
-                    name: row.name,
-                    isActive: row.isActive,
-                    nameStyle: Theme.of(context).textTheme.headlineSmall,
+        return _constrainCard(
+          AppBaseCard(
+            onTap: () => showDialog<void>(
+              context: context,
+              builder: (_) => AlertDialog(
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CommissionPersonHeader(
+                      name: row.name,
+                      isActive: row.isActive,
+                      nameStyle: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      commissionPeriodLabel(provider.month),
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ],
+                ),
+                content: SingleChildScrollView(
+                  child: SizedBox(
+                    width: 600,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Wrap(
+                          spacing: 28,
+                          runSpacing: 12,
+                          children: [
+                            CommissionMetric(
+                              'Оборотная база',
+                              row.turnover.formatted,
+                            ),
+                            CommissionMetric(
+                              'К выплате',
+                              row.payable.formatted,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        const Text('Начисления по фактическим ставкам'),
+                        CommissionRates(row.rates),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    commissionPeriodLabel(provider.month),
-                    style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                actions: [
+                  AppSecondaryButton(
+                    text: 'Закрыть',
+                    onPressed: () => Navigator.pop(context),
                   ),
                 ],
               ),
-              content: SingleChildScrollView(
-                child: SizedBox(
-                  width: 600,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Wrap(
-                        spacing: 28,
-                        runSpacing: 12,
-                        children: [
-                          CommissionMetric(
-                            'Оборотная база',
-                            row.turnover.formatted,
-                          ),
-                          CommissionMetric('К выплате', row.payable.formatted),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      const Text('Начисления по фактическим ставкам'),
-                      CommissionRates(row.rates),
-                    ],
-                  ),
-                ),
-              ),
-              actions: [
-                AppSecondaryButton(
-                  text: 'Закрыть',
-                  onPressed: () => Navigator.pop(context),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CommissionPersonHeader(name: row.name, isActive: row.isActive),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 32,
+                  runSpacing: 12,
+                  children: [
+                    CommissionMetric('Оборотная база', row.turnover.formatted),
+                    CommissionMetric('К выплате', row.payable.formatted),
+                  ],
                 ),
               ],
             ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              CommissionPersonHeader(name: row.name, isActive: row.isActive),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 32,
-                runSpacing: 12,
-                children: [
-                  CommissionMetric('Оборотная база', row.turnover.formatted),
-                  CommissionMetric('К выплате', row.payable.formatted),
-                ],
-              ),
-            ],
           ),
         );
       },

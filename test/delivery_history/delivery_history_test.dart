@@ -1,3 +1,4 @@
+import 'package:mountain_fairytale/shared/widgets/labeled_checkbox_toggle.dart';
 import 'package:flutter/services.dart';
 
 import 'dart:io';
@@ -522,9 +523,22 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+
       final top = tester.getTopLeft(find.byType(ListView));
       await provider.setClientsMode(false);
       await tester.pumpAndSettle();
+      final toggle = find.byType(LabeledCheckboxToggle);
+      final toggleIcon = find.descendant(
+        of: toggle,
+        matching: find.byType(Icon),
+      );
+      final toggleScale =
+          MediaQuery.textScalerOf(tester.element(toggle)).scale(14) / 14;
+      expect(
+        tester.getSize(toggle).height,
+        closeTo(tester.getSize(toggleIcon).height + 16 * toggleScale, 0.01),
+      );
+
       expect(
         (tester.getTopLeft(find.byType(ListView)).dy - top.dy).abs(),
         lessThan(1),
