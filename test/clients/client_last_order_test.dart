@@ -46,30 +46,6 @@ void main() {
     expect(customer().daysSinceLastOrder(DateTime(2026, 10, 19)), isNull);
   });
 
-  test('recent pickup leaves follow-up list; older order and cooldown are respected', () async {
-    final now = DateTime.now();
-    final repo = ClientsFake()
-      ..onSearch = (_, _) async => [customer(order: order(now))];
-    final provider = ClientsProvider(repo);
-    addTearDown(provider.dispose);
-    await provider.fetchClients();
-    provider.setListMode(ClientListMode.followUp);
-    expect(provider.sortedClients, isEmpty);
-    repo.onSearch = (_, _) async => [
-      customer(order: order(now.subtract(const Duration(days: 11)))),
-    ];
-    await provider.fetchClients(force: true);
-    expect(provider.sortedClients, hasLength(1));
-    repo.onSearch = (_, _) async => [
-      customer(
-        order: order(now.subtract(const Duration(days: 11))),
-        cooldown: now.add(const Duration(days: 1)),
-      ),
-    ];
-    await provider.fetchClients(force: true);
-    expect(provider.sortedClients, isEmpty);
-  });
-
   for (final brightness in Brightness.values) {
     testWidgets(
       'preview and full composition have separate card actions in $brightness',
@@ -127,7 +103,7 @@ void main() {
         ..onSearch = (_, _) async => [customer(order: order(DateTime.now()))];
       final provider = ClientsProvider(repo);
       addTearDown(provider.dispose);
-      await provider.fetchClients();
+      await provider.initializeDashboardClients();
       await tester.pumpWidget(
         ChangeNotifierProvider.value(
           value: provider,
@@ -136,7 +112,7 @@ void main() {
       );
       expect(find.text('Заказывает регулярно'), findsOneWidget);
       repo.onSearch = (_, _) async => [customer()];
-      await provider.fetchClients(force: true);
+      await provider.refreshDashboardClients();
       await tester.pumpAndSettle();
       expect(find.text('Заказов не было'), findsNWidgets(2));
       expect(find.text('Последняя доставка'), findsNothing);

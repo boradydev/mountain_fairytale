@@ -1,6 +1,19 @@
 import 'package:mountain_fairytale/features/clients/data/clients_model.dart';
 
+class ClientsPage<T> {
+  final List<T> clients;
+  final int total;
+  const ClientsPage(this.clients, this.total);
+}
+
 abstract interface class ClientDataSource {
+  Future<ClientsPage<Map<String, dynamic>>> getClientsPage({
+    int offset = 0,
+    int limit = 25,
+    String? search,
+    bool includeDeactivated = false,
+    String mode = 'database',
+  });
   Future<List<Map<String, dynamic>>> getAllClients({
     String? search,
     bool includeDeactivated = false,
@@ -25,6 +38,13 @@ abstract interface class ClientDataSource {
 }
 
 abstract interface class ClientRepository {
+  Future<ClientsPage<Client>> getClientsPage({
+    int offset = 0,
+    int limit = 25,
+    String? search,
+    bool includeDeactivated = false,
+    String mode = 'database',
+  });
   Future<List<Client>> getAllClients({
     String? search,
     bool includeDeactivated = false,

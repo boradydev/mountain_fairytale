@@ -32,6 +32,14 @@ class _ClientSelectionPanelState extends State<ClientSelectionPanel> {
   Client? _selectedClient;
   bool _busy = false;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(_search());
+    });
+  }
+
   void _scheduleSearch() {
     _debounce?.cancel();
     _searchVersion++;

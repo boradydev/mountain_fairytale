@@ -5,6 +5,24 @@ class ClientRepositoryImpl implements ClientRepository {
   final ClientDataSource dataSource;
   ClientRepositoryImpl(this.dataSource);
   @override
+  Future<ClientsPage<Client>> getClientsPage({
+    int offset = 0,
+    int limit = 25,
+    String? search,
+    bool includeDeactivated = false,
+    String mode = 'database',
+  }) async {
+    final page = await dataSource.getClientsPage(
+      offset: offset,
+      limit: limit,
+      search: search,
+      includeDeactivated: includeDeactivated,
+      mode: mode,
+    );
+    return ClientsPage(page.clients.map(Client.fromJson).toList(), page.total);
+  }
+
+  @override
   Future<List<Client>> getAllClients({
     String? search,
     bool includeDeactivated = false,

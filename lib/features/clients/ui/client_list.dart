@@ -7,131 +7,307 @@ import 'package:mountain_fairytale/features/clients/ui/client_last_order.dart';
 import 'package:mountain_fairytale/shared/widgets/add_action_card.dart';
 import 'package:mountain_fairytale/shared/widgets/base_card_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/labeled_checkbox_toggle.dart';
-import 'package:mountain_fairytale/shared/widgets/list_section_header.dart';
+
+import 'dart:async';
+import 'dart:math' as math;
+
+import 'package:mountain_fairytale/shared/widgets/icon_button_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 import 'package:provider/provider.dart';
 
-class ClientsAttentionListView extends StatelessWidget {
-  final double? headerHeight;
-  const ClientsAttentionListView({super.key, this.headerHeight});
+class ClientsAttentionListView extends StatefulWidget {
+  const ClientsAttentionListView({super.key});
+  @override
+  State<ClientsAttentionListView> createState() =>
+      _ClientsAttentionListViewState();
+}
+
+class _ClientsAttentionListViewState extends State<ClientsAttentionListView> {
+  final _search = TextEditingController();
+  final _scroll = {
+    for (final mode in ClientListMode.values) mode: ScrollController(),
+  };
+  Timer? _debounce;
+  bool _initialized = false;
+  bool _checkScheduled = false;
+  final _states = <ClientListMode, DashboardClientsState>{};
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      _initialized = true;
+      _search.text = context.read<ClientsProvider>().search;
+      for (final mode in ClientListMode.values) {
+        _scroll[mode]!.addListener(() {
+          final provider = context.read<ClientsProvider>();
+          final state = provider.dashboardFor(mode);
+          if (_states[mode] == state) {
+            state.scrollOffset = _scroll[mode]!.offset;
+          }
+          if (provider.listMode == mode) _checkScroll();
+        });
+      }
+    }
+  }
+
+  void _checkScroll() {
+    if (!mounted || !TickerMode.valuesOf(context).enabled) return;
+    final provider = context.read<ClientsProvider>();
+    final state = provider.dashboard;
+    final controller = _scroll[provider.listMode]!;
+    if (controller.hasClients &&
+        controller.position.extentAfter < 250 &&
+        !state.loading &&
+        state.error.isEmpty &&
+        state.hasMore) {
+      unawaited(provider.loadDashboardClients());
+    }
+  }
+
+  void _scheduleCheck() {
+    if (_checkScheduled) return;
+    _checkScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkScheduled = false;
+      if (!mounted) return;
+      final provider = context.read<ClientsProvider>();
+      for (final mode in ClientListMode.values) {
+        final state = provider.dashboardFor(mode);
+        if (_states[mode] != state) {
+          _states[mode] = state;
+          final controller = _scroll[mode]!;
+          if (controller.hasClients) controller.jumpTo(state.scrollOffset);
+        }
+      }
+      _checkScroll();
+    });
+  }
+
+  void _searchChanged(String value) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 350), () {
+      if (mounted) unawaited(context.read<ClientsProvider>().setSearch(value));
+    });
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _search.dispose();
+    for (final controller in _scroll.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final listMode = context.select(
-      (ClientsProvider p) => p.listMode,
-    );
+    final provider = context.watch<ClientsProvider>();
     final colors = Theme.of(context).colorScheme;
-    final showDeactivated = context.select(
-      (ClientsProvider p) => p.showDeactivated,
-    );
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        AppListSectionHeader(
-          height: headerHeight,
-          title: 'Клиенты',
-          description: listMode == ClientListMode.database
-              ? 'База клиентов: добавление и редактирование данных.'
-              : 'Засыпающие клиенты: обзвон и перенос следующего контакта.',
-          controls: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                SegmentedButton<ClientListMode>(
-                  segments: const [
-                    ButtonSegment(
-                      value: ClientListMode.database,
-                      label: Text('База клиентов'),
-                      icon: Icon(Icons.people_outline),
-                    ),
-                    ButtonSegment(
-                      value: ClientListMode.followUp,
-                      label: Text('Обзвон клиентов'),
-                      icon: Icon(Icons.phone_outlined),
-                    ),
-                  ],
-                  selected: {listMode},
-                  onSelectionChanged: (selection) => context
-                      .read<ClientsProvider>()
-                      .setListMode(selection.single),
-                  style: SegmentedButton.styleFrom(
-                    selectedBackgroundColor: colors.primary,
-                    selectedForegroundColor: colors.onPrimary,
+    _scheduleCheck();
+    return LayoutBuilder(
+      builder: (context, bounds) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: bounds.maxHeight * .65),
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: colors.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'Клиенты',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const Divider(height: 25),
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final scale = math.max(
+                            1.0,
+                            MediaQuery.textScalerOf(context).scale(14) / 14,
+                          );
+                          final width = constraints.maxWidth;
+                          final selectorWidth = math.min(width, 365 * scale);
+                          final filterWidth = math.min(width, 230 * scale);
+                          final searchWidth =
+                              width >= (365 + 230 + 300) * scale + 24
+                              ? width - selectorWidth - filterWidth - 24
+                              : math.min(width, 360 * scale);
+                          return Wrap(
+                            spacing: 12,
+                            runSpacing: 12,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              SizedBox(
+                                width: selectorWidth,
+                                child: SegmentedButton<ClientListMode>(
+                                  direction: width < 365 * scale
+                                      ? Axis.vertical
+                                      : Axis.horizontal,
+                                  showSelectedIcon: false,
+                                  segments: const [
+                                    ButtonSegment(
+                                      value: ClientListMode.database,
+                                      label: Text('База клиентов'),
+                                      icon: Icon(Icons.people_outline),
+                                    ),
+                                    ButtonSegment(
+                                      value: ClientListMode.followUp,
+                                      label: Text('Обзвон клиентов'),
+                                      icon: Icon(Icons.phone_outlined),
+                                    ),
+                                  ],
+                                  selected: {provider.listMode},
+                                  onSelectionChanged: (selection) =>
+                                      provider.setListMode(selection.single),
+                                  style: SegmentedButton.styleFrom(
+                                    selectedBackgroundColor: colors.primary,
+                                    selectedForegroundColor: colors.onPrimary,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(
+                                width: filterWidth,
+                                child: Visibility(
+                                  visible:
+                                      provider.listMode ==
+                                      ClientListMode.database,
+                                  maintainSize: true,
+                                  maintainAnimation: true,
+                                  maintainState: true,
+                                  child: Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: SingleChildScrollView(
+                                      scrollDirection: Axis.horizontal,
+                                      child: LabeledCheckboxToggle(
+                                        label: 'Деактивированные',
+                                        value: provider.showDeactivated,
+                                        onChanged: provider.setShowDeactivated,
+                                        tooltip: 'Показывать деактивированных клиентов вместе с активными',
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(
+                                width: searchWidth,
+                                child: TextField(
+                                  controller: _search,
+                                  maxLength: 500,
+                                  decoration: InputDecoration(
+                                    labelText:
+                                        'Клиент, адрес, уточнение или телефон',
+                                    border: const OutlineInputBorder(),
+                                    isDense: true,
+                                    counterText: '',
+                                    prefixIcon: const Icon(Icons.search),
+                                    suffixIcon: AppIconButton(
+                                      icon: Icons.clear,
+                                      tooltip: 'Очистить поиск',
+                                      onPressed: () {
+                                        _debounce?.cancel();
+                                        _search.clear();
+                                        unawaited(provider.setSearch(''));
+                                      },
+                                    ),
+                                  ),
+                                  onChanged: _searchChanged,
+                                  onSubmitted: (value) {
+                                    _debounce?.cancel();
+                                    unawaited(provider.setSearch(value));
+                                  },
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ),
-                if (listMode == ClientListMode.database) ...[
-                  const SizedBox(width: 16),
-                  LabeledCheckboxToggle(
-                    label: 'Деактивированные',
-                    value: showDeactivated,
-                    onChanged: context
-                        .read<ClientsProvider>()
-                        .setShowDeactivated,
-                    tooltip: 'Показывать деактивированных клиентов вместе с активными',
-                  ),
-                ],
+              ),
+            ),
+          ),
+          Expanded(
+            child: IndexedStack(
+              index: provider.listMode.index,
+              children: [
+                for (final mode in ClientListMode.values) _list(provider, mode),
               ],
             ),
           ),
-        ),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: Divider(height: 1),
-        ),
-        Expanded(child: _buildList(context)),
-      ],
+        ],
+      ),
     );
   }
 
-  Widget _buildList(BuildContext context) {
-    final status = context.select((ClientsProvider p) => p.status);
-
-    if (status == ClientStatus.loading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (status == ClientStatus.failure) {
-      final error = context.select((ClientsProvider p) => p.errorMessage);
-      return Center(child: Text('Ошибка: $error'));
-    }
-
-    final clients = context.select((ClientsProvider p) => p.sortedClients);
-
-    final listMode = context.select(
-      (ClientsProvider p) => p.listMode,
-    );
-    final isFollowUp = listMode == ClientListMode.followUp;
-
-    // Добавление клиентов доступно в режиме ведения базы.
-    final addCardCount = isFollowUp ? 0 : 1;
-
-    if (clients.isEmpty && isFollowUp) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Text(
-            'Нет клиентов для обзвона.\nСейчас нет засыпающих клиентов без отложенного контакта.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey, fontSize: 16),
-          ),
-        ),
-      );
-    }
-
-    return ListView.builder(
-      key: PageStorageKey(listMode),
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: clients.length + addCardCount,
-      itemBuilder: (context, index) {
-        // Если карточка добавления активна и это самый первый элемент
-        if (addCardCount == 1 && index == 0) {
-          return const _AddClientCard();
-        }
-
-        // Смещаем индекс на addCardCount (0 или 1), чтобы правильно читать массив
-        final client = clients[index - addCardCount];
-        return _ClientAttentionCard(client: client);
+  Widget _list(ClientsProvider provider, ClientListMode mode) {
+    final state = provider.dashboardFor(mode);
+    final addCount = mode == ClientListMode.database ? 1 : 0;
+    return NotificationListener<ScrollMetricsNotification>(
+      onNotification: (_) {
+        _scheduleCheck();
+        return false;
       },
+      child: RefreshIndicator(
+        onRefresh: () async {
+          await provider.refreshDashboardClients();
+        },
+        child: ListView.builder(
+          controller: _scroll[mode],
+          key: PageStorageKey(mode),
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          itemCount: state.clients.length + addCount + 1,
+          itemBuilder: (context, index) {
+            if (addCount == 1 && index == 0) return const _AddClientCard();
+            final clientIndex = index - addCount;
+            if (clientIndex < state.clients.length) {
+              final client = state.clients[clientIndex];
+              return _ClientAttentionCard(
+                key: ValueKey(client.id),
+                client: client,
+              );
+            }
+            return Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  if (state.loading) const CircularProgressIndicator(),
+                  if (state.error.isNotEmpty) ...[
+                    Text(state.error),
+                    AppSecondaryButton(
+                      text: 'Повторить',
+                      onPressed: () {
+                        if (state.refreshFailed) {
+                          unawaited(provider.refreshDashboardClients());
+                        } else {
+                          unawaited(provider.loadDashboardClients());
+                        }
+                      },
+                    ),
+                  ] else if (state.initialized && state.clients.isEmpty)
+                    Text(
+                      mode == ClientListMode.followUp
+                          ? 'Нет клиентов для обзвона.\nСейчас нет засыпающих клиентов без отложенного контакта.'
+                          : 'Клиенты не найдены.',
+                      textAlign: TextAlign.center,
+                    ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 }
@@ -155,7 +331,7 @@ class _AddClientCard extends StatelessWidget {
 class _ClientAttentionCard extends StatelessWidget {
   final Client client;
 
-  const _ClientAttentionCard({required this.client});
+  const _ClientAttentionCard({super.key, required this.client});
 
   @override
   Widget build(BuildContext context) {

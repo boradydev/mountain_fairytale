@@ -9,12 +9,40 @@ class ApiClientDataSource implements ClientDataSource {
   Map<String, dynamic> _data(Map<String, dynamic> response) =>
       Map<String, dynamic>.from(response['data'] as Map);
   @override
+  Future<ClientsPage<Map<String, dynamic>>> getClientsPage({
+    int offset = 0,
+    int limit = 25,
+    String? search,
+    bool includeDeactivated = false,
+    String mode = 'database',
+  }) async {
+    final response = await client.get(
+      Uri(
+        path: _path,
+        queryParameters: {
+          'offset': '$offset',
+          'limit': '$limit',
+          'mode': mode,
+          'include_deactivated': '$includeDeactivated',
+          'search': ?search,
+        },
+      ).toString(),
+    );
+    return ClientsPage(
+      (_data(response)['clients'] as List)
+          .map((row) => Map<String, dynamic>.from(row as Map))
+          .toList(),
+      (response['total'] as num).toInt(),
+    );
+  }
+
+  @override
   Future<List<Map<String, dynamic>>> getAllClients({
     String? search,
     bool includeDeactivated = false,
   }) async {
     final rows = <Map<String, dynamic>>[];
-    // Fetch all pages so the sleeping dashboard sees the complete active list.
+    // Full directory for selectors and other screens; independent of dashboard pages.
     while (true) {
       final uri = Uri(
         path: _path,

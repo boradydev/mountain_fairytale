@@ -31,6 +31,18 @@ import '../auth/auth_fakes.dart';
 import '../directories/directories_test.dart' show Store;
 
 class _ClientsRepository implements ClientRepository {
+  @override
+  Future<ClientsPage<Client>> getClientsPage({
+    int offset = 0,
+    int limit = 25,
+    String? search,
+    bool includeDeactivated = false,
+    String mode = 'database',
+  }) async {
+    calls++;
+    return const ClientsPage([], 0);
+  }
+
   int calls = 0;
 
   @override
@@ -283,7 +295,7 @@ void main() {
         await tester.tap(find.text('База клиентов'));
         await tester.pumpAndSettle();
         expect(find.text('Добавить клиента'), findsOneWidget);
-        expect(clientRepo.calls, 1);
+        expect(clientRepo.calls, 2);
         expect(dayRepo.calls, 1);
         await tester.ensureVisible(find.widgetWithText(Tab, 'Комиссии'));
         await tester.tap(find.text('Комиссии'));
