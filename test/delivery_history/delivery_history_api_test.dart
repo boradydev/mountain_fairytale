@@ -80,7 +80,7 @@ class _ApiClient implements ApiClient {
 
 void main() {
   testWidgets(
-    'one filtered delivery retains all three route clients in the mini card',
+    'compact card hides count while API retains all three route clients',
     (tester) async {
       final api = _ApiClient();
       final page = await ApiDeliveryHistoryRepository(api).getClientHistory(
@@ -113,11 +113,11 @@ void main() {
       final card = find.byType(DocumentSummaryCard);
       expect(
         find.descendant(of: card, matching: find.text('Клиентов:')),
-        findsOneWidget,
+        findsNothing,
       );
       expect(
         find.descendant(of: card, matching: find.text('3')),
-        findsOneWidget,
+        findsNothing,
       );
       expect(tester.takeException(), isNull);
     },

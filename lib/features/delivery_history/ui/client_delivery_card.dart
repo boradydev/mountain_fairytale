@@ -26,12 +26,6 @@ class ClientDeliveryCard extends StatelessWidget {
       child: DocumentSummaryCard(
         isPickup: doc.isPickup,
         date: DateFormat.yMd(locale).format(doc.plannedDate),
-        count: doc.clientsCount.toString(),
-        amount: NumberFormat.currency(
-          locale: locale,
-          symbol: '₽',
-          decimalDigits: 2,
-        ).format(doc.totalAmount),
         driver: doc.driverName ?? 'Не указан',
         car: doc.carModelAndNumber ?? 'Не указан',
         isActive: doc.isActive,

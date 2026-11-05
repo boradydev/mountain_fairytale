@@ -7,6 +7,66 @@ import 'package:mountain_fairytale/shared/widgets/dialog_card_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/document_summary_card.dart';
 
 void main() {
+  for (final count in [null, '3']) {
+    for (final amount in [null, '100 ₽']) {
+      for (final extra in [false, true]) {
+        testWidgets(
+          'optional fields count=$count amount=$amount extra=$extra',
+          (
+            tester,
+          ) async {
+            await tester.pumpWidget(
+              MaterialApp(
+                home: Scaffold(
+                  body: DocumentSummaryCard(
+                    isPickup: false,
+                    date: '05.11.2026',
+                    count: count,
+                    amount: amount,
+                    createdAt: extra ? '04.11.2026 12:30' : null,
+                    title: extra ? 'Доставка' : null,
+                    onOpen: () {},
+                  ),
+                ),
+              ),
+            );
+            expect(
+              find.text('Клиентов:'),
+              count == null ? findsNothing : findsOneWidget,
+            );
+            expect(
+              find.text('Сумма:'),
+              amount == null ? findsNothing : findsOneWidget,
+            );
+            expect(find.text('Создан:'), extra ? findsOneWidget : findsNothing);
+            expect(
+              find.text('Доставка'),
+              extra ? findsOneWidget : findsNothing,
+            );
+            expect(find.text('Отменён'), findsNothing);
+            expect(
+              tester.widget<Table>(find.byType(Table)).children.length,
+              3 +
+                  (count == null ? 0 : 1) +
+                  (amount == null ? 0 : 1) +
+                  (extra ? 1 : 0),
+            );
+            if (extra) {
+              expect(
+                tester.getTopLeft(find.text('Создан:')).dy,
+                greaterThan(tester.getTopLeft(find.text('Дата:')).dy),
+              );
+              expect(
+                tester.getTopLeft(find.text('Создан:')).dy,
+                lessThan(tester.getTopLeft(find.text('Водитель:')).dy),
+              );
+            }
+            expect(tester.takeException(), isNull);
+          },
+        );
+      }
+    }
+  }
   const driver = 'Иванов Иван Иванович очень длинное имя водителя маршрута';
   const car = 'Очень длинная модель автомобиля с номером А123ВС777';
   for (final brightness in Brightness.values) {

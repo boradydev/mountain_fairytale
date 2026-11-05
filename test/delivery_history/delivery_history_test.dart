@@ -20,6 +20,8 @@ import 'package:mountain_fairytale/shared/widgets/app_date_range_dialog.dart';
 import 'package:mountain_fairytale/shared/widgets/dialog_card_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/document_summary_card.dart';
 import 'package:provider/provider.dart';
+import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_screen.dart';
+import 'package:mountain_fairytale/features/pickup/ui/pickup_constructor_screen.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/route_point_card_content.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/task_item_row.dart';
 
@@ -75,6 +77,7 @@ class _Repository implements DeliveryHistoryRepository {
   final requests = <_Request>[];
   bool automatic = false;
   int rows = 0;
+  List<HistoryDocument>? documents;
   final documentOffsets = <int>[];
   final documentLimits = <int>[];
   String? documentType;
@@ -120,28 +123,43 @@ class _Repository implements DeliveryHistoryRepository {
     documentOffsets.add(offset);
     documentLimits.add(limit);
     return DeliveryHistoryPage(
-      documents: List.generate(
-        (rows - offset).clamp(0, limit),
-        (i) => ClientDelivery.fromJson(_json('${offset + i}')).document,
-      ),
+      documents:
+          documents ??
+          List.generate(
+            (rows - offset).clamp(0, limit),
+            (i) => ClientDelivery.fromJson(_json('${offset + i}')).document,
+          ),
       total: rows,
     );
   }
 }
 
 final _captureKey = GlobalKey();
-Widget _app(Widget child, {Brightness brightness = Brightness.light}) =>
-    RepaintBoundary(
-      key: _captureKey,
-      child: MaterialApp(
-        locale: const Locale('ru'),
-        supportedLocales: const [Locale('ru')],
-        localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(fontFamily: 'NotoSans', brightness: brightness),
-        home: Scaffold(body: child),
-      ),
-    );
+
+class _NavigationObserver extends NavigatorObserver {
+  Route<dynamic>? lastRoute;
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    lastRoute = route;
+  }
+}
+
+Widget _app(
+  Widget child, {
+  Brightness brightness = Brightness.light,
+  List<NavigatorObserver> observers = const [],
+}) => RepaintBoundary(
+  key: _captureKey,
+  child: MaterialApp(
+    navigatorObservers: observers,
+    locale: const Locale('ru'),
+    supportedLocales: const [Locale('ru')],
+    localizationsDelegates: GlobalMaterialLocalizations.delegates,
+    debugShowCheckedModeBanner: false,
+    theme: ThemeData(fontFamily: 'NotoSans', brightness: brightness),
+    home: Scaffold(body: child),
+  ),
+);
 void main() {
   setUpAll(() async {
     final loader = FontLoader('NotoSans')
@@ -230,7 +248,7 @@ void main() {
             ),
           ),
         );
-        final routeText = find.textContaining('900,50');
+        final routeText = find.text('Дата:');
         final routeCard = find.descendant(
           of: find.byType(AppDialogCard),
           matching: find.byType(Material),
@@ -240,11 +258,11 @@ void main() {
         expect(find.text('Дата:'), findsOneWidget);
         expect(find.text('Водитель:'), findsOneWidget);
         expect(find.text('Автомобиль:'), findsOneWidget);
-        expect(find.text('Сумма:'), findsOneWidget);
+        expect(find.text('Сумма:'), findsNothing);
         expect(find.textContaining('Создан:'), findsNothing);
         expect(find.byType(DocumentSummaryCard), findsOneWidget);
-        expect(find.text('Клиентов:'), findsOneWidget);
-        expect(find.text('3'), findsOneWidget);
+        expect(find.text('Клиентов:'), findsNothing);
+        expect(find.text('3'), findsNothing);
         if (width > 760) {
           final surface = find.byType(RoutePointCardSurface);
           expect(tester.getSize(routeCard).width, inInclusiveRange(280, 370));
@@ -570,6 +588,108 @@ void main() {
       },
     );
   }
+  for (final isPickup in [false, true]) {
+    testWidgets('history opens the original document pickup=$isPickup', (
+      tester,
+    ) async {
+      final doc = HistoryDocument.fromJson({
+        ..._json('navigation'),
+        'documentType': isPickup ? 'pickupSheet' : 'deliveryRouteSheet',
+        'isActive': false,
+        'purchasesCount': 1,
+        'matchedClients': [],
+      });
+      final repo = _Repository()..documents = [doc];
+      final provider = DeliveryHistoryProvider(repo);
+      addTearDown(provider.dispose);
+      await provider.setClientsMode(false);
+      final observer = _NavigationObserver();
+      await tester.pumpWidget(
+        _app(
+          ChangeNotifierProvider.value(
+            value: provider,
+            child: const DeliveryHistoryScreen(),
+          ),
+          observers: [observer],
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(DocumentSummaryCard));
+      final route = observer.lastRoute! as MaterialPageRoute<bool>;
+      final screen = route.builder(
+        tester.element(find.byType(DeliveryHistoryScreen)),
+      );
+      if (isPickup) {
+        expect(screen, isA<PickupConstructorScreen>());
+        expect((screen as PickupConstructorScreen).existingPickupId, doc.id);
+        expect(screen.initialDate, doc.plannedDate);
+      } else {
+        expect(screen, isA<RouteConstructorScreen>());
+        expect((screen as RouteConstructorScreen).existingRouteId, doc.id);
+        expect(screen.initialDate, doc.plannedDate);
+      }
+      // Inspect the navigation target without mounting the constructor's dependencies.
+      observer.navigator!.pop();
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    });
+  }
+  for (final isPickup in [false, true]) {
+    for (final width in [240.0, 320.0, 1200.0]) {
+      testWidgets('history document pickup=$isPickup width=$width', (
+        tester,
+      ) async {
+        tester.view.physicalSize = Size(width, 1400);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        final doc = HistoryDocument.fromJson({
+          ..._json('summary'),
+          'documentType': isPickup ? 'pickupSheet' : 'deliveryRouteSheet',
+          'createdAt': null,
+          'isActive': false,
+          'purchasesCount': 7,
+          'matchedClients': [],
+        });
+        HistoryDocument? opened;
+        await tester.pumpWidget(
+          _app(
+            MediaQuery(
+              data: const MediaQueryData(textScaler: TextScaler.linear(1.8)),
+              child: ListView(
+                children: [
+                  HistoryDocumentCard(
+                    document: doc,
+                    onOpen: () => opened = doc,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+        final card = find.byType(DocumentSummaryCard);
+        expect(find.text(isPickup ? 'Самовывоз' : 'Доставка'), findsOneWidget);
+        expect(find.text('Дата неизвестна'), findsOneWidget);
+        expect(find.text('Отменён'), findsOneWidget);
+        expect(find.text(isPickup ? 'Покупок:' : 'Клиентов:'), findsOneWidget);
+        expect(find.text(isPickup ? '7' : '3'), findsOneWidget);
+        expect(
+          find.text('Водитель:'),
+          isPickup ? findsNothing : findsOneWidget,
+        );
+        expect(
+          find.text('Автомобиль:'),
+          isPickup ? findsNothing : findsOneWidget,
+        );
+        expect(tester.getSize(card).width, lessThanOrEqualTo(600));
+        expect(tester.getTopLeft(card).dx, 16);
+        await tester.tap(card);
+        expect(opened, same(doc));
+        expect(opened!.isPickup, isPickup);
+        expect(tester.takeException(), isNull);
+      });
+    }
+  }
   testWidgets('document shows both dates and no matched clients', (
     tester,
   ) async {
@@ -577,8 +697,8 @@ void main() {
     await tester.pumpWidget(
       _app(HistoryDocumentCard(document: doc, onOpen: () {})),
     );
-    expect(find.text('Плановая дата: 03.11.2026'), findsOneWidget);
-    expect(find.text('Создан: 02.11.2026 12:30'), findsOneWidget);
+    expect(find.text('03.11.2026'), findsOneWidget);
+    expect(find.text('02.11.2026 12:30'), findsOneWidget);
     expect(find.text('Исторический клиент'), findsNothing);
   });
   testWidgets(
