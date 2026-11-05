@@ -8,6 +8,8 @@ class TaskItemRow extends StatefulWidget {
   final int index;
   final bool enabled;
   final bool allowFreePrice;
+  final bool showFullDriverNote;
+  final bool strikeThroughAmount;
   final VoidCallback? onRefreshPrice;
   final DeliveryTaskItem item;
   final VoidCallback onDelete;
@@ -20,6 +22,8 @@ class TaskItemRow extends StatefulWidget {
     required this.index,
     this.enabled = true,
     this.allowFreePrice = false,
+    this.showFullDriverNote = false,
+    this.strikeThroughAmount = false,
     this.onRefreshPrice,
     required this.item,
     required this.onDelete,
@@ -223,8 +227,8 @@ class _TaskItemRowState extends State<TaskItemRow> {
     message: widget.item.driverNote,
     child: Text(
       'Уточнение: ${widget.item.driverNote}',
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
+      maxLines: widget.showFullDriverNote ? null : 1,
+      overflow: widget.showFullDriverNote ? null : TextOverflow.ellipsis,
       style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
     ),
   );
@@ -239,7 +243,12 @@ class _TaskItemRowState extends State<TaskItemRow> {
     final amount = Text(
       '${widget.item.amount.toStringAsFixed(2)} ₽',
       textAlign: TextAlign.right,
-      style: const TextStyle(fontWeight: FontWeight.bold),
+      style: TextStyle(
+        fontWeight: FontWeight.bold,
+        decoration: widget.strikeThroughAmount
+            ? TextDecoration.lineThrough
+            : null,
+      ),
     );
     final actions = SizedBox(
       width: 48,
@@ -303,7 +312,7 @@ class _TaskItemRowState extends State<TaskItemRow> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           name,
-                          if (_showFreePrice &&
+                          if ((widget.showFullDriverNote || _showFreePrice) &&
                               widget.item.driverNote.isNotEmpty) ...[
                             const SizedBox(height: 4),
                             _noteSummary(),
@@ -336,7 +345,7 @@ class _TaskItemRowState extends State<TaskItemRow> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       name,
-                      if (_showFreePrice &&
+                      if ((widget.showFullDriverNote || _showFreePrice) &&
                           widget.item.driverNote.isNotEmpty) ...[
                         const SizedBox(height: 4),
                         _noteSummary(),

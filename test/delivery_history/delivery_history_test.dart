@@ -18,6 +18,8 @@ import 'package:mountain_fairytale/features/delivery_history/ui/client_delivery_
 import 'package:mountain_fairytale/features/delivery_history/ui/history_document_card.dart';
 import 'package:mountain_fairytale/shared/widgets/app_date_range_dialog.dart';
 import 'package:provider/provider.dart';
+import 'package:mountain_fairytale/features/delivery_route/ui/route_point_card_content.dart';
+import 'package:mountain_fairytale/features/delivery_route/ui/task_item_row.dart';
 
 Map<String, dynamic> _json(String id) => {
   'pointId': id,
@@ -248,13 +250,102 @@ void main() {
         }
         expect(find.text('Исторический товар'), findsOneWidget);
         expect(
-          find.text('Представитель: Исторический представитель'),
+          find.text('Исторический представитель'),
           findsOneWidget,
         );
         expect(find.byType(DropdownButtonFormField<String>), findsNothing);
         expect(tester.takeException(), isNull);
         await tester.tap(routeText);
         expect(opened, 1);
+      },
+    );
+  }
+  for (final width in [320.0, 680.0, 1100.0, 1500.0]) {
+    testWidgets(
+      'history snapshots, long text and independent expansion at $width',
+      (tester) async {
+        tester.view.physicalSize = Size(width, 1600);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        final longText = List.filled(
+          12,
+          'Длинный исторический текст',
+        ).join(' ');
+        final json = _json('first');
+        final item = Map<String, dynamic>.from(
+          (json['items'] as List).first as Map,
+        );
+        final data = {
+          ...json,
+          'clientName': longText,
+          'address': longText,
+          'memo': longText,
+          'nonDeliveryReason': longText,
+          'salesRepresentativeName': longText,
+          'items': [
+            {...item, 'driverNote': longText},
+            {
+              ...item,
+              'itemId': 'second-item',
+              'price': '125.50',
+              'driverNote': 'Вторая строка',
+            },
+          ],
+        };
+        await tester.pumpWidget(
+          _app(
+            ListView(
+              children: [
+                ClientDeliveryCard(
+                  delivery: ClientDelivery.fromJson(data),
+                  onOpen: () {},
+                ),
+                ClientDeliveryCard(
+                  delivery: ClientDelivery.fromJson(_json('second')),
+                  onOpen: () {},
+                ),
+              ],
+            ),
+          ),
+        );
+        final surfaces = find.byType(RoutePointCardSurface);
+        expect(
+          tester.widget<RoutePointCardSurface>(surfaces.first).isDelivered,
+          isFalse,
+        );
+        expect(find.byType(TaskItemRow), findsNothing);
+        final firstTile = find.byType(ExpansionTile).first;
+        await tester.tap(
+          find.descendant(of: firstTile, matching: find.byType(ListTile)),
+        );
+        await tester.pumpAndSettle();
+        expect(find.byType(TaskItemRow), findsNWidgets(2));
+        expect(find.text('Итого: 451.00 ₽'), findsOneWidget);
+        expect(find.text('Форма оплаты'), findsOneWidget);
+        expect(find.text('Торговый представитель'), findsOneWidget);
+        expect(find.byType(TextFormField), findsNothing);
+        expect(find.byType(PopupMenuButton<String>), findsNothing);
+        final note = tester.widget<Text>(find.text('Уточнение: $longText'));
+        expect(note.maxLines, isNull);
+        expect(
+          tester.widget<Text>(find.text('Итого: 451.00 ₽')).style!.decoration,
+          TextDecoration.lineThrough,
+        );
+        final row = tester.widget<TaskItemRow>(find.byType(TaskItemRow).first);
+        expect(row.strikeThroughAmount, isTrue);
+        expect(tester.takeException(), isNull);
+        await tester.tap(
+          find.descendant(of: firstTile, matching: find.byType(ListTile)),
+        );
+        await tester.pumpAndSettle();
+        expect(find.byType(TaskItemRow), findsNothing);
+        await tester.ensureVisible(find.byType(ExpansionTile).last);
+        await tester.tap(find.byType(ExpansionTile).last);
+        await tester.pumpAndSettle();
+        expect(find.byType(TaskItemRow), findsOneWidget);
+        expect(find.text('Итого: 200.00 ₽'), findsOneWidget);
+        expect(tester.takeException(), isNull);
       },
     );
   }
