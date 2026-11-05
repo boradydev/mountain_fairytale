@@ -16,7 +16,8 @@ import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 import 'package:provider/provider.dart';
 
 class ClientsAttentionListView extends StatefulWidget {
-  const ClientsAttentionListView({super.key});
+  final ValueChanged<double>? onHeaderHeightChanged;
+  const ClientsAttentionListView({super.key, this.onHeaderHeightChanged});
   @override
   State<ClientsAttentionListView> createState() =>
       _ClientsAttentionListViewState();
@@ -24,6 +25,7 @@ class ClientsAttentionListView extends StatefulWidget {
 
 class _ClientsAttentionListViewState extends State<ClientsAttentionListView> {
   final _search = TextEditingController();
+  final _headerKey = GlobalKey();
   final _scroll = {
     for (final mode in ClientListMode.values) mode: ScrollController(),
   };
@@ -71,6 +73,10 @@ class _ClientsAttentionListViewState extends State<ClientsAttentionListView> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkScheduled = false;
       if (!mounted) return;
+      final header = _headerKey.currentContext?.findRenderObject();
+      if (header is RenderBox && header.hasSize) {
+        widget.onHeaderHeightChanged?.call(header.size.height);
+      }
       final provider = context.read<ClientsProvider>();
       for (final mode in ClientListMode.values) {
         final state = provider.dashboardFor(mode);
@@ -111,131 +117,165 @@ class _ClientsAttentionListViewState extends State<ClientsAttentionListView> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           ConstrainedBox(
+            key: _headerKey,
             constraints: BoxConstraints(maxHeight: bounds.maxHeight * .65),
             child: SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: colors.surfaceContainerLow,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        'Клиенты',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const Divider(height: 25),
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          final scale = math.max(
-                            1.0,
-                            MediaQuery.textScalerOf(context).scale(14) / 14,
-                          );
-                          final width = constraints.maxWidth;
-                          final selectorWidth = math.min(width, 365 * scale);
-                          final filterWidth = math.min(width, 230 * scale);
-                          final searchWidth =
-                              width >= (365 + 230 + 300) * scale + 24
-                              ? width - selectorWidth - filterWidth - 24
-                              : math.min(width, 360 * scale);
-                          return Wrap(
-                            spacing: 12,
-                            runSpacing: 12,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            children: [
-                              SizedBox(
-                                width: selectorWidth,
-                                child: SegmentedButton<ClientListMode>(
-                                  direction: width < 365 * scale
-                                      ? Axis.vertical
-                                      : Axis.horizontal,
-                                  showSelectedIcon: false,
-                                  segments: const [
-                                    ButtonSegment(
-                                      value: ClientListMode.database,
-                                      label: Text('База клиентов'),
-                                      icon: Icon(Icons.people_outline),
-                                    ),
-                                    ButtonSegment(
-                                      value: ClientListMode.followUp,
-                                      label: Text('Обзвон клиентов'),
-                                      icon: Icon(Icons.phone_outlined),
-                                    ),
-                                  ],
-                                  selected: {provider.listMode},
-                                  onSelectionChanged: (selection) =>
-                                      provider.setListMode(selection.single),
-                                  style: SegmentedButton.styleFrom(
-                                    selectedBackgroundColor: colors.primary,
-                                    selectedForegroundColor: colors.onPrimary,
-                                  ),
-                                ),
-                              ),
-                              SizedBox(
-                                width: filterWidth,
-                                child: Visibility(
-                                  visible:
-                                      provider.listMode ==
-                                      ClientListMode.database,
-                                  maintainSize: true,
-                                  maintainAnimation: true,
-                                  maintainState: true,
-                                  child: Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: SingleChildScrollView(
-                                      scrollDirection: Axis.horizontal,
-                                      child: LabeledCheckboxToggle(
-                                        label: 'Деактивированные',
-                                        value: provider.showDeactivated,
-                                        onChanged: provider.setShowDeactivated,
-                                        tooltip: 'Показывать деактивированных клиентов вместе с активными',
+                child: Material(
+                  key: const ValueKey("clients-panel"),
+                  color: colors.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(16),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          'Клиенты',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const Divider(height: 25),
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final scale = math.max(
+                              1.0,
+                              MediaQuery.textScalerOf(context).scale(14) / 14,
+                            );
+                            final width = constraints.maxWidth;
+                            final selectorWidth = math.min(width, 365 * scale);
+                            final filterWidth = math.min(width, 230 * scale);
+                            final controlsWidth =
+                                width >=
+                                    selectorWidth +
+                                        filterWidth +
+                                        200 * scale +
+                                        24
+                                ? width - selectorWidth - 12
+                                : width;
+                            final searchWidth =
+                                controlsWidth >= filterWidth + 200 * scale + 12
+                                ? controlsWidth - filterWidth - 12
+                                : controlsWidth;
+                            return Wrap(
+                              spacing: 12,
+                              runSpacing: 12,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: selectorWidth,
+                                  child: SegmentedButton<ClientListMode>(
+                                    direction: width < 365 * scale
+                                        ? Axis.vertical
+                                        : Axis.horizontal,
+                                    showSelectedIcon: false,
+                                    segments: const [
+                                      ButtonSegment(
+                                        value: ClientListMode.database,
+                                        label: Text('База клиентов'),
+                                        icon: Icon(Icons.people_outline),
                                       ),
+                                      ButtonSegment(
+                                        value: ClientListMode.followUp,
+                                        label: Text('Обзвон клиентов'),
+                                        icon: Icon(Icons.phone_outlined),
+                                      ),
+                                    ],
+                                    selected: {provider.listMode},
+                                    onSelectionChanged: (selection) =>
+                                        provider.setListMode(selection.single),
+                                    style: SegmentedButton.styleFrom(
+                                      selectedBackgroundColor: colors.primary,
+                                      selectedForegroundColor: colors.onPrimary,
                                     ),
                                   ),
                                 ),
-                              ),
-                              SizedBox(
-                                width: searchWidth,
-                                child: TextField(
-                                  controller: _search,
-                                  maxLength: 500,
-                                  decoration: InputDecoration(
-                                    labelText:
-                                        'Клиент, адрес, уточнение или телефон',
-                                    border: const OutlineInputBorder(),
-                                    isDense: true,
-                                    counterText: '',
-                                    prefixIcon: const Icon(Icons.search),
-                                    suffixIcon: AppIconButton(
-                                      icon: Icons.clear,
-                                      tooltip: 'Очистить поиск',
-                                      onPressed: () {
-                                        _debounce?.cancel();
-                                        _search.clear();
-                                        unawaited(provider.setSearch(''));
-                                      },
-                                    ),
+                                SizedBox(
+                                  width: controlsWidth,
+                                  child: Wrap(
+                                    spacing: 12,
+                                    runSpacing: 12,
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
+                                    children: [
+                                      SizedBox(
+                                        width: searchWidth,
+                                        child: TextField(
+                                          controller: _search,
+                                          maxLength: 500,
+                                          decoration: InputDecoration(
+                                            labelText: 'Клиент, адрес, уточнение или телефон',
+                                            border: const OutlineInputBorder(),
+                                            isDense: true,
+                                            counterText: '',
+                                            prefixIcon: const Icon(
+                                              Icons.search,
+                                            ),
+                                            suffixIcon: AppIconButton(
+                                              icon: Icons.clear,
+                                              tooltip: 'Очистить поиск',
+                                              onPressed: () {
+                                                _debounce?.cancel();
+                                                _search.clear();
+                                                unawaited(
+                                                  provider.setSearch(''),
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                          onChanged: _searchChanged,
+                                          onSubmitted: (value) {
+                                            _debounce?.cancel();
+                                            unawaited(
+                                              provider.setSearch(value),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        width: filterWidth,
+                                        child: Visibility(
+                                          visible:
+                                              provider.listMode ==
+                                              ClientListMode.database,
+                                          maintainSize: true,
+                                          maintainAnimation: true,
+                                          maintainState: true,
+                                          child: Align(
+                                            alignment: Alignment.centerLeft,
+                                            child: SingleChildScrollView(
+                                              scrollDirection: Axis.horizontal,
+                                              child: LabeledCheckboxToggle(
+                                                label: 'Деактивированные',
+                                                value: provider.showDeactivated,
+                                                onChanged:
+                                                    provider.setShowDeactivated,
+                                                tooltip: 'Показывать деактивированных клиентов вместе с активными',
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  onChanged: _searchChanged,
-                                  onSubmitted: (value) {
-                                    _debounce?.cancel();
-                                    unawaited(provider.setSearch(value));
-                                  },
                                 ),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                    ],
+                              ],
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
+          ),
+          SizedBox(
+            key: const ValueKey('clients-loading-slot'),
+            height: 3,
+            child: provider.dashboard.loading
+                ? const LinearProgressIndicator(minHeight: 3)
+                : null,
           ),
           Expanded(
             child: IndexedStack(
@@ -258,7 +298,7 @@ class _ClientsAttentionListViewState extends State<ClientsAttentionListView> {
         _scheduleCheck();
         return false;
       },
-      child: RefreshIndicator(
+      child: RefreshIndicator.noSpinner(
         onRefresh: () async {
           await provider.refreshDashboardClients();
         },
@@ -282,7 +322,6 @@ class _ClientsAttentionListViewState extends State<ClientsAttentionListView> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  if (state.loading) const CircularProgressIndicator(),
                   if (state.error.isNotEmpty) ...[
                     Text(state.error),
                     AppSecondaryButton(

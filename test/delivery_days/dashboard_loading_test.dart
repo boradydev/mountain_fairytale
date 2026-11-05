@@ -21,6 +21,7 @@ import 'delivery_days_provider_test.dart' show DaysRepository, day;
 
 class EmptyClients implements ClientRepository {
   bool fail = false;
+  Completer<ClientsPage<Client>>? pageGate;
   @override
   Future<ClientsPage<Client>> getClientsPage({
     int offset = 0,
@@ -30,6 +31,7 @@ class EmptyClients implements ClientRepository {
     String mode = 'database',
   }) async {
     if (fail) throw StateError("offline");
+    if (pageGate != null) return pageGate!.future;
     return const ClientsPage([], 0);
   }
 
@@ -287,5 +289,45 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     sequence.responses.last.complete(event);
     await tester.pump();
+  });
+  testWidgets('wide panels align and request bars keep their slots', (
+    tester,
+  ) async {
+    await show(tester);
+    await tester.pump();
+    final daysPanel = find.byKey(const ValueKey('delivery-days-panel'));
+    final clientsPanel = find.byKey(const ValueKey('clients-panel'));
+    expect(
+      tester.getBottomLeft(daysPanel).dy,
+      tester.getBottomLeft(clientsPanel).dy,
+    );
+    final daysSlot = find.byKey(const ValueKey('delivery-days-loading-slot'));
+    final clientsSlot = find.byKey(const ValueKey('clients-loading-slot'));
+    final daysRect = tester.getRect(daysSlot);
+    final clientsRect = tester.getRect(clientsSlot);
+    expect(daysRect.top, clientsRect.top);
+    expect(daysRect.height, 3);
+    expect(clientsRect.height, 3);
+    final dayGate = Completer<DeliveryDaysPage>();
+    final clientGate = Completer<ClientsPage<Client>>();
+    repository.loadDays = (_, _) => dayGate.future;
+    clientRepository.pageGate = clientGate;
+    final refreshing = Future.wait([
+      days.refreshDashboardDays(),
+      clients.refreshDashboardClients(),
+    ]);
+    await tester.pump();
+    expect(find.byType(LinearProgressIndicator), findsNWidgets(2));
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(tester.getRect(daysSlot), daysRect);
+    expect(tester.getRect(clientsSlot), clientsRect);
+    dayGate.complete(DeliveryDaysPage(days: days.days, total: days.total));
+    clientGate.complete(const ClientsPage([], 0));
+    await refreshing;
+    await tester.pump();
+    expect(find.byType(LinearProgressIndicator), findsNothing);
+    expect(tester.getRect(daysSlot), daysRect);
+    expect(tester.getRect(clientsSlot), clientsRect);
+    await tester.pumpWidget(const SizedBox());
   });
 }

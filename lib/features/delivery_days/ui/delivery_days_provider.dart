@@ -14,6 +14,7 @@ class DeliveryDaysProvider extends SafeChangeNotifier {
   DeliveryStatus _status = DeliveryStatus.initial;
   String _errorMessage = '';
   bool _isLoadingMore = false;
+  bool _isRefreshingDashboard = false;
   int _total = 0;
   int _version = 0;
   List<DeliveryDay> get days => _days;
@@ -22,14 +23,17 @@ class DeliveryDaysProvider extends SafeChangeNotifier {
   int get total => _total;
   bool get isLoading => _status == DeliveryStatus.loading;
   bool get isLoadingMore => _isLoadingMore;
+  bool get isRequesting => _isLoadingMore || _isRefreshingDashboard;
   bool get hasMore =>
       _status == DeliveryStatus.initial || _days.length < _total;
   bool get hasError => _errorMessage.isNotEmpty;
   bool get isEmpty => _status == DeliveryStatus.success && _days.isEmpty;
   Future<void> refreshDeliveryDays() => _load(refresh: true);
   Future<bool> refreshDashboardDays() async {
-    if (_isLoadingMore) return false;
+    if (isRequesting) return false;
     final version = ++_version;
+    _isRefreshingDashboard = true;
+    notifyListeners();
     try {
       final page = await repository.getDeliveryDays(
         offset: 0,
@@ -44,11 +48,16 @@ class DeliveryDaysProvider extends SafeChangeNotifier {
       return true;
     } catch (_) {
       return false;
+    } finally {
+      if (version == _version) {
+        _isRefreshingDashboard = false;
+        notifyListeners();
+      }
     }
   }
 
   Future<void> fetchDeliveryDays() async {
-    if (_isLoadingMore || (_status == DeliveryStatus.success && !hasMore)) {
+    if (isRequesting || (_status == DeliveryStatus.success && !hasMore)) {
       return;
     }
     await _load(refresh: _days.isEmpty);
@@ -58,6 +67,7 @@ class DeliveryDaysProvider extends SafeChangeNotifier {
     final version = ++_version;
     final offset = refresh ? 0 : _days.length;
     final limit = refresh ? max(_pageSize, _days.length) : _pageSize;
+    _isRefreshingDashboard = false;
     _isLoadingMore = true;
     _errorMessage = '';
     if (_days.isEmpty) _status = DeliveryStatus.loading;

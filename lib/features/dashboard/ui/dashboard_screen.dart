@@ -30,6 +30,13 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen>
   bool _initialLoadStarted = false;
   bool _initialLoadComplete = false;
   bool _scrollCheckScheduled = false;
+  double? _clientHeaderHeight;
+
+  void _updateHeaderHeight(double height) {
+    if (!mounted || _clientHeaderHeight == height) return;
+    setState(() => _clientHeaderHeight = height);
+  }
+
   bool get _canWatch => mounted && _visible && _appActive;
   @override
   void initState() {
@@ -176,16 +183,18 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen>
     });
   }
 
-  Widget _daysList() => NotificationListener<ScrollMetricsNotification>(
-    onNotification: (_) {
-      // Also fill a large viewport when seven days do not yet make it scrollable.
-      _scheduleScrollCheck();
-      return false;
-    },
-    child: DeliveryDaysListView(
-      scrollController: _scrollController,
-    ),
-  );
+  Widget _daysList({double? headerHeight}) =>
+      NotificationListener<ScrollMetricsNotification>(
+        onNotification: (_) {
+          // Also fill a large viewport when seven days do not yet make it scrollable.
+          _scheduleScrollCheck();
+          return false;
+        },
+        child: DeliveryDaysListView(
+          scrollController: _scrollController,
+          headerHeight: headerHeight,
+        ),
+      );
 
   @override
   void dispose() {
@@ -220,12 +229,14 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen>
         children: [
           SizedBox(
             width: (constraints.maxWidth * 0.38).clamp(360.0, 500.0),
-            child: _daysList(),
+            child: _daysList(headerHeight: _clientHeaderHeight),
           ),
           const VerticalDivider(width: 1),
           Expanded(
             flex: 3,
-            child: const ClientsAttentionListView(),
+            child: ClientsAttentionListView(
+              onHeaderHeightChanged: _updateHeaderHeight,
+            ),
           ),
         ],
       );

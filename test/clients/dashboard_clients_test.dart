@@ -273,6 +273,13 @@ void main() {
       await tester.pumpAndSettle();
       final field = find.byType(TextField);
       final position = tester.getTopLeft(field);
+      final fieldSize = tester.getSize(field);
+      if (size.width >= 1000) {
+        expect(
+          tester.getTopLeft(find.byType(LabeledCheckboxToggle)).dx,
+          greaterThan(tester.getTopRight(field).dx),
+        );
+      }
       final height = tester.getSize(find.byType(IndexedStack)).height;
       final segments = tester.widget<SegmentedButton<ClientListMode>>(
         find.byType(SegmentedButton<ClientListMode>),
@@ -281,6 +288,7 @@ void main() {
       provider.setListMode(ClientListMode.followUp);
       await tester.pumpAndSettle();
       expect(tester.getTopLeft(field), position);
+      expect(tester.getSize(field), fieldSize);
       expect(tester.getSize(find.byType(IndexedStack)).height, height);
       final visibility = tester.widget<Visibility>(
         find

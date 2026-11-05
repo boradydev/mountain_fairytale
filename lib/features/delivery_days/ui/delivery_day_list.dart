@@ -12,9 +12,11 @@ import 'package:provider/provider.dart';
 
 class DeliveryDaysListView extends StatelessWidget {
   final ScrollController scrollController;
+  final double? headerHeight;
   const DeliveryDaysListView({
     super.key,
     required this.scrollController,
+    this.headerHeight,
   });
   @override
   Widget build(BuildContext context) {
@@ -25,39 +27,50 @@ class DeliveryDaysListView extends StatelessWidget {
         children: [
           ConstrainedBox(
             constraints: BoxConstraints(maxHeight: bounds.maxHeight * .65),
-            child: SingleChildScrollView(
+            child: SizedBox(
+              height: headerHeight,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerLow,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        'Дни доставки',
-                        style: Theme.of(context).textTheme.titleLarge,
+                child: Material(
+                  key: const ValueKey('delivery-days-panel'),
+                  color: Theme.of(context).colorScheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(16),
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            'Дни доставки',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          const Divider(height: 25),
+                          Tooltip(
+                            message: 'Календарные дни от первой даты документа, включая дни без доставок и запланированные даты.',
+                            child: Text(
+                              'Дней доставки: ${provider.status == DeliveryStatus.success || provider.days.isNotEmpty ? provider.total : '—'}',
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(fontSize: 14),
+                            ),
+                          ),
+                        ],
                       ),
-                      const Divider(height: 25),
-                      Tooltip(
-                        message: 'Календарные дни от первой даты документа, включая дни без доставок и запланированные даты.',
-                        child: Text(
-                          'Дней доставки: ${provider.status == DeliveryStatus.success || provider.days.isNotEmpty ? provider.total : '—'}',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(fontSize: 14),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
             ),
           ),
+          SizedBox(
+            key: const ValueKey('delivery-days-loading-slot'),
+            height: 3,
+            child: provider.isRequesting
+                ? const LinearProgressIndicator(minHeight: 3)
+                : null,
+          ),
           Expanded(
-            child: RefreshIndicator(
+            child: RefreshIndicator.noSpinner(
               onRefresh: provider.refreshDeliveryDays,
               child: ListView(
                 controller: scrollController,
@@ -86,12 +99,6 @@ class DeliveryDaysListView extends StatelessWidget {
                   ),
                   for (final day in provider.days)
                     DeliveryDayItem(key: ValueKey(day.plannedDate), day: day),
-                  if (provider.isLoadingMore ||
-                      provider.status == DeliveryStatus.initial)
-                    const Padding(
-                      padding: EdgeInsets.all(24),
-                      child: Center(child: CircularProgressIndicator()),
-                    ),
                   if (provider.hasError)
                     Padding(
                       padding: const EdgeInsets.all(16),
