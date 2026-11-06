@@ -1,4 +1,5 @@
 import 'package:mountain_fairytale/features/clients/clients_abcs.dart';
+import 'package:mountain_fairytale/features/clients/data/client_latest_order.dart';
 import 'package:mountain_fairytale/features/clients/data/clients_model.dart';
 
 class ClientRepositoryImpl implements ClientRepository {
@@ -33,6 +34,12 @@ class ClientRepositoryImpl implements ClientRepository {
   @override
   Future<Client> getClientById(String id) async =>
       Client.fromJson(await dataSource.getClientById(id));
+  @override
+  Future<ClientLatestOrder?> getLatestOrder(String clientId) async {
+    final json = await dataSource.getLatestOrder(clientId);
+    return json == null ? null : ClientLatestOrder.fromJson(json);
+  }
+
   @override
   Future<Client> updateCooldown(String clientId, DateTime cooldownUntil) =>
       updateClient(clientId, UpdateClientRequest(cooldownUntil: cooldownUntil));

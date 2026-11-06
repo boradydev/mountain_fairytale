@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:mountain_fairytale/features/clients/data/client_latest_order.dart';
+
 import 'package:mountain_fairytale/features/clients/data/location_repository.dart';
 import 'package:mountain_fairytale/core/network/api_exception.dart';
 import 'package:mountain_fairytale/core/state/safe_change_notifier.dart';
@@ -29,6 +31,9 @@ class ClientsProvider extends SafeChangeNotifier {
   final ClientRepository _repository;
 
   ClientsProvider(this._repository);
+
+  Future<ClientLatestOrder?> getLatestOrder(String clientId) =>
+      _repository.getLatestOrder(clientId);
 
   List<Client> _clients = const [];
 

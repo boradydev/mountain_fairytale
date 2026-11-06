@@ -1,4 +1,5 @@
 import 'package:mountain_fairytale/features/clients/data/clients_model.dart';
+import 'package:mountain_fairytale/features/clients/data/client_latest_order.dart';
 
 class ClientsPage<T> {
   final List<T> clients;
@@ -19,6 +20,7 @@ abstract interface class ClientDataSource {
     bool includeDeactivated = false,
   });
   Future<Map<String, dynamic>> getClientById(String id);
+  Future<Map<String, dynamic>?> getLatestOrder(String clientId);
   Future<Map<String, dynamic>?> checkDuplicate(
     String name,
     String phone,
@@ -50,6 +52,7 @@ abstract interface class ClientRepository {
     bool includeDeactivated = false,
   });
   Future<Client> getClientById(String id);
+  Future<ClientLatestOrder?> getLatestOrder(String clientId);
   Future<Client> updateCooldown(String clientId, DateTime cooldownUntil);
   Future<Client?> checkDuplicate(String name, String phone, String address);
   Future<Client> createClient(CreateClientRequest request);

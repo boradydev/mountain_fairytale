@@ -68,6 +68,12 @@ class ApiClientDataSource implements ClientDataSource {
   Future<Map<String, dynamic>> getClientById(String id) async =>
       _data(await client.get('$_path/$id'));
   @override
+  Future<Map<String, dynamic>?> getLatestOrder(String clientId) async {
+    final response = await client.get('$_path/$clientId/latest-order');
+    return response['data'] == null ? null : _data(response);
+  }
+
+  @override
   Future<Map<String, dynamic>> createClient(Map<String, dynamic> json) async =>
       _data(await client.post('$_path/create', body: json));
   @override

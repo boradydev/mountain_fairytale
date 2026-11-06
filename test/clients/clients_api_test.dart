@@ -74,6 +74,66 @@ void main() {
     auth.dispose();
   });
 
+  test('latest order uses protected lazy endpoint and parses historical decimal strings', () async {
+    var absent = false;
+    transport.respond = (_) async => HttpTransportResponse(
+      statusCode: 200,
+      body: jsonEncode({
+        'data': absent
+            ? null
+            : {
+                'deliveryDocumentId': 'doc',
+                'pointId': 'point',
+                'createdAt': '2026-11-05T15:45:00',
+                'plannedDate': '2026-11-07',
+                'totalAmount': '37.04',
+                'items': [
+                  {
+                    'itemId': 'line',
+                    'productId': 'product',
+                    'productName': 'Снимок',
+                    'quantity': 3,
+                    'price': '12.345',
+                    'amount': '37.04',
+                    'isFreePrice': true,
+                    'driverNote': 'Сохранённое примечание',
+                  },
+                ],
+              },
+      }),
+    );
+    expect(transport.requests, isEmpty);
+    final order = (await repo.getLatestOrder(clientId))!;
+    expect(order.createdAt, DateTime(2026, 11, 5, 15, 45));
+    expect(order.items.single.price, 12.345);
+    expect(order.items.single.amount, 37.04);
+    expect(order.items.single.driverNote, 'Сохранённое примечание');
+    expect(order.totalAmount, 37.04);
+    expect(
+      transport.requests.single.path,
+      '/protected/clients/$clientId/latest-order',
+    );
+    expect(
+      transport.requests.single.headers!['Authorization'],
+      'Bearer original-access',
+    );
+    absent = true;
+    expect(await repo.getLatestOrder('other'), isNull);
+    expect(
+      transport.requests.last.path,
+      '/protected/clients/other/latest-order',
+    );
+    final customer = Client.fromJson({
+      ...clientJson,
+      'latestOrderCreatedAt': '2026-11-05T15:45:00',
+    });
+    expect(
+      Client.fromJson(customer.toJson()).latestOrderCreatedAt,
+      order.createdAt,
+    );
+    expect(customer.lastOrderDate, isNull);
+  });
+
   test('server search, pagination, auth and UUID response envelope', () async {
     transport.respond = (request) async {
       final offset = int.parse(

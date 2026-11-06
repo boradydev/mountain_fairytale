@@ -88,6 +88,7 @@ class Client {
   final DateTime? lastDeliveryDate;
   final int? lastDeliveryQuantity;
   final ClientLastOrder? lastOrder;
+  final DateTime? latestOrderCreatedAt;
   final DateTime? cooldownUntil;
   final String? salesRepresentativeId;
   final String? salesRepresentativeName;
@@ -108,6 +109,7 @@ class Client {
     this.lastDeliveryDate,
     this.lastDeliveryQuantity,
     this.lastOrder,
+    this.latestOrderCreatedAt,
     this.cooldownUntil,
     this.salesRepresentativeId,
     this.salesRepresentativeName,
@@ -135,6 +137,9 @@ class Client {
         : ClientLastOrder.fromJson(
             Map<String, dynamic>.from(json['lastOrder'] as Map),
           ),
+    latestOrderCreatedAt: json['latestOrderCreatedAt'] == null
+        ? null
+        : DateTime.parse(json['latestOrderCreatedAt'] as String),
     cooldownUntil: json['cooldownUntil'] == null
         ? null
         : DateTime.parse(json['cooldownUntil'] as String),
@@ -158,6 +163,9 @@ class Client {
         : clientDateTime(lastDeliveryDate!),
     'lastDeliveryQuantity': lastDeliveryQuantity,
     'lastOrder': lastOrder?.toJson(),
+    'latestOrderCreatedAt': latestOrderCreatedAt == null
+        ? null
+        : clientDateTime(latestOrderCreatedAt!),
     'cooldownUntil': cooldownUntil == null
         ? null
         : clientDateTime(cooldownUntil!),

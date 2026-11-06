@@ -376,6 +376,7 @@ class _ClientAttentionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final now = DateTime.now();
+    final provider = context.read<ClientsProvider>();
 
     // Рассчитываем конфигурацию визуального статуса
     final statusConfig = _ClientStatusConfig.calculate(client, now);
@@ -496,7 +497,10 @@ class _ClientAttentionCard extends StatelessWidget {
                     ),
                     SizedBox(
                       width: wide ? space * 0.30 : width,
-                      child: ClientLastOrderView(client: client),
+                      child: ClientLastOrderView(
+                        client: client,
+                        loadOrder: () => provider.getLatestOrder(client.id),
+                      ),
                     ),
                   ],
                 );
