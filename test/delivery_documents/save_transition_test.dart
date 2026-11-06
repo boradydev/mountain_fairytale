@@ -1,4 +1,9 @@
 import 'dart:async';
+import 'dart:io';
+
+import 'package:mountain_fairytale/core/network/api_exception.dart';
+import 'package:mountain_fairytale/features/delivery_route/ui/document_mode_banner.dart';
+import 'package:mountain_fairytale/features/delivery_route/ui/document_connection_dialog.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -37,6 +42,7 @@ class _Session {
   final locks = Locks();
   late final provider = _DelayedCloseOrders(locks);
   final saveGate = Completer<bool>();
+  Object? saveError;
   int saves = 0;
   int changes = 0;
   bool? result;
@@ -48,7 +54,12 @@ class _Session {
     provider.notifyListeners();
     try {
       if (!await saveGate.future) {
-        provider.documentError = 'Ошибка сохранения';
+        if (saveError != null) {
+          provider.prepareDocumentSave();
+          provider.handleDocumentError(saveError!);
+        } else {
+          provider.documentError = 'Ошибка сохранения';
+        }
         return false;
       }
       provider.documentId ??= 'saved-document';
@@ -210,6 +221,52 @@ void main() {
         },
       );
     }
+  }
+
+  for (final error in [
+    const ApiException(statusCode: 500, message: 'temporary'),
+    const SocketException('offline'),
+  ]) {
+    testWidgets(
+      'uncertain save uses banner and dialog closes on automatic recovery: $error',
+      (tester) async {
+        final session = await _open(tester, 'Самовывоз');
+        session.saveError = error;
+        await tester.enterText(find.byType(TextFormField), 'Не терять');
+        await tester.tap(find.text('Сохранить'));
+        session.saveGate.complete(false);
+        await tester.pumpAndSettle();
+        expect(find.byType(DocumentConnectionDialog), findsOneWidget);
+        expect(
+          find.text(
+            error is ApiException
+                ? 'Не удаётся проверить состояние сервера'
+                : 'Нет связи с сервером',
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(
+            of: find.byType(DocumentModeBanner),
+            matching: find.text(
+              'Не удалось подтвердить сохранение документа. Проверяем состояние на сервере.',
+            ),
+          ),
+          findsOneWidget,
+        );
+        expect(find.byType(SnackBar), findsNothing);
+        expect(session.saves, 1);
+        expect(session.provider.canSave, isFalse);
+        // The existing five-second watcher performs safe recovery; no button press.
+        await tester.pump(const Duration(seconds: 5));
+        await tester.pumpAndSettle();
+        expect(find.byType(DocumentConnectionDialog), findsNothing);
+        expect(find.text('Не терять'), findsOneWidget);
+        expect(session.provider.canSave, isTrue);
+        expect(session.saves, 1);
+        expect(tester.takeException(), isNull);
+      },
+    );
   }
 
   testWidgets('failed save keeps entered data and allows retry', (

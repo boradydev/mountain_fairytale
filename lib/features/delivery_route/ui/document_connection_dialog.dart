@@ -13,13 +13,21 @@ class DocumentConnectionDialog extends StatelessWidget {
     child: ListenableBuilder(
       listenable: provider,
       builder: (context, _) => AlertDialog(
-        title: const Text('Нет связи с сервером'),
-        content: const SizedBox(
+        title: Text(
+          provider.connectionIssue == DocumentConnectionIssue.server
+              ? 'Не удаётся проверить состояние сервера'
+              : 'Нет связи с сервером',
+        ),
+        content: SizedBox(
           width: 420,
           child: Text(
-            'Введённые данные остаются в открытой форме. '
-            'Перед продолжением проверим соединение и актуальность документа. '
-            'Если вы нажимали «Сохранить», проверим, принял ли сервер изменения.',
+            provider.connectionIssue == DocumentConnectionIssue.server
+                ? 'Сервер временно не может подтвердить состояние документа. '
+                      'Введённые данные остаются в открытой форме. '
+                      'Попробуем восстановить работу и проверить актуальность документа.'
+                : 'Введённые данные остаются в открытой форме. '
+                      'Перед продолжением проверим соединение и актуальность документа. '
+                      'Если вы нажимали «Сохранить», проверим, принял ли сервер изменения.',
           ),
         ),
         actions: [

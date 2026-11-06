@@ -18,6 +18,8 @@ import 'package:mountain_fairytale/features/products/products_abcs.dart';
 import 'package:mountain_fairytale/features/clients/ui/clients_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+enum DocumentConnectionIssue { network, server }
+
 abstract class OrderPointsProvider extends SafeChangeNotifier {
   int _itemSequence = 0;
   // 1. Поля БЕЗ подчеркивания и с аннотацией
@@ -51,6 +53,18 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
   int documentRevision = 1;
   bool connectionInterrupted = false;
   bool reconnecting = false;
+  DocumentConnectionIssue connectionIssue = DocumentConnectionIssue.network;
+  static const connectionCheckInterval = Duration(seconds: 5);
+  static const connectionCheckMaxAttempts = 3;
+  static const connectionCheckRetryDelays = [
+    Duration(milliseconds: 500),
+    Duration(milliseconds: 1500),
+  ];
+  static const lockRenewMaxAttempts = 3;
+  static const lockRenewRetryDelays = [
+    Duration(milliseconds: 400),
+    Duration(milliseconds: 800),
+  ];
   bool _saveUnconfirmed = false;
   String? _pendingOperationId;
   Timer? _connectionTimer;
@@ -100,6 +114,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     _connectionTimer?.cancel();
     documentRevision = revision;
     connectionInterrupted = false;
+    connectionIssue = DocumentConnectionIssue.network;
     reconnecting = false;
     _saveUnconfirmed = false;
     _pendingOperationId = null;
@@ -122,7 +137,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
   void startConnectionWatch() {
     if (_closed || _connectionTimer?.isActive == true) return;
     _connectionTimer = Timer.periodic(
-      const Duration(seconds: 5),
+      connectionCheckInterval,
       (_) => _checkConnection(),
     );
   }
@@ -144,13 +159,23 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
   Future<RouteDocument?> findPendingCreation(String requestId) async => null;
   Future<void> applyRecoveryDocument(RouteDocument document) async {}
 
+  bool _serverFailure(Object error) =>
+      error is ApiException && {500, 502, 503, 504}.contains(error.statusCode);
+
   bool _connectionFailure(Object error) =>
       error is SocketException ||
       error is HttpException ||
       error is TimeoutException ||
-      (error is ApiException && error.statusCode >= 500);
+      _serverFailure(error);
 
-  void _pauseConnection() {
+  bool _currentSession(int version) =>
+      version == _sessionVersion && !_closed && !_closing;
+
+  void _pauseConnection({Object? error, bool serverResponded = false}) {
+    connectionIssue =
+        serverResponded || (error != null && _serverFailure(error))
+        ? DocumentConnectionIssue.server
+        : DocumentConnectionIssue.network;
     connectionInterrupted = true;
     _renewTimer?.cancel();
     notifyListeners();
@@ -161,6 +186,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
         _closing ||
         documentBusy ||
         _checkingConnection ||
+        _renewRequest != null ||
         lockRepository == null) {
       return;
     }
@@ -171,14 +197,37 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     if (!isEditing) return;
     final version = _sessionVersion;
     _checkingConnection = true;
+    var serverResponded = false;
     try {
-      await lockRepository!.checkConnection();
-    } catch (error) {
-      if (version == _sessionVersion &&
-          !_closed &&
-          !_closing &&
-          _connectionFailure(error)) {
-        _pauseConnection();
+      for (var attempt = 0; attempt < connectionCheckMaxAttempts; attempt++) {
+        if (!_currentSession(version) || !isEditing || connectionInterrupted) {
+          return;
+        }
+        // A user operation may have started during a retry delay. Its outcome
+        // takes precedence over this background health check.
+        if (documentBusy) return;
+        try {
+          await lockRepository!.checkConnection();
+          return;
+        } catch (error) {
+          if (!_currentSession(version) ||
+              !isEditing ||
+              connectionInterrupted) {
+            return;
+          }
+          if (documentBusy) return;
+          if (!_connectionFailure(error)) {
+            handleDocumentError(error);
+            notifyListeners();
+            return;
+          }
+          serverResponded = serverResponded || _serverFailure(error);
+          if (attempt == connectionCheckMaxAttempts - 1) {
+            _pauseConnection(error: error, serverResponded: serverResponded);
+            return;
+          }
+          await Future<void>.delayed(connectionCheckRetryDelays[attempt]);
+        }
       }
     } finally {
       _checkingConnection = false;
@@ -209,6 +258,8 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     reconnecting = true;
     notifyListeners();
     try {
+      await _renewRequest;
+      if (!_currentSession(version)) return false;
       await lockRepository!.checkConnection();
       if (version != _sessionVersion || _closed || _closing) return false;
       if (id == null) {
@@ -218,6 +269,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
         if (version != _sessionVersion || _closed || _closing) return false;
         if (created != null) {
           await applyRecoveryDocument(created);
+          if (!_currentSession(version)) return false;
           isEditing = false;
           _draftStarted = false;
           documentChanged = true;
@@ -246,19 +298,16 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       if (version != _sessionVersion || _closed || _closing) return false;
       final current = await readRecoveryDocument();
       if (version != _sessionVersion || _closed || _closing) return false;
+      if (current == null) {
+        throw StateError('Document state could not be confirmed');
+      }
       final saved =
-          _saveUnconfirmed &&
-          current != null &&
-          current.lastOperationId == _pendingOperationId;
+          _saveUnconfirmed && current.lastOperationId == _pendingOperationId;
       final changed =
-          current != null &&
           (current.revision != documentRevision || !current.isActive);
       if (_discardReason != null || changed || saved) {
-        if (current != null) {
-          await applyRecoveryDocument(current);
-        } else {
-          await refreshForEditing();
-        }
+        await applyRecoveryDocument(current);
+        if (!_currentSession(version)) return false;
         if (_hasLock) {
           try {
             await lockRepository!.releaseEditLock(id);
@@ -266,6 +315,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
             if (!{403, 409}.contains(error.statusCode)) rethrow;
           }
         }
+        if (!_currentSession(version)) return false;
         _hasLock = false;
         _draftStarted = false;
         isEditing = false;
@@ -285,7 +335,12 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       connectionInterrupted = false;
       return true;
     } catch (error) {
-      if (version == _sessionVersion && !_closed) {
+      if (_currentSession(version)) {
+        if (_connectionFailure(error)) {
+          connectionIssue = _serverFailure(error)
+              ? DocumentConnectionIssue.server
+              : DocumentConnectionIssue.network;
+        }
         if (error is ApiException &&
             error.statusCode == 404 &&
             documentId != null) {
@@ -300,7 +355,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       }
       return false;
     } finally {
-      if (version == _sessionVersion) {
+      if (_currentSession(version)) {
         reconnecting = false;
         notifyListeners();
       }
@@ -378,17 +433,20 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
         documentBusy) {
       return;
     }
+    var serverResponded = false;
     try {
       String? owner;
-      for (var attempt = 0; attempt < 3; attempt++) {
+      for (var attempt = 0; attempt < lockRenewMaxAttempts; attempt++) {
         try {
           owner = await lockRepository!.renewEditLock(id);
           break;
         } catch (error) {
-          if (!_connectionFailure(error) || attempt == 2) rethrow;
-          await Future<void>.delayed(
-            Duration(milliseconds: 400 * (attempt + 1)),
-          );
+          serverResponded = serverResponded || _serverFailure(error);
+          if (!_connectionFailure(error) ||
+              attempt == lockRenewMaxAttempts - 1) {
+            rethrow;
+          }
+          await Future<void>.delayed(lockRenewRetryDelays[attempt]);
           if (version != _sessionVersion || _closed || _closing || !isEditing) {
             return;
           }
@@ -406,7 +464,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
           _discardReason =
               'Редактирование прекращено: документ редактирует ${error.ownerName ?? 'другой сотрудник'}. Несохранённые изменения отменены.';
         }
-        _pauseConnection();
+        _pauseConnection(error: error, serverResponded: serverResponded);
       } else {
         documentError = documentFailure(error);
       }
@@ -456,7 +514,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
         _discardReason = afterSave
             ? 'Изменения сохранены. Показаны сохранённые данные.'
             : 'Редактирование отменено. Показаны сохранённые данные.';
-        _pauseConnection();
+        _pauseConnection(error: error);
       } else if (afterSave) {
         // The write already succeeded; do not offer another Save for it.
         isEditing = false;
@@ -497,7 +555,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
             'Не удалось освободить блокировку. Повторите закрытие. ${documentFailure(error)}';
         _closing = false;
         if (_connectionFailure(error)) {
-          _pauseConnection();
+          _pauseConnection(error: error);
         } else {
           isEditing = false;
         }
@@ -517,7 +575,10 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
 
   void handleDocumentError(Object error) {
     if (_connectionFailure(error) && isEditing) {
-      _pauseConnection();
+      if (_saveUnconfirmed) {
+        documentError = 'Не удалось подтвердить сохранение документа. Проверяем состояние на сервере.';
+      }
+      _pauseConnection(error: error);
       return;
     }
     if (error is ApiException &&
@@ -526,7 +587,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       if (error.data['code'] == 'document_revision_conflict') {
         _discardReason = 'Документ изменён другим сотрудником. Несохранённые изменения отменены.';
       }
-      _pauseConnection();
+      _pauseConnection(error: error);
       return;
     }
     _saveUnconfirmed = false;

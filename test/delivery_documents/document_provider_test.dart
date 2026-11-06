@@ -405,6 +405,11 @@ void main() {
       expect(provider.connectionInterrupted, isTrue);
       expect(provider.isEditing, isTrue);
       locks.failRenew = false;
+      provider.recoveryDocument = PickupSheet(
+        id: 'document',
+        date: DateTime(2026, 11, 6),
+        points: [point],
+      );
       expect(await provider.beginEditing(), isTrue);
       expect(provider.refreshes, 1);
       expect(provider.points.single.items.single.quantity, 5);

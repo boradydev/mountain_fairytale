@@ -89,6 +89,24 @@ void main() {
     },
   );
 
+  test(
+    'an acquired lock without a document snapshot cannot resume editing',
+    () async {
+      await edit();
+      provider.handleDocumentError(
+        const ApiException(statusCode: 500, message: 'temporary'),
+      );
+      provider.recoveryDocument = null;
+      expect(await provider.retryConnection(), isFalse);
+      expect(provider.connectionInterrupted, isTrue);
+      expect(provider.canSave, isFalse);
+      expect(provider.points.single.items.single.quantity, 3);
+      provider.recoveryDocument = snapshot();
+      expect(await provider.retryConnection(), isTrue);
+      expect(provider.canSave, isTrue);
+    },
+  );
+
   test('expired own lock is reacquired without losing draft', () async {
     await edit();
     locks.failRenew = true;
