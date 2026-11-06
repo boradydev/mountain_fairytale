@@ -100,25 +100,23 @@ Future<void> main() async {
     final storedPosition = posX != null && posY != null
         ? Offset(posX, posY)
         : null;
-    final restorePosition =
-        storedPosition != null &&
-        await WindowSettingsService.isPositionVisible(
-          storedPosition,
-          windowSize,
-        );
+    final geometry = await WindowSettingsService.restoreGeometry(
+      windowSize,
+      storedPosition,
+    );
 
     final windowOptions = WindowOptions(
-      size: windowSize,
-      minimumSize: WindowSettingsService.minimumWindowSize,
-      center: !restorePosition,
+      size: geometry.size,
+      minimumSize: geometry.minimumSize,
+      center: geometry.position == null,
       title: "Mountain Fairytale",
     );
     final restoreMaximized =
         prefs.getBool(WindowSettingsService.maximizedKey) ?? false;
 
     windowManager.waitUntilReadyToShow(windowOptions, () async {
-      if (restorePosition) {
-        await windowManager.setPosition(storedPosition);
+      if (geometry.position != null) {
+        await windowManager.setPosition(geometry.position!);
       }
       if (restoreMaximized) await windowManager.maximize();
       windowManager.addListener(WindowSettingsService(prefs));
