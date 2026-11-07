@@ -85,7 +85,7 @@ class _DayDocumentsDialogState extends State<DayDocumentsDialog> {
   }
 
   Future<void> _open(DeliveryType type, [RouteDocument? document]) async {
-    if (_opening) return;
+    if (_opening || _provider.loading) return;
     setState(() => _opening = true);
     final before = _mutations;
     try {
@@ -151,7 +151,7 @@ class _DayDocumentsDialogState extends State<DayDocumentsDialog> {
                           child: AppSecondaryButton(
                             text: 'Добавить доставку',
                             icon: Icons.local_shipping_outlined,
-                            onPressed: _opening
+                            onPressed: _opening || _provider.loading
                                 ? null
                                 : () => _open(DeliveryType.delivery),
                           ),
@@ -161,7 +161,7 @@ class _DayDocumentsDialogState extends State<DayDocumentsDialog> {
                           child: AppSecondaryButton(
                             text: 'Добавить самовывоз',
                             icon: Icons.store_outlined,
-                            onPressed: _opening
+                            onPressed: _opening || _provider.loading
                                 ? null
                                 : () => _open(DeliveryType.pickup),
                           ),
@@ -171,6 +171,13 @@ class _DayDocumentsDialogState extends State<DayDocumentsDialog> {
                   },
                 ),
                 const SizedBox(height: 16),
+                SizedBox(
+                  key: const ValueKey('day-documents-loading-slot'),
+                  height: 3,
+                  child: _provider.loading
+                      ? const LinearProgressIndicator(minHeight: 3)
+                      : null,
+                ),
                 const Divider(height: 1),
                 Expanded(
                   child: ListView(
@@ -195,29 +202,32 @@ class _DayDocumentsDialogState extends State<DayDocumentsDialog> {
                             ],
                           ),
                         ),
-                      if (_provider.loading)
-                        const Padding(
-                          padding: EdgeInsets.all(24),
-                          child: Center(child: CircularProgressIndicator()),
-                        )
-                      else if (_provider.error != null)
+                      if (_provider.error != null)
                         Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
+                          padding: const EdgeInsets.all(8),
+                          child: Row(
                             children: [
-                              Text(
-                                _provider.error!,
-                                textAlign: TextAlign.center,
+                              Expanded(
+                                child: Tooltip(
+                                  message: _provider.error!,
+                                  child: Text(
+                                    _provider.error!,
+                                    maxLines: 3,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
                               ),
-                              const SizedBox(height: 12),
+                              const SizedBox(width: 12),
                               AppSecondaryButton(
                                 text: 'Повторить',
                                 onPressed: _provider.load,
                               ),
                             ],
                           ),
-                        )
-                      else if (_provider.documents.isEmpty)
+                        ),
+                      if (!_provider.loading &&
+                          _provider.error == null &&
+                          _provider.documents.isEmpty)
                         Padding(
                           padding: const EdgeInsets.all(16),
                           child: Text(
@@ -226,8 +236,8 @@ class _DayDocumentsDialogState extends State<DayDocumentsDialog> {
                                 : 'На эту дату нет активных документов',
                             textAlign: TextAlign.center,
                           ),
-                        )
-                      else
+                        ),
+                      if (_provider.documents.isNotEmpty)
                         ..._buildDocumentSections(locale),
                     ],
                   ),
@@ -367,7 +377,9 @@ class _DayDocumentsDialogState extends State<DayDocumentsDialog> {
             ? document.carModelAndNumber
             : 'Не указан',
         isActive: document.isActive,
-        onOpen: _opening ? null : () => _open(type, document),
+        onOpen: _opening || _provider.loading
+            ? null
+            : () => _open(type, document),
       ),
     );
   }
