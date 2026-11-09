@@ -11,7 +11,7 @@ import 'package:mountain_fairytale/features/cars/data/cars_model.dart';
 import 'package:mountain_fairytale/features/payment_methods/data/payment_method_model.dart';
 
 enum DirectorySection {
-  products('Продукция', 'Добавить товар'),
+  products('Товары', 'Добавить товар'),
   drivers('Водители', 'Добавить водителя'),
   cars('Автомобили', 'Добавить автомобиль'),
   paymentMethods('Способы оплаты', 'Добавить способ оплаты'),

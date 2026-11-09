@@ -290,6 +290,58 @@ Future<void> choose(WidgetTester tester, DirectorySection section) async {
 
 void main() {
   for (final brightness in Brightness.values) {
+    for (final width in [320.0, 1400.0]) {
+      for (final active in [true, false]) {
+        testWidgets(
+          'product descriptions $brightness width=$width active=$active',
+          (tester) async {
+            final store = Store();
+            final products = store.rows[DirectorySection.products]!;
+            final original = products.single;
+            products
+              ..clear()
+              ..addAll([
+                {
+                  ...original,
+                  'basePrice': 140.75,
+                  'isFreePrice': false,
+                  'isActive': active,
+                },
+                {
+                  ...original,
+                  'productId': 'free-price',
+                  'name': 'Свободный товар',
+                  'basePrice': 0.0,
+                  'isFreePrice': true,
+                  'isActive': active,
+                },
+              ]);
+            await open(
+              tester,
+              store,
+              brightness: brightness,
+              width: width,
+            );
+            if (!active) {
+              expect(find.textContaining('Цена:'), findsNothing);
+              await tester.tap(find.byType(LabeledCheckboxToggle));
+              await tester.pumpAndSettle();
+            }
+            expect(find.text('Цена: 140.75 ₽'), findsOneWidget);
+            expect(
+              find.text('Цена: 0.0 ₽ · Свободная цена'),
+              findsOneWidget,
+            );
+            expect(find.textContaining('Свободная цена'), findsOneWidget);
+            expect(find.text('Свободная цена'), findsNothing);
+            expect(tester.takeException(), isNull);
+          },
+        );
+      }
+    }
+  }
+
+  for (final brightness in Brightness.values) {
     for (final width in [320.0, 420.0, 1400.0]) {
       testWidgets('directory layout $brightness width=$width', (tester) async {
         final store = Store();
@@ -301,6 +353,20 @@ void main() {
           textScale: width == 320 ? 1.8 : 1,
         );
         expect(find.text('Справочники'), findsNothing);
+        final segments = tester.widget<SegmentedButton<DirectorySection>>(
+          find.byType(SegmentedButton<DirectorySection>),
+        );
+        expect(
+          segments.segments.map((segment) => (segment.label! as Text).data),
+          [
+            'Товары',
+            'Водители',
+            'Автомобили',
+            'Способы оплаты',
+            'Торговые представители',
+          ],
+        );
+        expect(find.text('Продукция'), findsNothing);
         expect(find.textContaining('Добавление, редактирование'), findsNothing);
         final surface = tester.widget<Material>(
           find.byKey(const ValueKey('directories-toolbar-surface')),

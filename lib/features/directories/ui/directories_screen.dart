@@ -248,7 +248,7 @@ class _DirectoryCard extends StatelessWidget {
       Product p => (
         p.name,
         p.isActive,
-        'Цена: ${p.basePrice} ₽',
+        'Цена: ${p.basePrice} ₽${p.isFreePrice ? ' · Свободная цена' : ''}',
       ),
       Driver d => (d.name, d.isActive, ''),
       Car c => (
