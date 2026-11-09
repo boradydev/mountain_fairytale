@@ -6,11 +6,11 @@ import 'package:mountain_fairytale/features/delivery_route/ui/task_item_row.dart
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 
 class ClientLatestOrderDialog extends StatefulWidget {
-  final DateTime createdAt;
+  final DateTime plannedDate;
   final Future<ClientLatestOrder?> Function() loadOrder;
   const ClientLatestOrderDialog({
     super.key,
-    required this.createdAt,
+    required this.plannedDate,
     required this.loadOrder,
   });
 
@@ -38,7 +38,7 @@ class _ClientLatestOrderDialogState extends State<ClientLatestOrderDialog> {
       return AlertDialog(
         insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
         title: Text(
-          'Последний заказ — ${(order?.createdAt ?? widget.createdAt).toFormattedString()}',
+          'Последний заказ — ${(order?.plannedDate ?? widget.plannedDate).toFormattedString()}',
         ),
         content: SizedBox(
           width: 960,

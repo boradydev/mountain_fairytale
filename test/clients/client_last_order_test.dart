@@ -28,7 +28,8 @@ Client customer({
   createdAt: DateTime(2026),
   isActive: true,
   lastOrder: order,
-  latestOrderCreatedAt: latest,
+  latestOrderCreatedAt: DateTime(2026, 11, 5, 15, 45),
+  latestOrderPlannedDate: latest,
   cooldownUntil: cooldown,
 );
 
@@ -103,7 +104,7 @@ void main() {
                     ClientLastOrderView(
                       client: customer(
                         order: order(DateTime(2026, 10, 18)),
-                        latest: DateTime(2026, 11, 5),
+                        latest: DateTime(2026, 11, 7),
                       ),
                       loadOrder: () {
                         requests++;
@@ -117,7 +118,7 @@ void main() {
           ),
         );
         expect(requests, 0);
-        expect(find.text('05.11.2026'), findsOneWidget);
+        expect(find.text('07.11.2026'), findsOneWidget);
         expect(find.textContaining('Самовывоз'), findsNothing);
         expect(find.textContaining('Вода'), findsNothing);
         final height = tester.getSize(find.byType(ClientLastOrderView)).height;
@@ -127,9 +128,11 @@ void main() {
         expect(requests, 1);
         expect(find.byType(CircularProgressIndicator), findsOneWidget);
         expect(edits, 0);
+        expect(find.text('Последний заказ — 07.11.2026'), findsOneWidget);
+        expect(find.textContaining('05.11.2026'), findsNothing);
         pending.complete(detail(count: 20));
         await tester.pumpAndSettle();
-        expect(find.text('Последний заказ — 05.11.2026'), findsOneWidget);
+        expect(find.text('Последний заказ — 07.11.2026'), findsOneWidget);
         expect(find.byType(RoutePointTaskHeading), findsOneWidget);
         expect(find.byType(RoutePointTaskTable), findsOneWidget);
         expect(find.byType(TaskItemRow), findsNWidgets(20));
@@ -192,7 +195,7 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: ClientLastOrderView(
-            client: customer(latest: DateTime(2026, 11, 5)),
+            client: customer(latest: DateTime(2026, 11, 7)),
             loadOrder: () async {
               if (++requests == 1) throw Exception('network');
               return null;
@@ -222,7 +225,7 @@ void main() {
           body: Column(
             children: [
               ClientLastOrderView(
-                client: customer(latest: DateTime(2026, 11, 5)),
+                client: customer(latest: DateTime(2026, 11, 7)),
                 loadOrder: () => pending.future,
               ),
               ClientLastOrderView(

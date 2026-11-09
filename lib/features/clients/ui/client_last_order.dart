@@ -17,7 +17,7 @@ class ClientLastOrderView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final date = client.latestOrderCreatedAt;
+    final date = client.latestOrderPlannedDate;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -57,7 +57,7 @@ class ClientLastOrderView extends StatelessWidget {
                   onTap: () => showDialog<void>(
                     context: context,
                     builder: (_) => ClientLatestOrderDialog(
-                      createdAt: date,
+                      plannedDate: date,
                       loadOrder: loadOrder,
                     ),
                   ),

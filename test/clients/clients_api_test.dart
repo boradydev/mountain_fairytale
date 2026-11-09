@@ -105,6 +105,7 @@ void main() {
     expect(transport.requests, isEmpty);
     final order = (await repo.getLatestOrder(clientId))!;
     expect(order.createdAt, DateTime(2026, 11, 5, 15, 45));
+    expect(order.plannedDate, DateTime(2026, 11, 7));
     expect(order.items.single.price, 12.345);
     expect(order.items.single.amount, 37.04);
     expect(order.items.single.driverNote, 'Сохранённое примечание');
@@ -126,10 +127,22 @@ void main() {
     final customer = Client.fromJson({
       ...clientJson,
       'latestOrderCreatedAt': '2026-11-05T15:45:00',
+      'latestOrderPlannedDate': '2026-11-07',
     });
     expect(
       Client.fromJson(customer.toJson()).latestOrderCreatedAt,
       order.createdAt,
+    );
+    expect(customer.toJson()['latestOrderPlannedDate'], '2026-11-07');
+    expect(
+      Client.fromJson(customer.toJson()).latestOrderPlannedDate,
+      order.plannedDate,
+    );
+    expect(Client.fromJson(clientJson).latestOrderPlannedDate, isNull);
+    expect(
+      Client.fromJson({...clientJson, 'latestOrderPlannedDate': null})
+          .latestOrderPlannedDate,
+      isNull,
     );
     expect(customer.lastOrderDate, isNull);
   });
