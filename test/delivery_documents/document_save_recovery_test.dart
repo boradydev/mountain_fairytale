@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -97,6 +98,9 @@ void main() {
       for (final committed in [true, false]) {
         for (final error in [
           const ApiException(statusCode: 500, message: 'write failed'),
+          const ApiException(statusCode: 503, message: 'unavailable'),
+          const ApiException(statusCode: 504, message: 'gateway timeout'),
+          TimeoutException('response timeout'),
           const SocketException('response lost'),
         ]) {
           test(
