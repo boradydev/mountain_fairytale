@@ -9,7 +9,7 @@ import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_s
 import 'package:mountain_fairytale/features/delivery_route/ui/route_constructor_screen.dart';
 import 'package:mountain_fairytale/features/pickup/ui/pickup_constructor_screen.dart';
 import 'package:mountain_fairytale/features/pickup/data/pickup_model.dart';
-import 'package:mountain_fairytale/shared/widgets/dialog_card_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/document_summary_card.dart';
 import 'package:mountain_fairytale/shared/widgets/labeled_checkbox_toggle.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 
@@ -85,7 +85,7 @@ class _DayDocumentsDialogState extends State<DayDocumentsDialog> {
   }
 
   Future<void> _open(DeliveryType type, [RouteDocument? document]) async {
-    if (_opening) return;
+    if (_opening || _provider.loading) return;
     setState(() => _opening = true);
     final before = _mutations;
     try {
@@ -151,7 +151,7 @@ class _DayDocumentsDialogState extends State<DayDocumentsDialog> {
                           child: AppSecondaryButton(
                             text: 'Добавить доставку',
                             icon: Icons.local_shipping_outlined,
-                            onPressed: _opening
+                            onPressed: _opening || _provider.loading
                                 ? null
                                 : () => _open(DeliveryType.delivery),
                           ),
@@ -161,7 +161,7 @@ class _DayDocumentsDialogState extends State<DayDocumentsDialog> {
                           child: AppSecondaryButton(
                             text: 'Добавить самовывоз',
                             icon: Icons.store_outlined,
-                            onPressed: _opening
+                            onPressed: _opening || _provider.loading
                                 ? null
                                 : () => _open(DeliveryType.pickup),
                           ),
@@ -171,6 +171,13 @@ class _DayDocumentsDialogState extends State<DayDocumentsDialog> {
                   },
                 ),
                 const SizedBox(height: 16),
+                SizedBox(
+                  key: const ValueKey('day-documents-loading-slot'),
+                  height: 3,
+                  child: _provider.loading
+                      ? const LinearProgressIndicator(minHeight: 3)
+                      : null,
+                ),
                 const Divider(height: 1),
                 Expanded(
                   child: ListView(
@@ -195,29 +202,32 @@ class _DayDocumentsDialogState extends State<DayDocumentsDialog> {
                             ],
                           ),
                         ),
-                      if (_provider.loading)
-                        const Padding(
-                          padding: EdgeInsets.all(24),
-                          child: Center(child: CircularProgressIndicator()),
-                        )
-                      else if (_provider.error != null)
+                      if (_provider.error != null)
                         Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
+                          padding: const EdgeInsets.all(8),
+                          child: Row(
                             children: [
-                              Text(
-                                _provider.error!,
-                                textAlign: TextAlign.center,
+                              Expanded(
+                                child: Tooltip(
+                                  message: _provider.error!,
+                                  child: Text(
+                                    _provider.error!,
+                                    maxLines: 3,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
                               ),
-                              const SizedBox(height: 12),
+                              const SizedBox(width: 12),
                               AppSecondaryButton(
                                 text: 'Повторить',
                                 onPressed: _provider.load,
                               ),
                             ],
                           ),
-                        )
-                      else if (_provider.documents.isEmpty)
+                        ),
+                      if (!_provider.loading &&
+                          _provider.error == null &&
+                          _provider.documents.isEmpty)
                         Padding(
                           padding: const EdgeInsets.all(16),
                           child: Text(
@@ -226,8 +236,8 @@ class _DayDocumentsDialogState extends State<DayDocumentsDialog> {
                                 : 'На эту дату нет активных документов',
                             textAlign: TextAlign.center,
                           ),
-                        )
-                      else
+                        ),
+                      if (_provider.documents.isNotEmpty)
                         ..._buildDocumentSections(locale),
                     ],
                   ),
@@ -331,106 +341,45 @@ class _DayDocumentsDialogState extends State<DayDocumentsDialog> {
     DeliveryType type,
     String locale,
   ) {
-    final colors = Theme.of(context).colorScheme;
-    final iconColor = document.isActive
-        ? colors.primary
-        : colors.onSurfaceVariant;
-    final createdLabel = document.createdAt == null
-        ? 'Дата создания неизвестна'
-        : DateFormat.yMd(locale).add_Hm().format(document.createdAt!);
-    final details = <(String, String)>[
-      ('Создан:', '$createdLabel${document.isActive ? '' : ' — Отменён'}'),
-    ];
     final points = switch (document) {
       DeliveryRouteSheet() => document.points,
       PickupSheet() => document.points,
       _ => null,
     };
-    if (points != null) {
-      final clientsCount = points.map((point) => point.clientId).toSet().length;
-      final amount =
-          NumberFormat.currency(
-            locale: locale,
-            symbol: '₽',
-            decimalDigits: 2,
-          ).format(
-            points.fold<int>(0, (sum, point) => sum + point.totalCents) / 100,
-          );
-      details.addAll([
-        (
-          document is PickupSheet ? 'Покупок:' : 'Клиентов:',
-          document is PickupSheet ? '${points.length}' : '$clientsCount',
-        ),
-        ('Сумма:', amount),
-      ]);
-    }
-    if (document is DeliveryRouteSheet) {
-      details.addAll([
-        ('Водитель:', document.driverName),
-        ('Автомобиль:', document.carModelAndNumber),
-      ]);
-    }
-
-    return AppDialogCard(
-      onTap: _opening ? null : () => _open(type, document),
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Icon(
-            type == DeliveryType.delivery
-                ? Icons.local_shipping_outlined
-                : Icons.store_outlined,
-            color: iconColor,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (details.isNotEmpty) ...[
-                  Table(
-                    columnWidths: const {
-                      0: IntrinsicColumnWidth(),
-                      1: FlexColumnWidth(),
-                    },
-                    defaultVerticalAlignment: TableCellVerticalAlignment.top,
-                    children: [
-                      for (final (label, value) in details)
-                        TableRow(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                right: 12,
-                                bottom: 4,
-                              ),
-                              child: Text(
-                                label,
-                                style: label == 'Создан:'
-                                    ? Theme.of(context).textTheme.bodyLarge
-                                    : null,
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 4),
-                              child: Text(
-                                value,
-                                style: label == 'Создан:'
-                                    ? Theme.of(context).textTheme.bodyLarge
-                                    : null,
-                              ),
-                            ),
-                          ],
-                        ),
-                    ],
-                  ),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Icon(Icons.chevron_right, color: colors.onSurfaceVariant),
-        ],
+    final isPickup = type == DeliveryType.pickup;
+    final count = isPickup
+        ? points?.length
+        : points?.map((point) => point.clientId).toSet().length;
+    final amount =
+        NumberFormat.currency(
+          locale: locale,
+          symbol: '₽',
+          decimalDigits: 2,
+        ).format(
+          (points?.fold<int>(
+                    0,
+                    (sum, point) => sum + point.accountedTotalCents,
+                  ) ??
+                  0) /
+              100,
+        );
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: DocumentSummaryCard(
+        isPickup: isPickup,
+        date: DateFormat.yMd(locale).format(document.date),
+        count: count?.toString() ?? 'Нет данных',
+        amount: amount,
+        driver: document is DeliveryRouteSheet
+            ? document.driverName
+            : 'Не указан',
+        car: document is DeliveryRouteSheet
+            ? document.carModelAndNumber
+            : 'Не указан',
+        isActive: document.isActive,
+        onOpen: _opening || _provider.loading
+            ? null
+            : () => _open(type, document),
       ),
     );
   }

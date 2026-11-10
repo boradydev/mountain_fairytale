@@ -86,6 +86,21 @@ Client row({
 );
 
 class ClientsFake implements ClientRepository {
+  @override
+  Future<ClientsPage<Client>> getClientsPage({
+    int offset = 0,
+    int limit = 25,
+    String? search,
+    bool includeDeactivated = false,
+    String mode = 'database',
+  }) async {
+    final rows = await getAllClients(
+      search: search,
+      includeDeactivated: includeDeactivated,
+    );
+    return ClientsPage(rows.skip(offset).take(limit).toList(), rows.length);
+  }
+
   List<ClientDirectoryEntry> salesRepRows = [];
   List<ClientDirectoryEntry> paymentRows = [];
   Client? selected;

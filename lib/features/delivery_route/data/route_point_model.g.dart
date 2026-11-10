@@ -8,6 +8,9 @@ part of 'route_point_model.dart';
 
 RoutePoint _$RoutePointFromJson(Map<String, dynamic> json) => RoutePoint(
   pointId: json['pointId'] as String?,
+  isDelivered: json['isDelivered'] as bool? ?? true,
+  nonDeliveryReason: json['nonDeliveryReason'] as String? ?? '',
+  memo: json['memo'] as String? ?? '',
   position: (json['position'] as num?)?.toInt() ?? 0,
   salesRepresentativeId: json['salesRepresentativeId'] as String?,
   clientId: json['clientId'] as String?,
@@ -22,7 +25,7 @@ RoutePoint _$RoutePointFromJson(Map<String, dynamic> json) => RoutePoint(
   documentPaymentMethodId: json['paymentMethodId'] as String?,
   documentPaymentMethodName: json['paymentMethodName'] as String?,
   salesRepresentative:
-      json['salesRepresentativeName'] as String? ?? 'Нет представителя',
+      json['salesRepresentativeName'] as String? ?? 'Не указан',
   items: (json['items'] as List<dynamic>)
       .map((e) => DeliveryTaskItem.fromJson(e as Map<String, dynamic>))
       .toList(),
@@ -31,6 +34,9 @@ RoutePoint _$RoutePointFromJson(Map<String, dynamic> json) => RoutePoint(
 Map<String, dynamic> _$RoutePointToJson(RoutePoint instance) =>
     <String, dynamic>{
       'pointId': instance.pointId,
+      'isDelivered': instance.isDelivered,
+      'nonDeliveryReason': instance.nonDeliveryReason,
+      'memo': instance.memo,
       'position': instance.position,
       'salesRepresentativeId': instance.salesRepresentativeId,
       'clientId': instance.clientId,

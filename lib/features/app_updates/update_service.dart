@@ -5,6 +5,11 @@ import 'package:http/http.dart' as http;
 
 import 'package:mountain_fairytale/features/app_updates/data/update_release.dart';
 
+class UpdateHttpException implements Exception {
+  final int statusCode;
+  const UpdateHttpException(this.statusCode);
+}
+
 class UpdateService {
   static const appcastUrl = String.fromEnvironment(
     'UPDATE_FEED_URL',
@@ -29,8 +34,11 @@ class UpdateService {
         .get(Uri.parse(appcastUrl).resolve('update.json'))
         .timeout(const Duration(seconds: 15));
     if (response.statusCode == 404) return null; // First release not published.
-    if (response.statusCode != 200 || response.bodyBytes.length > 64000) {
-      throw const FormatException('Не удалось получить описание обновления');
+    if (response.statusCode != 200) {
+      throw UpdateHttpException(response.statusCode);
+    }
+    if (response.bodyBytes.length > 64000) {
+      throw const FormatException('Некорректное описание обновления');
     }
     final json = jsonDecode(utf8.decode(response.bodyBytes));
     if (json is! Map<String, dynamic>) {

@@ -166,13 +166,18 @@ class _AddTaskDialogState extends State<_AddTaskDialog> {
               onIncludeInactiveChanged: provider.isLoadingProducts
                   ? null
                   : _toggleInactive,
-              items: provider.products,
+              items: provider.products
+                  .where(
+                    (product) => !provider.isPickup || !product.isFreePrice,
+                  )
+                  .toList(),
               value: _selected,
               hint: 'Выберите товар/услугу',
-              itemLabelBuilder: (product) =>
-                  '${product.name} (${product.basePrice} ₽)',
+              itemLabelBuilder: (product) => product.isFreePrice
+                  ? '${product.name} (свободная цена)'
+                  : '${product.name} (${product.basePrice} ₽)',
               itemBuilder: (product) => Text(
-                '${product.name} (${product.basePrice} ₽)${product.isActive ? '' : ' — Неактивен'}',
+                '${product.name} (${product.isFreePrice ? 'свободная цена' : '${product.basePrice} ₽'})${product.isActive ? '' : ' — Неактивен'}',
                 overflow: TextOverflow.ellipsis,
                 style: product.isActive
                     ? null
@@ -184,7 +189,9 @@ class _AddTaskDialogState extends State<_AddTaskDialog> {
               validator: (value) => value == null || !value.isActive
                   ? 'Выберите активный товар'
                   : provider.points[widget.pointIndex].items.any(
-                      (item) => item.productId == value.id,
+                      (item) =>
+                          item.productId == value.id &&
+                          (!value.isFreePrice || !item.isFreePrice),
                     )
                   ? 'Товар уже добавлен. Измените количество строки.'
                   : null,

@@ -39,7 +39,12 @@ class PickupSheet implements RouteDocument {
     'plannedDate': date.toIso8601String().substring(0, 10),
 
     'points': points
-        .map((point) => point.toRequestJson(creating: id == null))
+        .map(
+          (point) => point.toRequestJson(
+            creating: id == null,
+            includeMemo: false,
+          ),
+        )
         .toList(),
   };
 

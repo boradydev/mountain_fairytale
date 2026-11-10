@@ -33,6 +33,15 @@ class RouteSheetPdfBuilder {
           pw.SizedBox(height: 18),
           _buildRouteInfo(sheet),
           pw.SizedBox(height: 20),
+          if (sheet.points.any((point) => point.items.isNotEmpty)) ...[
+            _buildProductLoadSummary(sheet),
+            pw.SizedBox(height: 20),
+          ],
+          pw.Text(
+            'ДОСТАВИТЬ КЛИЕНТАМ',
+            style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold),
+          ),
+          pw.SizedBox(height: 6),
           _buildPointsTable(sheet),
         ],
       ),
@@ -153,6 +162,14 @@ class RouteSheetPdfBuilder {
                       color: PdfColors.black,
                     ),
                     children: [
+                      if (!point.isDelivered)
+                        pw.TextSpan(
+                          text: 'НЕ ДОСТАВЛЕНО: ${point.nonDeliveryReason}\n',
+                          style: pw.TextStyle(
+                            fontWeight: pw.FontWeight.bold,
+                            color: PdfColors.red900,
+                          ),
+                        ),
                       pw.TextSpan(text: 'Клиент: '),
                       pw.TextSpan(
                         text: '${point.clientName}\n',
@@ -188,6 +205,15 @@ class RouteSheetPdfBuilder {
                           fontWeight: pw.FontWeight.bold,
                         ), // ДЕЛАЕМ ЖИРНЫМ
                       ),
+                      if (point.memo.isNotEmpty) ...[
+                        const pw.TextSpan(text: '\nПамятка: '),
+                        pw.TextSpan(
+                          text: point.memo,
+                          style: pw.TextStyle(
+                            fontWeight: pw.FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -196,6 +222,7 @@ class RouteSheetPdfBuilder {
               _buildItemsCell(point.items),
               _tableCell(
                 '${point.totalAmount.toStringAsFixed(2)} ₽',
+                strikeThrough: !point.isDelivered,
                 align: pw.TextAlign.center,
               ),
             ],
@@ -205,8 +232,68 @@ class RouteSheetPdfBuilder {
     );
   }
 
+  pw.Widget _buildProductLoadSummary(DeliveryRouteSheet sheet) {
+    final quantitiesByProduct =
+        <String, ({String productName, int quantity})>{};
+
+    // Include every route point, including failed deliveries: the goods may
+    // still have been loaded onto the vehicle before the delivery attempt.
+    for (final point in sheet.points) {
+      for (final item in point.items) {
+        if (item.isFreePrice) continue;
+        final existing = quantitiesByProduct[item.productId];
+        quantitiesByProduct[item.productId] = (
+          productName: existing?.productName ?? item.productName,
+          quantity: (existing?.quantity ?? 0) + item.quantity,
+        );
+      }
+    }
+
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+      children: [
+        pw.Text(
+          'ЗАГРУЗИТЬ СО СКЛАДА',
+          style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold),
+        ),
+        pw.SizedBox(height: 6),
+        pw.Table(
+          border: pw.TableBorder.all(color: PdfColors.grey600, width: 0.6),
+          columnWidths: const {
+            0: pw.FixedColumnWidth(28),
+            1: pw.FlexColumnWidth(1),
+            2: pw.FixedColumnWidth(75),
+          },
+          children: [
+            pw.TableRow(
+              decoration: const pw.BoxDecoration(color: PdfColors.grey300),
+              children: [
+                _tableHeader('#'),
+                _tableHeader('Товар'),
+                _tableHeader('Количество'),
+              ],
+            ),
+            ...quantitiesByProduct.values.toList().asMap().entries.map(
+              (entry) => pw.TableRow(
+                children: [
+                  _tableCell('${entry.key + 1}', align: pw.TextAlign.center),
+                  _tableCell(entry.value.productName),
+                  _tableCell(
+                    '${entry.value.quantity}',
+                    align: pw.TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   pw.Widget _buildItemsCell(List<dynamic> items) {
     return pw.Table(
+      defaultVerticalAlignment: pw.TableCellVerticalAlignment.middle,
       // Внутренние границы между колонками продуктов
       border: const pw.TableBorder(
         verticalInside: pw.BorderSide(color: PdfColors.grey400, width: 0.4),
@@ -240,7 +327,11 @@ class RouteSheetPdfBuilder {
           return pw.TableRow(
             children: [
               _tableCell('${subIndex + 1}', align: pw.TextAlign.center),
-              _tableCell(item.productName),
+              _tableCell(
+                item.isFreePrice && item.driverNote.trim().isNotEmpty
+                    ? '${item.productName}\nУточнение: ${item.driverNote.trim()}'
+                    : item.productName,
+              ),
               _tableCell('${item.quantity}', align: pw.TextAlign.center),
               _tableCell(
                 '${formatSavedUnitPrice(item.price)} ₽',
@@ -268,7 +359,11 @@ class RouteSheetPdfBuilder {
     );
   }
 
-  pw.Widget _tableCell(String text, {pw.TextAlign align = pw.TextAlign.left}) {
+  pw.Widget _tableCell(
+    String text, {
+    pw.TextAlign align = pw.TextAlign.left,
+    bool strikeThrough = false,
+  }) {
     // Мапим pw.TextAlign в соответствующий pw.Alignment для контейнера
     final containerAlignment = switch (align) {
       pw.TextAlign.left => pw.Alignment.centerLeft,
@@ -284,7 +379,10 @@ class RouteSheetPdfBuilder {
       child: pw.Text(
         text,
         textAlign: align, // Сохраняем горизонтальный текст-элайн
-        style: const pw.TextStyle(fontSize: 7.5),
+        style: pw.TextStyle(
+          decoration: strikeThrough ? pw.TextDecoration.lineThrough : null,
+          fontSize: 7.5,
+        ),
       ),
     );
   }

@@ -1,3 +1,5 @@
+import 'package:mountain_fairytale/features/commissions/ui/commissions_toolbar.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -103,6 +105,30 @@ class FakeCommissions implements CommissionsRepository {
 }
 
 void main() {
+  testWidgets('commission checkbox keeps natural height with enlarged text', (
+    tester,
+  ) async {
+    final provider = CommissionsProvider(FakeCommissions());
+    addTearDown(provider.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: MediaQuery(
+            data: const MediaQueryData(textScaler: TextScaler.linear(1.8)),
+            child: CommissionsToolbar(provider: provider),
+          ),
+        ),
+      ),
+    );
+    final toggle = find.byType(LabeledCheckboxToggle);
+    final icon = find.descendant(of: toggle, matching: find.byType(Icon));
+    expect(
+      tester.getSize(toggle).height,
+      closeTo(tester.getSize(icon).height + 16 * 1.8, 0.01),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   test('decimal HALF_UP rounding and sums use exact values without double arithmetic', () {
     expect(const CommissionAmount('0.005').cents, BigInt.one);
     expect(
@@ -224,6 +250,18 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+
+      final toggle = find.byType(LabeledCheckboxToggle);
+      final toggleIcon = find.descendant(
+        of: toggle,
+        matching: find.byType(Icon),
+      );
+      final toggleScale =
+          MediaQuery.textScalerOf(tester.element(toggle)).scale(14) / 14;
+      expect(
+        tester.getSize(toggle).height,
+        closeTo(tester.getSize(toggleIcon).height + 16 * toggleScale, 0.01),
+      );
       expect(find.text('Уволенный представитель'), findsOneWidget);
       await tester.tap(find.byType(LabeledCheckboxToggle));
       await tester.pumpAndSettle();

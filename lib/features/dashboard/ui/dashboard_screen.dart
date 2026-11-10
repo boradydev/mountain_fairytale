@@ -8,7 +8,6 @@ import 'package:mountain_fairytale/features/clients/ui/client_list.dart';
 import 'package:mountain_fairytale/features/delivery_days/ui/delivery_days_provider.dart';
 import 'package:mountain_fairytale/features/delivery_days/ui/delivery_day_list.dart';
 import 'package:provider/provider.dart';
-import 'package:mountain_fairytale/shared/widgets/list_section_header.dart';
 
 class DeliveryDaysScreen extends StatefulWidget {
   const DeliveryDaysScreen({super.key});
@@ -31,6 +30,13 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen>
   bool _initialLoadStarted = false;
   bool _initialLoadComplete = false;
   bool _scrollCheckScheduled = false;
+  double? _clientHeaderHeight;
+
+  void _updateHeaderHeight(double height) {
+    if (!mounted || _clientHeaderHeight == height) return;
+    setState(() => _clientHeaderHeight = height);
+  }
+
   bool get _canWatch => mounted && _visible && _appActive;
   @override
   void initState() {
@@ -89,7 +95,10 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen>
     // These regular requests also expose failures through the list retry UI.
     final days = context.read<DeliveryDaysProvider>();
     final clients = context.read<ClientsProvider>();
-    await Future.wait([days.fetchDeliveryDays(), clients.fetchClients()]);
+    await Future.wait([
+      days.fetchDeliveryDays(),
+      clients.initializeDashboardClients(),
+    ]);
     if (!mounted) return;
     _initialLoadComplete = true;
     _scheduleScrollCheck();
@@ -174,7 +183,7 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen>
     });
   }
 
-  Widget _daysList(double headerHeight) =>
+  Widget _daysList({double? headerHeight}) =>
       NotificationListener<ScrollMetricsNotification>(
         onNotification: (_) {
           // Also fill a large viewport when seven days do not yet make it scrollable.
@@ -202,22 +211,16 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen>
     builder: (context, constraints) {
       final scale = MediaQuery.textScalerOf(context).scale(1);
       final compact = constraints.maxWidth < 960 * scale;
-      final headerHeight = AppListSectionHeader.preferredHeight(context).clamp(
-        0.0,
-        constraints.maxHeight * (compact ? 0.2 : 0.6),
-      );
       if (compact) {
         return Column(
           children: [
             Expanded(
-              child: _daysList(headerHeight),
+              child: _daysList(),
             ),
             const Divider(height: 1),
             Expanded(
               flex: 2,
-              child: ClientsAttentionListView(
-                headerHeight: headerHeight,
-              ),
+              child: ClientsAttentionListView(),
             ),
           ],
         );
@@ -226,12 +229,14 @@ class _DeliveryDaysScreenState extends State<DeliveryDaysScreen>
         children: [
           SizedBox(
             width: (constraints.maxWidth * 0.38).clamp(360.0, 500.0),
-            child: _daysList(headerHeight),
+            child: _daysList(headerHeight: _clientHeaderHeight),
           ),
           const VerticalDivider(width: 1),
           Expanded(
             flex: 3,
-            child: ClientsAttentionListView(headerHeight: headerHeight),
+            child: ClientsAttentionListView(
+              onHeaderHeightChanged: _updateHeaderHeight,
+            ),
           ),
         ],
       );

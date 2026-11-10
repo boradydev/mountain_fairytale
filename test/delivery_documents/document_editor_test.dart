@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/features/pickup/data/pickup_model.dart';
 import 'package:flutter/services.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -121,6 +122,11 @@ void main() {
       isFalse,
     );
     locks.failRenew = false;
+    provider.recoveryDocument = PickupSheet(
+      id: 'document',
+      date: DateTime(2026, 11, 6),
+      points: [],
+    );
     await tester.tap(find.text('Повторить подключение'));
     await tester.pumpAndSettle();
     expect(find.text('Нет связи с сервером'), findsNothing);

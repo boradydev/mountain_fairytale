@@ -67,6 +67,47 @@ class RepresentativeOrders extends OrderPointsProvider {
 }
 
 void main() {
+  test('assigned saved and new points preserve snapshots and only new assignment can change', () async {
+    final repo = RepresentativeClients();
+    final orders = RepresentativeOrders(repo)
+      ..isEditing = true
+      ..points = [
+        RoutePoint.fromJson({
+          ...point.toJson(),
+          'salesRepresentativeId': 'historical-rep',
+          'salesRepresentativeName': 'Исторический представитель',
+        }),
+        RoutePoint.fromJson({
+          ...point.toJson(),
+          'pointId': null,
+          'clientId': 'new-client',
+        }),
+      ];
+    final clients = ClientsProvider(repo);
+    addTearDown(orders.dispose);
+    addTearDown(clients.dispose);
+    final saved = orders.points.first.toJson();
+    expect(
+      await orders.selectPointRepresentative(
+        point.clientId!,
+        const ClientDirectoryEntry('rep', 'Иванов Алексей'),
+        clients,
+      ),
+      false,
+    );
+    expect(repo.request, isNull);
+    expect(
+      await orders.selectPointRepresentative(
+        'new-client',
+        const ClientDirectoryEntry('rep', 'Иванов Алексей'),
+        clients,
+      ),
+      true,
+    );
+    expect(orders.points.first.toJson(), saved);
+    expect(orders.points.last.salesRepresentativeId, 'rep');
+  });
+
   for (final editing in [false, true]) {
     testWidgets(
       'inactive representative is marked independently of filter, editing=$editing',
@@ -85,6 +126,7 @@ void main() {
           ..points = [
             RoutePoint.fromJson({
               ...point.toJson(),
+              'pointId': null,
               'salesRepresentativeId': 'rep',
               'salesRepresentativeName': 'Иванов Алексей',
             }),
@@ -342,7 +384,7 @@ void main() {
         );
         expect(
           tester.widget<AppDropdown<ClientDirectoryEntry>>(repField).enabled,
-          editing,
+          false,
         );
         for (var i = 0; i < anchors.length; i++) {
           expect(
@@ -357,7 +399,7 @@ void main() {
         );
         expect(tester.takeException(), isNull);
       }
-      expect(repo.representativeLoads, 2);
+      expect(repo.representativeLoads, 1);
       expect(repo.request, isNull);
     });
   }
@@ -366,7 +408,10 @@ void main() {
     'representative saves client UUID and preserves order; failure retains selection',
     (tester) async {
       final repo = RepresentativeClients();
-      final orders = RepresentativeOrders(repo)..points = [point];
+      final orders = RepresentativeOrders(repo)
+        ..points = [
+          RoutePoint.fromJson({...point.toJson(), 'pointId': null}),
+        ];
       final clients = ClientsProvider(repo);
       addTearDown(orders.dispose);
       addTearDown(clients.dispose);
@@ -395,7 +440,10 @@ void main() {
       await tester.pumpAndSettle();
       expect(repo.request!.toJson(), {'salesRepresentativeId': 'rep'});
       expect(orders.points.single.salesRepresentativeId, 'rep');
-      expect(orders.points.single.items, point.items);
+      expect(
+        orders.points.single.items.map((i) => i.toJson()).toList(),
+        point.items.map((i) => i.toJson()).toList(),
+      );
       expect(orders.points.single.totalCents, point.totalCents);
       repo.fail = true;
       await tester.tap(

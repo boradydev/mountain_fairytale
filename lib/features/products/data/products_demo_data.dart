@@ -21,9 +21,11 @@ class DemoProductDataSource implements ProductDataSource {
     );
     _productsCache = legacyProducts.map((product) {
       return {
-        'productId': product['productId']?.toString() ?? product['id'].toString(),
+        'productId':
+            product['productId']?.toString() ?? product['id'].toString(),
         'name': product['name'],
         'basePrice': product['basePrice'],
+        'isFreePrice': product['isFreePrice'] ?? false,
         'createdAt': DateTime.utc(2026).toIso8601String(),
         'isActive': true,
       };
@@ -53,6 +55,8 @@ class DemoProductDataSource implements ProductDataSource {
     await _load();
     final product = {
       ...json,
+      'basePrice': json['isFreePrice'] == true ? 0 : json['basePrice'],
+      'isFreePrice': json['isFreePrice'] ?? false,
       'productId': 'demo-${DateTime.now().microsecondsSinceEpoch}',
       'createdAt': DateTime.now().toUtc().toIso8601String(),
       'isActive': true,
@@ -71,7 +75,9 @@ class DemoProductDataSource implements ProductDataSource {
       (product) => product['productId'] == id,
     );
     if (index == -1) throw Exception('Product not found');
-    _productsCache![index] = {..._productsCache![index], ...json};
+    final updated = {..._productsCache![index], ...json};
+    if (updated['isFreePrice'] == true) updated['basePrice'] = 0;
+    _productsCache![index] = updated;
     return Map<String, dynamic>.from(_productsCache![index]);
   }
 

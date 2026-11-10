@@ -1,3 +1,9 @@
+import 'dart:io';
+
+import 'package:mountain_fairytale/features/clients/data/clients_model.dart';
+
+import 'document_provider_test.dart' show Orders, Catalog, Locks;
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mountain_fairytale/features/delivery_route/data/delivery_route_sheet_model.dart';
 import 'package:mountain_fairytale/features/delivery_route/data/delivery_task_item_model.dart';
@@ -16,6 +22,8 @@ Future<String> _printedText(RoutePoint point) async {
       points: [point],
     ),
   );
+  final qaDir = Platform.environment['DELIVERY_HISTORY_QA_DIR'];
+  if (qaDir != null) await File('$qaDir/route-history.pdf').writeAsBytes(bytes);
   final document = await PdfDocument.openData(bytes);
   try {
     final text = StringBuffer();
@@ -31,6 +39,155 @@ Future<String> _printedText(RoutePoint point) async {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(pdfrxInitialize);
+
+  test('directory edits preserve historical point and printed PDF', () async {
+    final original = RoutePoint.fromJson({
+      'pointId': 'saved-point',
+      'clientId': 'client',
+      'clientName': 'Исторический клиент',
+      'address': 'Горная, 10 — Со двора',
+      'clientAddress': 'Горная, 10',
+      'deliveryDetails': 'Со двора',
+      'phone': '1234567',
+      'salesRepresentativeId': 'old-rep',
+      'salesRepresentativeName': 'Представитель',
+      'paymentMethodName': 'Наличные',
+      'items': [
+        {
+          'itemId': 'saved-item',
+          'productId': 'water',
+          'productName': 'Вода',
+          'quantity': 2,
+          'price': 350,
+        },
+      ],
+    });
+    final orders = Orders(Catalog(), Locks())..points = [original];
+    addTearDown(orders.dispose);
+    orders.syncClientPoint(
+      Client(
+        id: 'client',
+        name: 'Новое имя',
+        phone: '9999999',
+        address: 'Новый адрес',
+        deliveryDetails: 'Новые условия',
+        sleepingThresholdDays: 7,
+        createdAt: DateTime(2026),
+        isActive: true,
+        salesRepresentativeId: 'new-rep',
+      ),
+    );
+    expect(orders.points.single.toJson(), original.toJson());
+    final text = await _printedText(orders.points.single);
+    expect(text, contains('Исторический клиент'));
+    expect(text, contains('Горная, 10'));
+    expect(text, contains('Со двора'));
+    expect(text, contains('1234567'));
+    expect(text, isNot(contains('Новое имя')));
+    expect(text, isNot(contains('Новый адрес')));
+  });
+
+  test('PDF preserves unsuccessful order and reason but excludes its sum from route total', () async {
+    final text = await _printedText(
+      const RoutePoint(
+        clientId: 'client',
+        clientName: 'Клиент',
+        address: 'Адрес',
+        phone: '123',
+        salesRepresentative: '',
+        isDelivered: false,
+        nonDeliveryReason: 'Закрыт магазин',
+        items: [
+          DeliveryTaskItem(
+            productId: 'water',
+            productName: 'Вода',
+            quantity: 2,
+            price: 350,
+          ),
+        ],
+      ),
+    );
+    expect(text, contains('НЕ ДОСТАВЛЕНО: Закрыт магазин'));
+    expect(text, contains('700.00'));
+    expect(text, isNot(contains('Не включено в итог')));
+    expect(text, contains('Вода'));
+    expect(text, contains('0.00'));
+  });
+
+  test(
+    'PDF prints free-price item with its driver note and saved price',
+    () async {
+      final text = await _printedText(
+        const RoutePoint(
+          clientId: 'client',
+          clientName: 'Клиент',
+          address: 'Адрес',
+          phone: '123',
+          salesRepresentative: '',
+          items: [
+            DeliveryTaskItem(
+              productId: 'service',
+              productName: 'Настройка',
+              quantity: 1,
+              price: 75,
+              isFreePrice: true,
+              driverNote: 'Забрать кулер',
+            ),
+          ],
+        ),
+      );
+
+      expect(text, contains('Настройка'));
+      expect(text, contains('75.00'));
+      expect(text, contains('Уточнение: Забрать кулер'));
+    },
+  );
+
+  test(
+    'warehouse load summary excludes all free-price rows',
+    () async {
+      final text = await _printedText(
+        const RoutePoint(
+          clientId: 'client',
+          clientName: 'Клиент',
+          address: 'Адрес',
+          phone: '123',
+          salesRepresentative: '',
+          items: [
+            DeliveryTaskItem(
+              productId: 'water',
+              productName: 'Бесплатная вода',
+              quantity: 2,
+              price: 0,
+            ),
+            DeliveryTaskItem(
+              productId: 'service-zero',
+              productName: 'Услуга без цены',
+              quantity: 3,
+              price: 0,
+              isFreePrice: true,
+            ),
+            DeliveryTaskItem(
+              productId: 'service-priced',
+              productName: 'Оценённая услуга',
+              quantity: 4,
+              price: 25,
+              isFreePrice: true,
+            ),
+          ],
+        ),
+      );
+
+      int occurrences(String value) =>
+          RegExp(RegExp.escape(value)).allMatches(text).length;
+
+      expect(occurrences('Бесплатная вода'), 2);
+      expect(occurrences('Услуга без цены'), 1);
+      expect(occurrences('Оценённая услуга'), 1);
+      expect(text, contains('ЗАГРУЗИТЬ СО СКЛАДА'));
+      expect(text, isNot(contains('ЗАГРУЗИТЬ В АВТОМОБИЛЬ')));
+    },
+  );
 
   for (final savedPayment in ['Наличные', null]) {
     test(

@@ -18,7 +18,10 @@ import 'package:mountain_fairytale/features/products/products_abcs.dart';
 import 'package:mountain_fairytale/features/clients/ui/clients_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+enum DocumentConnectionIssue { network, server }
+
 abstract class OrderPointsProvider extends SafeChangeNotifier {
+  int _itemSequence = 0;
   // 1. Поля БЕЗ подчеркивания и с аннотацией
   @protected
   final ProductRepository productRepo;
@@ -50,6 +53,18 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
   int documentRevision = 1;
   bool connectionInterrupted = false;
   bool reconnecting = false;
+  DocumentConnectionIssue connectionIssue = DocumentConnectionIssue.network;
+  static const connectionCheckInterval = Duration(seconds: 5);
+  static const connectionCheckMaxAttempts = 3;
+  static const connectionCheckRetryDelays = [
+    Duration(milliseconds: 500),
+    Duration(milliseconds: 1500),
+  ];
+  static const lockRenewMaxAttempts = 3;
+  static const lockRenewRetryDelays = [
+    Duration(milliseconds: 400),
+    Duration(milliseconds: 800),
+  ];
   bool _saveUnconfirmed = false;
   String? _pendingOperationId;
   Timer? _connectionTimer;
@@ -99,6 +114,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     _connectionTimer?.cancel();
     documentRevision = revision;
     connectionInterrupted = false;
+    connectionIssue = DocumentConnectionIssue.network;
     reconnecting = false;
     _saveUnconfirmed = false;
     _pendingOperationId = null;
@@ -121,7 +137,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
   void startConnectionWatch() {
     if (_closed || _connectionTimer?.isActive == true) return;
     _connectionTimer = Timer.periodic(
-      const Duration(seconds: 5),
+      connectionCheckInterval,
       (_) => _checkConnection(),
     );
   }
@@ -143,13 +159,23 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
   Future<RouteDocument?> findPendingCreation(String requestId) async => null;
   Future<void> applyRecoveryDocument(RouteDocument document) async {}
 
+  bool _serverFailure(Object error) =>
+      error is ApiException && {500, 502, 503, 504}.contains(error.statusCode);
+
   bool _connectionFailure(Object error) =>
       error is SocketException ||
       error is HttpException ||
       error is TimeoutException ||
-      (error is ApiException && error.statusCode >= 500);
+      _serverFailure(error);
 
-  void _pauseConnection() {
+  bool _currentSession(int version) =>
+      version == _sessionVersion && !_closed && !_closing;
+
+  void _pauseConnection({Object? error, bool serverResponded = false}) {
+    connectionIssue =
+        serverResponded || (error != null && _serverFailure(error))
+        ? DocumentConnectionIssue.server
+        : DocumentConnectionIssue.network;
     connectionInterrupted = true;
     _renewTimer?.cancel();
     notifyListeners();
@@ -160,6 +186,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
         _closing ||
         documentBusy ||
         _checkingConnection ||
+        _renewRequest != null ||
         lockRepository == null) {
       return;
     }
@@ -170,14 +197,37 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     if (!isEditing) return;
     final version = _sessionVersion;
     _checkingConnection = true;
+    var serverResponded = false;
     try {
-      await lockRepository!.checkConnection();
-    } catch (error) {
-      if (version == _sessionVersion &&
-          !_closed &&
-          !_closing &&
-          _connectionFailure(error)) {
-        _pauseConnection();
+      for (var attempt = 0; attempt < connectionCheckMaxAttempts; attempt++) {
+        if (!_currentSession(version) || !isEditing || connectionInterrupted) {
+          return;
+        }
+        // A user operation may have started during a retry delay. Its outcome
+        // takes precedence over this background health check.
+        if (documentBusy) return;
+        try {
+          await lockRepository!.checkConnection();
+          return;
+        } catch (error) {
+          if (!_currentSession(version) ||
+              !isEditing ||
+              connectionInterrupted) {
+            return;
+          }
+          if (documentBusy) return;
+          if (!_connectionFailure(error)) {
+            handleDocumentError(error);
+            notifyListeners();
+            return;
+          }
+          serverResponded = serverResponded || _serverFailure(error);
+          if (attempt == connectionCheckMaxAttempts - 1) {
+            _pauseConnection(error: error, serverResponded: serverResponded);
+            return;
+          }
+          await Future<void>.delayed(connectionCheckRetryDelays[attempt]);
+        }
       }
     } finally {
       _checkingConnection = false;
@@ -208,6 +258,8 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     reconnecting = true;
     notifyListeners();
     try {
+      await _renewRequest;
+      if (!_currentSession(version)) return false;
       await lockRepository!.checkConnection();
       if (version != _sessionVersion || _closed || _closing) return false;
       if (id == null) {
@@ -217,6 +269,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
         if (version != _sessionVersion || _closed || _closing) return false;
         if (created != null) {
           await applyRecoveryDocument(created);
+          if (!_currentSession(version)) return false;
           isEditing = false;
           _draftStarted = false;
           documentChanged = true;
@@ -245,19 +298,16 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       if (version != _sessionVersion || _closed || _closing) return false;
       final current = await readRecoveryDocument();
       if (version != _sessionVersion || _closed || _closing) return false;
+      if (current == null) {
+        throw StateError('Document state could not be confirmed');
+      }
       final saved =
-          _saveUnconfirmed &&
-          current != null &&
-          current.lastOperationId == _pendingOperationId;
+          _saveUnconfirmed && current.lastOperationId == _pendingOperationId;
       final changed =
-          current != null &&
           (current.revision != documentRevision || !current.isActive);
       if (_discardReason != null || changed || saved) {
-        if (current != null) {
-          await applyRecoveryDocument(current);
-        } else {
-          await refreshForEditing();
-        }
+        await applyRecoveryDocument(current);
+        if (!_currentSession(version)) return false;
         if (_hasLock) {
           try {
             await lockRepository!.releaseEditLock(id);
@@ -265,6 +315,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
             if (!{403, 409}.contains(error.statusCode)) rethrow;
           }
         }
+        if (!_currentSession(version)) return false;
         _hasLock = false;
         _draftStarted = false;
         isEditing = false;
@@ -284,7 +335,12 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       connectionInterrupted = false;
       return true;
     } catch (error) {
-      if (version == _sessionVersion && !_closed) {
+      if (_currentSession(version)) {
+        if (_connectionFailure(error)) {
+          connectionIssue = _serverFailure(error)
+              ? DocumentConnectionIssue.server
+              : DocumentConnectionIssue.network;
+        }
         if (error is ApiException &&
             error.statusCode == 404 &&
             documentId != null) {
@@ -299,7 +355,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       }
       return false;
     } finally {
-      if (version == _sessionVersion) {
+      if (_currentSession(version)) {
         reconnecting = false;
         notifyListeners();
       }
@@ -377,8 +433,25 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
         documentBusy) {
       return;
     }
+    var serverResponded = false;
     try {
-      final owner = await lockRepository!.renewEditLock(id);
+      String? owner;
+      for (var attempt = 0; attempt < lockRenewMaxAttempts; attempt++) {
+        try {
+          owner = await lockRepository!.renewEditLock(id);
+          break;
+        } catch (error) {
+          serverResponded = serverResponded || _serverFailure(error);
+          if (!_connectionFailure(error) ||
+              attempt == lockRenewMaxAttempts - 1) {
+            rethrow;
+          }
+          await Future<void>.delayed(lockRenewRetryDelays[attempt]);
+          if (version != _sessionVersion || _closed || _closing || !isEditing) {
+            return;
+          }
+        }
+      }
       if (version == _sessionVersion && !_closed && !_closing) {
         lockOwner = owner;
       }
@@ -391,7 +464,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
           _discardReason =
               'Редактирование прекращено: документ редактирует ${error.ownerName ?? 'другой сотрудник'}. Несохранённые изменения отменены.';
         }
-        _pauseConnection();
+        _pauseConnection(error: error, serverResponded: serverResponded);
       } else {
         documentError = documentFailure(error);
       }
@@ -441,7 +514,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
         _discardReason = afterSave
             ? 'Изменения сохранены. Показаны сохранённые данные.'
             : 'Редактирование отменено. Показаны сохранённые данные.';
-        _pauseConnection();
+        _pauseConnection(error: error);
       } else if (afterSave) {
         // The write already succeeded; do not offer another Save for it.
         isEditing = false;
@@ -482,7 +555,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
             'Не удалось освободить блокировку. Повторите закрытие. ${documentFailure(error)}';
         _closing = false;
         if (_connectionFailure(error)) {
-          _pauseConnection();
+          _pauseConnection(error: error);
         } else {
           isEditing = false;
         }
@@ -502,7 +575,10 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
 
   void handleDocumentError(Object error) {
     if (_connectionFailure(error) && isEditing) {
-      _pauseConnection();
+      if (_saveUnconfirmed) {
+        documentError = 'Не удалось подтвердить сохранение документа. Проверяем состояние на сервере.';
+      }
+      _pauseConnection(error: error);
       return;
     }
     if (error is ApiException &&
@@ -511,7 +587,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       if (error.data['code'] == 'document_revision_conflict') {
         _discardReason = 'Документ изменён другим сотрудником. Несохранённые изменения отменены.';
       }
-      _pauseConnection();
+      _pauseConnection(error: error);
       return;
     }
     _saveUnconfirmed = false;
@@ -658,15 +734,40 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     notifyListeners();
   }
 
+  void setDeliveryOutcome(
+    int index, {
+    required bool delivered,
+    String reason = '',
+  }) {
+    if (!canEdit || isPickup) return;
+    final normalized = reason.trim();
+    if (!delivered && (normalized.isEmpty || normalized.length > 1000)) return;
+    points[index] = points[index].copyWith(
+      isDelivered: delivered,
+      nonDeliveryReason: delivered ? '' : normalized,
+    );
+    notifyListeners();
+  }
+
+  void setPointMemo(int index, String memo) {
+    if (!canEdit || isPickup || memo.trim().length > 1000) return;
+    points[index] = points[index].copyWith(memo: memo.trim());
+    notifyListeners();
+  }
+
   RoutePoint _withPaymentMethod(
     RoutePoint point,
     PaymentMethod method, {
     bool selectForDocument = false,
   }) => RoutePoint(
     pointId: point.pointId,
+    isDelivered: point.isDelivered,
+    nonDeliveryReason: point.nonDeliveryReason,
+    memo: point.memo,
     localId: point.localId,
     position: point.position,
     salesRepresentativeId: point.salesRepresentativeId,
+    representativeCorrectionPending: point.representativeCorrectionPending,
     clientId: point.clientId,
     clientName: point.clientName,
     city: point.city,
@@ -745,22 +846,50 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     }
   }
 
+  bool canSelectPointRepresentative(RoutePoint point) =>
+      canEdit &&
+      !isPickup &&
+      point.clientId != null &&
+      (point.pointId == null ||
+          point.salesRepresentativeId == null ||
+          point.representativeCorrectionPending);
+
   Future<bool> selectPointRepresentative(
     String clientId,
     ClientDirectoryEntry representative,
     ClientsProvider clientsProvider,
   ) async {
-    if (!canEdit || isPickup || !representative.isActive) return false;
+    final index = points.indexWhere((point) => point.clientId == clientId);
+    if (index == -1 ||
+        !canSelectPointRepresentative(points[index]) ||
+        !representative.isActive) {
+      return false;
+    }
+    final point = points[index];
+    if (point.pointId != null) {
+      points[index] = point.copyWith(
+        salesRepresentativeId: representative.id,
+        salesRepresentative: representative.name,
+        representativeCorrectionPending: true,
+      );
+      notifyListeners();
+      return true;
+    }
     final client = await clientRepo.updateClient(
       clientId,
       UpdateClientRequest(salesRepresentativeId: representative.id),
     );
     clientsProvider.syncUpdatedClient(client);
-    final index = points.indexWhere((point) => point.clientId == clientId);
-    if (index != -1) {
-      final point = points[index];
-      points[index] = RoutePoint(
+    final updatedIndex = points.indexWhere(
+      (point) => point.clientId == clientId,
+    );
+    if (updatedIndex != -1 && points[updatedIndex].pointId == null) {
+      final point = points[updatedIndex];
+      points[updatedIndex] = RoutePoint(
         pointId: point.pointId,
+        isDelivered: point.isDelivered,
+        nonDeliveryReason: point.nonDeliveryReason,
+        memo: point.memo,
         localId: point.localId,
         position: point.position,
         clientId: point.clientId,
@@ -775,8 +904,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
         documentPaymentMethodId: point.documentPaymentMethodId,
         documentPaymentMethodName: point.documentPaymentMethodName,
         salesRepresentativeId: client.salesRepresentativeId,
-        salesRepresentative:
-            client.salesRepresentativeName ?? 'Нет представителя',
+        salesRepresentative: client.salesRepresentativeName ?? 'Не указан',
         items: point.items,
       );
     }
@@ -785,7 +913,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
   }
 
   double get grandTotal =>
-      points.fold(0, (sum, point) => sum + point.totalCents) / 100;
+      points.fold(0, (sum, point) => sum + point.accountedTotalCents) / 100;
 
   Future<void> loadOrderDirectories() async {
     isLoadingDirectories = true;
@@ -850,10 +978,13 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
   void syncClientPoint(Client client) {
     points = points
         .map(
-          (point) => point.clientId != client.id
+          (point) => point.clientId != client.id || point.pointId != null
               ? point
               : RoutePoint(
                   pointId: point.pointId,
+                  isDelivered: point.isDelivered,
+                  nonDeliveryReason: point.nonDeliveryReason,
+                  memo: point.memo,
                   localId: point.localId,
                   position: point.position,
                   salesRepresentativeId: client.salesRepresentativeId,
@@ -873,7 +1004,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
                   documentPaymentMethodId: point.documentPaymentMethodId,
                   documentPaymentMethodName: point.documentPaymentMethodName,
                   salesRepresentative:
-                      client.salesRepresentativeName ?? 'Нет представителя',
+                      client.salesRepresentativeName ?? 'Не указан',
                   items: point.items,
                 ),
         )
@@ -908,8 +1039,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
         documentPaymentMethodName:
             paymentMethodsById[client.defaultPaymentMethodId]?.name ??
             client.defaultPaymentMethodName,
-        salesRepresentative:
-            client.salesRepresentativeName ?? 'Нет представителя',
+        salesRepresentative: client.salesRepresentativeName ?? 'Не указан',
         items: [],
       ),
     );
@@ -942,6 +1072,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     String? productName,
   }) {
     if (!canEdit) return;
+    if (isPickup && product.isFreePrice) return;
     if (!product.isActive || quantity <= 0) return;
     final currentPoint = points[pointIndex];
 
@@ -951,21 +1082,28 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       (item) => item.productId == product.id,
     );
 
-    if (existingIndex != -1) return;
+    if (existingIndex != -1 && !product.isFreePrice) return;
     updatedItems.add(
       DeliveryTaskItem(
+        localId: 'item-${++_itemSequence}',
         productId: product.id,
         productName: productName ?? product.name,
         quantity: quantity,
-        price: product.basePrice,
+        price: product.isFreePrice ? 0 : product.basePrice,
+        isFreePrice: !isPickup && product.isFreePrice,
       ),
     );
 
     points[pointIndex] = RoutePoint(
       pointId: currentPoint.pointId,
+      isDelivered: currentPoint.isDelivered,
+      nonDeliveryReason: currentPoint.nonDeliveryReason,
+      memo: currentPoint.memo,
       localId: currentPoint.localId,
       position: currentPoint.position,
       salesRepresentativeId: currentPoint.salesRepresentativeId,
+      representativeCorrectionPending:
+          currentPoint.representativeCorrectionPending,
       clientId: currentPoint.clientId,
       clientName: currentPoint.clientName,
       city: currentPoint.city,
@@ -1005,18 +1143,18 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     final items = List<DeliveryTaskItem>.from(currentPoint.items);
     final oldItem = items[taskIndex];
 
-    items[taskIndex] = DeliveryTaskItem(
-      productId: oldItem.productId,
-      productName: oldItem.productName,
-      quantity: quantity,
-      price: oldItem.price,
-    );
+    items[taskIndex] = oldItem.copyWith(quantity: quantity);
 
     points[pointIndex] = RoutePoint(
       pointId: currentPoint.pointId,
+      isDelivered: currentPoint.isDelivered,
+      nonDeliveryReason: currentPoint.nonDeliveryReason,
+      memo: currentPoint.memo,
       localId: currentPoint.localId,
       position: currentPoint.position,
       salesRepresentativeId: currentPoint.salesRepresentativeId,
+      representativeCorrectionPending:
+          currentPoint.representativeCorrectionPending,
       clientId: currentPoint.clientId,
       clientName: currentPoint.clientName,
       city: currentPoint.city,
@@ -1045,7 +1183,9 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       return false;
     }
     final point = points[pointIndex];
-    if (point.items.any((item) => item.productId == productId)) {
+    if (point.items.any(
+      (item) => item.productId == productId && !item.isFreePrice,
+    )) {
       documentError =
           'Этот товар уже добавлен. Измените количество существующей строки.';
       notifyListeners();
@@ -1053,8 +1193,17 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     }
     try {
       final product = await productRepo.getProductById(productId);
-      if (!canEdit || !product.isActive) {
-        documentError = 'Нельзя добавить неактивный товар.';
+      if (!canEdit || !product.isActive || (isPickup && product.isFreePrice)) {
+        documentError = isPickup && product.isFreePrice
+            ? 'Товар со свободной ценой нельзя добавить в самовывоз.'
+            : 'Нельзя добавить неактивный товар.';
+        notifyListeners();
+        return false;
+      }
+      if (!product.isFreePrice &&
+          point.items.any((item) => item.productId == productId)) {
+        documentError =
+            'Этот товар уже добавлен. Измените количество существующей строки.';
         notifyListeners();
         return false;
       }
@@ -1090,15 +1239,38 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       return false;
     }
     final items = List<DeliveryTaskItem>.from(point.items);
-    items[itemIndex] = DeliveryTaskItem(
-      productId: item.productId,
-      productName: item.productName,
-      quantity: item.quantity,
-      price: product.basePrice,
+    items[itemIndex] = item.copyWith(
+      price: item.isFreePrice ? item.price : product.basePrice,
     );
     points[index] = point.copyWith(items: items);
     notifyListeners();
     return true;
+  }
+
+  void updateTaskPrice(int pointIndex, int taskIndex, double price) {
+    if (!canEdit || isPickup || !price.isFinite || price < 0) return;
+    if (pointIndex < 0 || pointIndex >= points.length) return;
+    final point = points[pointIndex];
+    if (taskIndex < 0 || taskIndex >= point.items.length) return;
+    final items = List<DeliveryTaskItem>.from(point.items);
+    final oldItem = items[taskIndex];
+    if (!oldItem.isFreePrice) return;
+    items[taskIndex] = oldItem.copyWith(price: price);
+    points[pointIndex] = point.copyWith(items: items);
+    notifyListeners();
+  }
+
+  void updateTaskDriverNote(int pointIndex, int taskIndex, String driverNote) {
+    if (!canEdit || isPickup || driverNote.length > 1000) return;
+    if (pointIndex < 0 || pointIndex >= points.length) return;
+    final point = points[pointIndex];
+    if (taskIndex < 0 || taskIndex >= point.items.length) return;
+    final items = List<DeliveryTaskItem>.from(point.items);
+    final oldItem = items[taskIndex];
+    if (!oldItem.isFreePrice) return;
+    items[taskIndex] = oldItem.copyWith(driverNote: driverNote);
+    points[pointIndex] = point.copyWith(items: items);
+    notifyListeners();
   }
 
   Future<PaymentMethod?> addPaymentMethod(String name) async {
@@ -1173,6 +1345,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
   Future<Product?> addProduct({
     required String name,
     required double basePrice,
+    bool isFreePrice = false,
   }) async {
     final normalizedName = name.trim();
 
@@ -1184,7 +1357,8 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     try {
       final request = CreateProductRequest(
         name: normalizedName,
-        basePrice: basePrice,
+        basePrice: isFreePrice ? 0 : basePrice,
+        isFreePrice: isFreePrice,
       );
 
       final created = await productRepo.createProduct(request);
@@ -1204,6 +1378,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
     String id, {
     String? name,
     double? basePrice,
+    bool? isFreePrice,
   }) async {
     final normalizedName = name?.trim();
 
@@ -1217,6 +1392,7 @@ abstract class OrderPointsProvider extends SafeChangeNotifier {
       final request = UpdateProductRequest(
         name: normalizedName,
         basePrice: basePrice,
+        isFreePrice: isFreePrice,
       );
 
       final updated = await productRepo.updateProduct(id, request);

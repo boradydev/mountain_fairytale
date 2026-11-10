@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 import 'package:intl/intl.dart';
+import 'package:mountain_fairytale/shared/utils/date_range_limits.dart';
 import 'package:mountain_fairytale/shared/widgets/base_form_dialog_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/dropdown_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/icon_button_widget.dart';
@@ -10,12 +12,16 @@ class AppDateRangeDialog extends StatefulWidget {
   final String title;
   final DateTimeRange? initialDateRange;
   final DateTime? currentDate;
+  final int? maxRangeMonths;
+  final bool showReset;
 
   const AppDateRangeDialog({
     super.key,
     required this.title,
     this.initialDateRange,
     this.currentDate,
+    this.maxRangeMonths,
+    this.showReset = false,
   });
 
   @override
@@ -75,6 +81,12 @@ class _AppDateRangeDialogState extends State<AppDateRangeDialog> {
     final start = _parse(_from.text);
     if (end && start != null && date.isBefore(start)) {
       return 'Окончание раньше начала';
+    }
+    if (end &&
+        start != null &&
+        widget.maxRangeMonths != null &&
+        date.isAfter(lastDateOfRange(start, widget.maxRangeMonths!))) {
+      return 'Период не может превышать ${widget.maxRangeMonths} месяцев';
     }
     return null;
   }
@@ -153,6 +165,15 @@ class _AppDateRangeDialogState extends State<AppDateRangeDialog> {
     title: widget.title,
     submitButtonText: 'Подтвердить',
     onSubmit: _confirm,
+    leadingAction: widget.showReset
+        ? AppSecondaryButton(
+            text: 'Сбросить',
+            onPressed: () => _preset(
+              DateTime(_today.year, _today.month, _today.day - 29),
+              _today,
+            ),
+          )
+        : null,
     formKey: _form,
     children: [
       LayoutBuilder(

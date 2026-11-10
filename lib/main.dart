@@ -32,6 +32,8 @@ import 'package:mountain_fairytale/features/audit_event/data/audit_events_api_da
 import 'package:mountain_fairytale/features/sales_report/data/sales_report_api_data_source.dart';
 import 'package:mountain_fairytale/features/sales_report/data/sales_report_repo.dart';
 import 'package:mountain_fairytale/features/sales_report/ui/sales_report_provider.dart';
+import 'package:mountain_fairytale/features/delivery_history/data/delivery_history_api_repo.dart';
+import 'package:mountain_fairytale/features/delivery_history/ui/delivery_history_provider.dart';
 import 'package:mountain_fairytale/features/auth/data/auth_repo.dart';
 import 'package:mountain_fairytale/features/auth/data/auth_api_data_source.dart';
 import 'package:mountain_fairytale/features/cars/data/cars_repo.dart';
@@ -98,25 +100,23 @@ Future<void> main() async {
     final storedPosition = posX != null && posY != null
         ? Offset(posX, posY)
         : null;
-    final restorePosition =
-        storedPosition != null &&
-        await WindowSettingsService.isPositionVisible(
-          storedPosition,
-          windowSize,
-        );
+    final geometry = await WindowSettingsService.restoreGeometry(
+      windowSize,
+      storedPosition,
+    );
 
     final windowOptions = WindowOptions(
-      size: windowSize,
-      minimumSize: WindowSettingsService.minimumWindowSize,
-      center: !restorePosition,
+      size: geometry.size,
+      minimumSize: geometry.minimumSize,
+      center: geometry.position == null,
       title: "Mountain Fairytale",
     );
     final restoreMaximized =
         prefs.getBool(WindowSettingsService.maximizedKey) ?? false;
 
     windowManager.waitUntilReadyToShow(windowOptions, () async {
-      if (restorePosition) {
-        await windowManager.setPosition(storedPosition);
+      if (geometry.position != null) {
+        await windowManager.setPosition(geometry.position!);
       }
       if (restoreMaximized) await windowManager.maximize();
       windowManager.addListener(WindowSettingsService(prefs));
@@ -291,6 +291,10 @@ Widget _configuredApplication(
     ),
     ChangeNotifierProvider(
       create: (_) => SalesReportProvider(salesReportRepository),
+    ),
+    ChangeNotifierProvider(
+      create: (_) =>
+          DeliveryHistoryProvider(ApiDeliveryHistoryRepository(apiClient)),
     ),
   ];
 

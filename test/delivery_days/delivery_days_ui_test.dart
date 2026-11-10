@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:mountain_fairytale/shared/widgets/document_summary_card.dart';
 import 'package:mountain_fairytale/shared/widgets/labeled_checkbox_toggle.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -62,6 +65,78 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+  for (final isPickup in [false, true]) {
+    for (final cancelled in [false, true]) {
+      testWidgets(
+        'shared card opens pickup=$isPickup cancelled=$cancelled and blocks duplicate opens',
+        (tester) async {
+          final date = DateTime(2026, 10, 18);
+          final document = isPickup
+              ? PickupSheet(
+                  id: 'pickup',
+                  date: date,
+                  isActive: !cancelled,
+                  points: [],
+                )
+              : DeliveryRouteSheet(
+                  id: 'route',
+                  date: date,
+                  isActive: !cancelled,
+                  driverName: 'Водитель',
+                  carId: 'car',
+                  carModelAndNumber: 'Машина',
+                  startMileage: 0,
+                  points: [],
+                );
+          final repo = DaysRepository()..documents = [document];
+          final provider = DeliveryDaysProvider(repo);
+          addTearDown(provider.dispose);
+          final pending = Completer<bool?>();
+          var opens = 0;
+          await tester.pumpWidget(
+            MaterialApp(
+              home: DayDocumentsDialog(
+                date: date,
+                daysProvider: provider,
+                openDocument: (context, type, date, openedDocument, changed) {
+                  opens++;
+                  expect(type.name, isPickup ? 'pickup' : 'delivery');
+                  expect(openedDocument, same(document));
+                  return pending.future;
+                },
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          if (cancelled) {
+            await tester.tap(find.byType(LabeledCheckboxToggle));
+            await tester.pumpAndSettle();
+            expect(find.text('Отменён'), findsOneWidget);
+          }
+          final card = find.byType(DocumentSummaryCard);
+          await tester.ensureVisible(card);
+          await tester.tap(card);
+          await tester.pump();
+          expect(opens, 1);
+          expect(tester.widget<DocumentSummaryCard>(card).onOpen, isNull);
+          expect(
+            tester
+                .widget<LabeledCheckboxToggle>(
+                  find.byType(LabeledCheckboxToggle),
+                )
+                .onChanged,
+            isNull,
+          );
+          await tester.tap(card);
+          expect(opens, 1);
+          pending.complete(false);
+          await tester.pumpAndSettle();
+          expect(tester.widget<DocumentSummaryCard>(card).onOpen, isNotNull);
+          expect(tester.takeException(), isNull);
+        },
+      );
+    }
+  }
   final date = DateTime(2026, 10, 18);
   Future<void> showDays(WidgetTester tester, DeliveryDaysProvider p) async {
     tester.view.physicalSize = const Size(1000, 800);
@@ -159,8 +234,12 @@ void main() {
       expect(find.text('Самовывозы'), findsOneWidget);
       expect(find.text('Иванов Иван'), findsOneWidget);
       expect(find.text('Газель А123ВС'), findsOneWidget);
-      expect(find.text('17.10.2026 09:42'), findsOneWidget);
-      expect(find.text('17.10.2026 10:15'), findsOneWidget);
+      expect(find.text('Дата:'), findsNWidgets(2));
+      expect(find.byType(DocumentSummaryCard), findsNWidgets(2));
+      expect(find.text('18.10.2026'), findsNWidgets(2));
+      expect(find.text('Создан:'), findsNothing);
+      expect(find.text('17.10.2026 09:42'), findsNothing);
+      expect(find.text('17.10.2026 10:15'), findsNothing);
       expect(find.text('Клиентов:'), findsOneWidget);
       expect(find.text('Покупок:'), findsOneWidget);
       expect(find.text('2'), findsOneWidget);
@@ -205,7 +284,14 @@ void main() {
           findsOneWidget,
         );
       } else {
-        expect(find.text('Дата создания неизвестна'), findsNWidgets(count));
+        // Taller cards are built as they enter the scroll viewport.
+        expect(find.byType(DocumentSummaryCard), findsWidgets);
+        if (count > 1) {
+          await tester.drag(find.byType(ListView).last, const Offset(0, -500));
+          await tester.pumpAndSettle();
+          expect(find.byType(DocumentSummaryCard), findsWidgets);
+          expect(tester.takeException(), isNull);
+        }
       }
       await tester.tap(find.text('Закрыть'));
       await tester.pumpAndSettle();
@@ -239,8 +325,8 @@ void main() {
       addTearDown(p.dispose);
       await p.fetchDeliveryDays();
       await showDays(tester, p);
-      expect(find.text('Точки доставки'), findsOneWidget);
-      expect(find.text('Точки самовывоза'), findsOneWidget);
+      expect(find.text('Клиенты доставки'), findsOneWidget);
+      expect(find.text('Клиенты самовывоза'), findsOneWidget);
       expect(find.text('Возвраты'), findsNothing);
       expect(find.text('3510.50 ₽'), findsOneWidget);
       expect(find.byTooltip(name), findsOneWidget);
@@ -293,7 +379,7 @@ void main() {
       expect(find.text('На эту дату нет активных документов'), findsOneWidget);
       await tester.tap(find.byType(LabeledCheckboxToggle));
       await tester.pumpAndSettle();
-      expect(find.text('Дата создания неизвестна — Отменён'), findsOneWidget);
+      expect(find.text('Отменён'), findsOneWidget);
       expect(repo.documentCalls.last, (date, true));
     },
   );
@@ -360,7 +446,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byType(LabeledCheckboxToggle));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Дата создания неизвестна'));
+      await tester.tap(find.byType(DocumentSummaryCard));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Перенести'));
       await tester.pumpAndSettle();

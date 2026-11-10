@@ -8,6 +8,7 @@ void main() {
     description: 'Исправления',
   );
   test('semantic version takes precedence over build count', () {
+    expect(release.isNewerThan('1.1.2+65535'), isTrue);
     expect(release.isNewerThan('1.1.9+999'), isTrue);
     expect(release.isNewerThan('1.2.0+19'), isTrue);
     expect(release.isNewerThan('1.2.0+20'), isFalse);

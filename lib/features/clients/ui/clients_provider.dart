@@ -1,3 +1,8 @@
+import 'dart:async';
+import 'dart:math' as math;
+
+import 'package:mountain_fairytale/features/clients/data/client_latest_order.dart';
+
 import 'package:mountain_fairytale/features/clients/data/location_repository.dart';
 import 'package:mountain_fairytale/core/network/api_exception.dart';
 import 'package:mountain_fairytale/core/state/safe_change_notifier.dart';
@@ -8,10 +13,27 @@ enum ClientStatus { initial, loading, success, failure }
 
 enum ClientListMode { database, followUp }
 
+/// Dashboard pages never populate or truncate the selector directory.
+class DashboardClientsState {
+  List<Client> clients = [];
+  int total = 0;
+  int offset = 0;
+  int generation = 0;
+  bool initialized = false;
+  bool loading = false;
+  String error = '';
+  bool refreshFailed = false;
+  double scrollOffset = 0;
+  bool get hasMore => !initialized || offset < total;
+}
+
 class ClientsProvider extends SafeChangeNotifier {
   final ClientRepository _repository;
 
   ClientsProvider(this._repository);
+
+  Future<ClientLatestOrder?> getLatestOrder(String clientId) =>
+      _repository.getLatestOrder(clientId);
 
   List<Client> _clients = const [];
 
@@ -41,7 +63,11 @@ class ClientsProvider extends SafeChangeNotifier {
   Future<void> setShowDeactivated(bool value) async {
     if (_showDeactivated == value) return;
     _showDeactivated = value;
-    await fetchClients(force: true);
+    _resetDashboard(ClientListMode.database);
+    notifyListeners();
+    if (_dashboardStarted && _listMode == ClientListMode.database) {
+      await loadDashboardClients();
+    }
   }
 
   List<Client> get clients => _clients;
@@ -57,64 +83,9 @@ class ClientsProvider extends SafeChangeNotifier {
     if (_listMode == mode) return;
     _listMode = mode;
     notifyListeners();
-  }
-
-  /// Универсальный геттер, который теперь учитывает активный режим
-  List<Client> get sortedClients {
-    final now = DateTime.now();
-
-    // Вспомогательная функция для расчета коэффициента просрочки (K)
-    double getUrgencyCoefficient(Client client) {
-      if (client.lastOrderDate == null) return double.infinity;
-      final differenceDays = client.daysSinceLastOrder(now)!;
-      return client.sleepingThresholdDays == 0
-          ? double.infinity
-          : differenceDays / client.sleepingThresholdDays;
+    if (_dashboardStarted && !dashboard.initialized) {
+      unawaited(loadDashboardClients());
     }
-
-    // Вспомогательная функция проверки: просрочен ли клиент? (K >= 1.0)
-    bool isSleeping(Client client) {
-      // Если клиент на кулдауне, менеджер его уже обработал — он временно не считается "активно засыпающим"
-      final cooldownUntil = client.cooldownUntil;
-      if (cooldownUntil != null && cooldownUntil.isAfter(now)) {
-        return false;
-      }
-      return getUrgencyCoefficient(client) >= 1.0;
-    }
-
-    // ----------------------------------------------------
-    // РЕЖИМ 1: Показываем ТОЛЬКО просроченных клиентов
-    // ----------------------------------------------------
-    if (_listMode == ClientListMode.followUp) {
-      // Сначала фильтруем: оставляем только тех, кто реально спит
-      final filtered = _clients
-          .where((client) => client.isActive && isSleeping(client))
-          .toList();
-
-      // Сортируем их по критичности (чем больше K, тем выше)
-      filtered.sort((a, b) {
-        final aUrgency = getUrgencyCoefficient(a);
-        final bUrgency = getUrgencyCoefficient(b);
-        if (aUrgency != bUrgency) return bUrgency.compareTo(aUrgency);
-        return a.name.compareTo(b.name);
-      });
-
-      return filtered;
-    }
-
-    // ----------------------------------------------------
-    // РЕЖИМ 2: Сортировка по времени создания, затем UUID
-    // ----------------------------------------------------
-    final allClients = _clients
-        .where((client) => client.isActive || _showDeactivated)
-        .toList();
-    allClients.sort(
-      (a, b) {
-        final date = b.createdAt.compareTo(a.createdAt);
-        return date != 0 ? date : b.id.compareTo(a.id);
-      },
-    );
-    return allClients;
   }
 
   Future<void> fetchClients({bool force = false}) async {
@@ -155,21 +126,144 @@ class ClientsProvider extends SafeChangeNotifier {
   Future<bool> resetClientCooldown(String clientId) =>
       _changeClientCooldown(clientId, null);
 
-  Future<bool> refreshDashboardClients() async {
-    if (isLoading) return false;
-    final version = ++_fetchVersion;
-    try {
-      final loaded = await _repository.getAllClients(
-        includeDeactivated: _showDeactivated,
+  final _dashboard = {
+    for (final mode in ClientListMode.values) mode: DashboardClientsState(),
+  };
+  bool _dashboardStarted = false;
+  String _search = '';
+  String get search => _search;
+  DashboardClientsState get dashboard => _dashboard[_listMode]!;
+  DashboardClientsState dashboardFor(ClientListMode mode) => _dashboard[mode]!;
+
+  void _resetDashboard(ClientListMode mode) {
+    final old = _dashboard[mode]!;
+    old.generation++;
+    _dashboard[mode] = DashboardClientsState();
+  }
+
+  Future<void> setSearch(String value) async {
+    value = value.length > 500 ? value.substring(0, 500) : value;
+    if (value == _search) return;
+    _search = value;
+    for (final mode in ClientListMode.values) {
+      _resetDashboard(mode);
+    }
+    notifyListeners();
+    if (_dashboardStarted) await loadDashboardClients();
+  }
+
+  Future<void> initializeDashboardClients() async {
+    _dashboardStarted = true;
+    await loadDashboardClients();
+  }
+
+  Future<ClientsPage<Client>> _page(ClientListMode mode, int offset) =>
+      _repository.getClientsPage(
+        offset: offset,
+        limit: 25,
+        search: _search,
+        includeDeactivated: mode == ClientListMode.database && _showDeactivated,
+        mode: mode == ClientListMode.database ? 'database' : 'follow_up',
       );
-      if (version != _fetchVersion) return false;
-      _clients = loaded;
-      _status = ClientStatus.success;
-      notifyListeners();
+
+  Future<void> loadDashboardClients() async {
+    final mode = _listMode;
+    final state = _dashboard[mode]!;
+    if (state.loading || !state.hasMore) return;
+    final version = ++state.generation;
+    state.loading = true;
+    state.error = '';
+    state.refreshFailed = false;
+    notifyListeners();
+    try {
+      final page = await _page(mode, state.offset);
+      if (version != state.generation) return;
+      final byId = {for (final client in state.clients) client.id: client};
+      for (final client in page.clients) {
+        byId[client.id] = client;
+      }
+      state.clients = byId.values.toList();
+      state.total = page.total;
+      state.offset += page.clients.length;
+      if (page.clients.isEmpty) state.offset = page.total;
+      state.initialized = true;
+    } catch (_) {
+      if (version != state.generation) return;
+      state.error = 'Не удалось загрузить клиентов. Повторите запрос.';
+    } finally {
+      if (version == state.generation) {
+        state.loading = false;
+        notifyListeners();
+      }
+    }
+  }
+
+  Future<bool> _refreshDashboardMode(ClientListMode mode) async {
+    final state = _dashboard[mode]!;
+    if (state.loading) return false;
+    final version = ++state.generation;
+    final search = _search;
+    final include = mode == ClientListMode.database && _showDeactivated;
+    final target = math.max(25, state.offset);
+    state.loading = true;
+    notifyListeners();
+    try {
+      final rows = <Client>[];
+      var total = 0;
+      var offset = 0;
+      do {
+        final page = await _repository.getClientsPage(
+          offset: offset,
+          limit: 25,
+          search: search,
+          includeDeactivated: include,
+          mode: mode == ClientListMode.database ? 'database' : 'follow_up',
+        );
+        if (version != state.generation) return false;
+        rows.addAll(page.clients);
+        total = page.total;
+        offset += page.clients.length;
+        if (page.clients.isEmpty) {
+          offset = total;
+          break;
+        }
+      } while (offset < target && offset < total);
+      state.clients = {for (final row in rows) row.id: row}.values.toList();
+      state.total = total;
+      state.offset = offset;
+      state.initialized = true;
+      state.error = '';
       return true;
     } catch (_) {
+      if (version == state.generation) {
+        state.error = 'Не удалось обновить клиентов. Повторите запрос.';
+        state.refreshFailed = true;
+      }
       return false;
+    } finally {
+      if (version == state.generation) {
+        state.loading = false;
+        notifyListeners();
+      }
     }
+  }
+
+  Future<bool> refreshDashboardClients() async {
+    if (!_dashboardStarted) return true;
+    final results = await Future.wait([
+      for (final mode in ClientListMode.values)
+        if (mode == _listMode || _dashboard[mode]!.initialized)
+          _refreshDashboardMode(mode),
+    ]);
+    return results.every((success) => success);
+  }
+
+  Future<void> _clientChanged() async {
+    for (final state in _dashboard.values) {
+      state.generation++;
+      state.loading = false;
+    }
+    await refreshDashboardClients();
   }
 
   Future<bool> _changeClientCooldown(
@@ -195,6 +289,7 @@ class ClientsProvider extends SafeChangeNotifier {
 
       _status = ClientStatus.success;
       // Уведомляем UI для перерисовки и пересортировки
+      await _clientChanged();
       notifyListeners();
       return true;
     } catch (e) {
@@ -262,6 +357,7 @@ class ClientsProvider extends SafeChangeNotifier {
       _clients = [newClient, ..._clients];
       _status = ClientStatus.success;
 
+      await _clientChanged();
       notifyListeners();
       return true;
     } catch (e) {
@@ -317,6 +413,7 @@ class ClientsProvider extends SafeChangeNotifier {
 
       _status = ClientStatus.success;
 
+      await _clientChanged();
       notifyListeners();
       return true;
     } catch (e) {
@@ -344,6 +441,7 @@ class ClientsProvider extends SafeChangeNotifier {
           : [client, ..._clients];
       lastSavedClient = client;
       _status = ClientStatus.success;
+      await _clientChanged();
       notifyListeners();
       return true;
     } catch (e) {
@@ -359,6 +457,16 @@ class ClientsProvider extends SafeChangeNotifier {
     _clients = _clients.map((client) {
       return client.id == updatedClient.id ? updatedClient : client;
     }).toList();
+    unawaited(_clientChanged());
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _fetchVersion++;
+    for (final state in _dashboard.values) {
+      state.generation++;
+    }
+    super.dispose();
   }
 }

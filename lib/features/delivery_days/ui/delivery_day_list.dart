@@ -8,7 +8,6 @@ import 'package:mountain_fairytale/shared/widgets/add_action_card.dart';
 import 'package:mountain_fairytale/shared/widgets/card_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/metric_row_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
-import 'package:mountain_fairytale/shared/widgets/list_section_header.dart';
 import 'package:provider/provider.dart';
 
 class DeliveryDaysListView extends StatelessWidget {
@@ -22,92 +21,115 @@ class DeliveryDaysListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<DeliveryDaysProvider>();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        AppListSectionHeader(
-          height: headerHeight,
-          title: 'Дни доставки',
-          description: 'Маршруты и самовывозы по плановой дате.',
-          controls: Tooltip(
-            message: 'Календарные дни от первой даты документа, включая дни без доставок и запланированные даты.',
-            child: Text(
-              'Дней доставки: ${provider.status == DeliveryStatus.success || provider.days.isNotEmpty ? provider.total : '—'}',
-              style: Theme.of(context).textTheme.bodyMedium
-                  ?.copyWith(fontSize: 14),
-            ),
-          ),
-        ),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: Divider(height: 1),
-        ),
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: provider.refreshDeliveryDays,
-            child: ListView(
-              controller: scrollController,
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              children: [
-                AddActionButton(
-                  label: 'Добавить доставку',
-                  icon: Icons.add_circle_outline,
-                  onTap: () async {
-                    final type = await showDialog<DeliveryType>(
-                      context: context,
-                      builder: (_) => const SelectDeliveryTypeDialog(),
-                    );
-                    if (!context.mounted || type == null) return;
-                    await openDayDocument(
-                      context,
-                      type,
-                      DateTime.now(),
-                      null,
-                      () {
-                        provider.refreshDeliveryDays();
-                      },
-                    );
-                  },
+    return LayoutBuilder(
+      builder: (context, bounds) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: bounds.maxHeight * .65),
+            child: SizedBox(
+              height: headerHeight,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                child: Material(
+                  key: const ValueKey('delivery-days-panel'),
+                  color: Theme.of(context).colorScheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(16),
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            'Дни доставки',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          const Divider(height: 25),
+                          Tooltip(
+                            message: 'Календарные дни от первой даты документа, включая дни без доставок и запланированные даты.',
+                            child: Text(
+                              'Дней доставки: ${provider.status == DeliveryStatus.success || provider.days.isNotEmpty ? provider.total : '—'}',
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(fontSize: 14),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-                for (final day in provider.days)
-                  DeliveryDayItem(key: ValueKey(day.plannedDate), day: day),
-                if (provider.isLoadingMore ||
-                    provider.status == DeliveryStatus.initial)
-                  const Padding(
-                    padding: EdgeInsets.all(24),
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                if (provider.hasError)
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        Text(
-                          provider.errorMessage,
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 8),
-                        AppSecondaryButton(
-                          text: 'Повторить',
-                          onPressed: provider.refreshDeliveryDays,
-                        ),
-                      ],
-                    ),
-                  )
-                else if (provider.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.all(24),
-                    child: Text(
-                      'Документов пока нет.',
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-              ],
+              ),
             ),
           ),
-        ),
-      ],
+          SizedBox(
+            key: const ValueKey('delivery-days-loading-slot'),
+            height: 3,
+            child: provider.isRequesting
+                ? const LinearProgressIndicator(minHeight: 3)
+                : null,
+          ),
+          Expanded(
+            child: RefreshIndicator.noSpinner(
+              onRefresh: provider.refreshDeliveryDays,
+              child: ListView(
+                controller: scrollController,
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                children: [
+                  AddActionButton(
+                    label: 'Добавить доставку',
+                    icon: Icons.add_circle_outline,
+                    onTap: () async {
+                      final type = await showDialog<DeliveryType>(
+                        context: context,
+                        builder: (_) => const SelectDeliveryTypeDialog(),
+                      );
+                      if (!context.mounted || type == null) return;
+                      await openDayDocument(
+                        context,
+                        type,
+                        DateTime.now(),
+                        null,
+                        () {
+                          provider.refreshDeliveryDays();
+                        },
+                      );
+                    },
+                  ),
+                  for (final day in provider.days)
+                    DeliveryDayItem(key: ValueKey(day.plannedDate), day: day),
+                  if (provider.hasError)
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          Text(
+                            provider.errorMessage,
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          AppSecondaryButton(
+                            text: 'Повторить',
+                            onPressed: provider.refreshDeliveryDays,
+                          ),
+                        ],
+                      ),
+                    )
+                  else if (provider.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.all(24),
+                      child: Text(
+                        'Документов пока нет.',
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -154,13 +176,13 @@ class DeliveryDayItem extends StatelessWidget {
       metrics: [
         MetricRow(
           icon: Icons.local_shipping_outlined,
-          label: 'Точки доставки',
+          label: 'Клиенты доставки',
           truncateLabel: true,
           value: '${day.deliveryPointsCount}',
         ),
         MetricRow(
           icon: Icons.store_outlined,
-          label: 'Точки самовывоза',
+          label: 'Клиенты самовывоза',
           truncateLabel: true,
           value: '${day.pickupPointsCount}',
         ),

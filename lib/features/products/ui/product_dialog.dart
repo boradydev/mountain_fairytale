@@ -6,6 +6,7 @@ import 'package:mountain_fairytale/features/products/ui/product_activation_dialo
 import 'package:mountain_fairytale/shared/widgets/base_form_dialog_widget.dart';
 import 'package:mountain_fairytale/shared/widgets/confirm_dialog.dart';
 import 'package:mountain_fairytale/shared/widgets/duplicate_check_status_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/labeled_checkbox_toggle.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 
 class ProductDialog extends StatefulWidget {
@@ -32,6 +33,7 @@ class _ProductDialogState extends State<ProductDialog> {
   late final TextEditingController _basePriceController;
   final _nameFocusNode = FocusNode();
   bool _busy = false;
+  late bool _isFreePrice;
   bool _checking = false;
   String? _checkedName;
   String? _error;
@@ -45,7 +47,8 @@ class _ProductDialogState extends State<ProductDialog> {
   late final DuplicateCheckCoordinator _duplicateCheck;
   Map<String, Object?> get _values => {
     'name': _nameController.text.trim(),
-    'basePrice': formNumber(_basePriceController.text),
+    'basePrice': _isFreePrice ? 0.0 : formNumber(_basePriceController.text),
+    'isFreePrice': _isFreePrice,
   };
   Map<String, Object?> get _changes =>
       changedFormFields(_originalValues, _values);
@@ -67,6 +70,8 @@ class _ProductDialogState extends State<ProductDialog> {
     _basePriceController = TextEditingController(
       text: widget.product?.basePrice.toString() ?? '',
     );
+    _isFreePrice = widget.product?.isFreePrice ?? false;
+    if (_isFreePrice) _basePriceController.text = '0';
 
     _originalValues = Map.of(_values);
     _originalDuplicateInput = _duplicateInput;
@@ -174,11 +179,13 @@ class _ProductDialogState extends State<ProductDialog> {
           widget.product!.id,
           name: _changes['name'] as String?,
           basePrice: _changes['basePrice'] as double?,
+          isFreePrice: _changes['isFreePrice'] as bool?,
         );
       } else {
         created = await widget.provider.addProduct(
           name: name,
           basePrice: basePrice,
+          isFreePrice: _isFreePrice,
         );
         success = created != null;
       }
@@ -358,9 +365,23 @@ class _ProductDialogState extends State<ProductDialog> {
               : null,
         ),
         const SizedBox(height: 16),
+        LabeledCheckboxToggle(
+          label: 'Свободная цена',
+          value: _isFreePrice,
+          onChanged: _busy
+              ? null
+              : (value) {
+                  setState(() {
+                    _isFreePrice = value;
+                    if (value) _basePriceController.text = '0';
+                  });
+                },
+          tooltip: 'Цена будет указана при оформлении маршрутного листа.',
+        ),
+        const SizedBox(height: 8),
         TextFormField(
           controller: _basePriceController,
-          enabled: !_busy,
+          enabled: !_busy && !_isFreePrice,
           decoration: const InputDecoration(
             labelText: 'Базовая цена *',
             border: OutlineInputBorder(),

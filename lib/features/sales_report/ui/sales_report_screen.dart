@@ -49,27 +49,6 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Отчёт по продажам',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Оборот и количество товаров по способам оплаты.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-        ),
         _SalesReportToolbar(
           provider: provider,
           onSelectPeriod: () => _selectPeriod(provider),
@@ -237,8 +216,9 @@ class _SalesReportToolbar extends StatelessWidget {
         '${format.format(range.start)} — ${format.format(range.end)}';
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       child: Material(
+        key: const ValueKey('sales-report-toolbar-surface'),
         color: colors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
         child: Padding(
@@ -246,13 +226,64 @@ class _SalesReportToolbar extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: OutlinedButton.icon(
-                  onPressed: onSelectPeriod,
-                  icon: const Icon(Icons.calendar_month_outlined),
-                  label: Text('Период: $period'),
-                ),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final titleStyle = Theme.of(context).textTheme.titleLarge
+                      ?.copyWith(fontWeight: FontWeight.w600);
+                  final textScaler = MediaQuery.textScalerOf(context);
+                  double textWidth(String text, TextStyle? style) {
+                    final painter = TextPainter(
+                      text: TextSpan(text: text, style: style),
+                      textDirection: Directionality.of(context),
+                      textScaler: textScaler,
+                    )..layout();
+                    final width = painter.width;
+                    painter.dispose();
+                    return width;
+                  }
+
+                  final title = Text(
+                    'Отчёт по продажам',
+                    style: titleStyle,
+                  );
+                  final periodButton = AppSecondaryButton(
+                    text: period,
+                    icon: Icons.date_range,
+                    onPressed: onSelectPeriod,
+                  );
+                  // Include the button padding, icon, gap and outline so the
+                  // first row only stays horizontal when both labels fit.
+                  final requiredWidth =
+                      textWidth('Отчёт по продажам', titleStyle) +
+                      16 +
+                      textWidth(
+                        period,
+                        const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ) +
+                      68;
+                  return ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 48),
+                    child: requiredWidth <= constraints.maxWidth
+                        ? Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [title, periodButton],
+                          )
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              title,
+                              const SizedBox(height: 8),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: periodButton,
+                              ),
+                            ],
+                          ),
+                  );
+                },
               ),
               if (report != null) ...[
                 Padding(

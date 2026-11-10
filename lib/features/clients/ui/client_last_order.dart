@@ -1,36 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:mountain_fairytale/core/utils/datetime_extensions.dart';
 import 'package:mountain_fairytale/features/clients/data/clients_model.dart';
-import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
+import 'package:mountain_fairytale/features/clients/data/client_latest_order.dart';
+import 'package:mountain_fairytale/features/clients/ui/client_latest_order_dialog.dart';
 
 class ClientLastOrderView extends StatelessWidget {
   final Client client;
+  final Future<ClientLatestOrder?> Function() loadOrder;
 
-  const ClientLastOrderView({super.key, required this.client});
-
-  String _remainingLabel(int count) {
-    final lastTwo = count % 100;
-    final last = count % 10;
-    final word = lastTwo >= 11 && lastTwo <= 14
-        ? 'позиций'
-        : last == 1
-        ? 'позиция'
-        : last >= 2 && last <= 4
-        ? 'позиции'
-        : 'позиций';
-    return 'ещё $count $word';
-  }
+  const ClientLastOrderView({
+    super.key,
+    required this.client,
+    required this.loadOrder,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final order = client.lastOrder;
-    final date = client.lastOrderDate;
-    final dateLabel = date?.toFormattedString() ?? 'Заказов не было';
-    final description = order == null
-        ? dateLabel
-        : '$dateLabel · ${order.fulfillmentLabel}';
-    final content = Column(
+    final date = client.latestOrderPlannedDate;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
@@ -40,76 +29,53 @@ class ClientLastOrderView extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 3),
-        Text(description, style: theme.textTheme.bodyMedium),
-        if (order != null && order.items.isNotEmpty) ...[
-          const SizedBox(height: 3),
+        if (date == null)
           Text(
-            [
-              ...order.items.take(2).map((item) => item.description),
-              if (order.items.length > 2)
-                _remainingLabel(order.items.length - 2),
-            ].join(' · '),
+            'Заказов не было',
             style: theme.textTheme.bodyMedium,
-          ),
-        ],
-      ],
-    );
-    if (order == null) return content;
-    return Tooltip(
-      message: 'Открыть полный состав последнего заказа',
-      child: InkWell(
-        borderRadius: BorderRadius.circular(4),
-        mouseCursor: SystemMouseCursors.click,
-        hoverColor: theme.colorScheme.onSurface.withAlpha(10),
-        onTap: () => showDialog<void>(
-          context: context,
-          builder: (dialogContext) => AlertDialog(
-            title: const Text('Последний заказ'),
-            content: SingleChildScrollView(
-              child: SizedBox(
-                width: 480,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(client.name, style: theme.textTheme.titleMedium),
-                    const SizedBox(height: 8),
-                    Text(description),
-                    const SizedBox(height: 16),
-                    for (final item in order.items)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Text(item.description),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-            actions: [
-              AppSecondaryButton(
-                text: 'Закрыть',
-                onPressed: () => Navigator.pop(dialogContext),
-              ),
-            ],
-          ),
-        ),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 48),
-          child: Row(
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          )
+        else
+          Row(
             children: [
-              Expanded(child: content),
-              const SizedBox(width: 8),
-              ExcludeSemantics(
-                child: Icon(
-                  Icons.chevron_right,
-                  size: 20,
-                  color: theme.colorScheme.onSurfaceVariant,
+              Flexible(
+                child: Text(
+                  date.toFormattedString(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Tooltip(
+                message: 'Открыть полный состав последнего заказа',
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(4),
+                  mouseCursor: SystemMouseCursors.click,
+                  hoverColor: theme.colorScheme.primary.withAlpha(20),
+                  onTap: () => showDialog<void>(
+                    context: context,
+                    builder: (_) => ClientLatestOrderDialog(
+                      plannedDate: date,
+                      loadOrder: loadOrder,
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Text(
+                      'Посмотреть ›',
+                      maxLines: 1,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
-        ),
-      ),
+      ],
     );
   }
 }

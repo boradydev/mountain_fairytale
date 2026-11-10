@@ -1,3 +1,12 @@
+/// Show saved unit-price precision; only line totals are rounded to cents.
+String formatUnitPrice(double price) {
+  final text = price.toString();
+  return text.contains('e') ||
+          (text.contains('.') && text.split('.').last.length > 2)
+      ? text
+      : price.toStringAsFixed(2);
+}
+
 /// Decimal HALF_UP rounding, before any binary floating point multiplication.
 int lineAmountCents(int quantity, double price) {
   if (quantity <= 0 || !price.isFinite || price < 0) {

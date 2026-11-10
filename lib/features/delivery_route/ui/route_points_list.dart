@@ -1,5 +1,8 @@
+import 'package:mountain_fairytale/features/delivery_route/ui/route_point_card_content.dart';
+import 'package:mountain_fairytale/features/delivery_route/ui/route_point_memo_dialog.dart';
+import 'package:mountain_fairytale/features/delivery_route/ui/failed_delivery_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:mountain_fairytale/shared/widgets/icon_button_widget.dart';
+import 'package:mountain_fairytale/features/delivery_route/data/route_point_model.dart';
 import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
 import 'package:mountain_fairytale/features/delivery_route/ui/point_representative_selector.dart';
 import 'package:mountain_fairytale/shared/widgets/confirm_dialog.dart';
@@ -70,6 +73,92 @@ class _RoutePointsListState extends State<RoutePointsList> {
     super.dispose();
   }
 
+  int _pointIndex(String viewId) => widget.provider.points.indexWhere(
+    (point) => point.viewId == viewId,
+  );
+
+  Future<void> _editMemo(String viewId) async {
+    final provider = widget.provider;
+    final index = _pointIndex(viewId);
+    if (!provider.canEdit || index < 0) return;
+    final initialMemo = provider.points[index].memo;
+    final memo = await showDialog<String>(
+      context: context,
+      builder: (_) => RoutePointMemoDialog(initialMemo: initialMemo),
+    );
+    if (!mounted || memo == null || !provider.canEdit) return;
+    final currentIndex = _pointIndex(viewId);
+    if (currentIndex >= 0) provider.setPointMemo(currentIndex, memo);
+  }
+
+  Future<void> _editReason(String viewId, {bool editing = false}) async {
+    final provider = widget.provider;
+    final index = _pointIndex(viewId);
+    if (!provider.canEdit || index < 0) return;
+    final initialReason = editing
+        ? provider.points[index].nonDeliveryReason
+        : '';
+    final reason = await showDialog<String>(
+      context: context,
+      builder: (_) => FailedDeliveryDialog(initialReason: initialReason),
+    );
+    if (!mounted || reason == null || !provider.canEdit) return;
+    final currentIndex = _pointIndex(viewId);
+    if (currentIndex >= 0) {
+      provider.setDeliveryOutcome(
+        currentIndex,
+        delivered: false,
+        reason: reason,
+      );
+    }
+  }
+
+  Widget _pointMenu(RoutePoint point) => PopupMenuButton<String>(
+    tooltip: 'Действия с точкой',
+    icon: const Icon(Icons.more_vert),
+    onSelected: (action) {
+      final provider = widget.provider;
+      final index = _pointIndex(point.viewId);
+      if (!provider.canEdit || index < 0) return;
+      switch (action) {
+        case 'memo':
+          _editMemo(point.viewId);
+        case 'outcome':
+          if (provider.points[index].isDelivered) {
+            _editReason(point.viewId);
+          } else {
+            provider.setDeliveryOutcome(index, delivered: true);
+          }
+        case 'delete':
+          provider.removePoint(index);
+      }
+    },
+    itemBuilder: (_) => [
+      if (!widget.provider.isPickup) ...[
+        PopupMenuItem(
+          value: 'memo',
+          child: Text(
+            point.memo.isEmpty ? 'Добавить памятку' : 'Изменить памятку',
+          ),
+        ),
+        PopupMenuItem(
+          value: 'outcome',
+          child: Text(
+            point.isDelivered
+                ? 'Отметить как недоставленное'
+                : 'Снять отметку «Не доставлено»',
+          ),
+        ),
+      ],
+      PopupMenuItem(
+        value: 'delete',
+        child: Text(
+          widget.provider.isPickup ? 'Удалить покупку' : 'Удалить точку',
+        ),
+      ),
+    ],
+  );
+
   @override
   Widget build(BuildContext context) {
     final provider = widget.provider;
@@ -139,17 +228,8 @@ class _RoutePointsListState extends State<RoutePointsList> {
               const SizedBox(width: 8),
 
               Expanded(
-                child: Container(
-                  // Обрезает hover и splash эффекты строго по радиусу скругления corners
-                  clipBehavior: Clip.antiAlias,
-                  // =============================================
-                  decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerLow,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: colorScheme.outlineVariant,
-                    ),
-                  ),
+                child: RoutePointCardSurface(
+                  isDelivered: point.isDelivered,
                   child: ExpansionTile(
                     // Убираем появление девайдеров (линий) при разворачивании карточки
                     shape: const Border(),
@@ -165,72 +245,21 @@ class _RoutePointsListState extends State<RoutePointsList> {
                       horizontal: 20,
                       vertical: 8,
                     ),
-                    title: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final details = Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              provider.isPickup
-                                  ? 'Покупка ${index + 1}'
-                                  : point.clientName,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            if (!provider.isPickup) const SizedBox(height: 4),
-                            if (!provider.isPickup)
-                              Text(
-                                point.address,
-                                style: Theme.of(context).textTheme.bodyMedium,
-                              ),
-                          ],
-                        );
-                        final summary = Column(
-                          crossAxisAlignment: constraints.maxWidth < 440
-                              ? CrossAxisAlignment.start
-                              : CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              point.items.isEmpty
-                                  ? 'Задание не заполнено'
-                                  : '${point.totalAmount.toStringAsFixed(2)} ₽',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 16,
-                                color: point.items.isEmpty
-                                    ? colorScheme.onSurfaceVariant
-                                    : colorScheme.onSurface,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${point.items.length} ${_positionsLabel(point.items.length)} · ${point.documentPaymentMethodName ?? 'Оплата не указана'}',
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                          ],
-                        );
-                        if (constraints.maxWidth < 440) {
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              details,
-                              const SizedBox(height: 8),
-                              summary,
-                            ],
-                          );
-                        }
-                        return Row(
-                          crossAxisAlignment: provider.isPickup
-                              ? CrossAxisAlignment.center
-                              : CrossAxisAlignment.start,
-                          children: [
-                            Expanded(child: details),
-                            const SizedBox(width: 20),
-                            Expanded(child: summary),
-                          ],
-                        );
-                      },
+                    title: Row(
+                      children: [
+                        Expanded(
+                          child: RoutePointHeader(
+                            point: point,
+                            isPickup: provider.isPickup,
+                            pickupTitle: 'Покупка ${index + 1}',
+                          ),
+                        ),
+                        SizedBox(
+                          width: 40,
+                          height: 48,
+                          child: provider.canEdit ? _pointMenu(point) : null,
+                        ),
+                      ],
                     ),
                     leading: provider.isPickup
                         ? null
@@ -260,37 +289,21 @@ class _RoutePointsListState extends State<RoutePointsList> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: provider.isPickup
-                                      ? const SizedBox.shrink()
-                                      : Text(
-                                          'Телефон: ${point.phone}',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium,
-                                        ),
-                                ),
-                                Visibility(
-                                  visible: provider.canEdit,
-                                  maintainSize: true,
-                                  maintainAnimation: true,
-                                  maintainState: true,
-                                  child: AppIconButton(
-                                    icon: Icons.delete_outline,
-                                    tooltip: provider.isPickup
-                                        ? 'Удалить покупку'
-                                        : 'Удалить точку',
-                                    destructive: true,
-                                    onPressed: provider.canEdit
-                                        ? () => provider.removePoint(index)
-                                        : null,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
+                            if (!provider.isPickup) ...[
+                              RoutePointNotes(
+                                point: point,
+                                onEditMemo: provider.canEdit
+                                    ? () => _editMemo(point.viewId)
+                                    : null,
+                                onEditReason: provider.canEdit
+                                    ? () => _editReason(
+                                        point.viewId,
+                                        editing: true,
+                                      )
+                                    : null,
+                              ),
+                              const SizedBox(height: 16),
+                            ],
                             LayoutBuilder(
                               builder: (context, constraints) {
                                 final payment = PaymentMethodSelector(
@@ -348,252 +361,145 @@ class _RoutePointsListState extends State<RoutePointsList> {
                               ),
                             const SizedBox(height: 24),
 
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.assignment_outlined,
-                                  size: 20,
-                                  color: colorScheme.primary,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    provider.isPickup
-                                        ? 'Товары и услуги'
-                                        : 'Задание для водителя',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 15,
-                                      color: colorScheme.onSurface,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
+                            RoutePointTaskHeading(isPickup: provider.isPickup),
 
                             const SizedBox(height: 12),
 
-                            Container(
-                              clipBehavior: Clip.antiAlias,
-                              decoration: BoxDecoration(
-                                color: colorScheme.surfaceContainerLowest,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: colorScheme.outlineVariant,
+                            RoutePointTaskTable(
+                              items: point.items,
+                              rowBuilder: (taskIndex) {
+                                final item = point.items[taskIndex];
+                                return TaskItemRow(
+                                  key: ValueKey(
+                                    item.itemId ??
+                                        item.localId ??
+                                        item.productId,
+                                  ),
+                                  enabled: provider.canEdit,
+                                  allowFreePrice: !provider.isPickup,
+                                  onRefreshPrice: () async {
+                                    try {
+                                      final product = await provider
+                                          .currentCatalogProduct(
+                                            item.productId,
+                                          );
+                                      if (!context.mounted ||
+                                          !provider.canEdit) {
+                                        return;
+                                      }
+                                      if (!product.isActive) {
+                                        AppNotify.show(
+                                          'Нельзя обновить цену неактивного товара.',
+                                          isError: true,
+                                        );
+                                        return;
+                                      }
+                                      final confirmed = await ConfirmDialog.show(
+                                        context,
+                                        title: 'Обновить цену строки?',
+                                        content:
+                                            'Сохранённая цена: ${item.price} ₽. Цена каталога: ${product.basePrice} ₽. Количество останется прежним.',
+                                        confirmText: 'Обновить цену',
+                                      );
+                                      if (confirmed) {
+                                        provider.replaceItemPrice(
+                                          point,
+                                          item,
+                                          product,
+                                        );
+                                      }
+                                    } catch (_) {
+                                      AppNotify.show(
+                                        'Не удалось загрузить цену каталога.',
+                                        isError: true,
+                                      );
+                                    }
+                                  },
+                                  index: taskIndex,
+                                  item: item,
+                                  onPriceChanged: (price) =>
+                                      provider.updateTaskPrice(
+                                        index,
+                                        taskIndex,
+                                        price,
+                                      ),
+                                  onDriverNoteChanged: (note) =>
+                                      provider.updateTaskDriverNote(
+                                        index,
+                                        taskIndex,
+                                        note,
+                                      ),
+                                  onDelete: () => provider.removeTaskFromPoint(
+                                    index,
+                                    taskIndex,
+                                  ),
+                                  onQuantityChanged: (quantity) {
+                                    provider.updateTaskQuantity(
+                                      index,
+                                      taskIndex,
+                                      quantity,
+                                    );
+                                  },
+                                );
+                              },
+                              footer: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 10,
                                 ),
-                              ),
-                              child: Column(
-                                children: [
-                                  if (point.items.isNotEmpty)
-                                    LayoutBuilder(
-                                      builder: (context, constraints) =>
-                                          constraints.maxWidth < 700
-                                          ? const SizedBox.shrink()
-                                          : Padding(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 20,
-                                                    vertical: 12,
-                                                  ),
-                                              child: DefaultTextStyle(
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .labelMedium!,
-                                                child: const Row(
-                                                  children: [
-                                                    Expanded(
-                                                      child: Text(
-                                                        'Продукция / услуга',
-                                                      ),
-                                                    ),
-                                                    SizedBox(
-                                                      width: 156,
-                                                      child: Text(
-                                                        'Количество',
-                                                        textAlign:
-                                                            TextAlign.center,
-                                                      ),
-                                                    ),
-                                                    SizedBox(
-                                                      width: 112,
-                                                      child: Text(
-                                                        'Цена',
-                                                        textAlign:
-                                                            TextAlign.right,
-                                                      ),
-                                                    ),
-                                                    SizedBox(
-                                                      width: 112,
-                                                      child: Text(
-                                                        'Сумма',
-                                                        textAlign:
-                                                            TextAlign.right,
-                                                      ),
-                                                    ),
-                                                    SizedBox(width: 48),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                    ),
-                                  if (point.items.isEmpty)
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 20,
-                                        vertical: 18,
-                                      ),
-                                      child: Align(
-                                        alignment: Alignment.centerLeft,
-                                        child: Text(
-                                          'Продукция или услуги не добавлены',
-                                          style: TextStyle(
-                                            color: colorScheme.onSurfaceVariant,
-                                          ),
-                                        ),
-                                      ),
-                                    )
-                                  else
-                                    ...point.items.asMap().entries.map((entry) {
-                                      final taskIndex = entry.key;
-                                      final item = entry.value;
-
-                                      return Column(
-                                        children: [
-                                          TaskItemRow(
-                                            key: ValueKey(item.productId),
-                                            enabled: provider.canEdit,
-                                            onRefreshPrice: () async {
-                                              try {
-                                                final product = await provider
-                                                    .currentCatalogProduct(
-                                                      item.productId,
-                                                    );
-                                                if (!context.mounted ||
-                                                    !provider.canEdit) {
-                                                  return;
-                                                }
-                                                if (!product.isActive) {
-                                                  AppNotify.show(
-                                                    'Нельзя обновить цену неактивного товара.',
-                                                    isError: true,
-                                                  );
-                                                  return;
-                                                }
-                                                final confirmed =
-                                                    await ConfirmDialog.show(
-                                                      context,
-                                                      title: 'Обновить цену строки?',
-                                                      content:
-                                                          'Сохранённая цена: ${item.price} ₽. Цена каталога: ${product.basePrice} ₽. Количество останется прежним.',
-                                                      confirmText:
-                                                          'Обновить цену',
-                                                    );
-                                                if (confirmed) {
-                                                  provider.replaceItemPrice(
-                                                    point,
-                                                    item,
-                                                    product,
-                                                  );
-                                                }
-                                              } catch (_) {
-                                                AppNotify.show(
-                                                  'Не удалось загрузить цену каталога.',
-                                                  isError: true,
-                                                );
-                                              }
-                                            },
-                                            index: taskIndex,
-                                            item: item,
-                                            onDelete: () =>
-                                                provider.removeTaskFromPoint(
-                                                  index,
-                                                  taskIndex,
-                                                ),
-                                            onQuantityChanged: (quantity) {
-                                              provider.updateTaskQuantity(
+                                child: LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    final add = Visibility(
+                                      visible: provider.canEdit,
+                                      maintainSize: true,
+                                      maintainAnimation: true,
+                                      maintainState: true,
+                                      child: AppSecondaryButton(
+                                        icon: Icons.add,
+                                        text: 'Добавить позицию',
+                                        onPressed: provider.canEdit
+                                            ? () => TaskDialogs.showAddTask(
+                                                context,
+                                                provider,
                                                 index,
-                                                taskIndex,
-                                                quantity,
-                                              );
-                                            },
+                                              )
+                                            : null,
+                                      ),
+                                    );
+                                    final total = Text(
+                                      'Итого: ${point.totalAmount.toStringAsFixed(2)} ₽',
+                                      style: TextStyle(
+                                        decoration: point.isDelivered
+                                            ? null
+                                            : TextDecoration.lineThrough,
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 16,
+                                        color: colorScheme.onSurface,
+                                      ),
+                                    );
+                                    if (constraints.maxWidth < 420) {
+                                      return Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: [
+                                          add,
+                                          const SizedBox(height: 12),
+                                          Align(
+                                            alignment: Alignment.centerRight,
+                                            child: total,
                                           ),
-                                          if (taskIndex <
-                                              point.items.length - 1)
-                                            Divider(
-                                              height: 1,
-                                              thickness: 1,
-                                              indent: 16,
-                                              endIndent: 16,
-                                              color: colorScheme.outlineVariant,
-                                            ),
                                         ],
                                       );
-                                    }),
-
-                                  Divider(
-                                    height: 1,
-                                    thickness: 1,
-                                    color: colorScheme.outlineVariant,
-                                  ),
-
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 20,
-                                      vertical: 10,
-                                    ),
-                                    child: LayoutBuilder(
-                                      builder: (context, constraints) {
-                                        final add = Visibility(
-                                          visible: provider.canEdit,
-                                          maintainSize: true,
-                                          maintainAnimation: true,
-                                          maintainState: true,
-                                          child: AppSecondaryButton(
-                                            icon: Icons.add,
-                                            text: 'Добавить позицию',
-                                            onPressed: provider.canEdit
-                                                ? () => TaskDialogs.showAddTask(
-                                                    context,
-                                                    provider,
-                                                    index,
-                                                  )
-                                                : null,
-                                          ),
-                                        );
-                                        final total = Text(
-                                          'Итого: ${point.totalAmount.toStringAsFixed(2)} ₽',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 16,
-                                            color: colorScheme.onSurface,
-                                          ),
-                                        );
-                                        if (constraints.maxWidth < 420) {
-                                          return Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.stretch,
-                                            children: [
-                                              add,
-                                              const SizedBox(height: 12),
-                                              Align(
-                                                alignment:
-                                                    Alignment.centerRight,
-                                                child: total,
-                                              ),
-                                            ],
-                                          );
-                                        }
-                                        return Row(
-                                          children: [
-                                            add,
-                                            const Spacer(),
-                                            total,
-                                          ],
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ],
+                                    }
+                                    return Row(
+                                      children: [
+                                        add,
+                                        const Spacer(),
+                                        total,
+                                      ],
+                                    );
+                                  },
+                                ),
                               ),
                             ),
                           ],
@@ -620,15 +526,6 @@ extension ListX<T> on List<T> {
       return null;
     }
   }
-}
-
-String _positionsLabel(int count) {
-  if (count % 100 >= 11 && count % 100 <= 14) return 'позиций';
-  return switch (count % 10) {
-    1 => 'позиция',
-    2 || 3 || 4 => 'позиции',
-    _ => 'позиций',
-  };
 }
 
 Widget _documentPointsList({

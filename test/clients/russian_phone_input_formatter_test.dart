@@ -14,6 +14,19 @@ void main() {
       );
 
   test(
+    'stage2 MANUAL phones display completely and round-trip to the API',
+    () {
+      for (var index = 20; index < 30; index++) {
+        final phone = '+799900000$index';
+        final formatted = edit(phone).text;
+        expect(formatted, '+7 999 000 00 $index');
+        expect(RussianPhoneInputFormatter.isComplete(formatted), isTrue);
+        expect(RussianPhoneInputFormatter.toApiPhone(formatted), phone);
+      }
+    },
+  );
+
+  test(
     'adds +7 and groups national, international and domestic pasted numbers',
     () {
       for (final text in [

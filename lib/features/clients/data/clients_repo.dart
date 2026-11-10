@@ -1,9 +1,28 @@
 import 'package:mountain_fairytale/features/clients/clients_abcs.dart';
+import 'package:mountain_fairytale/features/clients/data/client_latest_order.dart';
 import 'package:mountain_fairytale/features/clients/data/clients_model.dart';
 
 class ClientRepositoryImpl implements ClientRepository {
   final ClientDataSource dataSource;
   ClientRepositoryImpl(this.dataSource);
+  @override
+  Future<ClientsPage<Client>> getClientsPage({
+    int offset = 0,
+    int limit = 25,
+    String? search,
+    bool includeDeactivated = false,
+    String mode = 'database',
+  }) async {
+    final page = await dataSource.getClientsPage(
+      offset: offset,
+      limit: limit,
+      search: search,
+      includeDeactivated: includeDeactivated,
+      mode: mode,
+    );
+    return ClientsPage(page.clients.map(Client.fromJson).toList(), page.total);
+  }
+
   @override
   Future<List<Client>> getAllClients({
     String? search,
@@ -15,6 +34,12 @@ class ClientRepositoryImpl implements ClientRepository {
   @override
   Future<Client> getClientById(String id) async =>
       Client.fromJson(await dataSource.getClientById(id));
+  @override
+  Future<ClientLatestOrder?> getLatestOrder(String clientId) async {
+    final json = await dataSource.getLatestOrder(clientId);
+    return json == null ? null : ClientLatestOrder.fromJson(json);
+  }
+
   @override
   Future<Client> updateCooldown(String clientId, DateTime cooldownUntil) =>
       updateClient(clientId, UpdateClientRequest(cooldownUntil: cooldownUntil));

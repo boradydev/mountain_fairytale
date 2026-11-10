@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -46,6 +47,24 @@ void main() {
     provider.recoveryDocument = snapshot();
   }
 
+  test('recovery checks cannot overlap or discard the draft', () async {
+    await edit();
+    provider.handleDocumentError(const SocketException('offline'));
+    locks.acquireGate = Completer<String>();
+    final first = provider.retryConnection();
+    await Future<void>.delayed(Duration.zero);
+    expect(provider.reconnecting, isTrue);
+    final second = provider.retryConnection();
+    expect(locks.acquired, 2);
+    expect(provider.canSave, isFalse);
+    expect(provider.points.single.items.single.quantity, 3);
+    locks.acquireGate!.complete('manager');
+    expect(await Future.wait([first, second]), [true, true]);
+    expect(locks.acquired, 2);
+    expect(provider.canSave, isTrue);
+    expect(provider.points.single.items.single.quantity, 3);
+  });
+
   test(
     'short outage preserves mode, draft and revision without saving',
     () async {
@@ -86,6 +105,24 @@ void main() {
         provider.documentError,
         isNot(contains('Редактирование отменено')),
       );
+    },
+  );
+
+  test(
+    'an acquired lock without a document snapshot cannot resume editing',
+    () async {
+      await edit();
+      provider.handleDocumentError(
+        const ApiException(statusCode: 500, message: 'temporary'),
+      );
+      provider.recoveryDocument = null;
+      expect(await provider.retryConnection(), isFalse);
+      expect(provider.connectionInterrupted, isTrue);
+      expect(provider.canSave, isFalse);
+      expect(provider.points.single.items.single.quantity, 3);
+      provider.recoveryDocument = snapshot();
+      expect(await provider.retryConnection(), isTrue);
+      expect(provider.canSave, isTrue);
     },
   );
 

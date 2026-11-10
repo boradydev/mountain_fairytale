@@ -5,6 +5,105 @@ import 'package:mountain_fairytale/features/delivery_route/ui/task_item_row.dart
 
 void main() {
   testWidgets(
+    'free-price item edits row price and note from the actions menu',
+    (
+      tester,
+    ) async {
+      final form = GlobalKey<FormState>();
+      var price = 0.0;
+      var note = '';
+      var item = const DeliveryTaskItem(
+        productId: 'service',
+        productName: 'Услуга',
+        quantity: 2,
+        price: 0,
+        isFreePrice: true,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: StatefulBuilder(
+              builder: (context, setState) => Form(
+                key: form,
+                child: TaskItemRow(
+                  index: 0,
+                  allowFreePrice: true,
+                  item: item,
+                  onDelete: () {},
+                  onQuantityChanged: (_) {},
+                  onPriceChanged: (value) => setState(() {
+                    price = value;
+                    item = DeliveryTaskItem(
+                      productId: item.productId,
+                      productName: item.productName,
+                      quantity: item.quantity,
+                      price: value,
+                      isFreePrice: item.isFreePrice,
+                      driverNote: item.driverNote,
+                    );
+                  }),
+                  onDriverNoteChanged: (value) => setState(() {
+                    note = value;
+                    item = DeliveryTaskItem(
+                      productId: item.productId,
+                      productName: item.productName,
+                      quantity: item.quantity,
+                      price: item.price,
+                      isFreePrice: item.isFreePrice,
+                      driverNote: value,
+                    );
+                  }),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      expect(tester.takeException(), isNull);
+
+      final priceField = find.byType(TextFormField).last;
+      await tester.enterText(priceField, '12,5');
+      await tester.pumpAndSettle();
+      expect(price, 12.5);
+      expect(find.text('25.00 ₽'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      expect(form.currentState!.validate(), isTrue);
+
+      await tester.enterText(priceField, '1,005');
+      await tester.pumpAndSettle();
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<TextFormField>(priceField).controller!.text,
+        '1.005',
+      );
+      expect(price, 1.005);
+      expect(find.text('2.01 ₽'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Действия с позицией'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.text('Добавить уточнение'), findsOneWidget);
+      await tester.tap(find.text('Добавить уточнение'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+
+      final noteField = find.byType(TextFormField).last;
+      await tester.enterText(noteField, 'Позвонить перед выездом');
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      await tester.tap(find.text('Сохранить'));
+      await tester.pumpAndSettle();
+
+      expect(note, 'Позвонить перед выездом');
+      expect(find.text('Уточнение: Позвонить перед выездом'), findsOneWidget);
+      expect(find.text('Свободная цена'), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
     'invalid quantity has only a border, keeps size and restores valid value',
     (tester) async {
       final form = GlobalKey<FormState>();

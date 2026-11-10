@@ -30,11 +30,13 @@ class Catalog implements ProductRepository {
   double price = 10;
   String name = 'Товар';
   bool active = true;
+  bool freePrice = false;
   @override
   Future<Product> getProductById(String id) async => Product(
     id: id,
     name: name,
     basePrice: price,
+    isFreePrice: freePrice,
     createdAt: DateTime(2026),
     isActive: active,
   );
@@ -53,6 +55,7 @@ class Locks implements DocumentLockRepository {
 
   int acquired = 0, renewed = 0, released = 0;
   bool failRenew = false, failRelease = false;
+  int transientRenewFailures = 0;
   Completer<String>? acquireGate;
   @override
   Future<String> acquireEditLock(String id) async {
@@ -64,6 +67,10 @@ class Locks implements DocumentLockRepository {
   @override
   Future<String> renewEditLock(String id) async {
     renewed++;
+    if (transientRenewFailures > 0) {
+      transientRenewFailures--;
+      throw TimeoutException('temporary outage');
+    }
     if (failRenew) {
       throw const ApiException(statusCode: 409, message: 'Expired');
     }
@@ -138,6 +145,56 @@ void main() {
     provider.points = [point];
   });
   tearDown(() => provider.dispose());
+  testWidgets(
+    'heartbeat tolerates a transient timeout without interrupting the draft',
+    (tester) async {
+      provider.initializeDocumentSession(id: 'document');
+      expect(await provider.beginEditing(), isTrue);
+      provider.updateTaskQuantity(0, 0, 5);
+      locks.transientRenewFailures = 1;
+      await tester.pump(const Duration(seconds: 30));
+      expect(provider.connectionInterrupted, isFalse);
+      expect(provider.canSave, isTrue);
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(locks.renewed, 2);
+      expect(provider.connectionInterrupted, isFalse);
+      expect(provider.points.single.items.single.quantity, 5);
+      await provider.closeDocument();
+    },
+  );
+
+  testWidgets('heartbeat stops after three transient failures', (tester) async {
+    provider.initializeDocumentSession(id: 'document');
+    expect(await provider.beginEditing(), isTrue);
+    locks.transientRenewFailures = 3;
+    await tester.pump(const Duration(seconds: 30));
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump(const Duration(milliseconds: 800));
+    expect(locks.renewed, 3);
+    expect(provider.connectionInterrupted, isTrue);
+    expect(provider.canSave, isFalse);
+    await provider.closeDocument();
+  });
+
+  test(
+    'free rows keep independent local identity through edits and deletion',
+    () async {
+      catalog.freePrice = true;
+      await provider.addCurrentProduct(0, 'service', 1, productName: 'Услуга');
+      await provider.addCurrentProduct(0, 'service', 2, productName: 'Услуга');
+      final firstId = provider.points.single.items[1].localId;
+      final secondId = provider.points.single.items[2].localId;
+      expect(firstId, isNot(secondId));
+      provider.updateTaskPrice(0, 1, 1.005);
+      provider.updateTaskDriverNote(0, 2, 'Вторая');
+      provider.updateTaskQuantity(0, 1, 3);
+      expect(provider.points.single.items[1].localId, firstId);
+      expect(provider.points.single.items[2].localId, secondId);
+      provider.removeTaskFromPoint(0, 1);
+      expect(provider.points.single.items.last.localId, secondId);
+      expect(provider.points.single.items.last.driverNote, 'Вторая');
+    },
+  );
   test(
     'selected name survives catalog rename, edits and request serialization',
     () async {
@@ -167,15 +224,26 @@ void main() {
         isTrue,
       );
       expect(provider.points.single.items.last.toRequestJson(), {
+        'itemId': null,
         'productId': 'second',
         'productName': '  Вода Горная  ',
         'quantity': 4,
         'price': 40.0,
+        'isFreePrice': false,
+        'driverNote': '',
       });
       expect(
         DeliveryTaskItem.fromJson(item.toJson()).toRequestJson()['productName'],
         'Товар',
       );
+      final legacyItem = DeliveryTaskItem.fromJson({
+        'productId': 'legacy',
+        'productName': 'Старая позиция',
+        'quantity': 1,
+        'price': 10,
+      });
+      expect(legacyItem.isFreePrice, isFalse);
+      expect(legacyItem.driverNote, isEmpty);
       provider.removeTaskFromPoint(0, 1);
       expect(
         await provider.addCurrentProduct(
@@ -192,6 +260,56 @@ void main() {
       );
     },
   );
+  test(
+    'free-price item price and driver note are saved on its document row',
+    () async {
+      catalog.freePrice = true;
+      catalog.price = 0;
+      expect(
+        await provider.addCurrentProduct(
+          0,
+          'service',
+          2,
+          productName: 'Услуга',
+        ),
+        isTrue,
+      );
+
+      expect(provider.points.single.items.last.isFreePrice, isTrue);
+      expect(provider.points.single.items.last.price, 0);
+      provider.updateTaskPrice(0, 1, 125.5);
+      provider.updateTaskDriverNote(0, 1, 'Позвонить перед выездом');
+
+      final savedItem = provider.points.single.items.last;
+      expect(savedItem.price, 125.5);
+      expect(savedItem.amount, 251);
+      expect(savedItem.toRequestJson(), {
+        'itemId': null,
+        'productId': 'service',
+        'productName': 'Услуга',
+        'quantity': 2,
+        'price': 125.5,
+        'isFreePrice': true,
+        'driverNote': 'Позвонить перед выездом',
+      });
+    },
+  );
+
+  test('free-price item is rejected by pickup documents', () async {
+    catalog.freePrice = true;
+    final pickup = PickupOrders(catalog, locks)..points = [point];
+    expect(
+      await pickup.addCurrentProduct(
+        0,
+        'service',
+        1,
+        productName: 'Услуга',
+      ),
+      isFalse,
+    );
+    expect(pickup.points.single.items, [item]);
+    pickup.dispose();
+  });
   test('HALF_UP rounds each row before point/document sums', () {
     expect(lineAmountCents(1, 1.005), 101);
     expect(lineAmountCents(3, 1.005), 302);
@@ -287,6 +405,11 @@ void main() {
       expect(provider.connectionInterrupted, isTrue);
       expect(provider.isEditing, isTrue);
       locks.failRenew = false;
+      provider.recoveryDocument = PickupSheet(
+        id: 'document',
+        date: DateTime(2026, 11, 6),
+        points: [point],
+      );
       expect(await provider.beginEditing(), isTrue);
       expect(provider.refreshes, 1);
       expect(provider.points.single.items.single.quantity, 5);
@@ -356,4 +479,11 @@ void main() {
       expect(locks.released, greaterThanOrEqualTo(1));
     },
   );
+}
+
+class PickupOrders extends Orders {
+  PickupOrders(super.catalog, super.locks);
+
+  @override
+  bool get isPickup => true;
 }

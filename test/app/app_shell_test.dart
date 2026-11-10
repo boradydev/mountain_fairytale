@@ -31,6 +31,18 @@ import '../auth/auth_fakes.dart';
 import '../directories/directories_test.dart' show Store;
 
 class _ClientsRepository implements ClientRepository {
+  @override
+  Future<ClientsPage<Client>> getClientsPage({
+    int offset = 0,
+    int limit = 25,
+    String? search,
+    bool includeDeactivated = false,
+    String mode = 'database',
+  }) async {
+    calls++;
+    return const ClientsPage([], 0);
+  }
+
   int calls = 0;
 
   @override
@@ -210,6 +222,7 @@ void main() {
         expect(find.text('Добавить клиента'), findsNothing);
 
         if (isAdmin) {
+          await tester.ensureVisible(find.widgetWithText(Tab, 'Сотрудники'));
           await tester.tap(find.widgetWithText(Tab, 'Сотрудники'));
           await tester.pumpAndSettle();
           expect(employeeRepo.calls, 1);
@@ -217,14 +230,17 @@ void main() {
           expect(find.byType(AppBar), findsOneWidget);
         }
 
+        await tester.ensureVisible(find.widgetWithText(Tab, 'Справочники'));
         await tester.tap(find.widgetWithText(Tab, 'Справочники'));
         await tester.pumpAndSettle();
         expect(find.text('Добавить товар'), findsOneWidget);
         expect(directories.current.items, hasLength(1));
+        await tester.ensureVisible(find.widgetWithText(Tab, 'Журнал событий'));
         await tester.tap(find.text('Журнал событий'));
         await tester.pumpAndSettle();
         expect(auditRepo.searches, [null]);
 
+        await tester.ensureVisible(find.widgetWithText(Tab, 'Комиссии'));
         await tester.tap(find.text('Комиссии'));
         await tester.pumpAndSettle();
         expect(commissionRepo.calls, 1);
@@ -261,9 +277,11 @@ void main() {
         await tester.tapAt(const Offset(20, 200));
         await tester.pumpAndSettle();
 
+        await tester.ensureVisible(find.widgetWithText(Tab, 'Журнал событий'));
         await tester.tap(find.text('Журнал событий'));
         await tester.pumpAndSettle();
         expect(auditRepo.searches.length, 1);
+        await tester.ensureVisible(find.widgetWithText(Tab, 'Дашборд'));
         await tester.tap(find.text('Дашборд'));
         await tester.pumpAndSettle();
         expect(
@@ -277,8 +295,9 @@ void main() {
         await tester.tap(find.text('База клиентов'));
         await tester.pumpAndSettle();
         expect(find.text('Добавить клиента'), findsOneWidget);
-        expect(clientRepo.calls, 1);
+        expect(clientRepo.calls, 2);
         expect(dayRepo.calls, 1);
+        await tester.ensureVisible(find.widgetWithText(Tab, 'Комиссии'));
         await tester.tap(find.text('Комиссии'));
         await tester.pumpAndSettle();
         expect(
@@ -287,6 +306,7 @@ void main() {
         );
         expect(commissionRepo.calls, 3);
         if (isAdmin) {
+          await tester.ensureVisible(find.widgetWithText(Tab, 'Сотрудники'));
           await tester.tap(find.widgetWithText(Tab, 'Сотрудники'));
           await tester.pumpAndSettle();
           expect(employeeRepo.calls, 1);

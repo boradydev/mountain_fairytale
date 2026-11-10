@@ -6,8 +6,17 @@ part 'route_point_model.g.dart';
 @JsonSerializable(explicitToJson: true)
 class RoutePoint {
   final String? pointId;
+  @JsonKey(defaultValue: true)
+  final bool isDelivered;
+  @JsonKey(defaultValue: '')
+  final String nonDeliveryReason;
+  @JsonKey(defaultValue: '')
+  final String memo;
   final int position;
   final String? salesRepresentativeId;
+  // Local draft only. Server responses always restore immutable historical state.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  final bool representativeCorrectionPending;
   final String? clientId;
   @JsonKey(includeFromJson: false, includeToJson: false)
   final String? localId;
@@ -28,7 +37,7 @@ class RoutePoint {
   final String? documentPaymentMethodId;
   @JsonKey(name: 'paymentMethodName')
   final String? documentPaymentMethodName;
-  @JsonKey(name: 'salesRepresentativeName', defaultValue: 'Нет представителя')
+  @JsonKey(name: 'salesRepresentativeName', defaultValue: 'Не указан')
   final String salesRepresentative; // Торговый представитель
 
   // Список товаров/услуг для этой точки
@@ -38,8 +47,20 @@ class RoutePoint {
 
   int get totalCents => items.fold(0, (sum, item) => sum + item.amountCents);
   double get totalAmount => totalCents / 100;
-  RoutePoint copyWith({List<DeliveryTaskItem>? items}) => RoutePoint(
+  int get accountedTotalCents => isDelivered ? totalCents : 0;
+  RoutePoint copyWith({
+    List<DeliveryTaskItem>? items,
+    bool? isDelivered,
+    String? nonDeliveryReason,
+    String? memo,
+    String? salesRepresentativeId,
+    String? salesRepresentative,
+    bool? representativeCorrectionPending,
+  }) => RoutePoint(
     pointId: pointId,
+    isDelivered: isDelivered ?? this.isDelivered,
+    nonDeliveryReason: nonDeliveryReason ?? this.nonDeliveryReason,
+    memo: memo ?? this.memo,
     localId: localId,
     position: position,
     clientId: clientId,
@@ -53,22 +74,40 @@ class RoutePoint {
     paymentMethod: paymentMethod,
     documentPaymentMethodId: documentPaymentMethodId,
     documentPaymentMethodName: documentPaymentMethodName,
-    salesRepresentativeId: salesRepresentativeId,
-    salesRepresentative: salesRepresentative,
+    salesRepresentativeId: salesRepresentativeId ?? this.salesRepresentativeId,
+    salesRepresentative: salesRepresentative ?? this.salesRepresentative,
+    representativeCorrectionPending:
+        representativeCorrectionPending ?? this.representativeCorrectionPending,
     items: items ?? this.items,
   );
-  Map<String, dynamic> toRequestJson({required bool creating}) => {
+  Map<String, dynamic> toRequestJson({
+    required bool creating,
+    bool includeMemo = true,
+  }) => {
     if (!creating && pointId != null) 'pointId': pointId,
+    if (!creating && pointId != null && representativeCorrectionPending)
+      'salesRepresentativeId': salesRepresentativeId,
     'clientId': clientId,
+    'isDelivered': isDelivered,
+    'nonDeliveryReason': nonDeliveryReason,
+    if (includeMemo) 'memo': memo,
     'paymentMethodId': documentPaymentMethodId,
-    'items': items.map((item) => item.toRequestJson()).toList(),
+    'items': items
+        .map(
+          (item) => item.toRequestJson(creating: creating || pointId == null),
+        )
+        .toList(),
   };
 
   const RoutePoint({
     this.pointId,
+    this.isDelivered = true,
+    this.nonDeliveryReason = '',
+    this.memo = '',
     this.localId,
     this.position = 0,
     this.salesRepresentativeId,
+    this.representativeCorrectionPending = false,
     required this.clientId,
     required this.clientName,
     this.city = '',

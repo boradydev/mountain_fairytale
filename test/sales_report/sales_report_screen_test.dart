@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mountain_fairytale/features/sales_report/data/sales_report_model.dart';
@@ -5,6 +7,8 @@ import 'package:mountain_fairytale/features/sales_report/sales_report_abcs.dart'
 import 'package:mountain_fairytale/features/sales_report/ui/sales_report_provider.dart';
 import 'package:mountain_fairytale/features/sales_report/ui/sales_report_screen.dart';
 import 'package:mountain_fairytale/shared/widgets/base_card_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/text_button_widget.dart';
+import 'package:mountain_fairytale/shared/widgets/app_date_range_dialog.dart';
 import 'package:provider/provider.dart';
 
 class _Repository implements SalesReportRepository {
@@ -28,7 +32,111 @@ class _Repository implements SalesReportRepository {
   }
 }
 
+class _PendingRepository implements SalesReportRepository {
+  final response = Completer<SalesReport>();
+
+  @override
+  Future<SalesReport> getSalesReport({
+    required DateTime dateFrom,
+    required DateTime dateTo,
+  }) => response.future;
+}
+
 void main() {
+  for (final (width, scale, stacked) in [
+    (1000.0, 1.0, false),
+    (380.0, 1.0, true),
+    (320.0, 2.0, true),
+    (1000.0, 2.0, true),
+  ]) {
+    testWidgets('toolbar layout at width $width and text scale $scale', (
+      tester,
+    ) async {
+      tester.view.physicalSize = Size(width, 1200);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final repository = _PendingRepository();
+      final provider = SalesReportProvider(
+        repository,
+        now: DateTime(2026, 11, 5),
+      );
+      addTearDown(provider.dispose);
+      await tester.pumpWidget(
+        ChangeNotifierProvider.value(
+          value: provider,
+          child: MaterialApp(
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                textScaler: TextScaler.linear(scale),
+              ),
+              child: child!,
+            ),
+            home: const Scaffold(body: SalesReportScreen()),
+          ),
+        ),
+      );
+      await tester.pump();
+      expect(provider.status, SalesReportStatus.loading);
+      final title = find.text('Отчёт по продажам');
+      final button = find.byType(AppSecondaryButton);
+      final surface = find.byKey(
+        const ValueKey('sales-report-toolbar-surface'),
+      );
+      expect(find.descendant(of: surface, matching: title), findsOneWidget);
+      expect(find.textContaining('Оборот и количество'), findsNothing);
+      expect(find.textContaining('Период:'), findsNothing);
+      expect(find.text('01.11.2026 — 05.11.2026'), findsOneWidget);
+      expect(tester.widget<AppSecondaryButton>(button).icon, Icons.date_range);
+      final titleRect = tester.getRect(title);
+      final buttonRect = tester.getRect(button);
+      final surfaceRect = tester.getRect(surface);
+      expect(surfaceRect.left, 16);
+      expect(surfaceRect.top, 12);
+      expect(surfaceRect.right, width - 16);
+      expect(titleRect.left, 32);
+      expect(buttonRect.right, closeTo(width - 32, 0.01));
+      expect(buttonRect.height, greaterThanOrEqualTo(48));
+      if (stacked) {
+        expect(buttonRect.top, greaterThanOrEqualTo(titleRect.bottom + 8));
+      } else {
+        expect(buttonRect.left, greaterThan(titleRect.right));
+        expect(buttonRect.center.dy, closeTo(titleRect.center.dy, 0.01));
+      }
+      expect(tester.takeException(), isNull);
+      repository.response.complete(
+        SalesReport(
+          dateFrom: provider.dateRange.start,
+          dateTo: provider.dateRange.end,
+          totalQuantity: 7,
+          totalAmount: '123.45',
+          paymentMethods: const [],
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.getRect(title), titleRect);
+      expect(tester.getRect(button), buttonRect);
+      expect(find.text('Оборот за период'), findsOneWidget);
+      expect(find.text('Продано товаров'), findsOneWidget);
+      expect(find.text('123.45 ₽'), findsOneWidget);
+      expect(find.text('7 шт.'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      if (scale == 1 && width == 1000) {
+        await tester.tap(button);
+        await tester.pumpAndSettle();
+        expect(find.byType(AppDateRangeDialog), findsOneWidget);
+        Navigator.of(tester.element(find.byType(AppDateRangeDialog))).pop(
+          DateTimeRange(
+            start: DateTime(2026, 10, 1),
+            end: DateTime(2026, 10, 31),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('01.10.2026 — 31.10.2026'), findsOneWidget);
+      }
+    });
+  }
+
   final methods = List.generate(
     5,
     (index) => SalesReportPaymentMethod(
